@@ -4,7 +4,7 @@ Use this pattern when bootstrapping a brand-new repository from a fresh project 
 
 ## Recommended Flow
 
-1. Start in the new project directory with no existing git history.
+1. Start in a clean, repo-specific Codex project or working context tied to the new project directory, with no existing git history.
 2. Create the repository under the target org.
 3. Initialize local git on `main`.
 4. Create a minimal initial `main` commit.
