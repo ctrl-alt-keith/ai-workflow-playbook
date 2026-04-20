@@ -25,6 +25,7 @@ Treat permission boundaries as part of the execution environment, not as inciden
 ## CI Expectations
 
 - run the repo-local validation path when it exists
+- in this repo, the current minimal CI path is the `markdownlint` GitHub Actions check
 - report clearly when no local validation path exists
 - until a formal validation path exists, use internal consistency review, path checks, and scope review
 - treat passing CI as necessary but not sufficient
@@ -46,6 +47,6 @@ After bootstrap, configure these as the basic merge-safety baseline:
 - require CI or checks before merge when available
 - keep release and tag actions human-gated
 
-This repository now enforces that baseline on `main`. Apply the same baseline after bootstrap when creating a new repo.
+This repository now enforces that baseline on `main`, including the `markdownlint` check. Apply the same baseline after bootstrap when creating a new repo.
 
 Codex should follow the core model, but this adapter exists to document the tooling realities that shape how the model is applied in practice.
