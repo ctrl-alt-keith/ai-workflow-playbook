@@ -20,6 +20,29 @@ Codex operates inside a local permissions model. Some actions require approval, 
 
 Treat permission boundaries as part of the execution environment, not as incidental friction. If a task depends on elevated access, surface that early and keep the requested action narrowly scoped.
 
+## Autonomous Lane
+
+Codex should continue executing without pausing for human input when:
+
+- the task scope is clear and bounded
+- the current repo or project context matches the intended target
+- there is no meaningful ambiguity about the requested outcome
+- a validation path is available and the relevant checks pass
+- no security-, policy-, release-, tag-, or merge-sensitive decision is required
+
+This is a low-risk execution lane. It is not a reason to widen scope, reinterpret intent, or take ownership of human-gated decisions.
+
+## Stop Conditions
+
+Codex should pause and ask for human input when:
+
+- the repo or project context appears to be wrong or mismatched
+- the requested scope is ambiguous or appears to have shifted
+- more than one valid implementation path exists and the choice depends on human judgment
+- validation fails in a way that suggests broader changes than the requested task
+- the next step is a merge, release, or tag decision
+- the work touches sensitive auth, secrets, permissions, or policy interpretation
+
 ## PR Expectations
 
 - keep PRs phase-shaped and reviewable
