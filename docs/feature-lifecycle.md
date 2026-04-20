@@ -11,6 +11,8 @@ The delivery lifecycle is:
 
 Each phase should have a clear goal, a clear review surface, and a natural stopping point before the next phase begins.
 
+Use [`alignment-checkpoints.md`](alignment-checkpoints.md) to decide when to pause or split work, and use [`review-packet.md`](review-packet.md) to prepare the review surface before merge or release.
+
 ## Phase Guidance
 
 ### Design
@@ -31,7 +33,7 @@ Address edge cases, refactors, failure handling, review findings, and CI quality
 
 ### Release
 
-Prepare the work to ship with a clean review packet, validation evidence, and any final release checks.
+Prepare the work to ship with a clean review packet, validation evidence, and any final release checks. If the repo does not have a formal validation path yet, record the lightweight validation that was used instead.
 
 ### Capture
 

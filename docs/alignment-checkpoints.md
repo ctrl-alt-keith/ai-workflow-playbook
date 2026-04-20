@@ -2,6 +2,8 @@
 
 These checkpoints are the explicit version of the "back-channel glue" that keeps AI-assisted delivery coherent.
 
+Use these checkpoints alongside [`feature-lifecycle.md`](feature-lifecycle.md) and [`review-packet.md`](review-packet.md).
+
 ## Pause When
 
 Pause and realign when:
