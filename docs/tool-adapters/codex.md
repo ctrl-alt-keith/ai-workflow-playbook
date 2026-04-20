@@ -7,6 +7,9 @@ This document explains how Codex maps onto the core playbook. It is adapter-spec
 - Codex can move quickly from brief to implementation, so phase boundaries need to be stated explicitly
 - Codex benefits from narrow, well-shaped tasks with clear validation targets
 - Codex can produce fluent output that still needs human judgment on scope, tradeoffs, and completeness
+- small tasks stay small when they extend a single existing seam or module, avoid cross-cutting changes, and avoid new abstractions unless clearly required
+
+Tasks that extend a clean documented seam are more likely to remain small. Tasks that must create or reshape seams tend to expand and should be treated that way during estimation.
 
 ## Project-Context Check
 
@@ -32,6 +35,10 @@ Codex should continue executing without pausing for human input when:
 
 This is a low-risk execution lane. It is not a reason to widen scope, reinterpret intent, or take ownership of human-gated decisions.
 
+When an existing documented seam already fits the task, prefer extending it over introducing a new abstraction. For small or medium tasks, do not invent a new layer when a clean extension point already exists.
+
+Do not turn small or medium tasks into "while I'm here" refactors. Keep changes within the requested scope unless a stop condition is triggered.
+
 ## Stop Conditions
 
 Codex should pause and ask for human input when:
@@ -50,6 +57,8 @@ Codex should pause and ask for human input when:
 - make PRs ready for review by default when the phase objective is met
 - use draft PRs only for intentionally incomplete work or early feedback
 - avoid bundling unrelated cleanup into the same PR
+
+When behavior or supported capability changes, quickly check the existing docs for that area and update any statements that would become inaccurate before calling the work complete.
 
 ## CI Expectations
 
