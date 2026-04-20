@@ -16,6 +16,7 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 - before making changes, confirm the current Codex project or working context matches the intended task target
 - if the task appears to target a different repository, a new repository, or a cross-repo comparison while the current context is repo-scoped, pause and confirm with the human before proceeding
 - keep this lightweight for normal same-repo work; a quick sanity check is enough
+- at the start of repo-scoped work, inspect the current git state; if the branch maps to a merged PR and the working tree is clean, switch to `main` and update from the remote before continuing; if the tree is not clean, the branch is still active, or the state is unclear, pause and report rather than forcing cleanup
 
 ## Local Permissions Model
 
@@ -63,6 +64,7 @@ When behavior or supported capability changes, quickly check the existing docs f
 ## CI Expectations
 
 - run the repo-local validation path when it exists
+- attempt local validation when the needed tools are clearly available; if a tool is missing locally, do not treat that as a failure and rely on required CI checks as the source of truth
 - in this repo, the current minimal CI path is the `markdownlint` GitHub Actions check
 - report clearly when no local validation path exists
 - until a formal validation path exists, use internal consistency review, path checks, and scope review
