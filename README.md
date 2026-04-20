@@ -43,6 +43,14 @@ Core guidance should stay tool-agnostic. The core docs should describe the opera
 
 Tool-specific behavior belongs in adapter docs under [`docs/tool-adapters/`](docs/tool-adapters/). Adapters should explain how a specific tool maps onto the core model, but they should not redefine the model itself.
 
+## Repo-Local AGENTS.md
+
+The playbook is the canonical home for reusable workflow patterns. Repositories can reference it from a local `AGENTS.md`, but that local file should stay self-contained for execution and should remain the source of truth for repo-specific validation, commands, and PR expectations.
+
+Reusable pattern:
+
+> This repository uses the shared AI workflow model defined in `ai-workflow-playbook` as a reference. `AGENTS.md` provides the repo-specific instructions (validation, commands, PR expectations) that take precedence when working here.
+
 ## Current Focus
 
 The first core module is delivery. Additional workflow families may be added later, but only if they meet the same discipline standards and stay aligned with the repository intent.

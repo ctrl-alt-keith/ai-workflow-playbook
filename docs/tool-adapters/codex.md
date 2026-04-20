@@ -8,6 +8,12 @@ This document explains how Codex maps onto the core playbook. It is adapter-spec
 - Codex benefits from narrow, well-shaped tasks with clear validation targets
 - Codex can produce fluent output that still needs human judgment on scope, tradeoffs, and completeness
 
+## Project-Context Check
+
+- before making changes, confirm the current Codex project or working context matches the intended task target
+- if the task appears to target a different repository, a new repository, or a cross-repo comparison while the current context is repo-scoped, pause and confirm with the human before proceeding
+- keep this lightweight for normal same-repo work; a quick sanity check is enough
+
 ## Local Permissions Model
 
 Codex operates inside a local permissions model. Some actions require approval, especially for network access, privileged writes, or potentially destructive commands.
