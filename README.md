@@ -39,9 +39,9 @@ Do not add content that behaves like a working notebook. If material is explorat
 
 ## Core And Adapters
 
-Core guidance should stay tool-agnostic whenever possible. The core docs should describe the operating model, lifecycle, checkpoints, and review expectations in language that survives tool changes.
+Core guidance should stay tool-agnostic. The core docs should describe the operating model, lifecycle, checkpoints, and review expectations in language that survives tool changes.
 
-Tool-specific behavior belongs in adapter docs under [`docs/tool-adapters/`](docs/tool-adapters/). Adapters may explain how a specific tool maps onto the core model, but they should not redefine the model itself.
+Tool-specific behavior belongs in adapter docs under [`docs/tool-adapters/`](docs/tool-adapters/). Adapters should explain how a specific tool maps onto the core model, but they should not redefine the model itself.
 
 ## Current Focus
 

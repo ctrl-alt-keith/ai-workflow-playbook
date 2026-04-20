@@ -30,7 +30,7 @@ Repo docs should use relative links from the start. Absolute local filesystem pa
 
 ### Validation In A Docs-First Repo
 
-A brand-new docs-first repo may not have a repo-local validation path yet. Until it does, validation falls back to:
+A brand-new docs-first repo often does not have a repo-local validation path yet. Until it does, validation falls back to:
 
 - internal consistency review
 - path portability checks
@@ -46,4 +46,4 @@ Keep the bootstrap workflow tool-aware but practical:
 
 ## Reuse
 
-Treat this as a reusable bootstrap pattern for new repositories, not as a one-off retrospective. Reapply it when a new repo needs a clean starting point, a reviewable bootstrap PR, and lightweight validation before richer tooling exists.
+Treat this as a reusable bootstrap pattern for new repositories, not as a one-off retrospective. Reapply it when a new repo needs a clean starting point, a reviewable bootstrap PR, and lightweight validation before richer tooling exists. Review it with [`playbook-integrity-check.md`](playbook-integrity-check.md) if similar bootstrap capture docs start to accumulate.

@@ -10,7 +10,7 @@ This document explains how Codex maps onto the core playbook. It is adapter-spec
 
 ## Local Permissions Model
 
-Codex operates inside a local permissions model. Some actions may require approval, especially for network access, privileged writes, or potentially destructive commands.
+Codex operates inside a local permissions model. Some actions require approval, especially for network access, privileged writes, or potentially destructive commands.
 
 Treat permission boundaries as part of the execution environment, not as incidental friction. If a task depends on elevated access, surface that early and keep the requested action narrowly scoped.
 
@@ -26,6 +26,7 @@ Treat permission boundaries as part of the execution environment, not as inciden
 
 - run the repo-local validation path when it exists
 - report clearly when no local validation path exists
+- until a formal validation path exists, use internal consistency review, path checks, and scope review
 - treat passing CI as necessary but not sufficient
 - use hardening to close gaps exposed by CI, review, or edge cases
 
@@ -38,11 +39,13 @@ Treat permission boundaries as part of the execution environment, not as inciden
 
 ## Repo Baseline
 
-After bootstrap, check the repository for basic merge safety:
+After bootstrap, configure these as the basic merge-safety baseline:
 
 - protect `main`
 - require PR-based changes to `main`
 - require CI or checks before merge when available
 - keep release and tag actions human-gated
+
+This repository does not enforce that baseline yet, so treat it as the next safety step after bootstrap rather than an already-configured guarantee.
 
 Codex should follow the core model, but this adapter exists to document the tooling realities that shape how the model is applied in practice.

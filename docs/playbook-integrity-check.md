@@ -2,6 +2,8 @@
 
 The integrity check is a lightweight periodic review to keep this repository a playbook instead of a dumping ground.
 
+Use this check to review new capture docs such as [`new-repo-bootstrap.md`](new-repo-bootstrap.md) before the repository accumulates one-off material.
+
 ## Goal
 
 Confirm that the repository still contains reusable guidance rather than drifting into notes, implementation, or tool sprawl.
