@@ -18,7 +18,8 @@ Treat permission boundaries as part of the execution environment, not as inciden
 
 - keep PRs phase-shaped and reviewable
 - summarize intent, scope, validation, and known risks
-- prefer draft PRs until the phase objective is actually met
+- make PRs ready for review by default when the phase objective is met
+- use draft PRs only for intentionally incomplete work or early feedback
 - avoid bundling unrelated cleanup into the same PR
 
 ## CI Expectations
@@ -34,5 +35,14 @@ Treat permission boundaries as part of the execution environment, not as inciden
 - keep commit messages and PR titles clear and phase-oriented
 - preserve a clean review narrative rather than one long-running branch
 - open a new PR when the work changes phase or review surface
+
+## Repo Baseline
+
+After bootstrap, check the repository for basic merge safety:
+
+- protect `main`
+- require PR-based changes to `main`
+- require CI or checks before merge when available
+- keep release and tag actions human-gated
 
 Codex should follow the core model, but this adapter exists to document the tooling realities that shape how the model is applied in practice.

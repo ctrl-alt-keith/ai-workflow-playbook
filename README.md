@@ -41,7 +41,7 @@ Do not add content that behaves like a working notebook. If material is explorat
 
 Core guidance should stay tool-agnostic whenever possible. The core docs should describe the operating model, lifecycle, checkpoints, and review expectations in language that survives tool changes.
 
-Tool-specific behavior belongs in adapter docs under [`docs/tool-adapters/`](/Users/keith/src/ctrl-alt-keith/ai-workflow-playbook/docs/tool-adapters/). Adapters may explain how a specific tool maps onto the core model, but they should not redefine the model itself.
+Tool-specific behavior belongs in adapter docs under [`docs/tool-adapters/`](docs/tool-adapters/). Adapters may explain how a specific tool maps onto the core model, but they should not redefine the model itself.
 
 ## Current Focus
 
@@ -49,9 +49,9 @@ The first core module is delivery. Additional workflow families may be added lat
 
 ## Initial Map
 
-- [`docs/core-model.md`](/Users/keith/src/ctrl-alt-keith/ai-workflow-playbook/docs/core-model.md): high-level operating model
-- [`docs/feature-lifecycle.md`](/Users/keith/src/ctrl-alt-keith/ai-workflow-playbook/docs/feature-lifecycle.md): delivery lifecycle
-- [`docs/alignment-checkpoints.md`](/Users/keith/src/ctrl-alt-keith/ai-workflow-playbook/docs/alignment-checkpoints.md): pause points and branch/PR rules
-- [`docs/review-packet.md`](/Users/keith/src/ctrl-alt-keith/ai-workflow-playbook/docs/review-packet.md): standard human review packet
-- [`docs/tool-adapters/codex.md`](/Users/keith/src/ctrl-alt-keith/ai-workflow-playbook/docs/tool-adapters/codex.md): Codex-specific adapter notes
-- [`docs/playbook-integrity-check.md`](/Users/keith/src/ctrl-alt-keith/ai-workflow-playbook/docs/playbook-integrity-check.md): lightweight anti-drift check
+- [`docs/core-model.md`](docs/core-model.md): high-level operating model
+- [`docs/feature-lifecycle.md`](docs/feature-lifecycle.md): delivery lifecycle
+- [`docs/alignment-checkpoints.md`](docs/alignment-checkpoints.md): pause points and branch/PR rules
+- [`docs/review-packet.md`](docs/review-packet.md): standard human review packet
+- [`docs/tool-adapters/codex.md`](docs/tool-adapters/codex.md): Codex-specific adapter notes
+- [`docs/playbook-integrity-check.md`](docs/playbook-integrity-check.md): lightweight anti-drift check
