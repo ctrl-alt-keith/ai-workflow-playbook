@@ -46,6 +46,6 @@ After bootstrap, configure these as the basic merge-safety baseline:
 - require CI or checks before merge when available
 - keep release and tag actions human-gated
 
-This repository does not enforce that baseline yet, so treat it as the next safety step after bootstrap rather than an already-configured guarantee.
+This repository now enforces that baseline on `main`. Apply the same baseline after bootstrap when creating a new repo.
 
 Codex should follow the core model, but this adapter exists to document the tooling realities that shape how the model is applied in practice.
