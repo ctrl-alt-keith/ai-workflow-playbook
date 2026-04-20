@@ -55,3 +55,4 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/review-packet.md`](docs/review-packet.md): standard human review packet
 - [`docs/tool-adapters/codex.md`](docs/tool-adapters/codex.md): Codex-specific adapter notes
 - [`docs/playbook-integrity-check.md`](docs/playbook-integrity-check.md): lightweight anti-drift check
+- [`docs/new-repo-bootstrap.md`](docs/new-repo-bootstrap.md): reusable bootstrap pattern for brand-new repositories
