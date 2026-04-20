@@ -75,6 +75,7 @@ When behavior or supported capability changes, quickly check the existing docs f
 
 - use a fresh branch for each lifecycle phase after merge
 - keep commit messages and PR titles clear and phase-oriented
+- adapt branch, commit, and PR naming to repo context: in playbook or workflow repos, use Codex-explicit naming such as `codex/<topic>` and `[codex] docs: ...` to make automation-driven changes obvious; in product or implementation repos, follow standard development naming such as `feat/<topic>`, `fix/<topic>`, `feat: ...`, and `fix: ...`
 - preserve a clean review narrative rather than one long-running branch
 - open a new PR when the work changes phase or review surface
 
