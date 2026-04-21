@@ -16,7 +16,7 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 - before making changes, confirm the current Codex project or working context matches the intended task target
 - if the task appears to target a different repository, a new repository, or a cross-repo comparison while the current context is repo-scoped, pause and confirm with the human before proceeding
 - keep this lightweight for normal same-repo work; a quick sanity check is enough
-- at the start of repo-scoped work, inspect the current git state; for new repo-scoped work, default to clean, updated `main`; do not start a new arc from an existing feature branch just because the working tree is clean; only remain on or reuse the current branch when the task explicitly says to continue that branch or PR; if the current branch is not `main` and the task does not explicitly continue it, normalize to `main` before creating a new branch when it is safe to do so; if normalization is unsafe or the state is unclear, pause and report rather than forcing cleanup
+- at the start of repo-scoped work, inspect the current git state; for new repo-scoped work, default to clean, updated `main`; do not start a new arc from an existing feature branch just because the working tree is clean; only remain on or reuse the current branch when the task explicitly says to continue that branch or PR; for medium or large arcs, verify the working branch is based on current `origin/main` before meaningful edits begin; if the current branch is not `main` and the task does not explicitly continue it, normalize to `main` before creating a new branch when it is safe to do so; if normalization is unsafe or the state is unclear, pause and report rather than forcing cleanup
 
 ## Local Permissions Model
 
@@ -58,6 +58,7 @@ Codex should pause and ask for human input when:
 - make PRs ready for review by default when the phase objective is met
 - use draft PRs only for intentionally incomplete work or early feedback
 - avoid bundling unrelated cleanup into the same PR
+- before calling the work complete, verify the PR diff contains only the intended arc; if `main` moved underneath the branch and overlap occurred, sync with current `main`, resolve conflicts, and rerun validation; if the branch carries unrelated history, rebuild the work onto a clean branch from current `main`
 
 When behavior or supported capability changes, quickly check the existing docs for that area and update any statements that would become inaccurate before calling the work complete.
 
