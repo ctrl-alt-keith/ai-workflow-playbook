@@ -65,6 +65,7 @@ Codex should pause and ask for human input when:
 - summarize intent, scope, validation, and known risks
 - make PRs ready for review by default when the phase objective is met
 - use draft PRs only for intentionally incomplete work or early feedback
+- when refining an active PR within the same arc, update the existing branch and PR rather than opening a new PR; open a new PR only when the work changes phase, scope, or review surface
 - avoid bundling unrelated cleanup into the same PR
 - before calling the work complete, verify the PR diff contains only the intended arc; if `main` moved underneath the branch and overlap occurred, sync with current `main`, resolve conflicts, and rerun validation; if the branch carries unrelated history, rebuild the work onto a clean branch from current `main`
 
