@@ -56,9 +56,18 @@ issue or task from that current `origin/main`, and do the issue work only
 inside its worktree.
 
 Before starting a same-repo worktree run, inspect existing worktree metadata and
-clear stale entries so an old attempt does not distort the new setup. After
-merge, clean up the experiment or task worktrees that were created for that run
-without treating unrelated pre-existing worktrees as cleanup failures.
+clear stale entries so an old attempt does not distort the new setup. Reuse an
+existing same-repo worktree only when it is clearly the same active issue, PR,
+or arc and its state is still clean and intelligible; otherwise recreate from
+current `origin/main`, especially when the worktree belongs to a different arc,
+the state is stale or unclear, or cleanup and recovery would be more confusing
+than starting fresh. Bias toward clarity over clever reuse.
+
+After merge, cleanup succeeds when the experiment or task worktrees created for
+that run are removed or clearly accounted for. Do not treat unrelated
+pre-existing worktrees as cleanup failures. If removal is blocked or deferred,
+report that clearly, avoid deleting unrelated worktrees, and leave the repo in
+a known, intelligible state.
 
 The expected pattern is:
 
