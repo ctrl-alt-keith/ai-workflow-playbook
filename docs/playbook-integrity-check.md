@@ -43,6 +43,9 @@ Look for:
 - notebook behavior such as raw notes, scratch thinking, or incomplete fragments
 - weak guidance that describes ideas without telling people how to act
 - tool-specific material leaking into core docs instead of adapter docs
+- filesystem-based audits or prompts that do not define dataset boundaries and
+  therefore invite traversal outside the intended project root or working
+  directory
 
 ## Review Questions
 
