@@ -41,3 +41,10 @@ The human reviewer should focus on:
 - whether the work is ready to merge or release
 
 Human review is for judgment, prioritization, and standards enforcement. It should not be wasted on reconstructing context that the review packet should have provided.
+
+## Merge Checks
+
+Before merge:
+
+- the PR diff must contain only the intended arc
+- issue-driven PRs must include `Closes #<issue number>`
