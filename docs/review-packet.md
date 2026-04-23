@@ -47,4 +47,4 @@ Human review is for judgment, prioritization, and standards enforcement. It shou
 Before merge:
 
 - the PR diff must contain only the intended arc
-- issue-driven PRs must include `Closes #<issue number>`
+- issue-driven PRs must include `Closes #[issue number]`
