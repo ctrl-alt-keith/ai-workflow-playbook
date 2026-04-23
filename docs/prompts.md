@@ -1,9 +1,12 @@
 # Reusable Workflow Prompt Templates
 
 These prompts capture repeatable workflow tasks in a generic, parameterized form.
-Use the placeholders in angle brackets as inputs. Treat the referenced playbook as
-the canonical source for cross-repo workflow rules, and keep repo-local behavior in
-repo-local files such as `AGENTS.md`.
+Use the placeholders shown in each prompt as inputs. In plain-text prompt bodies,
+angle-bracket placeholders are acceptable, but in markdown templates or copied
+instructions prefer lint-safe placeholders such as `[repository]` or backticked
+tokens. Angle-bracket placeholders can be interpreted as inline HTML by markdown
+tooling. Treat the referenced playbook as the canonical source for cross-repo
+workflow rules, and keep repo-local behavior in repo-local files such as `AGENTS.md`.
 
 ## Filesystem-Scoped Audit Boundaries
 
@@ -324,6 +327,9 @@ Constraints:
 Validation:
 - Verify that each scaffolded file has a clear job and does not duplicate another file.
 - Verify that placeholders and instructions match the repository's real workflow.
+- Verify that markdown-facing placeholders use lint-safe forms such as `[issue number]`
+  or backticked tokens instead of angle-bracket placeholders that markdown tooling
+  can interpret as inline HTML.
 - Verify that release guidance stays human-gated unless the repository already documents automation.
 - Verify that the resulting scaffolding is appropriate for the stated repo type.
 

@@ -30,7 +30,7 @@ This repository uses the shared playbook in `docs/` as the canonical source for 
 - Keep each PR scoped to one logical change.
 - Include a clear summary and rationale.
 - Include validation notes.
-- Add `Closes #<issue number>` when applicable.
+- Add `Closes #[issue number]` when applicable.
 
 ## Playbook Reference
 
