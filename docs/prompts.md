@@ -5,6 +5,20 @@ Use the placeholders in angle brackets as inputs. Treat the referenced playbook 
 the canonical source for cross-repo workflow rules, and keep repo-local behavior in
 repo-local files such as `AGENTS.md`.
 
+## Filesystem-Scoped Audit Boundaries
+
+When a prompt drives an audit over filesystem data rather than a fixed list of
+named files, define the intended dataset boundary before traversal begins.
+
+- State the traversal boundary explicitly in the prompt.
+- When the intended scope is a repository or working tree, treat the current
+  working directory or project root as the complete dataset unless the prompt
+  says otherwise.
+- Do not traverse outside the intended root into sibling repositories or user
+  directories unless the task explicitly asks for broader coverage.
+- If the boundary is unclear, tighten the prompt or ask for clarification rather
+  than widening the scan.
+
 ## Repo Readiness Audit
 
 ### Repo Readiness Audit Use When
@@ -47,6 +61,11 @@ Constraints:
 - Treat <playbook_reference> as the canonical source for cross-repo workflow rules.
 - Do not invent repo facts that are not visible in the repository or supplied inputs.
 - Do not propose repo-specific process rules as if they belong in the shared playbook.
+- Define the filesystem dataset boundary when the audit relies on traversal;
+  treat the current working directory or project root as the complete dataset
+  when that is the intended scope.
+- Do not traverse outside the intended root unless the task explicitly asks for
+  broader filesystem coverage.
 - Keep the audit concise, actionable, and evidence-based.
 
 Validation:
