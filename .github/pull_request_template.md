@@ -24,5 +24,3 @@
 ## Issue closure
 
 <!-- Add `Closes #<issue number>` when applicable. -->
-
-Closes #123
