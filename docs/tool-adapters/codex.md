@@ -30,9 +30,20 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 - before starting a same-repo worktree batch, inspect `git worktree list` and
   the underlying worktree metadata so stale entries from an earlier attempt do
   not confuse setup or cleanup
+- reuse an existing same-repo worktree only when it is clearly the same active
+  issue, PR, or arc and its state is still clean and intelligible; otherwise
+  recreate from current `origin/main`, with a bias toward clarity over clever
+  reuse
+- recreate rather than recover when the worktree belongs to a different arc,
+  the state is stale or unclear, or cleanup and recovery would be more
+  confusing than starting fresh
 - when checking a worktree experiment at the end, distinguish the worktrees that
   belong to the experiment from unrelated pre-existing entries so success does
   not depend on an artificially empty global worktree list
+- treat worktree cleanup as successful when the experiment or task worktrees
+  created for that run are removed or clearly accounted for
+- if removal is blocked or deferred, report it clearly, avoid deleting
+  unrelated worktrees, and leave the repo in a known, intelligible state
 
 ## Local Permissions Model
 
