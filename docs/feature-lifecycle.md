@@ -47,10 +47,16 @@ After each merged phase, start a new branch and PR for the next lifecycle phase.
 
 Start same-repo arcs from fresh `origin/main`. Do not reuse an old feature branch unless intentionally continuing that PR.
 
-When parallel arcs target the same repository, use separate worktrees or otherwise isolated directories. Treat repository identity and execution-context identity as separate checks.
+For same-repo parallel work, prefer isolated Git worktrees over multiple arcs
+sharing one checkout. Keep the main checkout clean and on `main`, fetch before
+creating task worktrees so `origin/main` is current, create one worktree per
+issue or task from that current `origin/main`, and do the issue work only
+inside its worktree.
 
 Before starting a same-repo worktree run, inspect existing worktree metadata and
-clear stale entries so an old attempt does not distort the new setup.
+clear stale entries so an old attempt does not distort the new setup. After
+merge, clean up the experiment or task worktrees that were created for that run
+without treating unrelated pre-existing worktrees as cleanup failures.
 
 The expected pattern is:
 

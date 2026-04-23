@@ -24,7 +24,7 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 - if the active worktree or directory is not on up-to-date `main`, switch or recreate the branch from current `origin/main` before making changes
 - for medium or large arcs, verify the working branch is based on current `origin/main` before meaningful edits begin
 - if normalization is unsafe or the state is unclear, pause and report rather than forcing cleanup
-- when parallel repo-scoped work targets the same repository, use separate worktrees or otherwise isolated directories for each arc, do not run concurrent arcs against the same checkout, and treat each worktree or directory as its own execution container with its own branch, validation run, and PR or review surface
+- when parallel repo-scoped work targets the same repository, prefer one worktree per issue or task from current `origin/main`; keep the main checkout clean and on `main`, do not run concurrent arcs against the same checkout, and treat each worktree as its own execution container with its own branch, validation run, and PR or review surface
 - before starting a same-repo worktree batch, inspect `git worktree list` and
   the underlying worktree metadata so stale entries from an earlier attempt do
   not confuse setup or cleanup
@@ -98,8 +98,9 @@ When behavior or supported capability changes, quickly check the existing docs f
 - adapt branch, commit, and PR naming to repo context: in playbook or workflow repos, use Codex-explicit naming such as `codex/<topic>` and `[codex] docs: ...` to make automation-driven changes obvious; in product or implementation repos, follow standard development naming such as `feat/<topic>`, `fix/<topic>`, `feat: ...`, and `fix: ...`
 - preserve a clean review narrative rather than one long-running branch
 - open a new PR when the work changes phase or review surface
-- prefer creating same-repo PRs serially unless parallel creation materially
-  reduces latency and the connector flow is known to be stable
+- for same-repo worktree batches, prefer opening PRs serially unless parallel
+  creation materially reduces latency and the connector flow is known to be
+  stable
 
 ## Repo Baseline
 
