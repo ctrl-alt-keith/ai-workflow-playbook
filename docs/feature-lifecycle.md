@@ -49,6 +49,9 @@ Start same-repo arcs from fresh `origin/main`. Do not reuse an old feature branc
 
 When parallel arcs target the same repository, use separate worktrees or otherwise isolated directories. Treat repository identity and execution-context identity as separate checks.
 
+Before starting a same-repo worktree run, inspect existing worktree metadata and
+clear stale entries so an old attempt does not distort the new setup.
+
 The expected pattern is:
 
 1. Merge the current phase
@@ -57,5 +60,9 @@ The expected pattern is:
 4. Complete post-release capture before starting the next major arc
 
 When overlapping PRs touch the same shared surface, merge behavior, workflow, or other source-of-truth changes before formatting, restructuring, or cleanup. Let cleanup absorb the settled state last.
+
+When concurrent PRs have no file overlap and no open review concerns, merge order
+is flexible. Say that explicitly in the review packet instead of inventing a
+false dependency.
 
 Do not roll multiple lifecycle phases into one long-running branch unless there is a strong reason and the review surface remains clear.
