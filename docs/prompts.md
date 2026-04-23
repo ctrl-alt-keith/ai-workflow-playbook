@@ -7,25 +7,25 @@ repo-local files such as `AGENTS.md`.
 
 ## Repo Readiness Audit
 
-### Use when
+### Repo Readiness Audit Use When
 
 Use this prompt when a repository needs a quick readiness pass before new work,
 automation, or process hardening.
 
-### Required inputs
+### Repo Readiness Audit Required Inputs
 
 - `repository`
 - `playbook_reference`
 - `repo_type` (`code`, `docs`, `workflow`, or `mixed`)
 - `target_files` (optional; use `entire repository` when broad)
 
-### Repo-Type Notes
+### Repo Readiness Audit Repo-Type Notes
 
 - Code repos: emphasize validation paths, CI coverage, branch protection, and PR hygiene.
 - Docs or playbook repos: emphasize scope clarity, canonical guidance placement, and markdown checks.
 - Mixed repos: balance implementation safety with documentation accuracy and workflow consistency.
 
-### Prompt
+### Repo Readiness Audit Prompt
 
 ```text
 Task:
@@ -62,31 +62,31 @@ Output format:
 4. Playbook capture candidates: optional bullets only if a reusable cross-repo lesson is clearly present.
 ```
 
-### Notes
+### Repo Readiness Audit Notes
 
 Use this prompt for workflow shape and readiness, not for deep code review.
 
 ## Playbook Update
 
-### Use when
+### Playbook Update Use When
 
 Use this prompt when a validated workflow lesson from one or more repositories should
 be promoted into the shared playbook as reusable guidance.
 
-### Required inputs
+### Playbook Update Required Inputs
 
 - `repository`
 - `playbook_reference`
 - `repo_type`
 - `target_files` (usually the candidate playbook files to create or update)
 
-### Repo-Type Notes
+### Playbook Update Repo-Type Notes
 
 - Code repos: promote only rules that generalize beyond one implementation stack or codebase.
 - Docs or playbook repos: tighten language, placement, and reuse boundaries; avoid duplicative rules.
 - Mixed repos: separate reusable workflow guidance from implementation-specific or documentation-only details.
 
-### Prompt
+### Playbook Update Prompt
 
 ```text
 Task:
@@ -124,31 +124,31 @@ Output format:
 5. Open questions: only if a rule boundary is still unclear.
 ```
 
-### Notes
+### Playbook Update Notes
 
 This prompt is strongest after a rule has already survived real repo use, review, or CI friction.
 
 ## AGENTS Update
 
-### Use when
+### AGENTS Update Use When
 
 Use this prompt when a repository's `AGENTS.md` needs to be synced with the shared
 playbook while preserving repo-local execution details.
 
-### Required inputs
+### AGENTS Update Required Inputs
 
 - `repository`
 - `playbook_reference`
 - `repo_type`
 - `target_files` (typically `AGENTS.md` and any closely related repo-local docs)
 
-### Repo-Type Notes
+### AGENTS Update Repo-Type Notes
 
 - Code repos: keep repo-local sections focused on validation commands, file placement rules, and release or merge boundaries.
 - Docs or playbook repos: keep repo-local sections focused on documentation scope, canonical file locations, and markdown workflow.
 - Mixed repos: keep local rules narrow and explicit where docs and implementation practices differ.
 
-### Prompt
+### AGENTS Update Prompt
 
 ```text
 Task:
@@ -187,31 +187,31 @@ Output format:
 5. Residual gaps: optional bullets only if something still needs a human decision.
 ```
 
-### Notes
+### AGENTS Update Notes
 
 If a rule feels important but still repo-specific, keep it local and avoid promoting it automatically.
 
 ## Workflow Scaffolding
 
-### Use when
+### Workflow Scaffolding Use When
 
 Use this prompt when a repository needs baseline workflow scaffolding such as PR
 templates, issue templates, release guidance, or related lightweight process docs.
 
-### Required inputs
+### Workflow Scaffolding Required Inputs
 
 - `repository`
 - `playbook_reference`
 - `repo_type`
 - `target_files` (for example PR templates, issue templates, release docs, or workflow docs)
 
-### Repo-Type Notes
+### Workflow Scaffolding Repo-Type Notes
 
 - Code repos: bias toward review quality, validation visibility, release safety, and clear issue intake.
 - Docs or playbook repos: bias toward scope control, content quality checks, and change-summary prompts.
 - Mixed repos: ensure templates cover both documentation and implementation deltas without overfitting either side.
 
-### Prompt
+### Workflow Scaffolding Prompt
 
 ```text
 Task:
@@ -249,31 +249,31 @@ Output format:
 5. Follow-up items: optional bullets for later hardening.
 ```
 
-### Notes
+### Workflow Scaffolding Notes
 
 Prefer a minimal baseline that can be extended later over an elaborate template set that no one will keep current.
 
 ## PR Creation
 
-### Use when
+### PR Creation Use When
 
 Use this prompt when changes already exist in a working tree and the next step is to
 wrap them in a clean branch, commit, push, and PR flow.
 
-### Required inputs
+### PR Creation Required Inputs
 
 - `repository`
 - `playbook_reference`
 - `repo_type`
 - `target_files` (the intended diff scope, if known)
 
-### Repo-Type Notes
+### PR Creation Repo-Type Notes
 
 - Code repos: emphasize test evidence, behavioral risk, and keeping the diff narrowly scoped.
 - Docs or playbook repos: emphasize content scope, placement, and markdown or link checks.
 - Mixed repos: explain both implementation and documentation effects clearly in the PR summary.
 
-### Prompt
+### PR Creation Prompt
 
 ```text
 Task:
@@ -311,6 +311,6 @@ Output format:
 5. Proposed PR title and body: ready to use.
 ```
 
-### Notes
+### PR Creation Notes
 
 This prompt is for packaging existing work cleanly, not for doing the implementation itself.
