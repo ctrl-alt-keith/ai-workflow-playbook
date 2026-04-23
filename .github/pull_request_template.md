@@ -25,4 +25,4 @@
 
 <!-- Add `Closes #<issue number>` when applicable. -->
 
-Closes #<issue number>
+Closes #123
