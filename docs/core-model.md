@@ -38,6 +38,11 @@ Reliable AI-assisted work depends on short feedback loops:
 - Review loop: summarize what changed so a human can inspect the right things
 - Capture loop: turn proven practice into reusable guidance before context fades
 
+Notes repositories can serve as staging layers where emerging ideas are refined,
+audited, and tested for reuse before promotion into this playbook. This
+playbook is the canonical home for guidance that has been generalized and
+proven across contexts.
+
 ## Discipline
 
 Speed is only useful when paired with disciplined execution. This model assumes:

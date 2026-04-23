@@ -8,6 +8,10 @@ Use this check to review new capture docs such as [`new-repo-bootstrap.md`](new-
 
 Confirm that the repository still contains reusable guidance rather than drifting into notes, implementation, or tool sprawl.
 
+Notes repositories may be useful staging layers for high-signal material, but
+promoted guidance should converge here so the playbook remains the canonical
+source.
+
 ## When To Run It
 
 Run the check when:
