@@ -60,6 +60,16 @@ When an existing documented seam already fits the task, prefer extending it over
 
 Do not turn small or medium tasks into "while I'm here" refactors. Keep changes within the requested scope unless a stop condition is triggered.
 
+## Optional Execution Inefficiency Signals
+
+When the prompt asks for it, Codex may briefly note obvious inefficiencies seen during execution when they are clearly visible and relevant to the run.
+
+- keep any observation to 1-2 sentences
+- do not expand it into deep analysis or optimization discussion
+- examples include repeated rebases or restarts mid-run, redundant fetches of `origin/main`, unnecessary worktree creation or churn, and repeated validation or file scans with no intervening change
+
+Prompt snippet example: "During execution, briefly note any obvious wasted work you observe, but only when it is clearly visible and relevant."
+
 ## Stop Conditions
 
 Codex should pause and ask for human input when:
