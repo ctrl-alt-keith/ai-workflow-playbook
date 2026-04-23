@@ -23,6 +23,8 @@ Define the intended behavior, constraints, risks, and acceptance shape. The goal
 
 Write or update the tests, checks, or examples that define what must be true. This anchors implementation to an explicit contract.
 
+Prefer semantic assertions over formatting-sensitive assertions when formatting is not the contract. For user-facing output, favor behavior-oriented assertions, stable substrings, or shared helpers.
+
 ### Implementation
 
 Build only what is needed to satisfy the contract. Keep feedback loops short and avoid mixing extra polish into the first pass.
@@ -43,11 +45,17 @@ Record what should become reusable guidance before the next delivery arc starts.
 
 After each merged phase, start a new branch and PR for the next lifecycle phase. This keeps the review surface narrow and preserves clean checkpoints.
 
+Start same-repo arcs from fresh `origin/main`. Do not reuse an old feature branch unless intentionally continuing that PR.
+
+When parallel arcs target the same repository, use separate worktrees or otherwise isolated directories. Treat repository identity and execution-context identity as separate checks.
+
 The expected pattern is:
 
 1. Merge the current phase
 2. Open a new branch for the next phase
 3. Open a new PR for that phase
 4. Complete post-release capture before starting the next major arc
+
+When overlapping PRs touch the same shared surface, merge behavior, workflow, or other source-of-truth changes before formatting, restructuring, or cleanup. Let cleanup absorb the settled state last.
 
 Do not roll multiple lifecycle phases into one long-running branch unless there is a strong reason and the review surface remains clear.
