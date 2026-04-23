@@ -18,11 +18,13 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 - when multiple Codex projects, worktrees, or isolated directories are active, treat repository identity and execution-container identity as separate checks: confirm that the active execution container belongs to the repository named in the task before making changes; do not treat directory naming or a clean checkout alone as proof; if the active project or worktree does not match the intended repository, pause and switch before proceeding
 - keep this lightweight for normal same-repo work; a quick sanity check is enough
 - at the start of repo-scoped work, inspect the current git state
-- for every new repo-scoped arc, start from the latest `origin/main`
+- for every new repo-scoped arc, fetch `origin/main` once at the start and treat that fetched tip as the canonical base for the run
 - only remain on or reuse the current branch when the task explicitly says to continue that branch or PR
 - otherwise, create a new branch for the arc
 - if the active worktree or directory is not on up-to-date `main`, switch or recreate the branch from current `origin/main` before making changes
 - for medium or large arcs, verify the working branch is based on current `origin/main` before meaningful edits begin
+- after the run, check whether the resulting branch or PR is still mergeable against current `main`; if upstream moved in the meantime, treat that as a final-state mergeability check rather than a reason to restart or rebase mid-run by default
+- make exceptions only when the task explicitly requires rebasing or when a real conflict or blocker appears that prevents finishing the requested work cleanly
 - if normalization is unsafe or the state is unclear, pause and report rather than forcing cleanup
 - when parallel repo-scoped work targets the same repository, prefer one worktree per issue or task from current `origin/main`; keep the main checkout clean and on `main`, do not run concurrent arcs against the same checkout, and treat each worktree as its own execution container with its own branch, validation run, and PR or review surface
 - before starting a same-repo worktree batch, inspect `git worktree list` and

@@ -29,6 +29,8 @@ Prefer semantic assertions over formatting-sensitive assertions when formatting 
 
 Build only what is needed to satisfy the contract. Keep feedback loops short and avoid mixing extra polish into the first pass.
 
+For same-repo runs, anchor implementation to one fetched `origin/main` snapshot at task start and treat that snapshot as the canonical base for the duration of the run. Check mergeability against current `main` at the end as a separate release-readiness concern rather than repeatedly re-anchoring mid-run.
+
 ### Hardening
 
 Address edge cases, refactors, failure handling, review findings, and CI quality. This is where robustness catches up to correctness.
