@@ -18,6 +18,22 @@ Run the check when:
 - the repo starts feeling harder to navigate or easier to misuse
 - a periodic maintenance pass is due
 
+## Notes Cleanup and Alignment
+
+Use the notes cleanup lifecycle after promotion work has already landed in the
+playbook:
+
+1. notes
+2. audit
+3. remove or trim
+4. re-audit
+5. converge
+
+In this lifecycle, the playbook remains canonical and notes remain a staging
+layer. Use the [`Notes vs Playbook Alignment Audit`](prompts.md#notes-vs-playbook-alignment-audit)
+prompt in [`prompts.md`](prompts.md) for the cleanup pass, then rerun it after
+changes to confirm convergence.
+
 ## What To Look For
 
 Look for:

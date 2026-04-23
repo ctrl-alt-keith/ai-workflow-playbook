@@ -128,6 +128,73 @@ Output format:
 
 This prompt is strongest after a rule has already survived real repo use, review, or CI friction.
 
+## Notes vs Playbook Alignment Audit
+
+### Notes vs Playbook Alignment Audit Use When
+
+Use this prompt when a notes repository needs cleanup after workflow rules were
+promoted into the playbook and the remaining notes should be aligned to the
+canonical source.
+
+### Notes vs Playbook Alignment Audit Required Inputs
+
+- `notes_project_root` (working directory)
+- `playbook_reference` (this repository)
+
+### Notes vs Playbook Alignment Audit Repo-Type Notes
+
+- The notes repo is a staging layer for material that may later become reusable guidance.
+- The playbook repo is the canonical source for promoted cross-repo workflow rules.
+- The audit must stay inside the notes project root and must not traverse outside it.
+
+### Notes vs Playbook Alignment Audit Prompt
+
+```text
+Task:
+Run a notes vs playbook alignment audit for <notes_project_root>.
+
+Inputs:
+- Notes project root: <notes_project_root>
+- Playbook reference: <playbook_reference>
+
+Instructions:
+- Audit the notes project against the playbook reference after promotion work has already been completed.
+- Treat the notes project as a staging layer and the playbook reference as the canonical source for promoted workflow guidance.
+- Review only files inside <notes_project_root>.
+- For each relevant file, classify it as remove, trim, keep, or defer.
+- Use remove when the file is fully superseded by canonical playbook guidance and no longer needs to remain in notes.
+- Use trim when the file should stay but only after redundant or already-promoted material is removed.
+- Use keep when the file still serves a valid notes-layer purpose without conflicting with the canonical playbook.
+- Use defer when cleanup depends on a separate local decision, missing context, or unfinished follow-up work.
+- Do not re-evaluate whether content should be promoted into the playbook. This audit is for cleanup and alignment after promotion, not for promotion decisions.
+- When a file overlaps with promoted guidance, reference the canonical playbook location that now owns that guidance.
+- Recommend only cleanup actions that can be justified from the observed notes files and the referenced playbook.
+
+Constraints:
+- Do not inspect, traverse, or recommend changes outside <notes_project_root>.
+- Do not treat the notes repository as a second canonical source.
+- Do not reopen already-settled promotion decisions during this audit.
+- Keep the audit operational, concise, and file-specific.
+
+Validation:
+- Verify that each remove or trim recommendation points to the canonical playbook location that replaced or now owns the guidance.
+- Verify that keep recommendations preserve only notes-layer material that still belongs in staging.
+- Verify that defer recommendations explain the specific blocker or unresolved local dependency.
+- Verify that the audit output can drive a cleanup pass followed by a re-audit to confirm convergence.
+
+Output format:
+1. Summary: one short paragraph describing the overall alignment state.
+2. Per-file classification: a list of files with one of remove, trim, keep, or defer and a short rationale for each.
+3. Cleanup recommendations: a short numbered list of the highest-leverage remove or trim actions, including canonical playbook references where applicable.
+4. Re-audit trigger: one short sentence stating when to rerun the audit to confirm convergence.
+```
+
+### Notes vs Playbook Alignment Audit Notes
+
+This audit is for cleanup, not promotion. Run it after promotion work, then use a
+follow-up re-audit to confirm the notes set has converged on the playbook as the
+canonical source.
+
 ## AGENTS Update
 
 ### AGENTS Update Use When
