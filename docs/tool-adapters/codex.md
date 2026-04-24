@@ -24,7 +24,9 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 - if the active worktree or directory is not on up-to-date `main`, switch or recreate the branch from current `origin/main` before making changes
 - for medium or large arcs, verify the working branch is based on current `origin/main` before meaningful edits begin
 - after the run, check whether the resulting branch or PR is still mergeable against current `main`; if upstream moved in the meantime, treat that as a final-state mergeability check rather than a reason to restart or rebase mid-run by default
+- distinguish local execution state from remote PR state: a clean local branch means the run completed cleanly against its anchored base, while GitHub mergeability reflects the current remote state after newer `main` movement, required checks, and review requirements
 - make exceptions only when the task explicitly requires rebasing or when a real conflict or blocker appears that prevents finishing the requested work cleanly
+- do not treat transient GitHub `BLOCKED` or pending states as mid-run failures by default; inspect whether the cause is pending checks, pending review requirements, dependency ordering, or a true merge conflict, then wait or act accordingly
 - if normalization is unsafe or the state is unclear, pause and report rather than forcing cleanup
 - when parallel repo-scoped work targets the same repository, prefer one worktree per issue or task from current `origin/main`; keep the main checkout clean and on `main`, do not run concurrent arcs against the same checkout, and treat each worktree as its own execution container with its own branch, validation run, and PR or review surface
 - before starting a same-repo worktree batch, inspect `git worktree list` and
@@ -97,6 +99,7 @@ Codex should pause and ask for human input when:
 - keep PRs phase-shaped and reviewable
 - summarize intent, scope, validation, and known risks
 - make PRs ready for review by default when the phase objective is met
+- before recommending merge readiness on an existing PR, confirm current remote mergeability and required checks rather than relying on local branch cleanliness alone
 - use draft PRs only for intentionally incomplete work or early feedback
 - when refining an active PR within the same arc, update the existing branch and PR rather than opening a new PR; open a new PR only when the work changes phase, scope, or review surface
 - avoid bundling unrelated cleanup into the same PR
