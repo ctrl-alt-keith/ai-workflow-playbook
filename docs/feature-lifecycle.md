@@ -68,6 +68,11 @@ it. Avoid separate project-map-only PRs unless creating the initial map, doing
 a planning checkpoint, or handling a major roadmap reshuffle. Keep map edits
 minimal and directly tied to the real change.
 
+Treat release PRs the same way. A release is a state checkpoint, so include any
+needed project map updates in the release PR itself: reflect completed arcs in
+current state, set the next active arc where appropriate, and avoid separate
+project-map-only PRs for release updates.
+
 ## Branch And PR Rules
 
 After each merged phase, start a new branch and PR for the next lifecycle phase. This keeps the review surface narrow and preserves clean checkpoints.
