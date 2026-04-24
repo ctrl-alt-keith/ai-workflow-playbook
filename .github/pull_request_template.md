@@ -23,4 +23,4 @@
 
 ## Issue closure
 
-<!-- Add `Closes #<issue number>` when applicable. -->
+<!-- Add `Closes #[issue number]` when applicable. -->
