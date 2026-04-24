@@ -27,6 +27,49 @@ Keep material in notes when it is still one or more of the following:
 
 Notes are allowed to be early, messy, and local. The playbook is not.
 
+## Working States
+
+Use these states to keep capture, defer, repo action, and playbook promotion
+separate:
+
+- Raw notes: fresh capture, partial observations, and rough ideas that are not
+  ready to guide action yet
+- Deferred ideas: notes worth revisiting later, but still too broad,
+  speculative, duplicated, or blocked to become repo work now
+- Bounded repo issues: action-ready work for a specific repository with a clear
+  scope, value, and acceptance shape
+- Playbook candidates: validated lessons that may later become reusable
+  cross-repo guidance after repo work proves the pattern
+
+Do not treat these states as a conveyor belt where every note must advance.
+Many notes should stay raw, many ideas should stay deferred, and only a narrow
+subset should become repo issues or playbook guidance.
+
+## Deferred Work Promotion
+
+Promote deferred notes into GitHub issues only when at least one of the
+following is true:
+
+- the same friction, gap, or cleanup need shows up repeatedly
+- the value is clear enough that repo-local action is justified now
+- the work is ready to be scoped, assigned, and validated in a specific repo
+
+Keep the item as a deferred idea when it is still mostly brainstorming,
+duplicate with existing backlog items, blocked on outside decisions, or too
+large to describe as one bounded change.
+
+When promotion is justified:
+
+- group related notes into one issue by theme instead of filing one issue per
+  line item
+- target the repository that would actually own the work
+- write the issue so it can be completed in a focused PR or short arc
+- include acceptance criteria that show what done looks like
+
+Do not create issues for every interesting thought immediately. Use notes for
+capture, use deferred ideas for backlog staging, and create repo issues only
+when the work is concrete enough to support action.
+
 ## Promotion Criteria
 
 Promote notes into the playbook when the guidance is:
@@ -46,9 +89,11 @@ context, keep refining it in notes instead of promoting it early.
 Use this general sequence:
 
 1. Capture the emerging pattern in notes while the work is fresh.
-2. Tighten the wording until the guidance is reusable and actionable.
-3. Promote the reusable rule into the playbook as the canonical version.
-4. Update or trim the notes so they no longer compete with the promoted source.
+2. Defer, group, or trim ideas that are not ready for action yet.
+3. Promote only action-ready, repo-local work into bounded repository issues.
+4. Tighten validated reusable guidance until it is ready for the playbook.
+5. Promote the reusable rule into the playbook as the canonical version.
+6. Update or trim the notes so they no longer compete with the promoted source.
 
 Promotion should move the durable guidance, not copy the entire notes history.
 
