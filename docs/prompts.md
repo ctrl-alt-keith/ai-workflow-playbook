@@ -18,6 +18,7 @@ tooling.
 - [Repo Readiness Audit](#repo-readiness-audit)
 - [Playbook Update](#playbook-update)
 - [Notes vs Playbook Alignment Audit](#notes-vs-playbook-alignment-audit)
+- [Deferred Notes Issue Promotion](#deferred-notes-issue-promotion)
 - [AGENTS Update](#agents-update)
 - [Workflow Scaffolding](#workflow-scaffolding)
 - [PR Creation](#pr-creation)
@@ -230,6 +231,97 @@ Output format:
 This audit is for cleanup, not promotion. Run it after promotion work, then use a
 follow-up re-audit to confirm the notes set has converged on the playbook as the
 canonical source.
+
+## Deferred Notes Issue Promotion
+
+### Deferred Notes Issue Promotion Use When
+
+Use this prompt when notes or deferred ideas should be reviewed for possible
+promotion into bounded GitHub issues without turning every captured thought into
+backlog work.
+
+### Deferred Notes Issue Promotion Required Inputs
+
+- `source_material_root`
+- `target_repositories`
+- `duplicate_check_scope` (for example open issues, recent closed issues, or a
+  named backlog board)
+- `arc_suggestions` (optional; use `none` when not needed)
+
+### Deferred Notes Issue Promotion Repo-Type Notes
+
+- The source material stays a staging layer, not a commitment queue.
+- Target repositories own actionable issues only when the work is ready for a
+  bounded repo change.
+- Cross-repo workflow lessons should remain playbook candidates until validated
+  by repo work; do not skip straight from raw notes to playbook updates.
+
+### Deferred Notes Issue Promotion Prompt
+
+```text
+Task:
+Review deferred notes and propose or create bounded GitHub issues where the
+work is ready.
+
+Inputs:
+- Source material / notes root: [source_material_root]
+- Target repository or repositories: [target_repositories]
+- Duplicate check scope: [duplicate_check_scope]
+- Optional arc suggestions: [arc_suggestions]
+
+Instructions:
+- Review the source material inside [source_material_root] and identify notes
+  or deferred ideas that may be ready for issue promotion.
+- Distinguish among raw notes, deferred ideas, bounded repo issues, and
+  playbook candidates.
+- Keep raw notes as raw notes when they are still capture, rough thinking, or
+  incomplete observations.
+- Keep items as deferred ideas when they are still speculative, blocked,
+  duplicated, or too broad for one bounded repo change.
+- Promote an item into a bounded repo issue only when repeated friction, clear
+  value, or readiness for action makes repo work justified now.
+- Check [duplicate_check_scope] before proposing or creating any issue.
+- Group closely related notes by theme instead of creating one issue per line
+  item.
+- For each proposed issue, name the owning repository, define a narrow scope,
+  and include concise acceptance criteria.
+- When useful, suggest an optional arc that groups several related issues into
+  a coherent sequence, but do not force arc structure when standalone issues are
+  clearer.
+- Identify playbook candidates separately when the note points to a possible
+  reusable rule that still needs repo validation before promotion.
+
+Constraints:
+- Do not create issues for every interesting idea.
+- Do not reopen duplicate or already-covered backlog items.
+- Do not turn vague themes into oversized umbrella issues.
+- Do not treat deferred-note triage as a general backlog-management rewrite.
+- Keep recommendations concise, operational, and tied to visible source
+  material.
+
+Validation:
+- Verify that each proposed or created issue maps to a specific repository.
+- Verify that each issue is small enough to support a focused PR or short arc.
+- Verify that acceptance criteria describe what done looks like.
+- Verify that grouped items belong together and are not masking unrelated work.
+- Verify that any playbook candidate is called out separately from repo issue
+  promotion.
+
+Output format:
+1. Triage summary: one short paragraph.
+2. Keep deferred: short bullets for items that should remain notes or deferred
+   ideas.
+3. Proposed or created issues: short bullets with repository, scope,
+   acceptance criteria, and duplicate-check result.
+4. Optional arcs: short bullets only when grouping adds real clarity.
+5. Playbook candidates: optional bullets for reusable lessons that should wait
+   for repo validation.
+```
+
+### Deferred Notes Issue Promotion Notes
+
+Use this prompt to decide when deferred material should become repo work. Use
+the notes cleanup audit separately after promotion or implementation work lands.
 
 ## AGENTS Update
 
