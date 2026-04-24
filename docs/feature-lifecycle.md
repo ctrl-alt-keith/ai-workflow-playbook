@@ -45,6 +45,29 @@ If GitHub shows `BLOCKED` or pending status at this stage, check the underlying 
 
 Record what should become reusable guidance before the next delivery arc starts.
 
+## Project Maps
+
+When a repository has multiple active or upcoming arcs, keep a lightweight
+project map to show the current direction of travel. Use it when GitHub issues
+alone no longer make the overall sequence or priorities easy to see. Do not add
+one for tiny repositories, one-off work, or repos whose near-term direction is
+already obvious from a small issue and PR set.
+
+A project map should stay lightweight and focus on the arc-level view:
+
+- current state
+- active arc
+- next arcs
+- deferred or usage-driven work
+- guiding principles or constraints
+
+Keep project-map maintenance tied to the work that changes arc state. When a PR
+completes an arc or changes the current sequencing, update the project map in
+that same PR so the map reflects the shipped state instead of drifting behind
+it. Avoid separate project-map-only PRs unless creating the initial map, doing
+a planning checkpoint, or handling a major roadmap reshuffle. Keep map edits
+minimal and directly tied to the real change.
+
 ## Branch And PR Rules
 
 After each merged phase, start a new branch and PR for the next lifecycle phase. This keeps the review surface narrow and preserves clean checkpoints.
