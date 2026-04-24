@@ -30,6 +30,7 @@ Prefer semantic assertions over formatting-sensitive assertions when formatting 
 Build only what is needed to satisfy the contract. Keep feedback loops short and avoid mixing extra polish into the first pass.
 
 For same-repo runs, anchor implementation to one fetched `origin/main` snapshot at task start and treat that snapshot as the canonical base for the duration of the run. Check mergeability against current `main` at the end as a separate release-readiness concern rather than repeatedly re-anchoring mid-run.
+A clean local branch at the end means the run stayed coherent against that anchored base; it does not by itself prove that a remote PR is still mergeable after `main` moves.
 
 ### Hardening
 
@@ -38,6 +39,7 @@ Address edge cases, refactors, failure handling, review findings, and CI quality
 ### Release
 
 Prepare the work to ship with a clean review packet, validation evidence, and any final release checks. If the repo does not have a formal validation path yet, record the lightweight validation that was used instead.
+If GitHub shows `BLOCKED` or pending status at this stage, check the underlying cause before reacting: pending checks or reviews usually mean wait, while failed required checks or true merge conflicts require action.
 
 ### Capture
 
