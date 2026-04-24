@@ -1,12 +1,26 @@
 # Reusable Workflow Prompt Templates
 
-These prompts capture repeatable workflow tasks in a generic, parameterized form.
+This file contains reusable prompt templates for repeatable workflow tasks in a
+generic, parameterized form. Keep core workflow rules in the core playbook docs,
+tool-specific execution guidance in `docs/tool-adapters/`, and repo-local
+execution rules in `AGENTS.md`. Prompts here should reference those canonical
+sources rather than duplicate them.
+
 Use the placeholders shown in each prompt as inputs. In plain-text prompt bodies,
 angle-bracket placeholders are acceptable, but in markdown templates or copied
 instructions prefer lint-safe placeholders such as `[repository]` or backticked
 tokens. Angle-bracket placeholders can be interpreted as inline HTML by markdown
-tooling. Treat the referenced playbook as the canonical source for cross-repo
-workflow rules, and keep repo-local behavior in repo-local files such as `AGENTS.md`.
+tooling.
+
+## Quick Navigation
+
+- [Filesystem-Scoped Audit Boundaries](#filesystem-scoped-audit-boundaries)
+- [Repo Readiness Audit](#repo-readiness-audit)
+- [Playbook Update](#playbook-update)
+- [Notes vs Playbook Alignment Audit](#notes-vs-playbook-alignment-audit)
+- [AGENTS Update](#agents-update)
+- [Workflow Scaffolding](#workflow-scaffolding)
+- [PR Creation](#pr-creation)
 
 ## Filesystem-Scoped Audit Boundaries
 
