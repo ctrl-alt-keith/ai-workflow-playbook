@@ -79,6 +79,15 @@ After each merged phase, start a new branch and PR for the next lifecycle phase.
 
 Start same-repo arcs from fresh `origin/main`. Do not reuse an old feature branch unless intentionally continuing that PR.
 
+For mixed-purpose repos that contain code, docs, tests, and release or
+workflow content, keep purpose-based branch prefixes such as `feat/`, `fix/`,
+`docs/`, `chore/`, `refactor/`, and `test/`. Reserve broad tool-oriented
+prefixes such as `codex/` for doc-only repos, scratch experiments, or repos
+whose branch convention explicitly allows them. Branch names should describe
+the change, not the tool that made it; for example
+`feat/minimal-cli-baseline`, `docs/project-map`, `chore/release-v0.7.0`, and
+`fix/run-ctrl-c-skip`.
+
 For same-repo parallel work, prefer isolated Git worktrees over multiple arcs
 sharing one checkout. Keep the main checkout clean and on `main`, fetch before
 creating task worktrees so `origin/main` is current, create one worktree per
