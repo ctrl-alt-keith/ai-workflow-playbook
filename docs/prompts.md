@@ -14,6 +14,7 @@ tooling.
 
 ## Quick Navigation
 
+- [Context Refresh Primitive](#context-refresh-primitive)
 - [Filesystem-Scoped Audit Boundaries](#filesystem-scoped-audit-boundaries)
 - [Repo Readiness Audit](#repo-readiness-audit)
 - [Playbook Update](#playbook-update)
@@ -22,6 +23,13 @@ tooling.
 - [AGENTS Update](#agents-update)
 - [Workflow Scaffolding](#workflow-scaffolding)
 - [PR Creation](#pr-creation)
+
+## Context Refresh Primitive
+
+Canonical guidance for the validated org context refresh pattern lives in
+[`docs/context-refresh.md`](context-refresh.md). Use that page for when to run
+it, required verification inputs, failure handling, and the self-contained
+prompt block.
 
 ## Filesystem-Scoped Audit Boundaries
 
