@@ -64,6 +64,7 @@ Codex should continue executing without pausing for human input when:
 - the task scope is clear and bounded
 - the current repo or project context matches the intended target
 - there is no meaningful ambiguity about the requested outcome
+- when working on destination layers, keep publish behavior explicit and scoped; avoid expanding capabilities such as updates, sharing, or permissions unless the task requires it
 - a validation path is available and the relevant checks pass
 - no security-, policy-, release-, tag-, or merge-sensitive decision is required
 
