@@ -1,24 +1,29 @@
-# Using Claude as a Lightweight PR Reviewer
+# Using an External AI Reviewer
 
-Claude can be useful as a second set of eyes during development, but it should
-stay lightweight.
+An external AI reviewer can be useful as a second set of eyes during
+development, but it should stay lightweight.
 
 Use it as an optional reviewer, not as part of the execution loop. Its role is
 advisory only and never blocking. Treat it as an impartial observer that may
-spot edge cases, completeness gaps, or risky assumptions before merge.
+spot edge cases, completeness gaps, or risky assumptions before merge. It is
+not an execution tool.
 
-## When To Use Claude
+This pattern is provider-agnostic. It can apply to Claude, Gemini, ChatGPT, or
+another reviewer model when a targeted review would add signal.
 
-Use Claude when:
+## When To Use an External AI Reviewer
+
+Use an external AI reviewer when:
 
 - a PR touches multiple files, layers, or concerns
-- a change has cross-repo implications
+- a change has cross-repo implications or consistency risk
 - the change feels slightly off or confidence is lower than usual
-- a pattern may be promoted into the playbook and deserves a quick sanity check
+- a docs or playbook change deserves a quick sanity check for clarity or
+  completeness
 
-## When Not To Use Claude
+## When Not To Use an External AI Reviewer
 
-Do not use Claude when:
+Do not use an external AI reviewer when:
 
 - the change is small or mechanical
 - confidence is already high
@@ -33,24 +38,25 @@ Keep the default loop simple:
 Codex -> PR -> human skim -> merge
 ```
 
-Use Claude only when a targeted review would add signal:
+Use an external AI reviewer only when a targeted review would add signal:
 
 ```text
-Codex -> PR -> Claude (targeted review) -> human skim -> merge
+Codex -> PR -> external AI reviewer (targeted review) -> human skim -> merge
 ```
 
-Claude is optional and situational. It is never required for merge.
+An external AI reviewer is optional and situational. It is never required for
+merge.
 
 ## Input Guidelines
 
-Give Claude only the context needed to review well:
+Give the reviewer only the context needed to review well:
 
 - a short statement of goal or intent
 - the PR description or a brief summary
 - only the relevant diffs, not the full repo
 
-Optionally include one specific concern if you want Claude to look for a known
-risk.
+Optionally include one specific concern if you want the reviewer to look for a
+known risk.
 
 ## Output Constraints
 
@@ -71,7 +77,8 @@ Do not use it for:
 ## Reusable Prompt: PR Review
 
 ```text
-Review this PR as a lightweight second set of eyes.
+You are acting as an external AI reviewer providing a lightweight second set of
+eyes on this PR.
 
 Goal:
 <short goal or intent>
@@ -101,7 +108,8 @@ Use this for playbook guidance or cross-repo patterns where the main question is
 whether the pattern is clear and safe to reuse.
 
 ```text
-Review this proposed pattern as a lightweight sanity check.
+You are acting as an external AI reviewer providing a lightweight sanity check
+on this proposed pattern.
 
 Intent:
 <short statement of the pattern and why it exists>
@@ -128,4 +136,5 @@ Watch for these failure modes:
 
 ## Guiding Principle
 
-Use Claude when something feels slightly off, not as a default step.
+Use an external AI reviewer when something feels slightly off, not as a default
+step.
