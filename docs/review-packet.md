@@ -42,6 +42,20 @@ The human reviewer should focus on:
 
 Human review is for judgment, prioritization, and standards enforcement. It should not be wasted on reconstructing context that the review packet should have provided.
 
+## Scope Verification
+
+During review:
+
+- confirm the PR matches its stated goal (issue, prompt, or task description)
+- confirm no unrelated changes are included
+- confirm the diff aligns with the intended arc
+- confirm issue linkage (if present) is accurate
+
+Quick check:
+
+- "If I remove part of this diff, does the PR still make sense?"
+- if yes, that part likely does not belong
+
 ## Merge Checks
 
 Before merge:
