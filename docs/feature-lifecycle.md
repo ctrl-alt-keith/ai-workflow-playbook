@@ -79,6 +79,15 @@ After each merged phase, start a new branch and PR for the next lifecycle phase.
 
 Start same-repo arcs from fresh `origin/main`. Do not reuse an old feature branch unless intentionally continuing that PR.
 
+For repo changes, "done" means the change is implemented, local checks have
+run, the branch is created or confirmed, the commit is created, the branch is
+pushed, and the PR is opened. Do not stop at "file created" or "checks passed";
+local edits are not delivery by themselves. If the user asks for a repo change,
+default to opening a PR unless they explicitly say local only, do not commit,
+do not open a PR, or draft this but do not ship it.
+
+Passing checks validates the change; opening the PR delivers it.
+
 For mixed-purpose repos that contain code, docs, tests, and release or
 workflow content, keep purpose-based branch prefixes such as `feat/`, `fix/`,
 `docs/`, `chore/`, `refactor/`, and `test/`. Reserve broad tool-oriented
