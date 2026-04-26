@@ -25,6 +25,7 @@ Open a pull request as ready for review when all of the following are true:
 - validation passes
 - no known follow-up work is required before merge
 - overlap and coordination risk are low
+- issue lifecycle should not affect pull request readiness; using `Closes #<issue>` follows standard GitHub behavior and should not delay marking a pull request as ready
 
 Open a pull request as draft when any of the following are true:
 
