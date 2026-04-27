@@ -79,20 +79,23 @@ After each merged phase, start a new branch and PR for the next lifecycle phase.
 
 Start same-repo arcs from fresh `origin/main`. Do not reuse an old feature branch unless intentionally continuing that PR.
 
-For repo changes, "done" means the change is implemented, local checks have
-run, the branch is created or confirmed, the commit is created, the branch is
-pushed, and the PR is opened. Do not stop at "file created" or "checks passed";
-local edits are not delivery by themselves. If the user asks for a repo change,
-default to opening a PR unless they explicitly say local only, do not commit,
-do not open a PR, or draft this but do not ship it.
+### Repo Change Completion
 
-Passing checks validates the change; opening the PR delivers it.
+For repo changes, "done" means all of the following are complete:
 
-For implementation tasks, treat PR delivery as required by default. Use a
-focused branch, stage only the relevant changes, create a clear commit, push
-the branch, open the PR against the intended base branch, usually `main`, and
-report the PR link, changed files, and validation results when closing out the
-task.
+- change implemented
+- local checks run
+- branch created or confirmed
+- commit created
+- branch pushed
+- PR opened
+
+Opening a PR is the default for repo changes. Passing checks validates the
+change; opening the PR delivers it. Do not stop at "file created" or
+"checks passed."
+
+Skip commit or PR only when the user explicitly says local only, do not commit,
+do not open a PR, or draft this but don't ship it.
 
 For exploration, design, or review-only tasks that do not change repo files,
 stop after the findings or recommendations unless the request also asks for
