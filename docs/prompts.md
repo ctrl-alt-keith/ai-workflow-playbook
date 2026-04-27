@@ -22,6 +22,7 @@ tooling.
 - [Deferred Notes Issue Promotion](#deferred-notes-issue-promotion)
 - [AGENTS Update](#agents-update)
 - [Workflow Scaffolding](#workflow-scaffolding)
+- [Implementation Delivery Footer](#implementation-delivery-footer)
 - [PR Creation](#pr-creation)
 
 ## Context Refresh Primitive
@@ -459,6 +460,31 @@ Output format:
 
 Prefer a minimal baseline that can be extended later over an elaborate template set that no one will keep current.
 
+## Implementation Delivery Footer
+
+### Implementation Delivery Footer Use When
+
+Append this footer to implementation prompts when the task is expected to make
+repo changes and deliver them through the normal branch, commit, push, and PR
+flow.
+
+### Implementation Delivery Footer Do Not Use When
+
+Do not append this footer for exploration, design, or review-only tasks unless
+they are also expected to make and deliver repo changes.
+
+### Implementation Delivery Footer Snippet
+
+```text
+Delivery:
+- Create a focused branch.
+- Stage only the relevant changes.
+- Commit with a clear message.
+- Push the branch.
+- Open a PR against the intended base branch, usually `main`.
+- Report the PR link, files changed, and validation results.
+```
+
 ## PR Creation
 
 ### PR Creation Use When
@@ -520,3 +546,6 @@ Output format:
 ### PR Creation Notes
 
 This prompt is for packaging existing work cleanly, not for doing the implementation itself.
+For implementation prompts that are expected to ship repo changes, append the
+Implementation Delivery Footer instead of assuming branch and PR delivery are
+implied.

@@ -88,6 +88,17 @@ do not open a PR, or draft this but do not ship it.
 
 Passing checks validates the change; opening the PR delivers it.
 
+For implementation tasks, treat PR delivery as required by default. Use a
+focused branch, stage only the relevant changes, create a clear commit, push
+the branch, open the PR against the intended base branch, usually `main`, and
+report the PR link, changed files, and validation results when closing out the
+task.
+
+For exploration, design, or review-only tasks that do not change repo files,
+stop after the findings or recommendations unless the request also asks for
+shipped changes. If those tasks do produce repo changes, follow the same
+branch, validation, and PR flow before calling them complete.
+
 For mixed-purpose repos that contain code, docs, tests, and release or
 workflow content, keep purpose-based branch prefixes such as `feat/`, `fix/`,
 `docs/`, `chore/`, `refactor/`, and `test/`. Reserve broad tool-oriented

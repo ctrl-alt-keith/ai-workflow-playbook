@@ -100,6 +100,17 @@ Codex should pause and ask for human input when:
 - keep PRs phase-shaped and reviewable
 - summarize intent, scope, validation, and known risks
 - make PRs ready for review by default when the phase objective is met
+- for implementation tasks that change repo files, do not stop at local edits
+  and local validation; finish the delivery path by using a focused branch,
+  staging only the relevant changes, creating a clear commit, pushing, and
+  opening or updating the PR against the intended base branch, usually `main`
+- when reporting completion for implementation tasks, include the PR link,
+  files changed, and validation results
+- for exploration, design, audit, or review-only tasks, do not force a PR when
+  no repo changes are required; report findings, recommendations, and any
+  validation or evidence gathered instead
+- if an exploration, design, audit, or review-only task produces repo changes,
+  switch back to the implementation delivery path before calling it complete
 - before recommending merge readiness on an existing PR, confirm current remote mergeability and required checks rather than relying on local branch cleanliness alone
 - use draft PRs only for intentionally incomplete work or early feedback
 - when refining an active PR within the same arc, update the existing branch and PR rather than opening a new PR; open a new PR only when the work changes phase, scope, or review surface
