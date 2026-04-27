@@ -14,7 +14,7 @@
 
 ## Validation
 
-- [ ] `markdownlint`
+- [ ] `make check`
 - [ ] Manual review
 
 ## Risks / notes

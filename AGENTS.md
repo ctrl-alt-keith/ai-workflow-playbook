@@ -22,7 +22,9 @@ This repository uses the shared playbook in `docs/` as the canonical source for 
 
 - CI uses `markdownlint`.
 - Use `make check` as the canonical local validation entrypoint.
-- Ensure `markdownlint` passes before opening or updating a PR.
+- Run `make check` before opening or updating a PR.
+- Treat direct `markdownlint` invocation as an implementation detail of the
+  Makefile target.
 - If `markdownlint` is not installed locally, `make check` should fail clearly and CI remains the enforcing authority.
 
 ## Pull Requests
