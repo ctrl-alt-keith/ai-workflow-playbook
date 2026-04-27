@@ -27,6 +27,8 @@ Open a pull request as ready for review when all of the following are true:
 - overlap and coordination risk are low
 - issue lifecycle should not affect pull request readiness; using `Closes #<issue>` follows standard GitHub behavior and should not delay marking a pull request as ready
 
+Before opening or updating a pull request, fetch current `origin/main`. If the branch is not based on current `origin/main`, update it onto current `origin/main`, resolve conflicts within the original task scope only, rerun the repository validation target, avoid unrelated cleanup, then push.
+
 Open a pull request as draft when any of the following are true:
 
 - work is incomplete
