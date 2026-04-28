@@ -38,6 +38,10 @@ Open a pull request as draft when any of the following are true:
 
 Docs-only changes should default to ready for review when they are validated and isolated.
 
+When working in a multi-repo workspace, treat each repository as an independent unit of change. Even if multiple repositories are visible, commits, branches, and PRs must be created and managed per repository. Do not create cross-repo commits or PRs.
+
+Before opening a PR, ensure that all staged changes belong to a single repository. If changes span multiple repositories, split them into separate branches and PRs, one per repository.
+
 ## Branch Protection
 
 Treat the following as the default branch protection baseline for `main`:
