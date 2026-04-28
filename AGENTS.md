@@ -36,5 +36,7 @@ This repository uses the shared playbook in `docs/` as the canonical source for 
 
 ## Playbook Reference
 
+- This playbook builds on the engineering baseline defined in
+  `docs/engineering-baseline.md`.
 - For general workflow rules, refer to the playbook documents instead of duplicating them here.
 - Start with `docs/core-model.md`, `docs/feature-lifecycle.md`, `docs/alignment-checkpoints.md`, `docs/review-packet.md`, and `docs/tool-adapters/codex.md`.
