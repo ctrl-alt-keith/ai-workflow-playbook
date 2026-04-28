@@ -16,6 +16,7 @@ tooling.
 
 - [Context Refresh Primitive](#context-refresh-primitive)
 - [Filesystem-Scoped Audit Boundaries](#filesystem-scoped-audit-boundaries)
+- [Codex Task Prompt Format](#codex-task-prompt-format)
 - [Repo Readiness Audit](#repo-readiness-audit)
 - [Playbook Update](#playbook-update)
 - [Notes vs Playbook Alignment Audit](#notes-vs-playbook-alignment-audit)
@@ -45,6 +46,113 @@ named files, define the intended dataset boundary before traversal begins.
   directories unless the task explicitly asks for broader coverage.
 - If the boundary is unclear, tighten the prompt or ask for clarification rather
   than widening the scan.
+
+## Codex Task Prompt Format
+
+Use this format for non-trivial Codex implementation tasks: work that changes an
+existing system, has meaningful constraints, needs validation, or should end in a
+branch and PR. Simple one-step tasks do not need this much structure.
+
+### Codex Task Prompt Format Sections
+
+- `Context`: repository, current situation, relevant background, and any known
+  boundaries.
+- `Goal`: the desired outcome in one or two clear sentences.
+- `Scope`: optional when the goal is already precise; useful for naming included
+  and excluded work.
+- `Constraints`: guardrails that prevent overengineering, unrelated cleanup, and
+  behavior drift.
+- `Tasks`: ordered work items when the path matters.
+- `Validation`: concrete repo commands or checks, such as `make check`, plus any
+  manual review expected.
+- `Deliverable`: branch, commit, PR, review packet, or handoff expectations.
+
+Keep prompts concise but complete. The goal is to remove ambiguity that would
+cause retries, not to turn every task into a process document.
+
+### Codex Task Prompt Template
+
+```text
+Context:
+- Repository: [repository]
+- Relevant background: [short context]
+
+Goal:
+- [desired outcome]
+
+Scope:
+- In scope: [files, behavior, or workflow area]
+- Out of scope: [explicit non-goals]
+
+Constraints:
+- Keep the change focused and avoid opportunistic refactors.
+- Preserve existing behavior unless the goal explicitly says otherwise.
+- Follow existing repo patterns and validation paths.
+
+Tasks:
+1. Inspect the existing structure and related docs or code.
+2. Make the smallest practical change that satisfies the goal.
+3. Update nearby docs or tests only when they are part of the same change.
+
+Validation:
+- Run [repo validation command], for example `make check`.
+- Report any validation that could not be run.
+
+Deliverable:
+- Create a focused branch.
+- Commit and push the intended changes.
+- Open a PR against `main`.
+- Include a summary, validation notes, and any residual risks.
+```
+
+### Codex Task Prompt Example
+
+```text
+Context:
+- Repository: [application repository]
+- The project already has a settings page and validation command.
+
+Goal:
+- Add a small user preference to the existing settings flow.
+
+Scope:
+- Reuse the current settings storage and UI patterns.
+- Do not redesign the settings page or introduce a new state-management layer.
+
+Constraints:
+- Preserve existing preference behavior.
+- Avoid unrelated cleanup.
+- Keep copy and controls consistent with the current interface.
+
+Tasks:
+1. Inspect the settings implementation and tests.
+2. Add the new preference through the existing path.
+3. Update focused tests or docs if needed.
+
+Validation:
+- Run `make check`.
+
+Deliverable:
+- Push a focused branch and open a PR with summary and validation notes.
+```
+
+### Model Selection And Cost Guidance
+
+Use the strongest available model, such as a GPT-5.5-class model, for
+implementation tasks, changes to existing systems, work with constraints such as
+"must not change behavior," tasks that require tests to pass, and anything
+involving state, caching, or edge cases.
+
+Use cheaper or faster models for ideation, backlog generation, documentation
+drafting, exploratory analysis, and throwaway work where a partial answer is
+still useful.
+
+Optimize for cost per successful outcome, not cost per token. Prefer fewer
+high-quality runs over many partial attempts, keep prompts concise but complete
+to reduce retries, avoid detail that does not affect the task, and include
+validation steps so mistakes are caught before another run is needed.
+
+Rule of thumb: prefer correctness per run over minimizing token cost.
 
 ## Repo Readiness Audit
 
