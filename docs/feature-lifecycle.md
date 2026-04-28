@@ -88,11 +88,14 @@ For repo changes, "done" means all of the following are complete:
 - branch created or confirmed
 - commit created
 - branch pushed
-- PR opened
+- ready-for-review PR opened against the intended base branch
 
 Opening a PR is the default for repo changes. Passing checks validates the
 change; opening the PR delivers it. Do not stop at "file created" or
 "checks passed."
+For completed work, the PR is ready for review by default. Draft PRs are only
+allowed when the human explicitly requests one or when the work is
+intentionally incomplete or early-feedback-only.
 
 Skip commit or PR only when the user explicitly says local only, do not commit,
 do not open a PR, or draft this but don't ship it.
