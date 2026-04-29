@@ -15,8 +15,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Lint markdown
-        uses: DavidAnson/markdownlint-cli2-action@v20
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          globs: |
-            **/*.md
+          node-version: lts/*
+
+      - name: Install markdownlint-cli2
+        run: npm install --global markdownlint-cli2
+
+      - name: Run checks
+        run: make check
