@@ -64,7 +64,6 @@ Codex should continue executing without pausing for human input when:
 - the task scope is clear and bounded
 - the current repo or project context matches the intended target
 - there is no meaningful ambiguity about the requested outcome
-- when working on destination layers, keep publish behavior explicit and scoped; avoid expanding capabilities such as updates, sharing, or permissions unless the task requires it
 - a validation path is available and the relevant checks pass
 - no security-, policy-, release-, tag-, or merge-sensitive decision is required
 
@@ -125,9 +124,8 @@ When behavior or supported capability changes, quickly check the existing docs f
 
 ## CI Expectations
 
-- run the repo-local validation path when it exists
+- use the repository's validation entrypoint, such as `make check`, when one exists
 - attempt local validation when the needed tools are clearly available; if a tool is missing locally, do not treat that as a failure and rely on required CI checks as the source of truth
-- in this repo, the current minimal CI path is the `markdownlint` GitHub Actions check
 - report clearly when no local validation path exists
 - until a formal validation path exists, use internal consistency review, path checks, and scope review
 - treat passing CI as necessary but not sufficient
@@ -152,7 +150,5 @@ After bootstrap, configure these as the basic merge-safety baseline:
 - require PR-based changes to `main`
 - require CI or checks before merge when available
 - keep release and tag actions human-gated
-
-This repository now enforces the `main` branch-protection portion of that baseline, including the required `markdownlint` check. Release and tag actions remain human-gated as an operational rule rather than something enforced by branch protection. Apply the same baseline after bootstrap when creating a new repo.
 
 Codex should follow the core model, but this adapter exists to document the tooling realities that shape how the model is applied in practice.
