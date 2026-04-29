@@ -39,6 +39,7 @@ Repo-local rules take precedence only for repo-specific behavior.
 
 ## Playbook Reference
 
+- Start here: `docs/start-here.md`
 - This playbook builds on the engineering baseline defined in
   `docs/engineering-baseline.md`.
 - For general workflow rules, refer to the playbook documents instead of
