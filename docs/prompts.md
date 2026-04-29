@@ -126,20 +126,23 @@ Scope:
 - Do not redesign the settings page or introduce a new state-management layer.
 
 Constraints:
-- Preserve existing preference behavior.
-- Avoid unrelated cleanup.
+- Do not include unrelated changes or opportunistic cleanup.
+- Preserve existing preference behavior unless explicitly required.
 - Keep copy and controls consistent with the current interface.
+- Report blockers or incomplete work instead of skipping required steps.
 
 Tasks:
 1. Inspect the settings implementation and tests.
-2. Add the new preference through the existing path.
+2. Add the new preference through the smallest existing path.
 3. Update focused tests or docs if needed.
 
 Validation:
 - Run `make check`.
+- Report the actual result, including failure details if it fails.
 
 Deliverable:
-- Push a focused branch and open a PR with summary and validation notes.
+- Open a non-draft PR against `main` with summary, validation results, and
+  residual risks.
 ```
 
 ### Model Selection And Cost Guidance

@@ -30,6 +30,7 @@ This repository uses the shared playbook in `docs/` as the canonical source for 
 ## Pull Requests
 
 - Keep each PR scoped to one logical change.
+- Open PRs as non-draft when the work is complete unless explicitly instructed otherwise.
 - Include a clear summary and rationale.
 - Include validation notes.
 - Add `Closes #[issue number]` when applicable.
