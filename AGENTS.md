@@ -1,18 +1,15 @@
 # AGENTS.md
 
-This repository uses the shared playbook in `docs/` as the canonical source for general workflow rules. This file is the thin repo-local execution layer.
+This repository uses the shared playbook in `docs/` as the canonical source for
+general workflow rules. This file is the thin repo-local execution layer.
+Repo-local rules take precedence only for repo-specific behavior.
 
 ## Repo Scope
 
 - This repo contains reusable AI workflow and playbook guidance.
 - It does not contain implementation code or project-specific automation.
 
-## Start State
-
-- Verify the working directory is `ctrl-alt-keith/ai-workflow-playbook`.
-- Start from fresh `origin/main` unless intentionally continuing an existing branch or PR.
-
-## File Placement Rules
+## File Placement
 
 - Put core reusable guidance in `docs/`.
 - Put tool-specific guidance in `docs/tool-adapters/`.
@@ -25,12 +22,10 @@ This repository uses the shared playbook in `docs/` as the canonical source for 
 - Run `make check` before opening or updating a PR.
 - Treat direct `markdownlint` invocation as an implementation detail of the
   Makefile target.
-- If `markdownlint` is not installed locally, `make check` should fail clearly and CI remains the enforcing authority.
+- CI remains the enforcing authority if local tooling is unavailable.
 
 ## Pull Requests
 
-- Keep each PR scoped to one logical change.
-- Open PRs as non-draft when the work is complete unless explicitly instructed otherwise.
 - Include a clear summary and rationale.
 - Include validation notes.
 - Add `Closes #[issue number]` when applicable.
@@ -39,5 +34,8 @@ This repository uses the shared playbook in `docs/` as the canonical source for 
 
 - This playbook builds on the engineering baseline defined in
   `docs/engineering-baseline.md`.
-- For general workflow rules, refer to the playbook documents instead of duplicating them here.
-- Start with `docs/core-model.md`, `docs/feature-lifecycle.md`, `docs/alignment-checkpoints.md`, `docs/review-packet.md`, and `docs/tool-adapters/codex.md`.
+- For general workflow rules, refer to the playbook documents instead of
+  duplicating them here.
+- Start with `docs/core-model.md`, `docs/feature-lifecycle.md`,
+  `docs/alignment-checkpoints.md`, `docs/review-packet.md`, and
+  `docs/tool-adapters/codex.md`.
