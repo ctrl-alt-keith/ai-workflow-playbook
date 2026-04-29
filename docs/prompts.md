@@ -85,24 +85,30 @@ Scope:
 - Out of scope: [explicit non-goals]
 
 Constraints:
-- Keep the change focused and avoid opportunistic refactors.
-- Preserve existing behavior unless the goal explicitly says otherwise.
+- Do not include unrelated changes or opportunistic cleanup.
+- Make the smallest possible change that satisfies the goal.
+- Default behavior must remain unchanged unless explicitly required.
 - Follow existing repo patterns and validation paths.
+- Do not silently skip required steps; report any blockers or incomplete work.
 
 Tasks:
 1. Inspect the existing structure and related docs or code.
-2. Make the smallest practical change that satisfies the goal.
+2. Make the smallest scoped change that satisfies the goal.
 3. Update nearby docs or tests only when they are part of the same change.
 
 Validation:
 - Run [repo validation command], for example `make check`.
-- Report any validation that could not be run.
+- Report the actual result of validation; do not assume success.
+- If validation fails, include the failure details.
+- If validation cannot be run, explain why.
 
 Deliverable:
-- Create a focused branch.
-- Commit and push the intended changes.
-- Open a PR against `main`.
-- Include a summary, validation notes, and any residual risks.
+- Create a new focused branch.
+- Stage only relevant changes.
+- Commit and push only the intended changes.
+- Open a non-draft PR against `main` unless explicitly instructed otherwise.
+- Ensure the PR contains only intended changes.
+- Include a summary, validation results, and any residual risks.
 ```
 
 ### Codex Task Prompt Example
