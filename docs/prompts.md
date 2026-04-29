@@ -589,7 +589,7 @@ Delivery:
 - Stage only the relevant changes.
 - Commit with a clear message.
 - Push the branch.
-- Open a PR against the intended base branch, usually `main`.
+- Open a non-draft PR against the intended base branch, usually `main`, unless a draft PR is explicitly requested.
 - Report the PR link, files changed, and validation results.
 ```
 
