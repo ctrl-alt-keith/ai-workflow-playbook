@@ -20,10 +20,10 @@
 ## Notes vs Playbook
 
 - `cross-repo-threads` is a staging layer for ideas and experiments.
-- It is not canonical; always verify against repo state and playbook guidance.
+- It is not canonical; treat repository code, tests, and docs as the source of truth and verify against playbook guidance.
 
 ## Rule of Thumb
 
 - Prefer small, scoped changes.
 - Validate with the repo's Makefile.
-- Open PRs ready for review by default.
+- Open PRs ready for review by default unless explicitly instructed otherwise.
