@@ -24,8 +24,15 @@ Repo-local rules take precedence only for repo-specific behavior.
   Makefile target.
 - CI remains the enforcing authority if local tooling is unavailable.
 
+## Branches
+
+- Use `codex/<short-name>` for automation-driven playbook or documentation work.
+- Use concise descriptive branch names for human-driven work, such as
+  `docs/<short-name>` or `chore/<short-name>`.
+
 ## Pull Requests
 
+- Target `main`.
 - Include a clear summary and rationale.
 - Include validation notes.
 - Add `Closes #[issue number]` when applicable.
