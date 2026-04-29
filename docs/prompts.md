@@ -103,7 +103,8 @@ Validation:
 - If validation cannot be run, explain why.
 
 Deliverable:
-- Create a new focused branch.
+- Create a new focused branch using the repository-appropriate branch naming convention from the Codex adapter guidance.
+- Do not default to `codex/...` in product or implementation repositories.
 - Stage only relevant changes.
 - Commit and push only the intended changes.
 - Open a non-draft PR against `main` unless explicitly instructed otherwise.
@@ -594,7 +595,8 @@ they are also expected to make and deliver repo changes.
 
 ```text
 Delivery:
-- Create a focused branch.
+- Create a focused branch using the repository-appropriate branch naming convention from the Codex adapter guidance.
+- Do not default to `codex/...` in product or implementation repositories.
 - Stage only the relevant changes.
 - Commit with a clear message.
 - Push the branch.
