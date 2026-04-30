@@ -30,6 +30,25 @@ If the repo does not have a formal validation path yet, say that directly and su
 
 When relevant, say explicitly whether validation was mocked, contract-level, or exercised against real behavior, and treat that gap as a risk.
 
+## Optional Trust Or Evidence Context
+
+When prior validation, repeated usage, or unresolved uncertainty affects review
+risk, include brief trust or evidence context in the packet. Short prose is
+enough. The point is to explain why reviewers can trust, question, or re-check
+the change.
+
+Use this only when it improves review quality. Do not add it for routine changes
+where the objective, validation, and risks already give reviewers enough signal.
+
+Example snippet:
+
+```text
+Trust context (optional):
+- Prior validation: This pattern was used in knowledge-adapters PR #248 and
+  passed `make chaos-all`.
+- Confidence: medium; behavior is stable but not yet promoted to the playbook.
+```
+
 ## What The Human Should Focus On
 
 The human reviewer should focus on:
