@@ -4,9 +4,12 @@
 
 Rehydrate working context from a baseline brief plus verified repo state.
 
+For new threads, start with the [Thread Initialization](thread-init.md) pattern
+before running a context refresh.
+
 ## When To Use
 
-- New thread
+- New thread that depends on prior state or verified repo context
 - Lost context
 - Before starting cross-repo work
 - After meaningful repo drift
