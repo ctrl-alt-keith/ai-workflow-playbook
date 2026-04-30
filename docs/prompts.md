@@ -70,6 +70,33 @@ branch and PR. Simple one-step tasks do not need this much structure.
 Keep prompts concise but complete. The goal is to remove ambiguity that would
 cause retries, not to turn every task into a process document.
 
+### Optional: Trust and Evidence Context
+
+Include trust and evidence context when prior work should shape how cautiously
+Codex implements a task. This is useful when a prompt depends on earlier PRs,
+notes, repeated patterns, or validation history, especially when confidence
+level affects whether to preserve, extend, or re-check an approach.
+
+This context can be short prose. Name the evidence that explains why the
+approach is believed to work, such as prior validation, related artifacts, or an
+informal confidence level. Do not add this section for simple tasks where it
+would only repeat the main context.
+
+Example prompt snippet:
+
+```text
+Context:
+- Repository: knowledge-adapters
+- Relevant background: Chaos replay fingerprints are already used during
+  replay comparison, but the reporting text needs to be clearer.
+
+Context (extended):
+- Prior validation: This pattern was used in knowledge-adapters PR #248 and
+  passed `make chaos-all`.
+- Confidence: medium; behavior is stable but not yet promoted to the playbook.
+- Related notes: cross-repo-threads note on chaos replay fingerprints.
+```
+
 ### Codex Task Prompt Template
 
 ```text
