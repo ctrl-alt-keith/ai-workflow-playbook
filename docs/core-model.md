@@ -38,6 +38,10 @@ Reliable AI-assisted work depends on short feedback loops:
 - Review loop: summarize what changed so a human can inspect the right things
 - Capture loop: turn proven practice into reusable guidance before context fades
 
+Use [`trust-topology.md`](trust-topology.md) as an optional vocabulary when the
+confidence level, validation evidence, or promotion path for a reusable pattern
+is unclear.
+
 ## Discipline
 
 Speed is only useful when paired with disciplined execution. This model assumes:
