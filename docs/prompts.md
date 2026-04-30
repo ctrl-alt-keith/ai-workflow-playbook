@@ -89,12 +89,10 @@ Context:
 - Repository: knowledge-adapters
 - Relevant background: Chaos replay fingerprints are already used during
   replay comparison, but the reporting text needs to be clearer.
-
-Context (extended):
-- Prior validation: This pattern was used in knowledge-adapters PR #248 and
-  passed `make chaos-all`.
-- Confidence: medium; behavior is stable but not yet promoted to the playbook.
-- Related notes: cross-repo-threads note on chaos replay fingerprints.
+- Additional context when helpful: This pattern was used in knowledge-adapters
+  PR #248 and passed `make chaos-all`. Confidence is medium; behavior is stable
+  but not yet promoted to the playbook. Related notes mention chaos replay
+  fingerprints in cross-repo-threads.
 ```
 
 ### Codex Task Prompt Template
