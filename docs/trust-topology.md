@@ -8,6 +8,9 @@ required workflow step. If a pattern is already clearly validated, keep moving.
 If confidence is unclear, use this model to name the current trust level and the
 evidence behind it.
 
+This document adapts trust topology ideas into a practical workflow model for
+AI-assisted development systems.
+
 ## Purpose
 
 Trust topology gives reusable guidance a simple shape:
@@ -228,3 +231,10 @@ Edges:
 - repeated adapter usage `supports` the pattern
 - adapter guidance `depends-on` the core model
 - successful task completion `validated-by` the repo's normal checks and review
+
+## Background and Further Reading
+
+This model is informed by broader ideas about trust as a networked property
+rather than a binary state.
+
+- Michael Roth, ["Trust Topology"](https://michael.roth.rocks/research/trust-topology/)
