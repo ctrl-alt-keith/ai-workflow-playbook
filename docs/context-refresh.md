@@ -9,7 +9,7 @@ before running a context refresh.
 
 ## When To Use
 
-- New thread
+- New thread that depends on prior state or verified repo context
 - Lost context
 - Before starting cross-repo work
 - After meaningful repo drift
