@@ -70,6 +70,11 @@ branch and PR. Simple one-step tasks do not need this much structure.
 Keep prompts concise but complete. The goal is to remove ambiguity that would
 cause retries, not to turn every task into a process document.
 
+Any implementation task that modifies repository files MUST include the
+Implementation Delivery Footer unless PR delivery is explicitly excluded.
+Omitting the footer can leave delivery incomplete: changes made locally but not
+pushed and opened for review in a PR.
+
 ### Optional: Trust and Evidence Context
 
 Include trust and evidence context when prior work should shape how cautiously
