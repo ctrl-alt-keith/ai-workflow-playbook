@@ -49,6 +49,7 @@ Working Context:
   - knowledge-adapters
   - ai-workflow-playbook
   - ka-destinations
+  - linode-image-lab
 - Local notes layer:
   - cross-repo-threads
   - reference only
@@ -117,10 +118,11 @@ For each repo, provide:
 - current focus (top 1-2 items only, or unknown if not verifiable)
 
 6. Produce Cross-Repo Health
-Assess whether the org still has a clean three-layer model:
+Assess whether the org still has clean repo boundaries:
 - knowledge-adapters = ingestion
 - ka-destinations = publishing
 - ai-workflow-playbook = guidance
+- linode-image-lab = public-safe Linode image freeze/thaw workflow lab
 
 Call out only meaningful drift, overlap, or ambiguity.
 Maximum 3 bullets.
@@ -155,11 +157,13 @@ Output Format (strict):
 - knowledge-adapters:
 - ai-workflow-playbook:
 - ka-destinations:
+- linode-image-lab:
 
 ## Current State
 - knowledge-adapters:
 - ai-workflow-playbook:
 - ka-destinations:
+- linode-image-lab:
 
 ## Cross-Repo Health
 - ...
