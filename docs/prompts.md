@@ -116,6 +116,15 @@ Constraints:
 - Follow existing repo patterns and validation paths.
 - Do not silently skip required steps; report any blockers or incomplete work.
 
+External State Verification:
+- Verify live external state, such as GitHub repository or pull request state,
+  before relying on it.
+- When available, fetch current repo or PR metadata before making decisions that
+  depend on it.
+- If live state cannot be verified, explicitly state that limitation.
+- Do not infer PR status, CI status, or branch protection from summaries or
+  local files.
+
 Tasks:
 1. Inspect the existing structure and related docs or code.
 2. Make the smallest scoped change that satisfies the goal.
