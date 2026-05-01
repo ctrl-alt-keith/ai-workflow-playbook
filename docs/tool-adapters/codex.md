@@ -47,6 +47,17 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 - if removal is blocked or deferred, report it clearly, avoid deleting
   unrelated worktrees, and leave the repo in a known, intelligible state
 
+## GitHub Access Preflight
+
+- before repo- or PR-dependent work, verify GitHub access instead of relying on
+  cached context, summaries, or local branch state
+- use `gh repo view` to confirm the target repository is reachable
+- when PR state matters, use `gh pr view` to fetch current PR metadata before
+  making decisions
+- if the required `gh` commands fail, stop and report the access or state
+  blocker instead of inferring remote state
+- do not assume mergeability, checks, or branch protection without verification
+
 ## Local Permissions Model
 
 Codex operates inside a local permissions model. Some actions require approval, especially for network access, privileged writes, or potentially destructive commands.
