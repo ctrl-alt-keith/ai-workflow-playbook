@@ -49,7 +49,7 @@ The playbook is the canonical home for reusable workflow patterns. Repositories 
 
 Reusable pattern:
 
-> This repository uses the shared AI workflow model defined in `ai-workflow-playbook` as a reference. `AGENTS.md` provides the repo-specific instructions (validation, commands, PR expectations) that take precedence when working here.
+> This repository uses the shared AI workflow model defined in `ai-workflow-playbook` as a reference. `AGENTS.md` provides the repo-specific instructions (validation, commands, PR expectations). Repo-local rules take precedence only for repo-specific behavior.
 
 ## Current Focus
 
