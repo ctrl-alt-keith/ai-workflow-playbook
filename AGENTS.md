@@ -44,6 +44,7 @@ Repo-local rules take precedence only for repo-specific behavior.
   `docs/engineering-baseline.md`.
 - For general workflow rules, refer to the playbook documents instead of
   duplicating them here.
-- Start with `docs/core-model.md`, `docs/feature-lifecycle.md`,
-  `docs/alignment-checkpoints.md`, `docs/review-packet.md`, and
-  `docs/tool-adapters/codex.md`.
+- After `docs/start-here.md`, use `docs/core-model.md`,
+  `docs/feature-lifecycle.md`, `docs/alignment-checkpoints.md`,
+  `docs/review-packet.md`, and `docs/tool-adapters/codex.md` as reference
+  material for deeper workflow details.
