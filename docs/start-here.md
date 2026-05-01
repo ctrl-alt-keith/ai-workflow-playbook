@@ -15,7 +15,7 @@
 
 - Use `ai-workflow-playbook` as the canonical source of reusable workflow rules.
 - Treat `AGENTS.md` as the repo-local execution layer.
-- Repo-local rules override playbook rules when they differ.
+- Repo-local rules take precedence only for repo-specific behavior.
 
 ## Notes vs Playbook
 
