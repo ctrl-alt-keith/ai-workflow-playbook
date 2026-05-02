@@ -144,6 +144,25 @@ External State Verification:
 - If official docs cannot confirm the behavior, state that uncertainty and avoid
   encoding a false guarantee or limitation.
 
+Parallel Execution Plan:
+- Prefer parallel task execution when work can be separated cleanly by
+  repository, file area, or risk surface.
+- Before launching parallel runs, classify each task by lane: docs/governance,
+  isolated code path, shared API/client behavior, mutation/safety-critical path,
+  or release/checking.
+- Do not parallelize changes that share mutation paths, release state, schema
+  contracts, or fragile overlapping files unless a clear merge order exists.
+- Define merge order up front for parallel runs. Prefer docs/governance before
+  dependent docs, reusable infrastructure before repo adoption, shared
+  client/API behavior before callers, and safety/mutation changes after
+  dependent semantics are clear.
+- If two PRs overlap unexpectedly, pause, update or rebase in order, rerun the
+  repository's canonical validation, inspect the PRs directly, and do not merge
+  based only on local cleanliness.
+- Parallelism must preserve one-repo/one-branch/one-PR scope integrity,
+  workspace isolation, canonical validation, direct PR inspection, and
+  authoritative source requirements.
+
 Tasks:
 1. Inspect the existing structure and related docs or code.
 2. Make the smallest scoped change that satisfies the goal.
