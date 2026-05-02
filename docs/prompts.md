@@ -129,6 +129,13 @@ External State Verification:
 - If live state cannot be verified, explicitly state that limitation.
 - Do not infer PR status, CI status, or branch protection from summaries or
   local files.
+- When code, tests, docs, risks, or user-facing claims depend on external public
+  API behavior, establish the current behavior from official docs, API
+  references, SDK docs, provider changelogs, or official release notes before
+  making the change.
+- Do not rely on memory or inference where official docs are available.
+- If official docs cannot confirm the behavior, state that uncertainty and avoid
+  encoding a false guarantee or limitation.
 
 Tasks:
 1. Inspect the existing structure and related docs or code.

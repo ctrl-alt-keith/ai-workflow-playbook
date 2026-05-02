@@ -78,6 +78,21 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
   blocker instead of inferring remote state
 - do not assume mergeability, checks, or branch protection without verification
 
+## Public API Baseline Check
+
+- before changing code, tests, docs, risks, or user-facing claims that depend on
+  external public API behavior, verify the current behavior from official
+  sources
+- use official docs, API references, SDK docs, provider changelogs, or official
+  release notes as the baseline; do not rely on model memory or inferred
+  provider behavior where official docs are available
+- include the verified source in PR notes or docs when it materially supports
+  the change
+- if official docs are ambiguous or unavailable for the behavior, state that
+  limitation and avoid encoding guessed guarantees or limitations
+- skip this check for purely internal refactors that do not depend on external
+  API semantics
+
 ## Local Permissions Model
 
 Codex operates inside a local permissions model. Some actions require approval, especially for network access, privileged writes, or potentially destructive commands.
