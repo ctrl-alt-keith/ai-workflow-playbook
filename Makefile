@@ -1,4 +1,4 @@
-.PHONY: check check-env
+.PHONY: check check-env authoritative-source-check
 
 check:
 	@if command -v markdownlint-cli2 >/dev/null 2>&1; then \
@@ -23,3 +23,6 @@ check-env:
 		echo "Install markdownlint-cli2 or markdownlint to enable local validation."; \
 		exit 1; \
 	fi
+
+authoritative-source-check:
+	python3 scripts/check_authoritative_sources.py --base-ref origin/main --head-ref HEAD

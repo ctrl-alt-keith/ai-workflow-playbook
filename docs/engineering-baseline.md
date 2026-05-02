@@ -56,6 +56,8 @@ sources before making the change.
   false guarantee or limitation.
 - When citing sources in PRs, link directly to official docs and avoid indirect
   or derivative sources.
+- If a third-party source is still useful for context, keep it secondary and add
+  an explicit source justification near the link.
 
 This requirement does not apply to trivial changes or internal-only refactors
 that do not depend on external API semantics.
