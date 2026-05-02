@@ -22,6 +22,7 @@ OFFICIAL_GITHUB_PATH_MARKERS = (
     "/github/rest-api-description",
     "openapi",
 )
+SAME_ORG_GITHUB_OWNERS = {"ctrl-alt-keith"}
 KNOWN_THIRD_PARTY_SUFFIXES = ("stackoverflow.com", "medium.com", "dev.to")
 JUSTIFICATION_MARKERS = (
     "source justification:",
@@ -49,6 +50,11 @@ def clean_url(url: str) -> str:
     return url
 
 
+def is_same_org_github_repo(path: str) -> bool:
+    parts = [part for part in path.lower().split("/") if part]
+    return len(parts) >= 2 and parts[0] in SAME_ORG_GITHUB_OWNERS
+
+
 def is_official(url: str) -> bool:
     parsed = urlparse(url)
     domain = normalize_domain(parsed.hostname)
@@ -59,7 +65,9 @@ def is_official(url: str) -> bool:
     if domain in OFFICIAL_GITHUB_DOMAINS:
         return True
     if domain == "github.com":
-        return any(marker in path for marker in OFFICIAL_GITHUB_PATH_MARKERS)
+        return is_same_org_github_repo(path) or any(
+            marker in path for marker in OFFICIAL_GITHUB_PATH_MARKERS
+        )
     return False
 
 
