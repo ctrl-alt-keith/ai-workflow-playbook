@@ -30,6 +30,30 @@ If the repo does not have a formal validation path yet, say that directly and su
 
 When relevant, say explicitly whether validation was mocked, contract-level, or exercised against real behavior, and treat that gap as a risk.
 
+## Direct PR Inspection
+
+When asked to review, check, assess, approve, or comment on a PR, inspect the PR
+directly unless the human explicitly asks for summary-only discussion.
+
+User-provided PR summaries are useful navigation and context, but they are not
+review evidence. A PR review must be grounded in the actual PR surface,
+including, where available:
+
+- PR title and body
+- changed files
+- relevant diffs
+- CI and check status
+- mergeability
+- scope against the task, issue, or stated goal
+
+Do not claim a PR is safe to merge, ready to merge, or approved without direct
+evidence from the PR itself.
+
+If direct PR access is unavailable, stop the PR review and say that direct PR
+access is unavailable. Do not provide a merge or readiness recommendation from
+secondhand text. Ask for access to be restored or for the PR and files to be
+made available for direct inspection.
+
 ## Optional Trust Or Evidence Context
 
 When prior validation, repeated usage, or unresolved uncertainty affects review
