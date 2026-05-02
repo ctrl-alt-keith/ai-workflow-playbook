@@ -15,6 +15,8 @@ Define the smallest reusable baseline a repository should have before normal AI-
 - All changes go through pull requests.
 - Validation must pass before a pull request is considered complete.
 - Pull requests should stay small, scoped, and single-purpose.
+- Public repositories include a root `LICENSE` file, defaulting to Apache License
+  2.0 unless the repository documents another choice.
 - Defaults should favor safe, explicit behavior over implied shortcuts.
 
 ## PR Readiness
