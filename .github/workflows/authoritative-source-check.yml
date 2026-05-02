@@ -2,6 +2,18 @@ name: Authoritative Source Check
 
 on:
   pull_request:
+  workflow_call:
+    inputs:
+      playbook_ref:
+        description: Ref to check out from ctrl-alt-keith/ai-workflow-playbook.
+        required: false
+        type: string
+        default: main
+      scan_mode:
+        description: Scan changed Markdown files or all Markdown files.
+        required: false
+        type: string
+        default: changed
 
 permissions:
   contents: read
@@ -13,15 +25,40 @@ jobs:
     continue-on-error: true
 
     steps:
-      - name: Check out repository
+      - name: Check out caller repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          path: caller-repository
+
+      - name: Check out ai-workflow-playbook
+        uses: actions/checkout@v4
+        with:
+          repository: ctrl-alt-keith/ai-workflow-playbook
+          ref: ${{ inputs.playbook_ref || github.ref }}
+          path: ai-workflow-playbook
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Scan PR sources
-        run: python3 scripts/check_authoritative_sources.py
+      - name: Scan sources
+        working-directory: caller-repository
+        env:
+          SCAN_MODE: ${{ inputs.scan_mode || 'changed' }}
+        run: |
+          set -euo pipefail
+
+          case "$SCAN_MODE" in
+            changed)
+              python3 ../ai-workflow-playbook/scripts/check_authoritative_sources.py
+              ;;
+            all)
+              python3 ../ai-workflow-playbook/scripts/check_authoritative_sources.py --all-markdown
+              ;;
+            *)
+              echo "::error title=Invalid scan_mode::scan_mode must be changed or all"
+              exit 1
+              ;;
+          esac

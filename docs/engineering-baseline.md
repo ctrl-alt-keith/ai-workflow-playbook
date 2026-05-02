@@ -62,6 +62,36 @@ sources before making the change.
 This requirement does not apply to trivial changes or internal-only refactors
 that do not depend on external API semantics.
 
+### Reusable Advisory Check
+
+Repositories can call the canonical advisory scanner from this playbook instead
+of copying scanner logic. Add a local workflow that calls the reusable workflow:
+
+```yaml
+name: Authoritative Source Check
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  authoritative-source-check:
+    uses: ctrl-alt-keith/ai-workflow-playbook/.github/workflows/authoritative-source-check.yml@main
+    with:
+      scan_mode: changed
+```
+
+The reusable workflow checks out both the caller repository and
+`ctrl-alt-keith/ai-workflow-playbook`, then runs the canonical
+`scripts/check_authoritative_sources.py` scanner against the caller repository.
+The check is advisory and emits warnings without blocking the pull request.
+
+Use `scan_mode: all` only when the caller intentionally wants to scan every
+Markdown file instead of the pull request's changed Markdown files. Use
+`playbook_ref` only when testing or pinning a non-`main` playbook ref.
+
 ## Relationship to Playbook
 
 - The AI workflow playbook builds on this baseline.
