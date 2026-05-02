@@ -9,7 +9,9 @@ Define shared engineering expectations across repositories. This baseline forms 
 - Small, scoped changes
   - One PR = one reason.
 - Validate before PR
-  - Use repo-defined validation, such as `make check`.
+  - Use the repository's canonical validation command, such as `make check`.
+  - Do not add or substitute alternate local validation tools outside the
+    repo-defined workflow.
 - Repository isolation
   - One repository per PR.
   - No cross-repo commits.

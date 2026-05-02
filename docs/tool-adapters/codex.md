@@ -170,10 +170,17 @@ When behavior or supported capability changes, quickly check the existing docs f
 
 ## CI Expectations
 
-- use the repository's validation entrypoint, such as `make check`, when one exists
-- attempt local validation when the needed tools are clearly available; if a tool is missing locally, do not treat that as a failure and rely on required CI checks as the source of truth
+- use the repository's canonical validation command, such as `make check`, when
+  one exists
+- do not introduce, invoke, or rely on alternate local validation tools unless
+  they are explicitly part of the repository-defined workflow
+- if a tool needed by the canonical command is missing locally, report that
+  limitation, do not substitute another parser, linter, or manual validation
+  path, and rely on required CI checks as the final validation authority
 - report clearly when no local validation path exists
-- until a formal validation path exists, use internal consistency review, path checks, and scope review
+- until a formal validation path exists, report that gap and keep any review to
+  scope and consistency notes rather than presenting it as substitute
+  validation
 - treat passing CI as necessary but not sufficient
 - use hardening to close gaps exposed by CI, review, or edge cases
 

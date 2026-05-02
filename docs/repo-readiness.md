@@ -68,6 +68,11 @@ Reusable workflow rules belong in the playbook, not duplicated into each reposit
 
 - `make check` is the canonical validation entrypoint when the repository provides one.
 - Use repository Makefile targets for validation. Do not invoke underlying tools directly when a Makefile target exists; tools such as `pytest`, `ruff`, `mypy`, `markdownlint`, or `npx` are implementation details of the repo validation contract.
+- Do not introduce or rely on alternate local validation tools unless they are
+  explicitly part of the repository-defined workflow.
+- If a local tool required by the canonical command is unavailable, report the
+  limitation, do not substitute another tool, and rely on CI as the final
+  validation authority.
 - CI is the enforcement layer.
 - Local validation should match CI behavior as closely as practical.
 

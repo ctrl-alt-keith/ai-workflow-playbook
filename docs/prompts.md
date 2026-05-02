@@ -143,9 +143,14 @@ Tasks:
 3. Update nearby docs or tests only when they are part of the same change.
 
 Validation:
-- Run [repo validation command], for example `make check`.
+- Run the repository's canonical validation command, for example `make check`.
+- Do not add or rely on alternate validation tools unless they are explicitly
+  part of the repository-defined workflow.
 - Report the actual result of validation; do not assume success.
 - If validation fails, include the failure details.
+- If a local tool needed by the canonical command is unavailable, do not
+  substitute another tool; report the limitation and rely on CI for final
+  validation.
 - If validation cannot be run, explain why.
 
 Deliverable:
