@@ -41,6 +41,17 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
   and on `main`, do not run concurrent arcs against the same checkout, and
   treat each worktree as its own execution container with its own branch,
   validation run, and PR or review surface
+- before launching a Codex parallel batch, apply the engineering baseline's
+  parallel execution guidance: classify each task by lane, confirm the work can
+  be separated by repository, file area, or risk surface, and define the merge
+  order before work starts
+- do not run parallel Codex arcs across shared mutation paths, release state,
+  schema contracts, or fragile overlapping files unless a clear merge order and
+  dependency chain have been stated up front
+- if Codex PRs in a parallel batch overlap unexpectedly, pause the batch,
+  update or rebase in the intended order, rerun the repository's canonical
+  validation in each affected worktree, and inspect the current PR surfaces
+  before recommending or performing any merge
 - if a worktree cannot be used and Codex believes a full copy or clone is
   necessary, stop before making changes and report why a worktree is not
   possible, what alternative workspace is proposed, where it would be created,

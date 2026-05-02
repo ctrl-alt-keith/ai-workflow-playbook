@@ -31,6 +31,48 @@ Define shared engineering expectations across repositories. This baseline forms 
 - Keep commits clean and focused.
 - PRs are ready for review by default.
 
+## Parallel Execution And Merge Ordering
+
+Prefer parallel task execution when work can be cleanly separated by repository,
+file area, or risk surface. Parallelism should improve throughput without
+weakening reviewability, validation, or merge safety.
+
+Before launching parallel work, classify each task by lane:
+
+- docs/governance
+- isolated code path
+- shared API/client behavior
+- mutation/safety-critical path
+- release/checking
+
+Do not parallelize changes that share mutation paths, release state, schema
+contracts, or fragile overlapping files unless the dependency is explicit and a
+clear merge order exists before work starts.
+
+For every parallel batch, define the intended merge order up front. If the work
+is truly independent, say that merge order is flexible and why. When ordering
+does matter, prefer the order that reduces conflict and review risk:
+
+- docs/governance before dependent docs
+- reusable infrastructure before repo adoption
+- shared client/API behavior before callers
+- safety/mutation changes after dependent semantics are clear
+
+If two PRs overlap unexpectedly, pause and re-establish the order before merging:
+
+- rebase or update branches in the intended order
+- rerun canonical validation after each update
+- inspect the PR surfaces directly
+- do not merge based only on local cleanliness
+
+Parallelism must not weaken:
+
+- one repository, one branch, one PR scope integrity
+- workspace or worktree isolation
+- canonical validation
+- direct PR inspection
+- authoritative source requirements
+
 ## Public API Baselines
 
 When a task changes code, tests, docs, risks, or user-facing claims that depend
