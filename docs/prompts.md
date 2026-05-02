@@ -183,8 +183,9 @@ Deliverable:
 - Create a new focused branch using the repository-appropriate branch naming convention from the Codex adapter guidance.
 - Do not default to `codex/...` in product or implementation repositories.
 - If an isolated workspace is needed, follow the Codex adapter workspace
-  isolation rule: use `git worktree`, and stop for explicit approval before
-  using any full copy or clone.
+  isolation rule: use `git worktree` under the repo's `.worktrees/` directory,
+  and stop for explicit approval before using any sibling worktree, full copy,
+  or clone.
 - Stage only relevant changes.
 - Commit and push only the intended changes.
 - Open a non-draft PR against `main` unless explicitly instructed otherwise.
@@ -677,9 +678,9 @@ they are also expected to make and deliver repo changes.
 Delivery:
 - Create a focused branch using the repository-appropriate branch naming convention from the Codex adapter guidance.
 - Do not default to `codex/...` in product or implementation repositories.
-- If isolated workspace setup is needed, use `git worktree` as required by the
-  Codex adapter guidance; do not create a full copy or clone without explicit
-  approval.
+- If isolated workspace setup is needed, use `git worktree` under the repo's
+  `.worktrees/` directory as required by the Codex adapter guidance; do not
+  create a sibling worktree, full copy, or clone without explicit approval.
 - Stage only the relevant changes.
 - Commit with a clear message.
 - Push the branch.

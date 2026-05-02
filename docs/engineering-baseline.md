@@ -68,7 +68,7 @@ If two PRs overlap unexpectedly, pause and re-establish the order before merging
 Parallelism must not weaken:
 
 - one repository, one branch, one PR scope integrity
-- workspace or worktree isolation
+- repo-local `.worktrees/` isolation when worktrees are used
 - canonical validation
 - direct PR inspection
 - authoritative source requirements

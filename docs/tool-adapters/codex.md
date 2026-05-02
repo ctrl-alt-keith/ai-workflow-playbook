@@ -34,13 +34,19 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 - read-only exploration, audit, or review work may use the active checkout when
   no repo changes are required
 - for repo-changing implementation work that needs an isolated workspace, use
-  `git worktree` from the target repository; do not create ad hoc sibling
-  full-copy repositories under the project root
+  `git worktree` from the target repository and place every repo-changing
+  worktree under `<repo>/.worktrees/`; do not create sibling repo directories,
+  sibling worktree directories, or ad hoc full-copy repositories under the
+  project root
+- before creating or reusing a repo-changing worktree, run `git worktree list`,
+  select a repo-local `.worktrees/...` path, and report that selected path in
+  setup or delivery notes
 - when parallel repo-scoped work targets the same repository, use one worktree
-  per issue or task from current `origin/main`; keep the main checkout clean
-  and on `main`, do not run concurrent arcs against the same checkout, and
-  treat each worktree as its own execution container with its own branch,
-  validation run, and PR or review surface
+  per issue or task from current `origin/main`, with each worktree located
+  under the repository's `.worktrees/` directory; keep the main checkout clean
+  and on `main`, do not run concurrent arcs against the same checkout, and treat
+  each worktree as its own execution container with its own branch, validation
+  run, and PR or review surface
 - before launching a Codex parallel batch, apply the engineering baseline's
   parallel execution guidance: classify each task by lane, confirm the work can
   be separated by repository, file area, or risk surface, and define the merge
@@ -52,10 +58,10 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
   update or rebase in the intended order, rerun the repository's canonical
   validation in each affected worktree, and inspect the current PR surfaces
   before recommending or performing any merge
-- if a worktree cannot be used and Codex believes a full copy or clone is
-  necessary, stop before making changes and report why a worktree is not
-  possible, what alternative workspace is proposed, where it would be created,
-  and how it will be cleaned up
+- if `<repo>/.worktrees/` cannot be used, stop before making changes and report
+  why the required repo-local worktree location is not possible, what
+  alternative workspace is proposed, where it would be created, and how it will
+  be cleaned up
 - wait for explicit human approval before proceeding with a full copy or clone
 - before starting a same-repo worktree batch, inspect `git worktree list` and
   the underlying worktree metadata so stale entries from an earlier attempt do
