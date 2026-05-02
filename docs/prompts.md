@@ -24,6 +24,7 @@ tooling.
 - [AGENTS Update](#agents-update)
 - [Workflow Scaffolding](#workflow-scaffolding)
 - [Implementation Delivery Footer](#implementation-delivery-footer)
+- [PR Review](#pr-review)
 - [PR Creation](#pr-creation)
 
 ## Context Refresh Primitive
@@ -126,6 +127,12 @@ External State Verification:
   before relying on it.
 - When available, fetch current repo or PR metadata before making decisions that
   depend on it.
+- When asked to review, check, assess, approve, or comment on a PR, inspect the
+  PR directly unless explicitly asked for summary-only discussion.
+- Treat user-provided PR summaries as navigation and context only, not review
+  evidence.
+- If direct PR access is unavailable for a PR review, stop the review, state the
+  access blocker, and do not provide a merge or readiness recommendation.
 - If live state cannot be verified, explicitly state that limitation.
 - Do not infer PR status, CI status, or branch protection from summaries or
   local files.
@@ -659,6 +666,57 @@ Delivery:
 - Push the branch.
 - Open a non-draft PR against the intended base branch, usually `main`, unless a draft PR is explicitly requested.
 - Report the PR link, files changed, and validation results.
+```
+
+## PR Review
+
+### PR Review Use When
+
+Use this prompt when the task is to review, check, assess, approve, or comment
+on an existing pull request.
+
+### PR Review Required Inputs
+
+- `repository`
+- `pull_request`
+- `task_or_issue_context` (optional; use `none` when not available)
+- `summary_only` (`yes` or `no`)
+
+### PR Review Prompt
+
+```text
+Task:
+Review pull request [pull_request] in [repository].
+
+Inputs:
+- Repository: [repository]
+- Pull request: [pull_request]
+- Task or issue context: [task_or_issue_context]
+- Summary-only requested: [summary_only]
+
+Instructions:
+- Unless Summary-only requested is `yes`, inspect the PR directly before giving
+  any review, approval, readiness, or merge recommendation.
+- Treat user-provided summaries as navigation and context only, not review
+  evidence.
+- Inspect the PR title and body, changed files, relevant diffs, CI and check
+  status, mergeability, and scope against the task or issue where those inputs
+  are available.
+- If direct PR access is unavailable and Summary-only requested is not `yes`,
+  stop the PR review, state that direct PR access is unavailable, and ask for
+  access to be restored or for the PR and files to be made available.
+- Do not claim the PR is safe to merge, ready to merge, or approved without
+  direct evidence from the PR itself.
+- If Summary-only requested is `yes`, state that the response is based only on
+  the supplied summary and does not establish merge readiness.
+
+Output format:
+1. Review findings: severity-ordered findings with file or PR references where
+   possible.
+2. Scope and evidence notes: concise notes on inspected PR surface, CI/checks,
+   mergeability, and task fit.
+3. Recommendation: `ready to merge`, `needs decision`, or `blocked`, only when
+   direct PR evidence supports it.
 ```
 
 ## PR Creation

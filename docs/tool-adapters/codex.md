@@ -74,8 +74,18 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 - use `gh repo view` to confirm the target repository is reachable
 - when PR state matters, use `gh pr view` to fetch current PR metadata before
   making decisions
+- when asked to review, check, assess, approve, or comment on a PR, inspect the
+  PR directly unless the human explicitly asks for summary-only discussion
+- treat user-provided PR summaries as navigation and context only, not review
+  evidence
+- direct PR inspection should include the PR title and body, changed files,
+  relevant diffs, CI and check status, mergeability, and scope against the task
+  or issue where those inputs are available
 - if the required `gh` commands fail, stop and report the access or state
   blocker instead of inferring remote state
+- if direct PR access is unavailable for a PR review, stop the review, state
+  that direct PR access is unavailable, and ask for access to be restored or for
+  the PR and files to be made available
 - do not assume mergeability, checks, or branch protection without verification
 
 ## Public API Baseline Check
@@ -161,7 +171,11 @@ Codex should pause and ask for human input when:
   validation or evidence gathered instead
 - if an exploration, design, audit, or review-only task produces repo changes,
   switch back to the implementation delivery path before calling it complete
-- before recommending merge readiness on an existing PR, confirm current remote mergeability and required checks rather than relying on local branch cleanliness alone
+- do not recommend merge readiness on an existing PR without direct evidence
+  from the PR itself
+- before recommending merge readiness on an existing PR, confirm current remote
+  mergeability and required checks rather than relying on local branch
+  cleanliness alone
 - when refining an active PR within the same arc, update the existing branch and PR rather than opening a new PR; open a new PR only when the work changes phase, scope, or review surface
 - avoid bundling unrelated cleanup into the same PR
 - before calling the work complete, verify the PR diff contains only the intended arc; if `main` moved underneath the branch and overlap occurred, sync with current `main`, resolve conflicts, and rerun validation; if the branch carries unrelated history, rebuild the work onto a clean branch from current `main`
