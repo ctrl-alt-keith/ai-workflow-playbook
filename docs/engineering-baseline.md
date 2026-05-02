@@ -31,6 +31,15 @@ Define shared engineering expectations across repositories. This baseline forms 
 - Keep commits clean and focused.
 - PRs are ready for review by default.
 
+## Licensing Baseline
+
+- Use Apache License 2.0 as the default license for public repositories unless
+  the repository has an explicit reason to choose another license.
+- Public repositories must include a root `LICENSE` file before normal delivery
+  work begins.
+- Keep licensing guidance simple and reusable; put repository-specific
+  exceptions in the repository's own setup notes.
+
 ## Parallel Execution And Merge Ordering
 
 Prefer parallel task execution when work can be cleanly separated by repository,
