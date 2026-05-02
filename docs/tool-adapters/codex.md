@@ -28,7 +28,24 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 - make exceptions only when the task explicitly requires rebasing or when a real conflict or blocker appears that prevents finishing the requested work cleanly
 - do not treat transient GitHub `BLOCKED` or pending states as mid-run failures by default; inspect whether the cause is pending checks, pending review requirements, dependency ordering, or a true merge conflict, then wait or act accordingly
 - if normalization is unsafe or the state is unclear, pause and report rather than forcing cleanup
-- when parallel repo-scoped work targets the same repository, prefer one worktree per issue or task from current `origin/main`; keep the main checkout clean and on `main`, do not run concurrent arcs against the same checkout, and treat each worktree as its own execution container with its own branch, validation run, and PR or review surface
+
+## Workspace Isolation
+
+- read-only exploration, audit, or review work may use the active checkout when
+  no repo changes are required
+- for repo-changing implementation work that needs an isolated workspace, use
+  `git worktree` from the target repository; do not create ad hoc sibling
+  full-copy repositories under the project root
+- when parallel repo-scoped work targets the same repository, use one worktree
+  per issue or task from current `origin/main`; keep the main checkout clean
+  and on `main`, do not run concurrent arcs against the same checkout, and
+  treat each worktree as its own execution container with its own branch,
+  validation run, and PR or review surface
+- if a worktree cannot be used and Codex believes a full copy or clone is
+  necessary, stop before making changes and report why a worktree is not
+  possible, what alternative workspace is proposed, where it would be created,
+  and how it will be cleaned up
+- wait for explicit human approval before proceeding with a full copy or clone
 - before starting a same-repo worktree batch, inspect `git worktree list` and
   the underlying worktree metadata so stale entries from an earlier attempt do
   not confuse setup or cleanup
@@ -46,6 +63,9 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
   created for that run are removed or clearly accounted for
 - if removal is blocked or deferred, report it clearly, avoid deleting
   unrelated worktrees, and leave the repo in a known, intelligible state
+- when a PR created from a Codex worktree is merged and the worktree is no
+  longer needed, remove the worktree and prune stale worktree metadata when
+  appropriate
 
 ## GitHub Access Preflight
 
