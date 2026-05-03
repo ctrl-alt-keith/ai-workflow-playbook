@@ -13,9 +13,17 @@ from urllib.parse import urlparse
 
 
 URL_RE = re.compile(r"https?://[^\s<>)\]}\"']+")
-GUIDANCE = "Prefer official provider documentation per Public API Baselines rule"
+GUIDANCE = "Use official provider documentation for public API evidence"
+PUBLIC_API_CONTEXT_RE = re.compile(
+    r"\b("
+    r"api reference|cloud provider|eventual consistency|rate limits?|release notes|"
+    r"saas api|api|auth|authentication|authorization|changelog|cli|endpoint|graphql|"
+    r"idempotency|openapi|pagination|rest|retry|retryability|sdk|token|webhook"
+    r")\b",
+    re.IGNORECASE,
+)
 
-OFFICIAL_SUFFIXES = ("akamai.com", "linode.com", "python.org")
+DEFAULT_OFFICIAL_SUFFIXES = ("akamai.com", "linode.com", "python.org")
 OFFICIAL_GITHUB_DOMAINS = {"api.github.com", "docs.github.com"}
 OFFICIAL_GITHUB_PATH_MARKERS = (
     "/github/docs",
@@ -55,12 +63,28 @@ def is_same_org_github_repo(path: str) -> bool:
     return len(parts) >= 2 and parts[0] in SAME_ORG_GITHUB_OWNERS
 
 
-def is_official(url: str) -> bool:
+def configured_domains(raw_values: list[str]) -> tuple[str, ...]:
+    domains: list[str] = []
+    for raw_value in raw_values:
+        for value in re.split(r"[\s,]+", raw_value):
+            if not value:
+                continue
+            parsed = urlparse(value if "://" in value else f"//{value}")
+            domain = normalize_domain(parsed.hostname or value)
+            if domain and domain not in domains:
+                domains.append(domain)
+    return tuple(domains)
+
+
+def is_official(
+    url: str,
+    official_suffixes: tuple[str, ...] = DEFAULT_OFFICIAL_SUFFIXES,
+) -> bool:
     parsed = urlparse(url)
     domain = normalize_domain(parsed.hostname)
     path = parsed.path.lower()
 
-    if any(matches(domain, suffix) for suffix in OFFICIAL_SUFFIXES):
+    if any(matches(domain, suffix) for suffix in official_suffixes):
         return True
     if domain in OFFICIAL_GITHUB_DOMAINS:
         return True
@@ -83,14 +107,28 @@ def justified(lines: list[str], index: int) -> bool:
     return any(marker in nearby for marker in JUSTIFICATION_MARKERS)
 
 
-def scan_text(label: str, text: str) -> list[dict[str, object]]:
+def public_api_context(lines: list[str], index: int) -> str | None:
+    """Return the nearby API evidence phrase that makes a URL worth checking."""
+    nearby = " ".join(lines[max(0, index - 1) : min(len(lines), index + 2)])
+    match = PUBLIC_API_CONTEXT_RE.search(nearby)
+    return match.group(0) if match else None
+
+
+def scan_text(
+    label: str,
+    text: str,
+    official_suffixes: tuple[str, ...] = DEFAULT_OFFICIAL_SUFFIXES,
+) -> list[dict[str, object]]:
     findings: list[dict[str, object]] = []
     lines = text.splitlines()
 
     for index, line in enumerate(lines):
         for match in URL_RE.findall(line):
             url = clean_url(match)
-            if is_official(url) or justified(lines, index):
+            if is_official(url, official_suffixes) or justified(lines, index):
+                continue
+            context = public_api_context(lines, index)
+            if context is None:
                 continue
 
             domain, reason = reason_for(url)
@@ -101,6 +139,7 @@ def scan_text(label: str, text: str) -> list[dict[str, object]]:
                     "label": label,
                     "line": index + 1,
                     "reason": reason,
+                    "context": context,
                     "count": 1,
                 }
             )
@@ -177,10 +216,13 @@ def warning_line(finding: dict[str, object]) -> str:
     message = f"{finding['url']} detected. {GUIDANCE}."
     if int(finding["count"]) > 1:
         message += f" {finding['count']} URLs from this domain were detected."
-    message += " Add a source justification if official docs are unavailable."
+    message += (
+        f" Matched public API context: {finding['context']}. "
+        "Replace with official docs or add a source justification if official docs are unavailable."
+    )
     message = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
 
-    title = "Non-authoritative source domain"
+    title = "Non-authoritative public API source"
     label = str(finding["label"])
     if label.endswith(".md"):
         return f"::warning file={label},line={finding['line']},title={title}::{message}"
@@ -202,6 +244,7 @@ def report(findings: list[dict[str, object]]) -> None:
         print(f"- {finding['domain']}: {finding['url']}")
         print(f"  location: {location}")
         print(f"  reason: {finding['reason']}")
+        print(f"  matched public API context: {finding['context']}")
         print(f"  guidance: {GUIDANCE}.")
 
 
@@ -211,12 +254,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--head-ref")
     parser.add_argument("--all-markdown", action="store_true")
     parser.add_argument("--pr-body-file", type=Path)
+    parser.add_argument(
+        "--official-domain",
+        action="append",
+        default=[],
+        help="Additional official documentation domain suffix. May be repeated or comma-separated.",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     payload = event_payload()
+    official_suffixes = DEFAULT_OFFICIAL_SUFFIXES + configured_domains(
+        args.official_domain + [os.environ.get("AUTHORITATIVE_SOURCE_OFFICIAL_DOMAINS", "")]
+    )
     sources: list[tuple[str, str]] = []
 
     if args.pr_body_file:
@@ -243,7 +295,7 @@ def main() -> int:
 
     findings: list[dict[str, object]] = []
     for label, text in sources + markdown_sources(markdown_files):
-        findings.extend(scan_text(label, text))
+        findings.extend(scan_text(label, text, official_suffixes))
 
     report(dedupe(findings))
     return 0

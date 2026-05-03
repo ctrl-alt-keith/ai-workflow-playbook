@@ -1,4 +1,4 @@
-.PHONY: check check-env authoritative-source-check
+.PHONY: check check-env authoritative-source-check scanner-test
 
 check:
 	@if command -v markdownlint-cli2 >/dev/null 2>&1; then \
@@ -12,6 +12,7 @@ check:
 		echo "Install markdownlint-cli2 or markdownlint, then rerun 'make check'."; \
 		exit 1; \
 	fi
+	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests
 
 check-env:
 	@if command -v markdownlint-cli2 >/dev/null 2>&1; then \
@@ -26,3 +27,6 @@ check-env:
 
 authoritative-source-check:
 	python3 scripts/check_authoritative_sources.py --base-ref origin/main --head-ref HEAD
+
+scanner-test:
+	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests
