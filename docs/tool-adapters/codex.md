@@ -203,11 +203,18 @@ When behavior or supported capability changes, quickly check the existing docs f
 
 - use the repository's canonical validation command, such as `make check`, when
   one exists
+- when the canonical validation command exists and can run locally, run it
+  before opening or updating a PR; do not treat CI as a replacement for that
+  local step
 - do not introduce, invoke, or rely on alternate local validation tools unless
   they are explicitly part of the repository-defined workflow
 - if a tool needed by the canonical command is missing locally, report that
   limitation, do not substitute another parser, linter, or manual validation
-  path, and rely on required CI checks as the final validation authority
+  path, and rely on required CI checks for enforcement of checks that cannot be
+  run locally
+- treat checks as CI-only only when the repository does not expose a local
+  canonical path for them or the local canonical path cannot run in the current
+  environment
 - report clearly when no local validation path exists
 - until a formal validation path exists, report that gap and keep any review to
   scope and consistency notes rather than presenting it as substitute
