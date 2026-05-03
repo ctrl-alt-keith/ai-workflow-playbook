@@ -136,15 +136,22 @@ jobs:
     uses: ctrl-alt-keith/ai-workflow-playbook/.github/workflows/authoritative-source-check.yml@main
     with:
       scan_mode: changed
+      official_domains: docs.example-provider.com
 ```
 
 The reusable workflow checks out both the caller repository and
 `ctrl-alt-keith/ai-workflow-playbook`, then runs the canonical
 `scripts/check_authoritative_sources.py` scanner against the caller repository.
 The check is advisory and emits warnings without blocking the pull request.
+The scanner reports non-authoritative links only when they appear near public
+API evidence terms such as API, SDK, CLI, endpoint, pagination, rate limits, or
+retry behavior. This keeps normal repository links quiet while still surfacing
+third-party sources used to support external API behavior claims.
 
 Use `scan_mode: all` only when the caller intentionally wants to scan every
 Markdown file instead of the pull request's changed Markdown files. Use
+`official_domains` to add provider-controlled documentation domains that are
+authoritative for the caller repository but not built into the scanner. Use
 `playbook_ref` only when testing or pinning a non-`main` playbook ref.
 
 ## Relationship to Playbook

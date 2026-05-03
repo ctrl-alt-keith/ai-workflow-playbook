@@ -14,6 +14,11 @@ on:
         required: false
         type: string
         default: changed
+      official_domains:
+        description: Additional official documentation domain suffixes, separated by commas or spaces.
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -47,6 +52,7 @@ jobs:
         working-directory: caller-repository
         env:
           SCAN_MODE: ${{ inputs.scan_mode || 'changed' }}
+          AUTHORITATIVE_SOURCE_OFFICIAL_DOMAINS: ${{ inputs.official_domains || '' }}
         run: |
           set -euo pipefail
 
