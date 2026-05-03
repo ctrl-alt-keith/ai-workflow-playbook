@@ -10,6 +10,8 @@ Define shared engineering expectations across repositories. This baseline forms 
   - One PR = one reason.
 - Validate before PR
   - Use the repository's canonical validation command, such as `make check`.
+  - Run available canonical local validation before opening or updating a PR;
+    do not treat CI as a substitute for that local step.
   - Do not add or substitute alternate local validation tools outside the
     repo-defined workflow.
 - Repository isolation
