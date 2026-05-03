@@ -61,6 +61,9 @@ This document defines expectations, not exact GitHub settings.
 
 - repo-local execution rules
 - the canonical validation entrypoint, typically `make check`
+- what the canonical validation entrypoint includes
+- justified exclusions from local validation
+- CI-only or advisory checks that are not part of the local blocking path
 - branch or commit conventions that are specific to the repository
 - repo-specific constraints, boundaries, or file placement rules
 
@@ -83,6 +86,33 @@ Reusable workflow rules belong in the playbook, not duplicated into each reposit
   environment.
 - CI is the enforcement layer.
 - Local validation should match CI behavior as closely as practical.
+
+### Minimum `make check` Coverage By Repo Type
+
+`make check` should be a single repo-local contract, not a mandate to use the
+same tools everywhere. Its minimum coverage depends on the repository's
+surface:
+
+- Docs and workflow repositories should check Markdown or structured docs,
+  links or generated docs when the repo maintains them locally, and any scripts
+  or tests that enforce reusable workflow behavior.
+- Code repositories should check the code paths the repository ships or
+  supports through the repo's normal test, lint, type, build, or equivalent
+  local quality gates.
+- API or provider-facing repositories should include the code-repo baseline and
+  local checks for provider-facing contracts, generated clients or schemas, and
+  public API behavior claims that the repository can verify without live
+  credentials or external mutable state.
+- Mixed repositories should include the applicable local checks for each
+  changed surface, with `AGENTS.md` documenting which surfaces are covered by
+  `make check`.
+
+Repo-local `AGENTS.md` should document what `make check` includes, any
+justified exclusions, and any CI-only or advisory checks such as live provider
+integration, credentialed workflows, slow release checks, or source-evidence
+scans that are intentionally outside the local blocking path. Those deviations
+should explain why the check is excluded locally without weakening `make check`
+as the canonical local validation entrypoint.
 
 ## Notes
 
