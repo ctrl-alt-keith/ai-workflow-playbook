@@ -4,11 +4,13 @@ Codex maintenance automations are part of the orchestration model: they keep
 recurring checks visible, bounded, and reviewable without turning the playbook
 into an automation implementation repo.
 
-This inventory reflects the current local Codex `automation.toml` configs. It
-summarizes purpose, cadence, scope, mutation behavior, and safety expectations
-without copying long prompts or local execution paths.
+This document owns reusable policy and pattern guidance for maintenance
+automation. The inventory below is non-canonical reference material copied from
+current local Codex `automation.toml` configs; the active local automation
+configs remain the owning source for runtime state, schedules, prompts, and
+execution paths.
 
-## Inventory
+## Reference Inventory
 
 | Automation | ID | Purpose | Cadence | Target Scope | Mode | Safety Expectations / Skip Conditions |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -29,11 +31,12 @@ without copying long prompts or local execution paths.
 
 ## Configuration Notes
 
-- Entries reflect currently active maintenance automations.
+- Entries reflect currently active maintenance automations at the time this
+  reference was updated.
 - This document summarizes behavior and intent; it does not replicate full prompt
   bodies or local configuration.
-- Treat automation configuration as local operational state, not canonical
-  workflow guidance.
+- Treat automation configuration, run state, schedules, and logs as local
+  operational state, not canonical workflow guidance.
 - Detailed automation configuration should remain in local configuration files,
   not in the playbook.
 - Do not expose secrets, local-only paths, raw prompts containing private

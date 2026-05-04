@@ -4,9 +4,9 @@ Use this optional model when a workflow pattern needs a lightweight way to
 describe how much trust it has earned and what evidence supports that trust.
 
 The goal is to make promotion and cleanup decisions easier without adding a new
-required workflow step. If a pattern is already clearly validated, keep moving.
-If confidence is unclear, use this model to name the current trust level and the
-evidence behind it.
+required workflow step. If a pattern is already clearly evidence-supported, keep
+moving. If confidence is unclear, use this model to name the current trust level
+and the evidence behind it.
 
 This document adapts trust topology ideas into a practical workflow model for
 AI-assisted development systems.
@@ -24,8 +24,8 @@ Use it for playbook guidance, staging notes, prompt patterns, review workflows,
 or tool-adapter behavior that may later become canonical.
 
 Do not use it to create required metadata fields, a second tracking system, or a
-reason to promote speculative ideas. The playbook remains reusable, validated,
-and non-speculative.
+reason to promote speculative ideas. The playbook remains reusable,
+evidence-supported, and non-speculative.
 
 ## Trust Levels
 
@@ -101,7 +101,8 @@ Weak evidence includes:
 
 - a single anecdote without a merged result
 - a pattern that sounds right but has not been tried
-- copied guidance from another context that has not been validated locally
+- copied guidance from another context that has not been supported by local
+  evidence
 - broad claims without examples
 
 Evidence does not need a formal schema. A short note, PR link, review packet, or
@@ -136,19 +137,19 @@ Examples:
 
 When a dependency changes, revisit the dependent pattern before promoting it.
 
-### Validated By
+### Confirmed By
 
-Use `validated-by` when a check, review, or real usage confirms that a pattern
+Use `confirmed-by` when a check, review, or real usage confirms that a pattern
 worked in practice.
 
 Examples:
 
-- a docs change validated by `make check`
-- a workflow rule validated by a ready-for-review PR using it end to end
-- a prompt pattern validated by review feedback that found the output useful
+- a docs change confirmed by `make check`
+- a workflow rule confirmed by a ready-for-review PR using it end to end
+- a prompt pattern confirmed by review feedback that found the output useful
 
-Validation can be local, CI-based, manual, or reviewer-based. Be explicit about
-which kind was used.
+Confirmation can be local, CI-based, manual, or reviewer-based. Be explicit
+about which kind was used.
 
 ## Promotion Guidance
 
@@ -161,8 +162,8 @@ Use this progression as a guide:
 2. Move to `emerging` after repeated use shows the pattern is useful.
 3. Move to `strong` after it works across boundaries such as repos, phases, or
    reviewers.
-4. Move to `canonical` only when it is reusable, validated, non-speculative, and
-   clear enough to guide action.
+4. Move to `canonical` only when it is reusable, evidence-supported,
+   non-speculative, and clear enough to guide action.
 
 Promotion should be small and operational. When moving a pattern into the
 playbook:
@@ -204,7 +205,7 @@ Edges:
 
 - review feedback `supports` the packet shape
 - the packet format `depends-on` the feature lifecycle release phase
-- successful PR reviews are `validated-by` human inspection and CI results
+- successful PR reviews are `confirmed-by` human inspection and CI results
 
 ### Notes Cleanup Rule
 
@@ -217,7 +218,7 @@ Edges:
 
 - cleanup PRs `support` the rule
 - the rule `depends-on` the notes-versus-playbook boundary
-- markdown checks and reviewer confirmation `validated-by` the cleanup result
+- markdown checks and reviewer confirmation `confirmed-by` the cleanup result
 
 ### Tool Adapter Behavior
 
@@ -230,7 +231,7 @@ Edges:
 
 - repeated adapter usage `supports` the pattern
 - adapter guidance `depends-on` the core model
-- successful task completion `validated-by` the repo's normal checks and review
+- successful task completion `confirmed-by` the repo's normal checks and review
 
 ## Background and Further Reading
 

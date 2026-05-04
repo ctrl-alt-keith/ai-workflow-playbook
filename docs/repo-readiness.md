@@ -29,7 +29,12 @@ Open a pull request as ready for review when all of the following are true:
 - overlap and coordination risk are low
 - issue lifecycle should not affect pull request readiness; using `Closes #<issue>` follows standard GitHub behavior and should not delay marking a pull request as ready
 
-Before opening or updating a pull request, fetch current `origin/main`. If the branch is not based on current `origin/main`, update it onto current `origin/main`, resolve conflicts within the original task scope only, rerun the repository validation target, avoid unrelated cleanup, then push.
+Before opening or updating a pull request, fetch current `origin/main` and
+verify whether the branch is mergeable against current `main`. Update or rebase
+only for conflicts, overlapping upstream changes, repo policy, or explicit
+human request. Keep any conflict resolution within the original task scope,
+avoid unrelated cleanup, rerun the canonical validation entrypoint after the
+update, then push.
 
 Open a pull request as draft when any of the following are true:
 
@@ -38,7 +43,8 @@ Open a pull request as draft when any of the following are true:
 - reconciliation with other pending work is likely
 - the branch is intentionally staged for later promotion
 
-Docs-only changes should default to ready for review when they are validated and isolated.
+Docs-only changes should default to ready for review when canonical validation
+passes and the diff is isolated.
 
 When working in a multi-repo workspace, treat each repository as an independent unit of change. Even if multiple repositories are visible, commits, branches, and PRs must be created and managed per repository. Do not create cross-repo commits or PRs.
 
@@ -49,7 +55,8 @@ Before opening a PR, ensure that all staged changes belong to a single repositor
 Treat the following as the default branch protection baseline for `main`:
 
 - pull requests are required for changes to `main`
-- the repository validation check is required, typically `make check` or an equivalent single entrypoint
+- the repository validation check is required, typically `make check`; if a
+  repository uses a different single entrypoint, that repo's `AGENTS.md` owns it
 - admins follow the same merge rules
 - required approvals are not part of the default baseline unless a repository defines stricter repo-specific rules
 

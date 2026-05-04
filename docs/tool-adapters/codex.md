@@ -18,14 +18,18 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 - when multiple Codex projects, worktrees, or isolated directories are active, treat repository identity and execution-container identity as separate checks: confirm that the active execution container belongs to the repository named in the task before making changes; do not treat directory naming or a clean checkout alone as proof; if the active project or worktree does not match the intended repository, pause and switch before proceeding
 - keep this lightweight for normal same-repo work; a quick sanity check is enough
 - at the start of repo-scoped work, inspect the current git state
-- for every new repo-scoped arc, fetch `origin/main` once at the start and treat that fetched tip as the canonical base for the run
+- for every new repo-scoped arc, fetch current `origin/main` at task start and
+  anchor implementation to that fetched baseline
 - only remain on or reuse the current branch when the task explicitly says to continue that branch or PR
 - otherwise, create a new branch for the arc
 - if the active worktree or directory is not on up-to-date `main`, switch or recreate the branch from current `origin/main` before making changes
 - for medium or large arcs, verify the working branch is based on current `origin/main` before meaningful edits begin
-- after the run, check whether the resulting branch or PR is still mergeable against current `main`; if upstream moved in the meantime, treat that as a final-state mergeability check rather than a reason to restart or rebase mid-run by default
+- before opening or updating the PR, verify whether the resulting branch is
+  mergeable against current `main`
 - distinguish local execution state from remote PR state: a clean local branch means the run completed cleanly against its anchored base, while GitHub mergeability reflects the current remote state after newer `main` movement, required checks, and review requirements
-- make exceptions only when the task explicitly requires rebasing or when a real conflict or blocker appears that prevents finishing the requested work cleanly
+- update or rebase only when there is a conflict, overlapping upstream change,
+  repo policy requirement, or explicit human request; rerun canonical validation
+  after any update or rebase
 - do not treat transient GitHub `BLOCKED` or pending states as mid-run failures by default; inspect whether the cause is pending checks, pending review requirements, dependency ordering, or a true merge conflict, then wait or act accordingly
 - if normalization is unsafe or the state is unclear, pause and report rather than forcing cleanup
 
@@ -195,7 +199,7 @@ Codex should pause and ask for human input when:
   cleanliness alone
 - when refining an active PR within the same arc, update the existing branch and PR rather than opening a new PR; open a new PR only when the work changes phase, scope, or review surface
 - avoid bundling unrelated cleanup into the same PR
-- before calling the work complete, verify the PR diff contains only the intended arc; if `main` moved underneath the branch and overlap occurred, sync with current `main`, resolve conflicts, and rerun validation; if the branch carries unrelated history, rebuild the work onto a clean branch from current `main`
+- before calling the work complete, verify the PR diff contains only the intended arc; if `main` moved underneath the branch and overlap occurred, sync with current `main`, resolve conflicts, and rerun validation; if the branch carries unrelated history, rebuild the work onto a clean branch from current `origin/main`
 
 When behavior or supported capability changes, quickly check the existing docs for that area and update any statements that would become inaccurate before calling the work complete.
 

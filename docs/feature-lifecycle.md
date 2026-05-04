@@ -29,8 +29,14 @@ Prefer semantic assertions over formatting-sensitive assertions when formatting 
 
 Build only what is needed to satisfy the contract. Keep feedback loops short and avoid mixing extra polish into the first pass.
 
-For same-repo runs, anchor implementation to one fetched `origin/main` snapshot at task start and treat that snapshot as the canonical base for the duration of the run. Check mergeability against current `main` at the end as a separate release-readiness concern rather than repeatedly re-anchoring mid-run.
-A clean local branch at the end means the run stayed coherent against that anchored base; it does not by itself prove that a remote PR is still mergeable after `main` moves.
+For same-repo runs, fetch current `origin/main` at task start and anchor
+implementation to that fetched baseline. Check mergeability against current
+`main` before opening or updating the PR. Update or rebase only when there is a
+conflict, overlapping upstream change, repo policy requirement, or explicit
+human request, then rerun the repository's canonical validation entrypoint.
+A clean local branch at the end means the run stayed coherent against its
+anchored base; it does not by itself prove that a remote PR is still mergeable
+after `main` moves.
 
 ### Hardening
 
@@ -43,7 +49,9 @@ If GitHub shows `BLOCKED` or pending status at this stage, check the underlying 
 
 ### Capture
 
-Record what should become reusable guidance before the next delivery arc starts.
+Record any evidence-supported reusable lesson before the next delivery arc
+starts. If the lesson is promoted into the playbook, include a notes cleanup
+follow-up or state explicitly that no notes cleanup is needed.
 
 ## Project Maps
 
@@ -77,7 +85,8 @@ project-map-only PRs for release updates.
 
 After each merged phase, start a new branch and PR for the next lifecycle phase. This keeps the review surface narrow and preserves clean checkpoints.
 
-Start same-repo arcs from fresh `origin/main`. Do not reuse an old feature branch unless intentionally continuing that PR.
+Start same-repo arcs from freshly fetched `origin/main`. Do not reuse an old
+feature branch unless intentionally continuing that PR.
 
 ### Repo Change Completion
 

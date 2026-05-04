@@ -29,7 +29,7 @@ tooling.
 
 ## Context Refresh Primitive
 
-Canonical guidance for the validated org context refresh pattern lives in
+Canonical guidance for the verified org context refresh pattern lives in
 [`docs/context-refresh.md`](context-refresh.md). Use that page for when to run
 it, required verification inputs, failure handling, and the self-contained
 prompt block.
@@ -125,43 +125,23 @@ Constraints:
 External State Verification:
 - Verify live external state, such as GitHub repository or pull request state,
   before relying on it.
-- When available, fetch current repo or PR metadata before making decisions that
-  depend on it.
-- When asked to review, check, assess, approve, or comment on a PR, inspect the
-  PR directly unless explicitly asked for summary-only discussion.
-- Treat user-provided PR summaries as navigation and context only, not review
-  evidence.
-- If direct PR access is unavailable for a PR review, stop the review, state the
-  access blocker, and do not provide a merge or readiness recommendation.
-- If live state cannot be verified, explicitly state that limitation.
-- Do not infer PR status, CI status, or branch protection from summaries or
-  local files.
-- When code, tests, docs, risks, or user-facing claims depend on external public
-  API behavior, establish the current behavior from official docs, API
-  references, SDK docs, provider changelogs, or official release notes before
-  making the change.
-- Do not rely on memory or inference where official docs are available.
-- If official docs cannot confirm the behavior, state that uncertainty and avoid
-  encoding a false guarantee or limitation.
+- Follow the direct PR inspection rule in `docs/review-packet.md` when a task
+  asks for PR review, readiness, approval, or merge advice.
+- Follow the public API baseline in `docs/engineering-baseline.md` when code,
+  tests, docs, risks, or user-facing claims depend on external public API
+  behavior.
+- If live state cannot be verified, explicitly state that limitation and do not
+  infer PR status, CI status, or branch protection from summaries or local
+  files.
 
 Parallel Execution Plan:
-- Prefer parallel task execution when work can be separated cleanly by
-  repository, file area, or risk surface.
-- Before launching parallel runs, classify each task by lane: docs/governance,
-  isolated code path, shared API/client behavior, mutation/safety-critical path,
-  or release/checking.
-- Do not parallelize changes that share mutation paths, release state, schema
-  contracts, or fragile overlapping files unless a clear merge order exists.
-- Define merge order up front for parallel runs. Prefer docs/governance before
-  dependent docs, reusable infrastructure before repo adoption, shared
-  client/API behavior before callers, and safety/mutation changes after
-  dependent semantics are clear.
-- If two PRs overlap unexpectedly, pause, update or rebase in order, rerun the
-  repository's canonical validation, inspect the PRs directly, and do not merge
-  based only on local cleanliness.
-- Parallelism must preserve one-repo/one-branch/one-PR scope integrity,
-  workspace isolation, canonical validation, direct PR inspection, and
-  authoritative source requirements.
+- Follow the parallel execution and merge-order rules in
+  `docs/engineering-baseline.md`.
+- Before parallel work begins, classify each task by lane and define merge order
+  or state why merge order is flexible.
+- Preserve one-repo/one-branch/one-PR scope integrity, workspace isolation,
+  canonical validation, direct PR inspection, and authoritative source
+  requirements.
 
 Tasks:
 1. Inspect the existing structure and related docs or code.
@@ -169,25 +149,18 @@ Tasks:
 3. Update nearby docs or tests only when they are part of the same change.
 
 Validation:
-- Run the repository's canonical validation command, for example `make check`,
-  before opening or updating a PR when it exists and can run locally.
-- Do not treat CI as a substitute for available local canonical validation.
-- Do not add or rely on alternate validation tools unless they are explicitly
-  part of the repository-defined workflow.
+- Follow the validation rules in `docs/repo-readiness.md` and repo-local
+  `AGENTS.md`.
+- Run the repository's canonical validation command, such as `make check`, when
+  it exists and can run locally.
 - Report the actual result of validation; do not assume success.
 - If validation fails, include the failure details.
-- If a local tool needed by the canonical command is unavailable, do not
-  substitute another tool; report the limitation and rely on CI for enforcement
-  of checks that cannot be run locally.
 - If validation cannot be run, explain why.
 
 Deliverable:
-- Create a new focused branch using the repository-appropriate branch naming convention from the Codex adapter guidance.
-- Do not default to `codex/...` in product or implementation repositories.
-- If an isolated workspace is needed, follow the Codex adapter workspace
-  isolation rule: use `git worktree` under the repo's `.worktrees/` directory,
-  and stop for explicit approval before using any sibling worktree, full copy,
-  or clone.
+- Follow the branch, workspace, and PR delivery rules in
+  `docs/feature-lifecycle.md`, `docs/repo-readiness.md`, and
+  `docs/tool-adapters/codex.md`.
 - Stage only relevant changes.
 - Commit and push only the intended changes.
 - Open a non-draft PR against `main` unless explicitly instructed otherwise.
@@ -317,8 +290,8 @@ Use this prompt for workflow shape and readiness, not for deep code review.
 
 ### Playbook Update Use When
 
-Use this prompt when a validated workflow lesson from one or more repositories should
-be promoted into the shared playbook as reusable guidance.
+Use this prompt when an evidence-supported workflow lesson from one or more
+repositories should be promoted into the shared playbook as reusable guidance.
 
 ### Playbook Update Required Inputs
 
@@ -337,7 +310,7 @@ be promoted into the shared playbook as reusable guidance.
 
 ```text
 Task:
-Promote validated workflow rules into the playbook for <repository>.
+Promote evidence-supported workflow rules into the playbook for <repository>.
 
 Inputs:
 - Source repository: <repository>
@@ -347,27 +320,34 @@ Inputs:
 
 Instructions:
 - Review the existing playbook reference and the source repository context.
-- Identify workflow rules or patterns that have already been validated in practice and are reusable across repositories.
+- Identify workflow rules or patterns that have concrete evidence from real use,
+  review, repeated successful application, or merged repo work and are reusable
+  across repositories.
 - Update the playbook only where the lesson is durable, generic, and better captured centrally than locally.
 - Prefer tightening or extending existing playbook guidance over adding fragmented one-off notes.
 
 Constraints:
 - Treat <playbook_reference> as the canonical source for cross-repo workflow rules.
 - Do not copy project-specific implementation details, repo names, or local exceptions into the playbook.
-- Do not promote rules that are still speculative, unvalidated, or narrowly tied to one repository.
+- Do not promote rules that are still speculative, unsupported by concrete
+  evidence, or narrowly tied to one repository.
 - Keep the change scoped to one logical documentation update.
 
 Validation:
-- Verify that each promoted rule is reusable across at least two plausible repository contexts.
+- Verify that each promoted rule is backed by concrete cited evidence, not only
+  plausible reuse.
 - Verify that any repo-local rule remains outside the shared playbook.
 - Verify that updated wording does not conflict with existing core playbook documents.
 - Verify that the resulting file placement matches the playbook structure.
+- Verify that the update includes a notes cleanup follow-up or explicitly says
+  no notes cleanup is needed.
 
 Output format:
 1. Proposed playbook changes: brief summary paragraph.
 2. Rules promoted: short bullets with rationale.
 3. Files to update: list of target files and why.
-4. Validation notes: short bullets covering reuse, scope, and conflict checks.
+4. Validation notes: short bullets covering evidence, reuse, scope, conflict
+   checks, and notes cleanup.
 5. Open questions: only if a rule boundary is still unclear.
 ```
 
@@ -463,8 +443,8 @@ backlog work.
 - The source material stays a staging layer, not a commitment queue.
 - Target repositories own actionable issues only when the work is ready for a
   bounded repo change.
-- Cross-repo workflow lessons should remain playbook candidates until validated
-  by repo work; do not skip straight from raw notes to playbook updates.
+- Cross-repo workflow lessons should remain playbook candidates until supported
+  by repo evidence; do not skip straight from raw notes to playbook updates.
 
 ### Deferred Notes Issue Promotion Prompt
 
@@ -499,7 +479,7 @@ Instructions:
   a coherent sequence, but do not force arc structure when standalone issues are
   clearer.
 - Identify playbook candidates separately when the note points to a possible
-  reusable rule that still needs repo validation before promotion.
+  reusable rule that still needs concrete repo evidence before promotion.
 
 Constraints:
 - Do not create issues for every interesting idea.
@@ -525,7 +505,7 @@ Output format:
    acceptance criteria, and duplicate-check result.
 4. Optional arcs: short bullets only when grouping adds real clarity.
 5. Playbook candidates: optional bullets for reusable lessons that should wait
-   for repo validation.
+   for repo evidence.
 ```
 
 ### Deferred Notes Issue Promotion Notes
@@ -678,11 +658,11 @@ they are also expected to make and deliver repo changes.
 
 ```text
 Delivery:
-- Create a focused branch using the repository-appropriate branch naming convention from the Codex adapter guidance.
-- Do not default to `codex/...` in product or implementation repositories.
-- If isolated workspace setup is needed, use `git worktree` under the repo's
-  `.worktrees/` directory as required by the Codex adapter guidance; do not
-  create a sibling worktree, full copy, or clone without explicit approval.
+- Follow the branch, PR readiness, and workspace rules in
+  `docs/feature-lifecycle.md`, `docs/repo-readiness.md`, and
+  `docs/tool-adapters/codex.md`.
+- Fetch current `origin/main` at task start, anchor implementation to that
+  fetched baseline, and verify current mergeability before PR.
 - Stage only the relevant changes.
 - Commit with a clear message.
 - Push the branch.
@@ -776,7 +756,8 @@ Inputs:
 Instructions:
 - Inspect the current git state, existing diff, and branch context.
 - Confirm that the intended changes form one logical PR and identify any unrelated files or accidental scope.
-- If needed, create a fresh branch from current main, keep only the intended diff, and prepare a clear commit and PR description.
+- If needed, create a fresh branch from current `origin/main`, keep only the
+  intended diff, and prepare a clear commit and PR description.
 - Summarize the change in a way that supports quick human review and accurate merge decisions.
 
 Constraints:
@@ -787,7 +768,8 @@ Constraints:
 
 Validation:
 - Verify that the diff contains only the intended files and changes.
-- Verify that the branch is suitable for review and based on an appropriate mainline state.
+- Verify that the branch is suitable for review, anchored to the intended
+  mainline state, and checked for current mergeability before PR.
 - Verify that the reported validation matches what was actually run or observed.
 - Verify that the PR summary explains user-facing, workflow, or documentation impact as appropriate for the repo type.
 

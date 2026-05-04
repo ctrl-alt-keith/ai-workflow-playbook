@@ -21,10 +21,16 @@
 ## Notes vs Playbook
 
 - `cross-repo-threads` is a staging layer for ideas and experiments.
-- It is not canonical; treat repository code, tests, and docs as the source of truth and verify against playbook guidance.
+- It is not canonical and is not a direct path into playbook guidance.
+- Durable workflow guidance follows this order: idea -> notes staging ->
+  bounded repo issue or PR -> evidence-supported reusable lesson -> playbook
+  promotion -> notes cleanup.
+- Treat repository code, tests, docs, reviews, and merged PRs as the evidence
+  source for reusable lessons before promoting them into the playbook.
 
 ## Rule of Thumb
 
 - Prefer small, scoped changes.
-- Validate with the repo's Makefile.
+- Run repository validation through the repo's Makefile when it provides the
+  canonical entrypoint.
 - Open PRs ready for review by default unless explicitly instructed otherwise.
