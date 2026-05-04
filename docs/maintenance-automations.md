@@ -29,19 +29,12 @@ without copying long prompts or local execution paths.
 
 ## Configuration Notes
 
-- Current entries are active Codex cron automations.
-- Current entries use Codex worktree execution.
-- Codex can inspect local automation config and memory files when filesystem
-  permissions allow.
-- Codex can create or update local automation config files by following the
-  observed local schema and existing templates.
-- Treat automation config edits as file-level local configuration changes, not
-  as a guaranteed live client API update.
-- Restart the Codex client after changing automation configs, `instructions.md`,
-  or custom-instructions configs so the local client loads the new behavior.
-- Long prompt bodies, creation/update timestamps, model tuning details, and
-  local filesystem execution roots are intentionally omitted here unless needed
-  to explain operational behavior.
-- Do not expose secrets, local-only sensitive paths, raw prompts containing
-  private context, or environment-specific execution roots in this playbook;
-  summarize operational behavior instead.
+- Current entries reflect active Codex cron automations.
+- This document summarizes behavior and intent; it does not replicate full prompt
+  bodies or local configuration.
+- Treat automation configuration as local operational state, not canonical
+  workflow guidance.
+- Detailed automation configuration should remain in local configuration files,
+  not in the playbook.
+- Do not expose secrets, local-only paths, raw prompts containing private
+  context, or environment-specific details in the playbook.
