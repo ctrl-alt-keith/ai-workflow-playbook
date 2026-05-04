@@ -137,7 +137,7 @@ Maximum 3 bullets.
 - Each item must be small, high leverage, and directly actionable.
 - Prefer moves that reduce ambiguity, unblock near-term work, or protect repo boundaries.
 
-Validation Requirements:
+Verification Requirements:
 - Ground all statements in verified repo state.
 - Do not guess or infer missing information.
 - Do not mark Drift as `accurate` unless the repo was actually verified.

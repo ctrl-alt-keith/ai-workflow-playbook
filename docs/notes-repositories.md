@@ -1,8 +1,9 @@
 # Notes Repositories
 
 Use a notes repository as a staging layer for workflow material that is still
-being explored, refined, or validated. Use this playbook repository as the
-canonical source only after that material has been proven reusable.
+being explored, refined, or supported with concrete evidence. Use this playbook
+repository as the canonical source only after that material has been proven
+reusable.
 
 This split keeps early capture lightweight without turning the playbook into a
 scratch space.
@@ -15,6 +16,20 @@ scratch space.
   the cross-repo rule or pattern.
 - A notes repository is not a second canonical source once promotion has
   happened.
+
+## Terms
+
+- `canonical`: the source that owns reusable workflow guidance after promotion.
+- `staging`: provisional notes, experiments, and local observations that may
+  inform later work but do not govern repositories.
+- `evidence-supported`: backed by concrete evidence such as real use, review,
+  repeated successful application, or merged repo work.
+- `validated`: reserved for repository validation commands and their results,
+  such as `make check`.
+- `promotion`: moving only the durable reusable lesson into the playbook after
+  evidence supports it.
+- `bounded`: scoped tightly enough to become one focused repo issue, PR, or
+  short arc.
 
 ## What Belongs In Notes
 
@@ -36,10 +51,10 @@ separate:
   ready to guide action yet
 - Deferred ideas: notes worth revisiting later, but still too broad,
   speculative, duplicated, or blocked to become repo work now
-- Bounded repo issues: action-ready work for a specific repository with a clear
-  scope, value, and acceptance shape
-- Playbook candidates: validated lessons that may later become reusable
-  cross-repo guidance after repo work proves the pattern
+- Bounded repo issues or PRs: action-ready work for a specific repository with
+  a clear scope, value, and acceptance shape
+- Playbook candidates: evidence-supported lessons that may later become
+  reusable cross-repo guidance after repo work proves the pattern
 
 Do not treat these states as a conveyor belt where every note must advance.
 Many notes should stay raw, many ideas should stay deferred, and only a narrow
@@ -52,7 +67,8 @@ following is true:
 
 - the same friction, gap, or cleanup need shows up repeatedly
 - the value is clear enough that repo-local action is justified now
-- the work is ready to be scoped, assigned, and validated in a specific repo
+- the work is ready to be scoped, assigned, implemented, and checked in a
+  specific repo
 
 Keep the item as a deferred idea when it is still mostly brainstorming,
 duplicate with existing backlog items, blocked on outside decisions, or too
@@ -77,12 +93,14 @@ Promote notes into the playbook when the guidance is:
 - reusable across multiple projects or workflow arcs
 - specific enough to tell people how to act, not just what was observed
 - stable enough that the core rule is unlikely to churn immediately
-- validated by real use, review, or repeated successful application
+- supported by concrete evidence from real use, review, repeated successful
+  application, or merged repo work
 - scoped so the playbook receives the rule, pattern, or checklist rather than
   project-specific residue
 
 If the content is still mostly retrospective detail, raw examples, or local
-context, keep refining it in notes instead of promoting it early.
+context, keep refining it in notes instead of promoting it early. The promotion
+packet should cite the evidence that supports the lesson.
 
 ## Promotion Flow
 
@@ -90,8 +108,10 @@ Use this general sequence:
 
 1. Capture the emerging pattern in notes while the work is fresh.
 2. Defer, group, or trim ideas that are not ready for action yet.
-3. Promote only action-ready, repo-local work into bounded repository issues.
-4. Tighten validated reusable guidance until it is ready for the playbook.
+3. Promote only action-ready, repo-local work into bounded repository issues or
+   PRs.
+4. Complete bounded repo work and capture the evidence-supported reusable
+   lesson.
 5. Promote the reusable rule into the playbook as the canonical version.
 6. Update or trim the notes so they no longer compete with the promoted source.
 
