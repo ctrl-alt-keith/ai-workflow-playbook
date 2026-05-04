@@ -29,7 +29,7 @@ without copying long prompts or local execution paths.
 
 ## Configuration Notes
 
-- Current entries reflect active Codex cron automations.
+- Entries reflect currently active maintenance automations.
 - This document summarizes behavior and intent; it does not replicate full prompt
   bodies or local configuration.
 - Treat automation configuration as local operational state, not canonical
