@@ -154,6 +154,36 @@ Markdown file instead of the pull request's changed Markdown files. Use
 authoritative for the caller repository but not built into the scanner. Use
 `playbook_ref` only when testing or pinning a non-`main` playbook ref.
 
+### Reusable Workflow Pinning
+
+Reusable workflows consumed by other repositories should be treated as
+cross-repo dependencies. GitHub documents that reusable workflows can be
+referenced by SHA, release tag, or branch, and that commit SHA references are
+the safest option for stability and security:
+
+- [Reusable workflow reference](https://docs.github.com/en/actions/reference/workflows-and-actions/reusable-workflows#behavior-of-reusable-workflows-when-re-running-jobs)
+- [Secure use guidance](https://docs.github.com/en/actions/reference/security/secure-use#reusing-third-party-workflows)
+
+Default stable callers to a release tag or full-length commit SHA instead of
+`@main`. Use a full-length commit SHA for security-sensitive, release-blocking,
+or otherwise behavior-sensitive checks. Use a release tag when readable version
+intent and routine update ergonomics matter more than strict immutability, and
+the workflow owner has a clear tag-publishing practice.
+
+`@main` is acceptable only while the reusable workflow is actively iterating
+with known downstream callers, while the workflow is unpublished or explicitly
+experimental, or when the caller intentionally wants every default-branch change
+immediately. Before treating the workflow as a stable shared contract, replace
+`@main` with a tag or SHA and document the expected update path.
+
+When rolling out updates, publish or choose the next workflow ref first, then
+update downstream callers in scoped pull requests. Each downstream update should
+state the old and new refs, run the caller repository's canonical validation and
+CI path, and keep any required compatibility fixes in the same review surface.
+For this playbook's advisory scanner, pin `playbook_ref` to the same tag or SHA
+as the reusable workflow unless the caller is deliberately testing a split
+workflow/scanner ref.
+
 ## Relationship to Playbook
 
 - The AI workflow playbook builds on this baseline.
