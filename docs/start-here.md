@@ -9,6 +9,7 @@
 
 - `docs/engineering-baseline.md` -> foundational engineering expectations
 - `docs/repo-readiness.md` -> repository workflow expectations
+- `docs/maintenance-automations.md` -> recurring Codex maintenance automation expectations
 - `docs/prompts.md` -> reusable prompt templates
 
 ## Execution Model

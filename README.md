@@ -65,4 +65,5 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/playbook-integrity-check.md`](docs/playbook-integrity-check.md): lightweight anti-drift check
 - [`docs/new-repo-bootstrap.md`](docs/new-repo-bootstrap.md): reusable bootstrap pattern for brand-new repositories
 - [`docs/context-refresh.md`](docs/context-refresh.md): validated context refresh primitive for baseline briefs plus verified repo state
+- [`docs/maintenance-automations.md`](docs/maintenance-automations.md): concise inventory and operating rules for recurring Codex maintenance automation
 - [`docs/prompts.md`](docs/prompts.md): reusable prompt templates, including the standard Codex task prompt format
