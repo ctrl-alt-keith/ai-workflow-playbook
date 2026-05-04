@@ -163,7 +163,8 @@ Deliverable:
   `docs/tool-adapters/codex.md`.
 - Stage only relevant changes.
 - Commit and push only the intended changes.
-- Open a non-draft PR against `main` unless explicitly instructed otherwise.
+- Open a PR in the appropriate readiness state against the intended base
+  branch, usually `main`.
 - Ensure the PR contains only intended changes.
 - Include a summary, validation results, and any residual risks.
 ```
@@ -198,8 +199,8 @@ Validation:
 - Report the actual result, including failure details if it fails.
 
 Deliverable:
-- Open a non-draft PR against `main` with summary, validation results, and
-  residual risks.
+- Open a PR in the appropriate readiness state against `main` with summary,
+  validation results, and residual risks.
 ```
 
 ### Model Selection And Cost Guidance
@@ -666,7 +667,8 @@ Delivery:
 - Stage only the relevant changes.
 - Commit with a clear message.
 - Push the branch.
-- Open a non-draft PR against the intended base branch, usually `main`, unless a draft PR is explicitly requested.
+- Open a PR in the appropriate readiness state against the intended base branch,
+  usually `main`.
 - Report the PR link, files changed, and validation results.
 ```
 
