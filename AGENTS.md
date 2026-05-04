@@ -17,11 +17,13 @@ Repo-local rules take precedence only for repo-specific behavior.
 
 ## Validation
 
-- CI uses `markdownlint`.
 - Use `make check` as the canonical local validation entrypoint.
 - Run `make check` before opening or updating a PR.
-- Treat direct `markdownlint` invocation as an implementation detail of the
-  Makefile target.
+- `make check` runs Markdown lint and scanner unit tests.
+- Treat direct validation tool calls as implementation details of the Makefile
+  target.
+- Authoritative-source scanning is advisory and non-blocking unless a caller
+  configures that workflow to be stricter.
 - CI remains the enforcing authority if local tooling is unavailable.
 
 ## Branches
