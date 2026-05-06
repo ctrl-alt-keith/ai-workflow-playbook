@@ -10,7 +10,9 @@ Use this pattern when bootstrapping a brand-new repository from a fresh project 
 4. Create a minimal initial `main` commit.
 5. Push `main` to establish the base branch remotely.
 6. Create a feature branch for the real bootstrap work.
-7. Open a PR for the bootstrap content rather than merging directly.
+7. Add the narrow local workflow artifact ignore baseline before worktree or
+   automation use begins.
+8. Open a PR for the bootstrap content rather than merging directly.
 
 This keeps the actual bootstrap reviewable while avoiding ambiguity about where the repository starts.
 
@@ -33,6 +35,7 @@ decisions needed to make that posture clear:
 - credential handling expectations
 - authoritative external documentation boundaries
 - validation entrypoint or current validation gap
+- local workflow artifact ignore baseline
 - lightweight ecosystem registration needs after bootstrap
 
 Keep these decisions short and operational. Repo-specific examples,
@@ -52,6 +55,19 @@ If the bootstrap work is complete, the PR should be ready for review by default.
 ### Relative Links From The Start
 
 Repo docs should use relative links from the start. Absolute local filesystem paths are not portable and can leak machine-specific context into the repository.
+
+### Local Workflow Artifact Hygiene
+
+Bootstrap should include ignore rules for standardized workflow-local
+infrastructure that the repo expects humans, Codex, or maintenance automation to
+create locally. Keep this intentionally narrow: include repo-local workflow paths
+such as `.worktrees/`, and avoid expanding bootstrap into generic workstation,
+editor, runtime, or temporary-file policy.
+
+Dirty-tree safety checks depend on this baseline. If standardized local workflow
+artifacts appear as untracked files, conservative automation should skip rather
+than mutate the repository, but the repo has lost the predictable clean state the
+workflow expects.
 
 ### Positioning, Scope, And Architecture
 
