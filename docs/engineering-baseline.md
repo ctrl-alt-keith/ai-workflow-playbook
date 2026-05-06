@@ -145,7 +145,8 @@ that do not depend on external API semantics.
 
 For repositories that depend on external providers, specs, CLIs, SDKs, or
 hosted platforms, keep the boundary between documented behavior and local
-assumption visible:
+assumption visible. This boundary is part of the repository's safety posture,
+not just a citation habit:
 
 - Treat official provider or specification docs as authoritative for behavior
   claims.
