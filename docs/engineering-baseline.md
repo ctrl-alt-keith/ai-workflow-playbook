@@ -141,6 +141,29 @@ sources before making the change.
 This requirement does not apply to trivial changes or internal-only refactors
 that do not depend on external API semantics.
 
+### External Dependency Boundaries
+
+For repositories that depend on external providers, specs, CLIs, SDKs, or
+hosted platforms, keep the boundary between documented behavior and local
+assumption visible. This boundary is part of the repository's safety posture,
+not just a citation habit:
+
+- Treat official provider or specification docs as authoritative for behavior
+  claims.
+- Distinguish documented guarantees from observed behavior in code comments,
+  docs, tests, risks, and PR notes.
+- Record the checked date when the behavior is operationally important,
+  time-sensitive, or likely to change.
+- Prefer conservative workflows when docs are incomplete, ambiguous, or silent.
+- Do not turn unverified assumptions into architecture, public guarantees, or
+  destructive default behavior.
+- Keep credentials in the environment or approved secret stores; do not encode
+  account-specific state, private topology, or local paths into reusable docs.
+
+Provider-specific API semantics belong in the repository that uses that
+provider, backed by direct official sources. The playbook should define the
+verification posture, not repeat external documentation.
+
 ### Reusable Advisory Check
 
 Repositories can call the canonical advisory scanner from this playbook instead

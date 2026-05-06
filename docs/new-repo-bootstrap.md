@@ -14,6 +14,31 @@ Use this pattern when bootstrapping a brand-new repository from a fresh project 
 
 This keeps the actual bootstrap reviewable while avoiding ambiguity about where the repository starts.
 
+## Bootstrap Posture Checklist
+
+For public, infrastructure-adjacent, or externally dependent repositories,
+bootstrap should connect public positioning, operational posture, and technical
+shape before feature work begins. Include only the durable repo-shaping
+decisions needed to make that posture clear:
+
+- purpose and audience
+- public or private posture
+- license selection for public repositories
+- non-affiliation language when the repository could be mistaken for an
+  official, vendor-owned, or endorsed project
+- scope boundaries and explicit non-goals
+- safety model and mutation boundaries
+- reviewable artifacts, such as deterministic manifests or reports, when the
+  repository produces operational output
+- credential handling expectations
+- authoritative external documentation boundaries
+- validation entrypoint or current validation gap
+- lightweight ecosystem registration needs after bootstrap
+
+Keep these decisions short and operational. Repo-specific examples,
+implementation details, provider behavior, and legal analysis belong outside
+the reusable playbook.
+
 ## Lessons
 
 ### Base Branch First
@@ -27,6 +52,51 @@ If the bootstrap work is complete, the PR should be ready for review by default.
 ### Relative Links From The Start
 
 Repo docs should use relative links from the start. Absolute local filesystem paths are not portable and can leak machine-specific context into the repository.
+
+### Positioning, Scope, And Architecture
+
+Establish one coherent posture before feature growth. A repository should state
+what it is, what it is not, and how its technical choices reinforce that
+boundary. If readers could confuse it with an official provider, upstream,
+customer, or employer project, include a brief non-affiliation statement in
+repo-local docs.
+
+Do not turn positioning into legal policy. The reusable requirement is clarity:
+avoid implied endorsement, hidden ownership assumptions, or ambiguous safety
+claims.
+
+### Scope And Non-Goals
+
+Define the first working boundary before adding implementation weight:
+
+- what workflows the repository intentionally supports
+- what workflows it intentionally excludes
+- what live-service, production, destructive, or credentialed behavior is out
+  of scope by default
+- what assumptions must remain explicit until verified
+
+Use non-goals to prevent accidental expansion, especially platform gravity
+toward orchestration systems, desired-state platforms, automation frameworks,
+or generalized control planes. Include that evolution only when it is an
+explicit repository goal.
+
+### Public-Safe Operating Posture
+
+For public repositories near infrastructure, automation, credentials, or
+mutable external systems, default to conservative safety boundaries. The
+architecture should match the stated posture:
+
+- dry-run or inspect-first behavior before mutation
+- explicit mutation boundaries
+- deterministic manifests or reports for reviewable output
+- environment-only credential handling
+- no committed secrets, local paths, account identifiers, or private topology
+- explicit confirmation for destructive or irreversible operations
+- clear separation between observed behavior and documented guarantees
+
+The playbook guidance is the posture, not a mandate for a specific
+architecture. Avoid hidden destructive behavior and do not let implementation
+convenience contradict the public scope or safety claim.
 
 ### Validation In A Docs-First Repo
 
@@ -43,6 +113,25 @@ Keep the bootstrap workflow tool-aware but practical:
 - repo and PR metadata may be easier to inspect through a connector when available
 - repo creation, branch publishing, or current-branch PR actions may still need `gh`
 - if a connector mutation misbehaves, use the simplest working CLI fallback and verify the resulting state
+
+### Lightweight Ecosystem Registration
+
+A repository is not fully integrated when the first bootstrap PR merges. After
+bootstrap, check that surrounding workflow systems know the repository exists
+where that awareness matters:
+
+- repo inventories or org briefs
+- automation inventories or scheduled maintenance lists, when the repo is
+  intentionally covered
+- cross-repo prompts or context refresh inputs
+- sibling-repo references, when they intentionally name the repository
+- validation or advisory workflow adoption, when applicable
+
+Keep this lightweight. Registration means inventories, audits, and context
+systems can classify the repo correctly. It does not imply mature automation
+support, operational ownership, or service guarantees. Distinguish
+intentionally excluded repositories from accidentally invisible ones, then
+update only the systems that should know about the repo.
 
 ## Reuse
 
