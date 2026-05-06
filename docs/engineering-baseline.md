@@ -37,6 +37,26 @@ Define shared engineering expectations across repositories. This baseline forms 
 - Keep commits clean and focused.
 - PRs are ready for review by default.
 
+## Config And CLI Default Changes
+
+When extending config/default precedence or CLI override logic, identify every
+parallel structure that describes the field before editing: allowlists,
+candidate/default maps, source labels, option-name maps, redaction lists, and
+error-message paths. Update them together or replace the parallel structure with
+one source of truth when that is locally simple.
+
+For each new config-validation CLI override, add focused tests for both accepted
+and rejected command paths:
+
+- a supported command accepts the override and reports the expected source,
+- an unsupported command fails cleanly with the option name in the parser or
+  validation error,
+- raw implementation exceptions, such as missing-map `KeyError`s, do not leak
+  through.
+
+When commands have command-specific allowed fields, test at least one supported
+and one unsupported command for each new override.
+
 ## Licensing Baseline
 
 - Use Apache License 2.0 as the default license for public repositories unless
