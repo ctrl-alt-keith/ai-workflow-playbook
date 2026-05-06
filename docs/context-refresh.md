@@ -50,6 +50,7 @@ Working Context:
   - ai-workflow-playbook
   - ka-destinations
   - linode-image-lab
+  - linode-backup-lab
 - Local notes layer:
   - cross-repo-threads
   - reference only
@@ -123,6 +124,7 @@ Assess whether the org still has clean repo boundaries:
 - ka-destinations = publishing
 - ai-workflow-playbook = guidance
 - linode-image-lab = public-safe Linode image freeze/thaw workflow lab
+- linode-backup-lab = public-safe Linode backup validation and snapshot inspection lab
 
 Call out only meaningful drift, overlap, or ambiguity.
 Maximum 3 bullets.
@@ -158,12 +160,14 @@ Output Format (strict):
 - ai-workflow-playbook:
 - ka-destinations:
 - linode-image-lab:
+- linode-backup-lab:
 
 ## Current State
 - knowledge-adapters:
 - ai-workflow-playbook:
 - ka-destinations:
 - linode-image-lab:
+- linode-backup-lab:
 
 ## Cross-Repo Health
 - ...
