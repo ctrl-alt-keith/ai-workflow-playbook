@@ -114,14 +114,13 @@ stop after the findings or recommendations unless the request also asks for
 shipped changes. If those tasks do produce repo changes, follow the same
 branch, validation, and PR flow before calling them complete.
 
-For mixed-purpose repos that contain code, docs, tests, and release or
-workflow content, keep purpose-based branch prefixes such as `feat/`, `fix/`,
-`docs/`, `chore/`, `refactor/`, and `test/`. Reserve broad tool-oriented
-prefixes such as `codex/` for doc-only repos, scratch experiments, or repos
-whose branch convention explicitly allows them. Branch names should describe
-the change, not the tool that made it; for example
-`feat/minimal-cli-baseline`, `docs/project-map`, `chore/release-v0.7.0`, and
-`fix/run-ctrl-c-skip`.
+Use purpose-based branch prefixes that describe the change, not the tool that
+made it. AI-agent branches should use concise, non-tool-branded names such as
+`docs/<short-topic>`, `fix/<short-topic>`, `chore/<short-topic>`, or
+`feature/<short-topic>`. Repo-local guidance may narrow the allowed prefixes,
+such as using `feat/` instead of `feature/`, but broad tool-name prefixes such
+as `codex/`, `claude/`, or `copilot/` should be avoided unless a repository
+intentionally requires them.
 
 For same-repo parallel work, prefer isolated Git worktrees over multiple arcs
 sharing one checkout. Keep the main checkout clean and on `main`, fetch before
