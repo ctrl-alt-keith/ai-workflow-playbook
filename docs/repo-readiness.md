@@ -79,6 +79,41 @@ This document defines expectations, not exact GitHub settings.
 
 Reusable workflow rules belong in the playbook, not duplicated into each repository's `AGENTS.md`.
 
+## Repository Categories
+
+Most repositories fit one or more broad surfaces: docs or workflow guidance,
+implementation code, API or provider-facing contracts, or a mix of those
+surfaces. Apply the shared workflow baseline to each repository, then let
+repo-local `AGENTS.md` describe only the local execution details that make that
+repository different.
+
+Org infrastructure repositories are special-purpose repositories that hold
+organization-level platform material. Examples include GitHub `.github`
+repositories for org profile content, community health files, templates,
+metadata, or GitHub-supported defaults.
+
+Org infrastructure repositories still follow the shared workflow rules where
+they apply: one repo, one branch, one pull request; current `origin/main` as the
+base; purpose-based branch names; small scoped diffs; human-readable review
+summaries; no unrelated cleanup; and public artifact path hygiene.
+
+Normal project-repository expectations may not apply until the repository grows:
+`make check`, tests, package, build, release, or implementation-specific file
+placement rules may be absent. Do not add a Makefile, CI, package scaffold, or
+release workflow only to satisfy expectations that the repository does not yet
+need.
+
+When an org infrastructure repository has no documented canonical validation
+command, validation may be inspection-based. Repo-local `AGENTS.md` should say
+what to inspect, such as Markdown rendering, links, repository scope, and
+public-safe content. If the repository later documents a canonical command, use
+that command as the local validation path instead.
+
+Org infrastructure repositories should not own project-specific docs,
+implementation code, or reusable workflow policy for other repositories.
+Reusable workflow guidance belongs in this playbook; project-specific rules
+belong in the affected project repository.
+
 ## Validation
 
 - `make check` is the canonical validation entrypoint when the repository provides one.
