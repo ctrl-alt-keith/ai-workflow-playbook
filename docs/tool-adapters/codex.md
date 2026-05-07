@@ -219,6 +219,8 @@ When behavior or supported capability changes, quickly check the existing docs f
 - treat checks as CI-only only when the repository does not expose a local
   canonical path for them or the local canonical path cannot run in the current
   environment
+- do not infer merge or release gates from check names alone; use the
+  repository's documented validation taxonomy and required CI status
 - report clearly when no local validation path exists
 - until a formal validation path exists, report that gap and keep any review to
   scope and consistency notes rather than presenting it as substitute

@@ -64,8 +64,9 @@ branch and PR. Simple one-step tasks do not need this much structure.
 - `Constraints`: guardrails that prevent overengineering, unrelated cleanup, and
   behavior drift.
 - `Tasks`: ordered work items when the path matters.
-- `Validation`: concrete repo commands or checks, such as `make check`, plus any
-  manual review expected.
+- `Validation`: the canonical repo command, such as `make check`, when
+  available, plus any explicitly advisory, CI-only, release-only, or manual
+  review expectations.
 - `Deliverable`: branch, commit, PR, review packet, or handoff expectations.
 
 Keep prompts concise but complete. The goal is to remove ambiguity that would
