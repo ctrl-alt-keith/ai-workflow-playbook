@@ -92,6 +92,11 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 
 - before repo- or PR-dependent work, verify GitHub access instead of relying on
   cached context, summaries, or local branch state
+- prefer direct `gh ...` invocations for GitHub CLI operations; do not
+  shell-wrap `gh` commands unless shell behavior is required, such as pipes,
+  redirects, globbing, command substitution, or compound conditionals
+- expect shell-wrapped `gh` commands to prompt when local approval rules allow
+  only the direct command form
 - use `gh repo view` to confirm the target repository is reachable
 - when PR state matters, use `gh pr view` to fetch current PR metadata before
   making decisions
