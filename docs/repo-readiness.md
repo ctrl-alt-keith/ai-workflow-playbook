@@ -57,6 +57,8 @@ Treat the following as the default branch protection baseline for `main`:
 - pull requests are required for changes to `main`
 - the repository validation check is required, typically `make check`; if a
   repository uses a different single entrypoint, that repo's `AGENTS.md` owns it
+- additional CI-only checks block merge only when branch protection or
+  repo-local guidance explicitly makes them required
 - admins follow the same merge rules
 - required approvals are not part of the default baseline unless a repository defines stricter repo-specific rules
 
@@ -70,7 +72,8 @@ This document defines expectations, not exact GitHub settings.
 - the canonical validation entrypoint, typically `make check`
 - what the canonical validation entrypoint includes
 - justified exclusions from local validation
-- CI-only or advisory checks that are not part of the local blocking path
+- CI-only, advisory, smoke, chaos, or release-only checks that are not part of
+  the local blocking path, including whether they block merge or release
 - branch or commit conventions that are specific to the repository
 - repo-specific constraints, boundaries, or file placement rules
 
@@ -93,6 +96,35 @@ Reusable workflow rules belong in the playbook, not duplicated into each reposit
   environment.
 - CI is the enforcement layer.
 - Local validation should match CI behavior as closely as practical.
+
+### Check Taxonomy And Gates
+
+Use one clear role for each check:
+
+- Canonical local validation is the repo-owned local command, typically
+  `make check`. When it exists and can run locally, it blocks local readiness
+  and PR completion until it passes.
+- CI-only checks run remotely because they have no practical local canonical
+  path, require hosted infrastructure, depend on credentials, or are too slow or
+  disruptive for normal local work. They block merge only when branch protection
+  or repo-local guidance explicitly requires them.
+- Advisory checks surface risk or missing evidence. They do not block local
+  readiness, merge, or release unless the repository deliberately promotes them
+  into a documented required check.
+- Smoke checks are narrow confidence checks. Their gate depends on placement:
+  inside `make check` they block local readiness, as required CI they block
+  merge, and otherwise they remain advisory.
+- Chaos checks exercise resilience, stress, failure modes, or long-running
+  scenarios. Default them to advisory, scheduled, or release-only unless the
+  repository explicitly documents a stricter merge or release gate.
+- Release-only checks run for release preparation or publish decisions. They
+  block release when documented, but they do not block ordinary PR readiness or
+  merge unless repo-local guidance says so.
+
+Do not create hidden validation gates. If a check is expected to block local
+readiness, merge, or release, document the check name, when it runs, what it
+blocks, and what to report when it is unavailable. Otherwise report the result
+as informational or advisory evidence, not as an unstated requirement.
 
 ### Minimum `make check` Coverage By Repo Type
 
