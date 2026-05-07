@@ -67,3 +67,5 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/context-refresh.md`](docs/context-refresh.md): verified context refresh primitive for baseline briefs plus verified repo state
 - [`docs/maintenance-automations.md`](docs/maintenance-automations.md): reusable operating rules plus reference inventory notes for recurring Codex maintenance automation
 - [`docs/prompts.md`](docs/prompts.md): reusable prompt templates, including the standard Codex task prompt format
+
+> AI-generated. Human-verified. Occasionally argued about.
