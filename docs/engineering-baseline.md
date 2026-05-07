@@ -201,6 +201,54 @@ Markdown file instead of the pull request's changed Markdown files. Use
 authoritative for the caller repository but not built into the scanner. Use
 `playbook_ref` only when testing or pinning a non-`main` playbook ref.
 
+### Incremental Advisory Adoption
+
+Use the advisory check first in API-facing repositories where public API claims
+are common and the repository already has a clear canonical validation path.
+Google-facing and Atlassian-facing repositories are good candidates when their
+docs, tests, or PR notes regularly cite vendor API behavior.
+
+Adopt the check in this order:
+
+1. Inventory the changed surfaces that make public API claims, such as docs,
+   generated-client notes, schemas, examples, and PR descriptions.
+2. Identify the narrow official vendor documentation domains needed for that
+   repository's APIs. Prefer product API references, developer portals,
+   official schemas, SDK docs, release notes, and changelogs controlled by the
+   vendor.
+3. Add the reusable workflow in `scan_mode: changed` with only those narrow
+   `official_domains`. Keep it advisory and visible in PR checks.
+4. Triage the first findings in ordinary PR review. Replace community, blog, or
+   third-party links with official sources when official sources exist.
+5. Use a nearby source justification only when official docs are unavailable,
+   ambiguous, or insufficient for the specific edge case. Keep the claim
+   conservative.
+6. Expand to the next repository only after the current repository has a small,
+   understandable finding pattern and no broad domain suppressions.
+
+Keep rollout lightweight. Do not require every historical Markdown file to be
+clean before adoption. Use `scan_mode: all` only for an explicit audit PR, not
+as the default rollout posture. Do not make advisory warnings required merge
+gates unless the caller repository explicitly documents that stricter local
+policy.
+
+False-positive mitigation should stay local and narrow:
+
+- Prefer specific official documentation domains over broad corporate domains.
+- Do not add broad allowlists for mixed domains that also host community,
+  marketing, or blog content.
+- Keep third-party investigation links separate from authoritative API claims,
+  or add a nearby source justification when no official source exists.
+- Avoid mixed source dumps where one community link appears to support many API
+  claims.
+- Fix wording when the scanner reveals an unsupported guarantee rather than
+  suppressing the finding.
+
+Implementation details remain in the reusable workflow and scanner. Caller
+repositories should document only their chosen official documentation domains,
+any repo-local advisory status, and any intentional exclusions from local
+blocking validation.
+
 ### Reusable Workflow Pinning
 
 Reusable workflows consumed by other repositories should be treated as
