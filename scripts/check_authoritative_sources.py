@@ -23,7 +23,17 @@ PUBLIC_API_CONTEXT_RE = re.compile(
     re.IGNORECASE,
 )
 
-DEFAULT_OFFICIAL_SUFFIXES = ("akamai.com", "linode.com", "python.org")
+DEFAULT_OFFICIAL_SUFFIXES = (
+    "akamai.com",
+    "linode.com",
+    "python.org",
+    "cloud.google.com",
+    "developers.google.com",
+    "firebase.google.com",
+    "developer.atlassian.com",
+    "docs.atlassian.com",
+    "support.atlassian.com",
+)
 OFFICIAL_GITHUB_DOMAINS = {"api.github.com", "docs.github.com"}
 OFFICIAL_GITHUB_PATH_MARKERS = (
     "/github/docs",
@@ -32,13 +42,12 @@ OFFICIAL_GITHUB_PATH_MARKERS = (
 )
 SAME_ORG_GITHUB_OWNERS = {"ctrl-alt-keith"}
 KNOWN_THIRD_PARTY_SUFFIXES = ("stackoverflow.com", "medium.com", "dev.to")
-JUSTIFICATION_MARKERS = (
-    "source justification:",
-    "source exception:",
-    "non-authoritative-source-ok",
-    "third-party-source-ok",
-    "official docs unavailable",
-    "authoritative docs unavailable",
+JUSTIFICATION_RE = re.compile(
+    r"\b("
+    r"source justification|source exception|"
+    r"non-authoritative-source-ok|third-party-source-ok"
+    r")\s*:\s*\S",
+    re.IGNORECASE,
 )
 
 
@@ -104,7 +113,7 @@ def reason_for(url: str) -> tuple[str, str]:
 
 def justified(lines: list[str], index: int) -> bool:
     nearby = " ".join(lines[max(0, index - 1) : min(len(lines), index + 2)]).lower()
-    return any(marker in nearby for marker in JUSTIFICATION_MARKERS)
+    return JUSTIFICATION_RE.search(nearby) is not None
 
 
 def public_api_context(lines: list[str], index: int) -> str | None:
@@ -218,7 +227,7 @@ def warning_line(finding: dict[str, object]) -> str:
         message += f" {finding['count']} URLs from this domain were detected."
     message += (
         f" Matched public API context: {finding['context']}. "
-        "Replace with official docs or add a source justification if official docs are unavailable."
+        "Replace with official docs or add a visible source justification if official docs are unavailable."
     )
     message = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
 
