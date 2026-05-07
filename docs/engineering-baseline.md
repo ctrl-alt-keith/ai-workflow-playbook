@@ -66,6 +66,21 @@ and one unsupported command for each new override.
 - Keep licensing guidance simple and reusable; put repository-specific
   exceptions in the repository's own setup notes.
 
+## Public Artifact Path Hygiene
+
+Public-facing workflow artifacts should avoid machine-local absolute filesystem
+paths. This includes public docs, reusable examples, manifests, validation
+notes, PR evidence, and reusable workflow guidance.
+
+Prefer relative paths, repo-root placeholders, lint-safe example placeholders,
+and temporary-directory abstractions instead. When an example needs a scratch
+location, show the pattern rather than a captured local path, such as a
+`mktemp`-style temporary directory or `[temporary-directory]/artifact`.
+
+Machine-local paths reduce portability and can leak unnecessary local context
+into public artifacts. Keep path examples reusable unless the artifact is
+explicitly private, local-only, and not intended for publication.
+
 ## Parallel Execution And Merge Ordering
 
 Prefer parallel task execution when work can be cleanly separated by repository,

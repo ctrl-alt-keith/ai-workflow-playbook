@@ -54,7 +54,10 @@ If the bootstrap work is complete, the PR should be ready for review by default.
 
 ### Relative Links From The Start
 
-Repo docs should use relative links from the start. Absolute local filesystem paths are not portable and can leak machine-specific context into the repository.
+Repo docs should use relative links from the start. For public bootstrap
+artifacts, apply the baseline path-hygiene rule: avoid machine-local absolute
+paths in docs, examples, manifests, validation notes, and reusable workflow
+guidance.
 
 ### Local Workflow Artifact Hygiene
 
