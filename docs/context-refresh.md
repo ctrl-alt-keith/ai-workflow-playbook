@@ -48,6 +48,7 @@ Working Context:
 - Repos to evaluate:
   - knowledge-adapters
   - ai-workflow-playbook
+  - ai-workflow-enforcement
   - ka-destinations
   - linode-image-lab
   - linode-backup-lab
@@ -123,6 +124,7 @@ Assess whether the org still has clean repo boundaries:
 - knowledge-adapters = ingestion
 - ka-destinations = publishing
 - ai-workflow-playbook = guidance
+- ai-workflow-enforcement = advisory workflow reinforcement tooling
 - linode-image-lab = public-safe Linode image freeze/thaw workflow lab
 - linode-backup-lab = public-safe Linode backup validation and snapshot inspection lab
 
@@ -158,6 +160,7 @@ Output Format (strict):
 ## Drift
 - knowledge-adapters:
 - ai-workflow-playbook:
+- ai-workflow-enforcement:
 - ka-destinations:
 - linode-image-lab:
 - linode-backup-lab:
@@ -165,6 +168,7 @@ Output Format (strict):
 ## Current State
 - knowledge-adapters:
 - ai-workflow-playbook:
+- ai-workflow-enforcement:
 - ka-destinations:
 - linode-image-lab:
 - linode-backup-lab:
