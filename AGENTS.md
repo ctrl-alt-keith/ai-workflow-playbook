@@ -15,6 +15,12 @@ Repo-local rules take precedence only for repo-specific behavior.
 - Put tool-specific guidance in `docs/tool-adapters/`.
 - Do not add project-specific logic or implementation examples.
 
+## Local Execution
+
+- Run commands from this repository working directory by default.
+- Keep temporary workflow state repo-local, for example `.worktrees/`.
+- Prefer direct `gh ...` commands unless shell behavior is required.
+
 ## Validation
 
 - Use `make check` as the canonical local validation entrypoint.

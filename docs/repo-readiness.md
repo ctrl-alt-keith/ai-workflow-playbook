@@ -50,6 +50,18 @@ When working in a multi-repo workspace, treat each repository as an independent 
 
 Before opening a PR, ensure that all staged changes belong to a single repository. If changes span multiple repositories, split them into separate branches and PRs, one per repository.
 
+## Repo-Local Workflow State
+
+Run commands from the target repository working directory by default. Keep
+temporary workflow artifacts scoped to that repository whenever practical.
+Examples include local worktree directories, generated review artifacts,
+transient manifests, and task-specific scratch state.
+
+Avoid spreading workflow state across sibling repositories, home-directory
+scratch areas, or ad hoc shared locations unless the task explicitly requires
+broader coordination. When broader coordination is required, state where the
+shared state lives and why repo-local state is insufficient.
+
 ## Branch Protection
 
 Treat the following as the default branch protection baseline for `main`:
