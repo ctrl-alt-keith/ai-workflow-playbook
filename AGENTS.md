@@ -28,8 +28,8 @@ Repo-local rules take precedence only for repo-specific behavior.
 
 ## Branches
 
-- Use `codex/<short-name>` for automation-driven playbook or documentation work.
-- Use concise descriptive branch names for human-driven work, such as
+- Follow the branch naming guidance in `docs/feature-lifecycle.md`.
+- For playbook documentation work, use concise descriptive branch names such as
   `docs/<short-name>` or `chore/<short-name>`.
 
 ## Pull Requests
