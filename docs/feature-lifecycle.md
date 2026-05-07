@@ -117,10 +117,9 @@ branch, validation, and PR flow before calling them complete.
 Use purpose-based branch prefixes that describe the change, not the tool that
 made it. AI-agent branches should use concise, non-tool-branded names such as
 `docs/<short-topic>`, `fix/<short-topic>`, `chore/<short-topic>`, or
-`feature/<short-topic>`. Repo-local guidance may narrow the allowed prefixes,
-such as using `feat/` instead of `feature/`, but broad tool-name prefixes such
-as `codex/`, `claude/`, or `copilot/` should be avoided unless a repository
-intentionally requires them.
+`feat/<short-topic>`. Repo-local guidance may narrow the allowed prefixes, but
+broad tool-name prefixes such as `codex/`, `claude/`, or `copilot/` should be
+avoided unless a repository intentionally requires them.
 
 For same-repo parallel work, prefer isolated Git worktrees over multiple arcs
 sharing one checkout. Keep the main checkout clean and on `main`, fetch before
