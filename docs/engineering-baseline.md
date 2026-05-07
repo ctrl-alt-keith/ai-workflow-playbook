@@ -121,6 +121,14 @@ sources before making the change.
   - official OpenAPI or schema definitions
   - official SDK documentation
   - official release notes or changelogs
+- Treat a source as authoritative only when it is controlled by the provider or
+  standards body responsible for the behavior and is specific enough to support
+  the claim being made. Product API references, developer portals, schema
+  definitions, SDK docs, and provider release notes are good evidence.
+- Do not treat generic corporate home pages, marketing pages, blogs, forums,
+  community answers, issue comments, StackOverflow answers, third-party
+  tutorials, AI-generated content, or search-result snippets as authoritative
+  evidence for public API behavior.
 - Check official sources for behavior such as resource lifecycle or status
   semantics, region or location availability, pagination, rate limits and
   retryability, auth or token error behavior, deletion and idempotency
@@ -200,6 +208,104 @@ Markdown file instead of the pull request's changed Markdown files. Use
 `official_domains` to add provider-controlled documentation domains that are
 authoritative for the caller repository but not built into the scanner. Use
 `playbook_ref` only when testing or pinning a non-`main` playbook ref.
+
+### Official Domain Classification
+
+Keep official-source classification narrow and explainable. Add documentation
+domains that are controlled by the provider and are used for API references,
+developer docs, SDK docs, official schemas, changelogs, release notes, or
+product support docs that directly describe the behavior in question.
+
+Do not add broad generic domains just because a vendor owns them. Avoid
+allowlisting mixed surfaces such as blogs, communities, marketplaces, marketing
+sites, support forums, or generic corporate roots when only a documentation
+subdomain or developer portal is authoritative.
+
+The scanner includes narrow Google and Atlassian documentation domains because
+they are common adoption targets:
+
+- Google: `cloud.google.com`, `developers.google.com`, and
+  `firebase.google.com`.
+- Atlassian: `developer.atlassian.com`, `docs.atlassian.com`, and
+  `support.atlassian.com`.
+
+These defaults do not imply that `google.com`, `atlassian.com`, `blog.google`,
+`community.atlassian.com`, or other mixed/community domains are authoritative.
+Caller repositories can still add more narrow `official_domains` when their
+public API surface depends on another provider-controlled documentation domain.
+
+Same-organization GitHub repository links are intentionally treated as project
+references for this playbook's repositories. They are useful for local project
+history, reusable workflow behavior, and issue or PR context owned by the same
+organization. They are not a substitute for provider documentation when the
+claim is about an external public API.
+
+### Source Justifications
+
+Suppressions must be visible, justified, and intentionally scoped. A
+non-authoritative source may remain only when official docs are unavailable,
+ambiguous, or insufficient for the specific edge case being discussed.
+
+Use a nearby justification marker with a reason, such as:
+
+```text
+Source justification: official docs do not cover this API edge case; this link is investigation context only.
+```
+
+The scanner recognizes `Source justification:`, `Source exception:`,
+`non-authoritative-source-ok:`, and `third-party-source-ok:` only when the
+marker includes text after the colon and appears near the URL. Bare markers or
+distant blanket exceptions are not suppressions. Keep the source claim
+conservative, prefer replacing the link with official docs when possible, and
+leave the exception visible in the reviewed Markdown or PR body.
+
+### Incremental Advisory Adoption
+
+Use the advisory check first in API-facing repositories where public API claims
+are common and the repository already has a clear canonical validation path.
+Google-facing and Atlassian-facing repositories are good candidates when their
+docs, tests, or PR notes regularly cite vendor API behavior.
+
+Adopt the check in this order:
+
+1. Inventory the changed surfaces that make public API claims, such as docs,
+   generated-client notes, schemas, examples, and PR descriptions.
+2. Identify the narrow official vendor documentation domains needed for that
+   repository's APIs. Prefer product API references, developer portals,
+   official schemas, SDK docs, release notes, and changelogs controlled by the
+   vendor.
+3. Add the reusable workflow in `scan_mode: changed` with only those narrow
+   `official_domains`. Keep it advisory and visible in PR checks.
+4. Triage the first findings in ordinary PR review. Replace community, blog, or
+   third-party links with official sources when official sources exist.
+5. Use a nearby source justification only when official docs are unavailable,
+   ambiguous, or insufficient for the specific edge case. Keep the claim
+   conservative.
+6. Expand to the next repository only after the current repository has a small,
+   understandable finding pattern and no broad domain suppressions.
+
+Keep rollout lightweight. Do not require every historical Markdown file to be
+clean before adoption. Use `scan_mode: all` only for an explicit audit PR, not
+as the default rollout posture. Do not make advisory warnings required merge
+gates unless the caller repository explicitly documents that stricter local
+policy.
+
+False-positive mitigation should stay local and narrow:
+
+- Prefer specific official documentation domains over broad corporate domains.
+- Do not add broad allowlists for mixed domains that also host community,
+  marketing, or blog content.
+- Keep third-party investigation links separate from authoritative API claims,
+  or add a nearby source justification when no official source exists.
+- Avoid mixed source dumps where one community link appears to support many API
+  claims.
+- Fix wording when the scanner reveals an unsupported guarantee rather than
+  suppressing the finding.
+
+Implementation details remain in the reusable workflow and scanner. Caller
+repositories should document only their chosen official documentation domains,
+any repo-local advisory status, and any intentional exclusions from local
+blocking validation.
 
 ### Reusable Workflow Pinning
 

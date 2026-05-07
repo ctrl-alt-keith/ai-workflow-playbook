@@ -15,7 +15,7 @@ on:
         type: string
         default: changed
       official_domains:
-        description: Additional official documentation domain suffixes, separated by commas or spaces.
+        description: Additional narrow official documentation domain suffixes, separated by commas or spaces.
         required: false
         type: string
         default: ""
