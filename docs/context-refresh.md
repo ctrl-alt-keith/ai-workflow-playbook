@@ -52,8 +52,8 @@ Working Context:
   - ka-destinations
   - linode-image-lab
   - linode-backup-lab
-- Local notes layer:
-  - cross-repo-threads
+- Private staging/incubation layer:
+  - ai-workflow-incubator
   - reference only
   - not authoritative
 

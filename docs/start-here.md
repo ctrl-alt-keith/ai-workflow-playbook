@@ -18,15 +18,18 @@
 - Treat `AGENTS.md` as the repo-local execution layer.
 - Repo-local rules take precedence only for repo-specific behavior.
 
-## Notes vs Playbook
+## Staging vs Playbook
 
-- `cross-repo-threads` is a staging layer for ideas and experiments.
+- The private staging/incubation layer is for ideas and experiments.
 - It is not canonical and is not a direct path into playbook guidance.
 - Durable workflow guidance follows this order: idea -> notes staging ->
   bounded repo issue or PR -> evidence-supported reusable lesson -> playbook
   promotion -> notes cleanup.
 - Treat repository code, tests, docs, reviews, and merged PRs as the evidence
   source for reusable lessons before promoting them into the playbook.
+- Canonical guidance should generally describe staging and incubation by role;
+  use concrete private repository names when operational paths, examples,
+  provenance, or ecosystem topology need them.
 
 ## Rule of Thumb
 
