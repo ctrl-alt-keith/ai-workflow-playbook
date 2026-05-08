@@ -1,5 +1,7 @@
 .PHONY: help check check-env authoritative-source-check scanner-test workspace-bootstrap context-refresh github-context dist
 
+.DEFAULT_GOAL := check
+
 WORKSPACE_REPOS_MANIFEST := config/workspace-repos.txt
 
 WORKSPACE_BOOTSTRAP_SOURCES := \
