@@ -27,6 +27,9 @@
   promotion -> notes cleanup.
 - Treat repository code, tests, docs, reviews, and merged PRs as the evidence
   source for reusable lessons before promoting them into the playbook.
+- Canonical guidance should generally describe staging and incubation by role;
+  use concrete private repository names when operational paths, examples,
+  provenance, or ecosystem topology need them.
 
 ## Rule of Thumb
 
