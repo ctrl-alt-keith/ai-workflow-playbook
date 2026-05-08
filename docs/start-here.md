@@ -18,9 +18,9 @@
 - Treat `AGENTS.md` as the repo-local execution layer.
 - Repo-local rules take precedence only for repo-specific behavior.
 
-## Incubator vs Playbook
+## Staging vs Playbook
 
-- `ai-workflow-incubator` is the private staging/incubation repo for ideas and experiments.
+- The private staging/incubation layer is for ideas and experiments.
 - It is not canonical and is not a direct path into playbook guidance.
 - Durable workflow guidance follows this order: idea -> notes staging ->
   bounded repo issue or PR -> evidence-supported reusable lesson -> playbook
