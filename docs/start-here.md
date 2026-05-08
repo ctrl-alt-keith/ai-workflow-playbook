@@ -18,9 +18,9 @@
 - Treat `AGENTS.md` as the repo-local execution layer.
 - Repo-local rules take precedence only for repo-specific behavior.
 
-## Notes vs Playbook
+## Incubator vs Playbook
 
-- `cross-repo-threads` is a staging layer for ideas and experiments.
+- `ai-workflow-incubator` is the private staging/incubation repo for ideas and experiments.
 - It is not canonical and is not a direct path into playbook guidance.
 - Durable workflow guidance follows this order: idea -> notes staging ->
   bounded repo issue or PR -> evidence-supported reusable lesson -> playbook

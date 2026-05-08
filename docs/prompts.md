@@ -98,8 +98,8 @@ Context:
   replay comparison, but the reporting text needs to be clearer.
 - Additional context when helpful: This pattern was used in knowledge-adapters
   PR #248 and passed `make chaos-all`. Confidence is medium; behavior is stable
-  but not yet promoted to the playbook. Related notes mention chaos replay
-  fingerprints in cross-repo-threads.
+  but not yet promoted to the playbook. Related staging notes mention chaos
+  replay fingerprints in ai-workflow-incubator.
 ```
 
 ### Codex Task Prompt Template
