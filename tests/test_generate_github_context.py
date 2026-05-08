@@ -34,12 +34,15 @@ class GitHubContextGeneratorTest(unittest.TestCase):
                 "\n".join(
                     [
                         "# GitHub Connector Context",
+                        "",
                         "Status: generated snapshot",
                         "Canonical: false",
+                        "",
                         (
                             "This file is a generated convenience artifact for "
                             "refreshing GitHub connector repo context in fresh threads."
                         ),
+                        "",
                     ]
                 )
             )
