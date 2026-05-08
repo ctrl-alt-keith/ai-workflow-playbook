@@ -57,10 +57,24 @@ temporary workflow artifacts scoped to that repository whenever practical.
 Examples include local worktree directories, generated review artifacts,
 transient manifests, and task-specific scratch state.
 
-Avoid spreading workflow state across sibling repositories, home-directory
-scratch areas, or ad hoc shared locations unless the task explicitly requires
-broader coordination. When broader coordination is required, state where the
-shared state lives and why repo-local state is insufficient.
+Use repo-local temporary state when artifacts belong to one repository's
+execution workflow and that repository's instructions support the local path.
+When temporary workflow material spans repositories or should remain visible
+during execution, prefer the workspace scratch area:
+`~/src/ctrl-alt-keith/scratch/`. Suitable scratch material includes generated
+reports, orchestration helpers, prompt packs, transient automation outputs, and
+other disposable workflow artifacts that may need later inspection,
+provenance, reconciliation, or cleanup review.
+
+Avoid `/tmp`, `/private/tmp`, or ad hoc temporary directories for workflow
+artifacts that may need later inspection. Use disposable OS temp locations only
+for short-lived process-local files whose path and contents do not matter after
+the command finishes.
+
+Avoid spreading workflow state across sibling repositories or other ad hoc
+shared locations unless the task explicitly requires broader coordination. When
+broader coordination is required, state where the shared state lives and why
+repo-local state is insufficient.
 
 ## Branch Protection
 
