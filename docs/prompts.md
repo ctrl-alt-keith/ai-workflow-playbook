@@ -563,6 +563,7 @@ Constraints:
 Validation:
 - Verify that AGENTS points readers to the relevant playbook documents instead of restating them.
 - Verify that repo-local rules are specific to this repository's files, validation path, and workflow shape.
+- Verify repeated AGENTS wording by authority ownership and operational effect before trimming or promoting it; preserve necessary repo-local execution constraints, and remove broad playbook restatements.
 - Verify that the updated AGENTS file does not introduce conflicting guidance relative to the playbook.
 - Verify that the document still works as a practical execution layer for this repo type.
 
