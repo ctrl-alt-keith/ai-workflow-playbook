@@ -76,6 +76,28 @@ shared locations unless the task explicitly requires broader coordination. When
 broader coordination is required, state where the shared state lives and why
 repo-local state is insufficient.
 
+## Command Form And Intent Visibility
+
+Prefer the structurally minimal command form that still expresses the intended
+operation clearly. Normal repository operations should usually be invoked as
+the command itself, rather than hidden inside an extra shell layer.
+
+This keeps operational intent visible in logs, prompts, review notes, and local
+approval surfaces. It also lets permission or approval systems reason about the
+specific operation being requested, instead of treating a simple repository
+action as a broad shell execution.
+
+Use a shell wrapper when the operation genuinely needs shell semantics, such as
+pipes, redirects, globbing, chaining, shell builtins, inline environment
+assignment, or other composition that the command cannot express directly.
+When shell semantics are needed, keep the wrapped command narrow enough that
+the operational intent remains inspectable.
+
+Avoid inflating simple commands into larger execution forms only for habit or
+convenience. The goal is not to forbid shells; it is to preserve clarity,
+reviewability, and policy precision around what work is actually being
+performed.
+
 ## Branch Protection
 
 Treat the following as the default branch protection baseline for `main`:
