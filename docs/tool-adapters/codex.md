@@ -92,14 +92,16 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
 
 - before repo- or PR-dependent work, verify GitHub access instead of relying on
   cached context, summaries, or local branch state
-- prefer direct `git ...` and `gh ...` invocations for normal repository
+- apply the command-form guidance in
+  [`repo-readiness.md`](../repo-readiness.md#command-form-and-intent-visibility):
+  keep normal repository operations in their structurally minimal form, and
+  reserve shell wrapping for operations that need shell semantics
+- prefer clear `git ...` and `gh ...` invocations for normal repository
   operations, such as `git status`, `git merge --ff-only origin/main`,
   `gh repo view`, and `gh pr view`
-- do not shell-wrap `git` or `gh` commands unless shell behavior is required,
-  such as pipes, redirects, globbing, command substitution, or compound
-  conditionals
-- expect shell-wrapped `git` and `gh` commands to prompt when local approval
-  rules allow only the direct command form
+- when a `git` or `gh` operation needs shell composition, keep the wrapped
+  command narrow enough that the requested operation remains visible to local
+  approval and review surfaces
 - use `gh repo view` to confirm the target repository is reachable
 - when PR state matters, use `gh pr view` to fetch current PR metadata before
   making decisions
