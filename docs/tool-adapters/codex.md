@@ -96,9 +96,11 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
   [`repo-readiness.md`](../repo-readiness.md#command-form-and-intent-visibility):
   keep normal repository operations in their structurally minimal form, and
   reserve shell wrapping for operations that need shell semantics
-- prefer clear `git ...` and `gh ...` invocations for normal repository
-  operations, such as `git status`, `git merge --ff-only origin/main`,
-  `gh repo view`, and `gh pr view`
+- prefer clear direct invocations for normal repository operations, such as
+  `git status`, `git merge --ff-only origin/main`, `gh repo view`,
+  `gh pr view`, `make check`, and `python ...`
+- do not use `zsh -lc`, `bash -lc`, `sh -c`, or equivalent wrapper forms for
+  ordinary repo commands
 - when a `git` or `gh` operation needs shell composition, keep the wrapped
   command narrow enough that the requested operation remains visible to local
   approval and review surfaces

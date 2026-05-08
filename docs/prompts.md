@@ -126,6 +126,9 @@ Constraints:
 External State Verification:
 - Verify live external state, such as GitHub repository or pull request state,
   before relying on it.
+- Run commands directly from the target repository and follow the command-form
+  rule in `docs/repo-readiness.md`; do not wrap ordinary repo commands in
+  `zsh`, `bash`, `sh`, or equivalent shell forms.
 - Follow the direct PR inspection rule in `docs/review-packet.md` when a task
   asks for PR review, readiness, approval, or merge advice.
 - Follow the public API baseline in `docs/engineering-baseline.md` when code,
@@ -664,6 +667,8 @@ Delivery:
 - Follow the branch, PR readiness, and workspace rules in
   `docs/feature-lifecycle.md`, `docs/repo-readiness.md`, and
   `docs/tool-adapters/codex.md`.
+- Run ordinary repo commands directly from the target repository; reserve
+  shell wrapping for commands that genuinely require shell syntax.
 - Fetch current `origin/main` at task start, anchor implementation to that
   fetched baseline, and verify current mergeability before PR.
 - Stage only the relevant changes.

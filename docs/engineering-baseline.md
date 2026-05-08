@@ -14,6 +14,9 @@ Define shared engineering expectations across repositories. This baseline forms 
     do not treat CI as a substitute for that local step.
   - Do not add or substitute alternate local validation tools outside the
     repo-defined workflow.
+- Command intent stays visible
+  - Run ordinary repo commands directly from the target repository, following
+    the command-form rules in `docs/repo-readiness.md`.
 - Repository isolation
   - One repository per PR.
   - No cross-repo commits.

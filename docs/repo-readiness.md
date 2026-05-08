@@ -82,16 +82,23 @@ Prefer the structurally minimal command form that still expresses the intended
 operation clearly. Normal repository operations should usually be invoked as
 the command itself, rather than hidden inside an extra shell layer.
 
+Run commands from the target repository working directory by default. For
+ordinary repository operations, prefer direct `git ...`, `gh ...`, `make ...`,
+`python ...`, and tool-specific commands. Do not wrap those commands in `zsh`,
+`bash`, `sh`, shell aliases, or equivalent wrapper shells only for convenience.
+In particular, avoid `zsh -lc`, `bash -lc`, `sh -c`, or equivalent forms for
+ordinary repo commands.
+
 This keeps operational intent visible in logs, prompts, review notes, and local
 approval surfaces. It also lets permission or approval systems reason about the
 specific operation being requested, instead of treating a simple repository
 action as a broad shell execution.
 
 Use a shell wrapper when the operation genuinely needs shell semantics, such as
-pipes, redirects, globbing, chaining, shell builtins, inline environment
-assignment, or other composition that the command cannot express directly.
-When shell semantics are needed, keep the wrapped command narrow enough that
-the operational intent remains inspectable.
+pipes, redirection, glob expansion, command chaining, shell builtins, inline
+environment assignment, compound conditionals, or other composition that the
+command cannot express directly. When shell semantics are needed, keep the
+wrapped command narrow enough that the operational intent remains inspectable.
 
 Avoid inflating simple commands into larger execution forms only for habit or
 convenience. The goal is not to forbid shells; it is to preserve clarity,

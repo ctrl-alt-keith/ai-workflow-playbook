@@ -34,6 +34,8 @@
 ## Rule of Thumb
 
 - Prefer small, scoped changes.
+- Run commands directly from the target repository; follow
+  `docs/repo-readiness.md` for command form and shell-wrapping rules.
 - Run repository validation through the repo's Makefile when it provides the
   canonical entrypoint.
 - Open PRs ready for review by default unless explicitly instructed otherwise.
