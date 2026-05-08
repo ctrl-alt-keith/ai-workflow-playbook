@@ -54,6 +54,14 @@ Use this format for non-trivial Codex implementation tasks: work that changes an
 existing system, has meaningful constraints, needs validation, or should end in a
 branch and PR. Simple one-step tasks do not need this much structure.
 
+Before writing or using a Codex task prompt, apply the interaction mode
+preflight in [`docs/repo-readiness.md`](repo-readiness.md#interaction-mode-preflight).
+Use this implementation prompt format only when the intended mode is direct
+implementation. For review/audit work, use the review or audit templates. For
+orchestration or prompt-authoring work, inspect enough context to produce a
+complete self-contained downstream prompt instead of appending implementation
+delivery instructions by habit.
+
 ### Codex Task Prompt Format Sections
 
 - `Context`: repository, current situation, relevant background, and any known
@@ -124,6 +132,9 @@ Constraints:
 - Do not silently skip required steps; report any blockers or incomplete work.
 
 External State Verification:
+- Determine the interaction mode before repo work begins. Implementation mode
+  requires explicit user intent; ambiguous ctrl-alt-keith repo tasks default to
+  review/audit or orchestration/prompt-authoring.
 - Verify live external state, such as GitHub repository or pull request state,
   before relying on it.
 - Run commands directly from the target repository and follow the command-form
@@ -659,10 +670,15 @@ Append this footer to implementation prompts when the task is expected to make
 repo changes and deliver them through the normal branch, commit, push, and PR
 flow.
 
+Use this footer only after the interaction mode is clearly implementation mode.
+
 ### Implementation Delivery Footer Do Not Use When
 
 Do not append this footer for exploration, design, or review-only tasks unless
 they are also expected to make and deliver repo changes.
+
+Do not append this footer for orchestration or prompt-authoring tasks whose
+deliverable is a complete downstream prompt rather than repo mutation.
 
 ### Implementation Delivery Footer Snippet
 

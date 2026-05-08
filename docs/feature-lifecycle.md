@@ -90,6 +90,10 @@ feature branch unless intentionally continuing that PR.
 
 ### Repo Change Completion
 
+After the interaction mode preflight in
+[`repo-readiness.md`](repo-readiness.md#interaction-mode-preflight) selects
+implementation mode, repo-changing work follows the normal delivery path.
+
 For repo changes, "done" means all of the following are complete:
 
 - change implemented

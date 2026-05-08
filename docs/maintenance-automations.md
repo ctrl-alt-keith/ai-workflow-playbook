@@ -40,6 +40,8 @@ execution paths.
 
 - Name recurring automations by purpose so their intent is clear in schedules,
   reports, and follow-up.
+- Automation prompts that touch repositories should state the interaction mode
+  from [`repo-readiness.md`](repo-readiness.md#interaction-mode-preflight).
 - Report-only is the default for audits and validation checks.
 - Mutating automations must be bounded, conservative, and skip on uncertainty.
 - Skipped work should be reported with reasons, not hidden as a clean pass.

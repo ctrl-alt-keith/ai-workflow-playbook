@@ -20,6 +20,46 @@ Define the smallest reusable baseline a repository should have before normal AI-
 - Repositories with a Makefile include `make help` for local target discovery.
 - Defaults should favor safe, explicit behavior over implied shortcuts.
 
+## Interaction Mode Preflight
+
+Before acting on any repository or software task, determine the interaction
+mode. Do this before editing files, creating branches, committing, opening pull
+requests, or running implementation-oriented workflows.
+
+Use one of these modes:
+
+- Implementation mode: directly make repo changes, validate them, commit them,
+  push the branch, and open or update a pull request when repo guidance calls
+  for PR delivery.
+- Review/audit mode: inspect the requested repository, pull request, issue, or
+  file surface and report findings, evidence, risks, and recommendations
+  without mutating the repository.
+- Orchestration/prompt-authoring mode: inspect enough issue, repository, pull
+  request, and workflow context to decide the right course of action, then
+  produce a complete, self-contained prompt or handoff for another agent or
+  tool.
+
+Do not infer implementation mode from vague wording such as "fix this",
+"handle this", or "let's fix the bug" when the surrounding context suggests
+advisory review, audit, orchestration, or prompt generation.
+
+For ctrl-alt-keith workflows, default ambiguous repository tasks to
+review/audit mode or orchestration/prompt-authoring mode unless the human
+explicitly asks for direct implementation. Implementation mode requires clear
+user intent, such as "make the change", "implement it", "open the PR",
+"commit this", or equivalent wording.
+
+In orchestration/prompt-authoring mode, do enough direct inspection to make the
+handoff usable without hidden assumptions. A prompt that asks another agent to
+act should include the repository, goal, relevant context, constraints,
+validation path, deliverable expectations, and any known blockers or
+uncertainty. Do not produce partial prompts that leave the downstream agent to
+rediscover essential context.
+
+Keep this policy in the shared playbook. Repo-local `AGENTS.md` files should
+reference or rely on it rather than duplicate it, except where a repository
+truly requires different behavior.
+
 ## Makefile Discoverability
 
 Any repository with a Makefile should include a `make help` target. `make help`
