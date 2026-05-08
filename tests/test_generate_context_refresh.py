@@ -7,7 +7,12 @@ import sys
 import unittest
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "generate_context_refresh.py"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS_DIR = REPO_ROOT / "scripts"
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
+SCRIPT_PATH = SCRIPTS_DIR / "generate_context_refresh.py"
 SPEC = importlib.util.spec_from_file_location("generate_context_refresh", SCRIPT_PATH)
 assert SPEC is not None
 generator = importlib.util.module_from_spec(SPEC)
@@ -22,6 +27,7 @@ class ContextRefreshGeneratorTest(unittest.TestCase):
             reports=[],
             unavailable=[],
             generated_at=datetime(2026, 5, 8, 12, 0, tzinfo=timezone.utc),
+            repos=("ctrl-alt-keith/example",),
         )
 
         self.assertTrue(
@@ -62,6 +68,7 @@ class ContextRefreshGeneratorTest(unittest.TestCase):
                 )
             ],
             generated_at=datetime(2026, 5, 8, 12, 0, tzinfo=timezone.utc),
+            repos=("ctrl-alt-keith/example",),
         )
 
         self.assertIn("## Blocked Or Unavailable", report)

@@ -11,18 +11,12 @@ import subprocess
 import sys
 from typing import Any
 
-
-TRACKED_REPOS = (
-    "ctrl-alt-keith/.github",
-    "ctrl-alt-keith/ai-workflow-incubator",
-    "ctrl-alt-keith/ai-workflow-playbook",
-    "ctrl-alt-keith/ai-workflow-enforcement",
-    "ctrl-alt-keith/linode-image-lab",
-    "ctrl-alt-keith/linode-backup-lab",
-    "ctrl-alt-keith/knowledge-adapters",
-    "ctrl-alt-keith/ka-destinations",
+from workspace_repos import (
+    WorkspaceRepoManifestError,
+    read_workspace_repos,
 )
 
+DEFAULT_MANIFEST = Path("config/workspace-repos.txt")
 OPEN_ITEM_LIMIT = 100
 MERGED_PR_LIMIT = 5
 
@@ -110,6 +104,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="Markdown file to write.",
     )
+    parser.add_argument(
+        "--repo-manifest",
+        default=DEFAULT_MANIFEST,
+        type=Path,
+        help="Workspace repo manifest to read.",
+    )
     return parser.parse_args()
 
 
@@ -173,10 +173,10 @@ def collect_repo(repo: str) -> RepoReport:
     )
 
 
-def collect_reports() -> tuple[list[RepoReport], list[UnavailableRepo]]:
+def collect_reports(repos: tuple[str, ...]) -> tuple[list[RepoReport], list[UnavailableRepo]]:
     reports: list[RepoReport] = []
     unavailable: list[UnavailableRepo] = []
-    for repo in TRACKED_REPOS:
+    for repo in repos:
         try:
             reports.append(collect_repo(repo))
         except Exception as exc:
@@ -188,6 +188,7 @@ def render_report(
     reports: list[RepoReport],
     unavailable: list[UnavailableRepo],
     generated_at: datetime,
+    repos: tuple[str, ...],
 ) -> str:
     timestamp = generated_at.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     lines = [
@@ -212,11 +213,11 @@ def render_report(
         "## Tracked Repositories",
         "",
     ]
-    lines.extend(f"- `{repo}`" for repo in TRACKED_REPOS)
+    lines.extend(f"- `{repo}`" for repo in repos)
     lines.extend(["", "## Repository State", ""])
 
     by_name = {report.name: report for report in reports}
-    for repo in TRACKED_REPOS:
+    for repo in repos:
         report = by_name.get(repo)
         if report is None:
             continue
@@ -227,7 +228,7 @@ def render_report(
     if unavailable:
         lines.extend(
             f"- `{repo.name}`: {repo.reason}"
-            for repo in sorted(unavailable, key=lambda item: item.name)
+            for repo in unavailable
         )
     else:
         lines.append("- None.")
@@ -319,10 +320,19 @@ def write_report(output: Path, content: str) -> None:
 def main() -> int:
     args = parse_args()
     try:
+        repos = read_workspace_repos(args.repo_manifest)
         require_gh()
-        reports, unavailable = collect_reports()
-        content = render_report(reports, unavailable, datetime.now(timezone.utc))
+        reports, unavailable = collect_reports(repos)
+        content = render_report(
+            reports,
+            unavailable,
+            datetime.now(timezone.utc),
+            repos,
+        )
         write_report(args.output, content)
+    except WorkspaceRepoManifestError as exc:
+        print(f"context-refresh failed: {exc}", file=sys.stderr)
+        return 1
     except Exception as exc:
         print(f"context-refresh failed: {exc}", file=sys.stderr)
         return 1

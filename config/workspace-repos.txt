@@ -1,0 +1,9 @@
+# Workspace repositories used by generated context artifacts.
+ctrl-alt-keith/.github
+ctrl-alt-keith/ai-workflow-incubator
+ctrl-alt-keith/ai-workflow-playbook
+ctrl-alt-keith/ai-workflow-enforcement
+ctrl-alt-keith/linode-image-lab
+ctrl-alt-keith/linode-backup-lab
+ctrl-alt-keith/knowledge-adapters
+ctrl-alt-keith/ka-destinations
