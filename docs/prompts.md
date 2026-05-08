@@ -31,8 +31,8 @@ tooling.
 
 Canonical guidance for the verified org context refresh pattern lives in
 [`docs/context-refresh.md`](context-refresh.md). Use that page for when to run
-it, required verification inputs, failure handling, and the self-contained
-prompt block.
+it, how to generate the current-state snapshot, and how to interpret blocked,
+unavailable, or stale output.
 
 ## Filesystem-Scoped Audit Boundaries
 
