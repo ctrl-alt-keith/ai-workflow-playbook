@@ -1,4 +1,4 @@
-.PHONY: check check-env authoritative-source-check scanner-test workspace-bootstrap
+.PHONY: check check-env authoritative-source-check scanner-test workspace-bootstrap context-refresh
 
 WORKSPACE_BOOTSTRAP_SOURCES := \
 	docs/start-here.md \
@@ -79,3 +79,7 @@ workspace-bootstrap:
 	} > "$$tmp"; \
 	mv "$$tmp" "$$out"; \
 	echo "Generated $$out"
+
+# Generated current-state brief for fresh-thread handoff.
+context-refresh:
+	python3 scripts/generate_context_refresh.py --output dist/context-refresh.md
