@@ -19,9 +19,10 @@ Repo-local rules take precedence only for repo-specific behavior.
 
 - Run commands from this repository working directory by default.
 - Keep temporary workflow state repo-local, for example `.worktrees/`.
-- Follow the command-form rule in `docs/repo-readiness.md`: prefer direct
-  `git ...`, `gh ...`, `make ...`, `python ...`, and tool commands; reserve
-  wrapper shells for commands that genuinely require shell behavior.
+- Follow the command-form preflight rule in `docs/repo-readiness.md`: use direct
+  `git ...`, `gh ...`, `make ...`, `python ...`, and tool commands for ordinary
+  repository operations; before using a wrapper shell, confirm shell semantics
+  are genuinely required, otherwise rewrite the operation into direct argv form.
 
 ## Validation
 
