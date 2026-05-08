@@ -17,6 +17,9 @@
 - Use `ai-workflow-playbook` as the canonical source of reusable workflow rules.
 - Treat `AGENTS.md` as the repo-local execution layer.
 - Repo-local rules take precedence only for repo-specific behavior.
+- Before acting on repository or software work, determine the interaction mode
+  using `docs/repo-readiness.md`: implementation, review/audit, or
+  orchestration/prompt-authoring.
 
 ## Staging vs Playbook
 
@@ -34,6 +37,9 @@
 ## Rule of Thumb
 
 - Prefer small, scoped changes.
+- In ctrl-alt-keith workflows, default ambiguous repository tasks to
+  review/audit or orchestration/prompt-authoring unless the human explicitly
+  asks for direct implementation.
 - Run commands directly from the target repository; follow
   `docs/repo-readiness.md` for command form and shell-wrapping rules.
 - Run repository validation through the repo's Makefile when it provides the

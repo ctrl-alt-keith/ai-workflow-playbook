@@ -11,6 +11,23 @@ This document explains how Codex maps onto the core playbook. It is adapter-spec
 
 Tasks that extend a clean documented seam are more likely to remain small. Tasks that must create or reshape seams tend to expand and should be treated that way during estimation.
 
+## Interaction Mode Selection
+
+Before repo-scoped work, apply the interaction mode preflight in
+[`repo-readiness.md`](../repo-readiness.md#interaction-mode-preflight).
+
+Codex should not treat vague repair language as permission to mutate a repo
+when the surrounding context indicates advisory review, audit, orchestration,
+or prompt authoring. In ctrl-alt-keith workflows, ambiguous repo tasks default
+to read-only review/audit or orchestration/prompt-authoring unless the human
+explicitly asks Codex to implement, commit, push, or open the PR.
+
+When acting in orchestration/prompt-authoring mode, Codex should still inspect
+enough live repository, issue, pull request, and documentation context to write
+a complete downstream prompt. The deliverable is the prompt or handoff itself,
+not a branch or PR, unless the human separately asks Codex to implement the
+change.
+
 ## Project-Context Check
 
 - before making changes, confirm the current Codex project or working context matches the intended task target
