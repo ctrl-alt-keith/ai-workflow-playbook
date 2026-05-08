@@ -51,6 +51,10 @@ Reusable pattern:
 
 > This repository uses the shared AI workflow model defined in `ai-workflow-playbook` as a reference. `AGENTS.md` provides the repo-specific instructions (validation, commands, PR expectations). Repo-local rules take precedence only for repo-specific behavior.
 
+## Workspace Bootstrap Bundle
+
+Run `make workspace-bootstrap` to generate `dist/workspace-bootstrap.md`, a non-canonical hydration bundle for fresh-thread and project-source context loading. Canonical guidance remains in the source docs and repo-local `AGENTS.md`; the generated bundle is only a convenience snapshot and should be regenerated instead of edited directly.
+
 ## Current Focus
 
 The first core module is delivery. Additional workflow families may be added later, but only if they meet the same discipline standards and stay aligned with the repository intent.
