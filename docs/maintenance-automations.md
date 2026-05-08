@@ -16,8 +16,25 @@ execution paths.
 | --- | --- | --- | --- | --- | --- | --- |
 | 🧹 Delete merged repo branches | `delete-merged-repo-branches` | Clean up branches Git confirms are merged, then report remaining unmerged branch state. | Daily at 08:00. | `knowledge-adapters`, `ka-destinations`, `ai-workflow-playbook`, `ai-workflow-enforcement`, `linode-image-lab`, `linode-backup-lab`. | Mutating, bounded to merged local and remote branch deletion. | Skip repos with dirty working trees, failed fetch/switch/pull, unclear default branches, active worktrees, protected refs, symbolic refs, empty branch names, or any uncertainty. Never force-delete, remove worktree directories, delete unmerged branches, commit, or open PRs. |
 | 🧠 Staging vs Canon Audit | `staging-vs-canon-audit` | Audit drift between staging notes, canonical playbook guidance, and repo-local execution layers. | Weekly on Monday at 08:15. | The `ctrl-alt-keith` workspace guidance layer, including the playbook, repo-local `AGENTS.md` files, and staging/reference material. | Report-only. | Stay read-only; do not modify files, refs, branches, working trees, automation prompts, or repository state. Ignore generated and dependency paths. Treat freshness findings as context only. |
-| 🔍 AGENTS Drift Detector | `agents-md-vs-playbook-alignment-audit` | Audit repo-local `AGENTS.md` guidance against the canonical playbook. | Weekly on Monday at 08:15. | `ai-workflow-playbook`, `ai-workflow-enforcement`, `ai-workflow-incubator`, `knowledge-adapters`, `ka-destinations`, `linode-image-lab`, `linode-backup-lab`, `.github`. | Report-only. | Inspect latest `origin/main` state only. If a repository cannot be fetched or inspected, mark it blocked. Do not modify files or branches, and do not invent missing repo details. |
+| 🔍 AGENTS Drift Detector | `agents-md-vs-playbook-alignment-audit` | Audit repo-local `AGENTS.md` guidance and local workspace-routing guidance against the canonical playbook. | Weekly on Monday at 08:15. | `ai-workflow-playbook`, `ai-workflow-enforcement`, `ai-workflow-incubator`, `knowledge-adapters`, `ka-destinations`, `linode-image-lab`, `linode-backup-lab`, `.github`, plus the local-only workspace-level `~/src/ctrl-alt-keith/AGENTS.md`. | Report-only. | Inspect latest `origin/main` state for repositories. Review the workspace-level `AGENTS.md` as local-only, non-canonical routing guidance, not as a repository policy document. If a repository or the local workspace file cannot be inspected, mark that scope blocked. Do not modify files or branches, and do not invent missing repo details. |
 | 🧪 knowledge-adapters weekly chaos-all validation | `run-weekly-chaos-all-validation` | Run exhaustive scheduled validation for `knowledge-adapters` and report the result. | Weekly on Monday at 08:30. | `knowledge-adapters`. | Report-only validation. | Refresh from current `origin/main`, run `make chaos-all`, and report the tested commit SHA. Do not modify files, open PRs, or run live-service or credential-dependent checks. |
+
+## Guidance Layers
+
+- Canonical playbook guidance lives in this repository and defines reusable
+  cross-repo workflow expectations.
+- Workspace-level routing guidance may live in a local-only workspace
+  `AGENTS.md`. It can describe multi-repository boundaries, scratch usage,
+  command form, and how to enter target repositories, but it is non-canonical
+  and must not define repository branch, commit, PR, or validation policy.
+- Repo-local execution guidance lives in each repository's `AGENTS.md` and
+  remains authoritative for that repository's validation path, file placement,
+  branch conventions, PR expectations, and repo-specific constraints.
+- Drift review should compare repo-local `AGENTS.md` files against the playbook
+  and any relevant workspace-routing guidance, while comparing workspace-level
+  routing guidance against reusable playbook expectations and observed
+  repo-local execution patterns. Do not require the workspace file to duplicate
+  repo-only rules.
 
 ## Operating Rules
 
