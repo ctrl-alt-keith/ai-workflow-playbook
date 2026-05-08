@@ -55,6 +55,8 @@ Reusable pattern:
 
 Run `make workspace-bootstrap` to generate `dist/workspace-bootstrap.md`, a non-canonical hydration bundle for fresh-thread and project-source context loading. Canonical guidance remains in the source docs and repo-local `AGENTS.md`; the generated bundle is only a convenience snapshot and should be regenerated instead of edited directly.
 
+Run `make context-refresh` to generate `dist/context-refresh.md`, a non-canonical current-state brief for fresh-thread handoff and repo-state refresh. It complements `make workspace-bootstrap`: bootstrap hydrates the stable operating model, while context refresh captures current GitHub repository reality. Repository code, issues, pull requests, and docs remain the source of truth.
+
 ## Current Focus
 
 The first core module is delivery. Additional workflow families may be added later, but only if they meet the same discipline standards and stay aligned with the repository intent.
