@@ -17,7 +17,18 @@ Define the smallest reusable baseline a repository should have before normal AI-
 - Pull requests should stay small, scoped, and single-purpose.
 - Public repositories include a root `LICENSE` file, defaulting to Apache License
   2.0 unless the repository documents another choice.
+- Repositories with a Makefile include `make help` for local target discovery.
 - Defaults should favor safe, explicit behavior over implied shortcuts.
+
+## Makefile Discoverability
+
+Any repository with a Makefile should include a `make help` target. `make help`
+lists available repo-local Makefile targets with short descriptions so a fresh
+worker can discover setup, validation, generation, and maintenance commands
+without reading the whole file first.
+
+Prefer the self-documenting `##` comment pattern when it fits the existing
+Makefile style, for example `check: ## Run canonical local validation`.
 
 ## PR Readiness
 

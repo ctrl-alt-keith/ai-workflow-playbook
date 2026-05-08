@@ -1,4 +1,4 @@
-.PHONY: check check-env authoritative-source-check scanner-test workspace-bootstrap context-refresh github-context
+.PHONY: help check check-env authoritative-source-check scanner-test workspace-bootstrap context-refresh github-context dist
 
 WORKSPACE_REPOS_MANIFEST := config/workspace-repos.txt
 
@@ -11,8 +11,10 @@ WORKSPACE_BOOTSTRAP_SOURCES := \
 	docs/maintenance-automations.md \
 	docs/prompts.md
 
-# Canonical validation entrypoint for local work and CI.
-check:
+help: ## List available repo-local Makefile targets with short descriptions.
+	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_.-]+:.*## / {printf "  %-28s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+check: ## Run canonical local validation for local work and CI.
 	@if command -v markdownlint-cli2 >/dev/null 2>&1; then \
 		echo "Running markdownlint-cli2"; \
 		markdownlint-cli2 "**/*.md" "#dist"; \
@@ -26,8 +28,7 @@ check:
 	fi
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests
 
-# Environment probe for the tool behind check; not a validation substitute.
-check-env:
+check-env: ## Verify local tools needed by make check are available.
 	@if command -v markdownlint-cli2 >/dev/null 2>&1; then \
 		echo "Found markdownlint-cli2"; \
 	elif command -v markdownlint >/dev/null 2>&1; then \
@@ -38,15 +39,13 @@ check-env:
 		exit 1; \
 	fi
 
-# Advisory source scan; CI runs this separately from required make check.
-authoritative-source-check:
+authoritative-source-check: ## Run advisory authoritative-source scanning.
 	python3 scripts/check_authoritative_sources.py --base-ref origin/main --head-ref HEAD
 
-scanner-test:
+scanner-test: ## Run scanner unit tests.
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests
 
-# Generated convenience bundle for fresh-thread and project-source hydration.
-workspace-bootstrap:
+workspace-bootstrap: ## Generate fresh-thread and project-source bootstrap context.
 	@set -eu; \
 	for src in $(WORKSPACE_BOOTSTRAP_SOURCES); do \
 		if [ ! -f "$$src" ]; then \
@@ -82,10 +81,10 @@ workspace-bootstrap:
 	mv "$$tmp" "$$out"; \
 	echo "Generated $$out"
 
-# Generated current-state brief for fresh-thread handoff.
-context-refresh:
+context-refresh: ## Generate current-state brief for fresh-thread handoff.
 	python3 scripts/generate_context_refresh.py --repo-manifest $(WORKSPACE_REPOS_MANIFEST) --output dist/context-refresh.md
 
-# Generated GitHub connector repo hydration snippet for fresh threads.
-github-context:
+github-context: ## Generate GitHub connector repo hydration snippet.
 	python3 scripts/generate_github_context.py --repo-manifest $(WORKSPACE_REPOS_MANIFEST) --output dist/github-context.md
+
+dist: workspace-bootstrap context-refresh github-context ## Generate all distribution context artifacts.
