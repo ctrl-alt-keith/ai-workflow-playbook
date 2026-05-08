@@ -101,9 +101,19 @@ Tasks that extend a clean documented seam are more likely to remain small. Tasks
   `gh pr view`, `make check`, and `python ...`
 - do not use `zsh -lc`, `bash -lc`, `sh -c`, or equivalent wrapper forms for
   ordinary repo commands
+- before executing a shell-wrapped command, perform a command-form preflight:
+  decide whether shell semantics are genuinely required; if not, rewrite the
+  operation into direct argv form before execution
+- treat pipes, redirects, glob expansion, command chaining, shell builtins,
+  inline environment assignment, and compound shell conditionals as examples of
+  shell semantics that can justify a wrapper when no direct command form is
+  sufficient
 - when a `git` or `gh` operation needs shell composition, keep the wrapped
   command narrow enough that the requested operation remains visible to local
   approval and review surfaces
+- examples: use `git status`, not `zsh -lc 'git status'`; use `make check`, not
+  `bash -lc 'make check'`; use `gh pr view 145`, not
+  `sh -c 'gh pr view 145'`
 - use `gh repo view` to confirm the target repository is reachable
 - when PR state matters, use `gh pr view` to fetch current PR metadata before
   making decisions

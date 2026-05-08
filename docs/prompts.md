@@ -567,6 +567,10 @@ Validation:
 - Verify that AGENTS points readers to the relevant playbook documents instead of restating them.
 - Verify that repo-local rules are specific to this repository's files, validation path, and workflow shape.
 - Verify repeated AGENTS wording by authority ownership and operational effect before trimming or promoting it; preserve necessary repo-local execution constraints, and remove broad playbook restatements.
+- Verify that command-form guidance preserves the playbook's preflight rule:
+  shell-wrapped commands are used only when shell semantics are required, and
+  ordinary repository commands are rewritten to direct argv form before
+  execution.
 - Verify that the updated AGENTS file does not introduce conflicting guidance relative to the playbook.
 - Verify that the document still works as a practical execution layer for this repo type.
 
@@ -669,6 +673,9 @@ Delivery:
   `docs/tool-adapters/codex.md`.
 - Run ordinary repo commands directly from the target repository; reserve
   shell wrapping for commands that genuinely require shell syntax.
+- Before executing a shell-wrapped command, perform the command-form preflight
+  from `docs/repo-readiness.md`; when shell semantics are unnecessary, rewrite
+  the operation into direct argv form before execution.
 - Fetch current `origin/main` at task start, anchor implementation to that
   fetched baseline, and verify current mergeability before PR.
 - Stage only the relevant changes.

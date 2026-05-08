@@ -89,27 +89,47 @@ repo-local state is insufficient.
 
 ## Command Form And Intent Visibility
 
-Prefer the structurally minimal command form that still expresses the intended
-operation clearly. Normal repository operations should usually be invoked as
-the command itself, rather than hidden inside an extra shell layer.
+Use the structurally minimal command form that still expresses the intended
+operation clearly. Normal repository operations must be invoked as the command
+itself, rather than hidden inside an extra shell layer.
 
 Run commands from the target repository working directory by default. For
-ordinary repository operations, prefer direct `git ...`, `gh ...`, `make ...`,
+ordinary repository operations, use direct `git ...`, `gh ...`, `make ...`,
 `python ...`, and tool-specific commands. Do not wrap those commands in `zsh`,
 `bash`, `sh`, shell aliases, or equivalent wrapper shells only for convenience.
-In particular, avoid `zsh -lc`, `bash -lc`, `sh -c`, or equivalent forms for
-ordinary repo commands.
+In particular, `zsh -lc`, `bash -lc`, `sh -c`, or equivalent forms must not be
+used for ordinary repo commands.
 
 This keeps operational intent visible in logs, prompts, review notes, and local
 approval surfaces. It also lets permission or approval systems reason about the
 specific operation being requested, instead of treating a simple repository
 action as a broad shell execution.
 
+Before executing any shell-wrapped command, perform a command-form preflight:
+
+- determine whether the operation genuinely needs shell semantics, such as
+  pipes, redirects, glob expansion, command chaining, shell builtins, inline
+  environment assignment, compound shell conditionals, or other shell-only
+  composition
+- if shell semantics are not required, rewrite the command into direct argv
+  form before execution
+- if shell semantics are required, keep the wrapped command narrow enough that
+  the operational intent remains inspectable
+
 Use a shell wrapper when the operation genuinely needs shell semantics, such as
 pipes, redirection, glob expansion, command chaining, shell builtins, inline
 environment assignment, compound conditionals, or other composition that the
 command cannot express directly. When shell semantics are needed, keep the
 wrapped command narrow enough that the operational intent remains inspectable.
+
+Examples:
+
+- incorrect: `zsh -lc 'git status'`
+- correct: `git status`
+- incorrect: `bash -lc 'make check'`
+- correct: `make check`
+- incorrect: `sh -c 'gh pr view 145'`
+- correct: `gh pr view 145`
 
 Avoid inflating simple commands into larger execution forms only for habit or
 convenience. The goal is not to forbid shells; it is to preserve clarity,
