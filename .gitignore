@@ -4,5 +4,9 @@
 # Local worktrees
 .worktrees/
 
+# Python bytecode
+__pycache__/
+*.pyc
+
 # Generated convenience bundles
 dist/
