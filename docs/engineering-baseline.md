@@ -81,6 +81,17 @@ Machine-local paths reduce portability and can leak unnecessary local context
 into public artifacts. Keep path examples reusable unless the artifact is
 explicitly private, local-only, and not intended for publication.
 
+## Human-Maintained TOML Readability
+
+Valid TOML is the baseline requirement. When TOML files are intended for human
+editing or review, prefer multiline strings, arrays, and tables that keep the
+operational intent inspectable in diffs and review surfaces.
+
+Avoid long escaped single-line blobs with embedded `\n` sequences in
+human-maintained configuration. Compact serialized TOML is usually appropriate
+for intentionally machine-generated artifacts or local runtime state where
+round-trip serialization is more important than review readability.
+
 ## Parallel Execution And Merge Ordering
 
 Prefer parallel task execution when work can be cleanly separated by repository,
