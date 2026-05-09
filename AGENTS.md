@@ -4,6 +4,17 @@ This repository uses the shared playbook in `docs/` as the canonical source for
 general workflow rules. This file is the thin repo-local execution layer.
 Repo-local rules take precedence only for repo-specific behavior.
 
+## Startup And Interaction Mode
+
+- Start with `docs/start-here.md` before repository or software work.
+- Before acting, select the interaction mode from `docs/repo-readiness.md`:
+  implementation, review/audit, or orchestration/prompt-authoring.
+- Implementation agents make explicit repo changes and carry them through
+  validation, commit, push, and PR delivery.
+- Review/audit agents inspect and report findings without mutating the repo.
+- Orchestration/prompt-authoring agents produce complete, self-contained
+  handoffs or prompts unless explicitly asked to implement.
+
 ## Repo Scope
 
 - This repo contains reusable AI workflow and playbook guidance.
@@ -20,9 +31,11 @@ Repo-local rules take precedence only for repo-specific behavior.
 - Run commands from this repository working directory by default.
 - Keep temporary workflow state repo-local, for example `.worktrees/`.
 - Follow the command-form preflight rule in `docs/repo-readiness.md`: use direct
-  `git ...`, `gh ...`, `make ...`, `python ...`, and tool commands for ordinary
-  repository operations; before using a wrapper shell, confirm shell semantics
-  are genuinely required, otherwise rewrite the operation into direct argv form.
+  `git ...`, `gh ...`, `make ...`, `python ...`, repo-local scripts, and tool
+  commands for ordinary repository operations.
+- Before using `zsh`, `bash`, `sh`, `zsh -lc`, `bash -lc`, `sh -c`, aliases, or
+  equivalent wrapper shells, confirm shell semantics are genuinely required;
+  otherwise rewrite the operation into direct argv form.
 
 ## Validation
 
