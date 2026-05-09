@@ -153,6 +153,14 @@ artifacts that may need later inspection. Use disposable OS temp locations only
 for short-lived process-local files whose path and contents do not matter after
 the command finishes.
 
+For Codex specifically, configured
+`[sandbox_workspace_write].writable_roots` may not be the full effective
+writable root set. The active project root and platform temp directories can be
+implicit writable roots unless local config excludes them. When stricter
+isolation matters, inspect the effective policy with
+`codex debug prompt-input effective-sandbox-check` and use the Codex adapter's
+sandbox guidance for temp-root exclusions.
+
 Avoid spreading workflow state across sibling repositories or other ad hoc
 shared locations unless the task explicitly requires broader coordination. When
 broader coordination is required, state where the shared state lives and why

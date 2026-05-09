@@ -173,6 +173,44 @@ Worktree cleanup can require elevated permission even when the visible worktree
 paths sit inside the repository, because Git also updates internal worktree
 metadata outside the leaf directories being removed.
 
+### Sandbox Writable Roots
+
+In `workspace-write` mode, do not assume
+`[sandbox_workspace_write].writable_roots` is the complete effective writable
+root list. Codex may also have implicit writable roots from the active project
+root and platform temp locations such as `/tmp` or `$TMPDIR`; on macOS, `/tmp`
+may appear in diagnostics as `/private/tmp`.
+
+Inspect the effective policy when sandbox boundaries matter:
+
+```sh
+codex debug prompt-input effective-sandbox-check
+```
+
+For stricter isolation, local Codex config can explicitly exclude the implicit
+temp roots:
+
+```toml
+[sandbox_workspace_write]
+exclude_slash_tmp = true
+exclude_tmpdir_env_var = true
+```
+
+Then verify the empty-explicit-roots case so temp roots do not silently
+reappear:
+
+```sh
+codex debug prompt-input -c 'sandbox_workspace_write.writable_roots=[]' effective-sandbox-check
+```
+
+Use repo-local scratch paths for workflow artifacts that need review later.
+Excluding temp roots can break tools that require writable temp directories, so
+redirect those tools to repo-local temp state when stricter isolation is
+required.
+
+The detailed runtime note lives in
+`ai-workflow-incubator/runtime-artifacts/codex-local-policy/sandbox-writable-roots.md`.
+
 ## Autonomous Lane
 
 Codex should continue executing without pausing for human input when:
