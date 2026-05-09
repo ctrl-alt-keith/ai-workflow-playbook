@@ -103,6 +103,14 @@ change.
 - when a PR created from a Codex worktree is merged and the worktree is no
   longer needed, remove the worktree and prune stale worktree metadata when
   appropriate
+- Codex command approval rules should allow direct `git worktree remove <path>`
+  execution, along with necessary safety-inspection commands such as
+  `git worktree list --porcelain` and
+  `git status --porcelain=v1 -z --untracked-files=all`, when removing a merged
+  branch worktree that has no uncommitted or untracked changes
+- do not use forced worktree removal for routine merged-branch cleanup; if
+  `git worktree remove <path>` is blocked by local changes, preserve the
+  worktree and report the reason
 
 ## GitHub Access Preflight
 
@@ -191,6 +199,13 @@ Treat permission boundaries as part of the execution environment, not as inciden
 Worktree cleanup can require elevated permission even when the visible worktree
 paths sit inside the repository, because Git also updates internal worktree
 metadata outside the leaf directories being removed.
+
+For merged-branch cleanup, request narrowly scoped permission for
+`git worktree remove <path>` and the related direct Git inspection commands
+needed to prove the worktree is safe to remove. Suitable approval-prefix
+patterns include `git worktree remove`, `git worktree list`, and
+`git status`; avoid broad shell or arbitrary `git` approval when the cleanup
+can be expressed through these direct argv forms.
 
 ### Sandbox Writable Roots
 
