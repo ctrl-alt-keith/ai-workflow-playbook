@@ -9,6 +9,9 @@
 
 - `docs/engineering-baseline.md` -> foundational engineering expectations
 - `docs/repo-readiness.md` -> repository workflow expectations
+- `docs/tool-adapters/codex.md` -> required adapter guidance for Codex
+  executions; mandatory startup material for Codex runs, not optional
+  deep-reference material
 - `docs/maintenance-automations.md` -> recurring Codex maintenance automation expectations
 - `docs/prompts.md` -> reusable prompt templates
 
@@ -32,13 +35,17 @@ Before acting on repository or software work:
 
 1. Read `docs/start-here.md` first.
 2. Read the target repository's repo-local `AGENTS.md`.
-3. Select the interaction mode before acting: implementation, review/audit, or
+3. If the executor is Codex, read and apply `docs/tool-adapters/codex.md`
+   before implementation, review/audit, or orchestration/prompt-authoring work.
+   Codex adapter guidance is part of the startup contract for Codex runs, not
+   optional reference material.
+4. Select the interaction mode before acting: implementation, review/audit, or
    orchestration/prompt-authoring.
-4. Identify the canonical source for the rule, behavior, or context being used.
-5. Confirm the command form and execution settings for planned repository
+5. Identify the canonical source for the rule, behavior, or context being used.
+6. Confirm the command form and execution settings for planned repository
    commands, especially direct `git` and `gh` usage.
-6. Identify the repository's canonical validation path.
-7. Act only after those checks are clear, or report the blocker,
+7. Identify the repository's canonical validation path.
+8. Act only after those checks are clear, or report the blocker,
    uncertainty, or missing context.
 
 ## Source Authority Map
