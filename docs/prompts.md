@@ -183,9 +183,15 @@ External State Verification:
   review/audit or orchestration/prompt-authoring.
 - Verify live external state, such as GitHub repository or pull request state,
   before relying on it.
-- Run commands directly from the target repository and follow the command-form
-  rule in `docs/repo-readiness.md`; do not wrap ordinary repo commands in
-  `zsh`, `bash`, `sh`, or equivalent shell forms.
+- Run commands directly from inside the target repository worktree and follow
+  the command-form rule in `docs/repo-readiness.md`; do not wrap ordinary repo
+  commands in `zsh`, `bash`, `sh`, or equivalent shell forms.
+- For implementation changes, use a dedicated repo-local git worktree: one
+  repository, one branch, one worktree, and one PR per change. Run commands
+  from inside that target worktree and keep temporary or scratch state
+  repo-local.
+- The only worktree exceptions are read-only inspection or explicit human
+  instruction not to modify files.
 - Follow the direct PR inspection rule in `docs/review-packet.md` when a task
   asks for PR review, readiness, approval, or merge advice.
 - Follow the public API baseline in `docs/engineering-baseline.md` when code,
@@ -200,8 +206,8 @@ Parallel Execution Plan:
   `docs/engineering-baseline.md`.
 - Before parallel work begins, classify each task by lane and define merge order
   or state why merge order is flexible.
-- Preserve one-repo/one-branch/one-PR scope integrity, workspace isolation,
-  canonical validation, direct PR inspection, and authoritative source
+- Preserve one-repo/one-branch/one-worktree/one-PR scope integrity, workspace
+  isolation, canonical validation, direct PR inspection, and authoritative source
   requirements.
 
 Tasks:
@@ -629,9 +635,9 @@ Constraints:
 - Explicitly distinguish shared playbook rules from repo-local rules.
 - Do not duplicate broad workflow guidance in AGENTS when the playbook already covers it.
 - Do not remove necessary repo-local instructions that the playbook cannot supply.
-- For global rollout, keep one repository, one branch, and one pull request per
-  target repository unless the target repository's documented process says
-  otherwise.
+- For global rollout and implementation changes, keep one repository, one
+  branch, one dedicated worktree, and one pull request per target repository
+  unless the target repository's documented process says otherwise.
 - Keep the document concise, operational, and easy to maintain.
 
 Validation:
@@ -771,8 +777,9 @@ Required startup:
 3. Select the interaction mode before acting.
 4. Identify the canonical source for reusable workflow rules.
 5. Confirm command form for ordinary repo commands.
-6. Identify the canonical validation path.
-7. Act only after these checks are clear, or report the blocker.
+6. Confirm the dedicated repo-local worktree for implementation changes.
+7. Identify the canonical validation path.
+8. Act only after these checks are clear, or report the blocker.
 
 Interaction mode:
 - [implementation, review/audit, or orchestration/prompt-authoring]
@@ -790,12 +797,16 @@ Scope:
 
 Constraints:
 - Keep changes minimal, scoped, and structurally local.
+- Use a dedicated repo-local git worktree for implementation changes: one
+  repository, one branch, one worktree, and one PR per change. Run commands
+  from inside the target worktree and keep temporary or scratch state
+  repo-local.
 - Do not include unrelated cleanup.
 - Do not rely on noncanonical staging, runtime, generated, or local instruction
   surfaces as policy unless the rule has been promoted into the canonical
   source.
 - Use direct command execution for ordinary `git`, `gh`, `make`, `python`,
-  repo-local script, and tool commands.
+  repo-local script, and tool commands from inside the target worktree.
 - Do not use `zsh -lc`, `bash -lc`, `sh -c`, or equivalent shell wrappers for
   ordinary repo commands.
 - Use shell wrappers only when shell syntax is genuinely required.
@@ -851,8 +862,12 @@ Delivery:
 - Follow the branch, PR readiness, and workspace rules in
   `docs/feature-lifecycle.md`, `docs/repo-readiness.md`, and
   `docs/tool-adapters/codex.md`.
+- Use a dedicated repo-local git worktree for implementation changes: one
+  repository, one branch, one worktree, and one PR per change. Run commands
+  from inside the target worktree and keep temporary or scratch state
+  repo-local.
 - Run ordinary `git`, `gh`, `make`, `python`, repo-local script, and tool
-  commands directly from the target repository; reserve shell wrapping for
+  commands directly from the target worktree; reserve shell wrapping for
   commands that genuinely require shell syntax.
 - Before executing a shell-wrapped command, perform the command-form preflight
   from `docs/repo-readiness.md`; when shell semantics are unnecessary, rewrite
@@ -955,6 +970,9 @@ Inputs:
 Instructions:
 - Inspect the current git state, existing diff, and branch context.
 - Confirm that the intended changes form one logical PR and identify any unrelated files or accidental scope.
+- Confirm that the changes are in a dedicated repo-local worktree, or stop and
+  report the mismatch unless the human explicitly instructed no file
+  modification.
 - If needed, create a fresh branch from current `origin/main`, keep only the
   intended diff, and prepare a clear commit and PR description.
 - Summarize the change in a way that supports quick human review and accurate merge decisions.

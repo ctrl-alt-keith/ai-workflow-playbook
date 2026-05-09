@@ -15,10 +15,11 @@ Define shared engineering expectations across repositories. This baseline forms 
   - Do not add or substitute alternate local validation tools outside the
     repo-defined workflow.
 - Command intent stays visible
-  - Run ordinary repo commands directly from the target repository, following
-    the command-form rules in `docs/repo-readiness.md`.
+  - Run ordinary repo commands directly from the target repository worktree,
+    following the command-form rules in `docs/repo-readiness.md`.
 - Repository isolation
   - One repository per PR.
+  - One dedicated worktree per implementation change.
   - No cross-repo commits.
 - Deterministic behavior
   - Prefer explicit, predictable outputs.
@@ -131,8 +132,8 @@ If two PRs overlap unexpectedly, pause and re-establish the order before merging
 
 Parallelism must not weaken:
 
-- one repository, one branch, one PR scope integrity
-- repo-local `.worktrees/` isolation when worktrees are used
+- one repository, one branch, one worktree, one PR scope integrity
+- required repo-local `.worktrees/` isolation for implementation changes
 - canonical validation
 - direct PR inspection
 - authoritative source requirements
