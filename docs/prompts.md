@@ -183,6 +183,9 @@ External State Verification:
   review/audit or orchestration/prompt-authoring.
 - Verify live external state, such as GitHub repository or pull request state,
   before relying on it.
+- When the human posts a GitHub PR link, provides a PR number, or asks to
+  review a PR, follow the GitHub connector-first PR review rule in
+  `docs/review-packet.md`.
 - Run commands directly from inside the target repository worktree and follow
   the command-form rule in `docs/repo-readiness.md`; do not wrap ordinary repo
   commands in `zsh`, `bash`, `sh`, or equivalent shell forms.
@@ -909,22 +912,39 @@ Inputs:
 - Summary-only requested: [summary_only]
 
 Instructions:
-- Unless Summary-only requested is `yes`, inspect the PR directly before giving
-  any review, approval, readiness, or merge recommendation.
+- When a PR link or PR number is available, you must use connector inspection
+  and must open the PR through the GitHub connector before giving any review,
+  approval, readiness, or merge recommendation.
 - Stay in review/audit mode. Do not implement changes while performing the PR
   review unless the human explicitly changes the task to implementation.
-- Treat user-provided summaries as navigation and context only, not review
-  evidence.
-- Inspect the PR title and body, changed files, relevant diffs, CI and check
+- Local checkouts, `git diff`, and `gh` commands may be used as supplemental
+  evidence for PR review, but they must not replace connector inspection.
+- Treat "open the PR" as read-only connector inspection, not opening the PR in
+  a browser and not submitting a GitHub review.
+- Treat "review this PR" as inspect the PR and provide feedback in chat, unless
+  the human explicitly asks to post the review to GitHub.
+- Treat user-provided summaries, pasted titles, local path snippets, and copied
+  diff excerpts as navigation and context only, not review evidence, when a PR
+  link or PR number is available.
+- You must inspect the actual PR metadata, title and body, changed files,
+  relevant diffs, comments and unresolved review discussion, CI and check
   status, mergeability, and scope against the task or issue where those inputs
   are available.
-- If direct PR access is unavailable and Summary-only requested is not `yes`,
-  stop the PR review, state that direct PR access is unavailable, and ask for
-  access to be restored or for the PR and files to be made available.
+- You must not mutate the PR: do not submit, approve, request changes, comment
+  on, label, merge, close, or otherwise change the PR unless the human
+  explicitly asks for that GitHub action.
+- If GitHub connector access is unavailable or declined and Summary-only
+  requested is not `yes`, stop the PR review, state that connector access is
+  unavailable, and provide only clearly caveated feedback from the information
+  already present.
 - Do not claim the PR is safe to merge, ready to merge, or approved without
-  direct evidence from the PR itself.
-- If Summary-only requested is `yes`, state that the response is based only on
-  the supplied summary and does not establish merge readiness.
+  direct evidence from the PR itself through the connector.
+- If Summary-only requested is `yes` but a PR link or PR number is available,
+  state that summary-only material is not the review source of truth and still
+  perform connector inspection before review feedback.
+- If Summary-only requested is `yes` and no PR link or PR number is available,
+  state that the response is based only on the supplied summary and does not
+  establish merge readiness.
 
 Output format:
 1. Review findings: severity-ordered findings with file or PR references where
