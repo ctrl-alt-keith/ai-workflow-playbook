@@ -58,14 +58,20 @@ authoritative scope.
 
 ## Prompt Output Contract
 
-Prompt and orchestration deliverables must be complete, self-contained, and
-directly usable by default. A downstream agent should not need to reconstruct
-the task from conversation history, hidden assumptions, earlier partial output,
-or unstated repository context.
+Prompt, spec, plan, implementation brief, review brief, automation prompt, agent
+instruction, and orchestration deliverables must be complete, self-contained,
+and directly usable by default. A downstream agent should not need to
+reconstruct the task from conversation history, hidden assumptions, earlier
+partial output, or unstated repository context.
 
-When prompt text is the deliverable, provide one contiguous copyable block. Do
-not split the prompt across multiple fragments, follow-up messages, or
-continuation blocks unless the human explicitly requests an incremental draft.
+When prompt or instruction text is the deliverable, provide the full drop-in
+version in one contiguous copyable block. If the human asks how to "add",
+"incorporate", "fold in", or otherwise update something in an existing prompt,
+spec, instruction, or task envelope, still return the full updated artifact by
+default. Do not assume the human will manually stitch prior context or earlier
+snippets into the final artifact. Do not split the artifact across multiple
+fragments, follow-up messages, or continuation blocks unless the human
+explicitly requests an incremental draft.
 
 Avoid these forms unless explicitly requested:
 
@@ -74,8 +80,14 @@ Avoid these forms unless explicitly requested:
 - "change X to Y" pseudo-prompts
 - diffs
 - partial edits
+- delta-only responses
+- targeted edits without the full updated artifact
 - instructions that require the receiver to infer missing context from earlier
   discussion
+
+Prefer copy/paste-safe output over terse conversational deltas for
+agent-facing prompts. Preserve brevity only when it does not risk omitting
+required context.
 
 When a prompt is intended for implementation, include enough context for the
 receiver to start safely: repository, working directory, canonical source,
@@ -171,9 +183,18 @@ External State Verification:
   review/audit or orchestration/prompt-authoring.
 - Verify live external state, such as GitHub repository or pull request state,
   before relying on it.
-- Run commands directly from the target repository and follow the command-form
-  rule in `docs/repo-readiness.md`; do not wrap ordinary repo commands in
-  `zsh`, `bash`, `sh`, or equivalent shell forms.
+- When the human posts a GitHub PR link, provides a PR number, or asks to
+  review a PR, follow the GitHub connector-first PR review rule in
+  `docs/review-packet.md`.
+- Run commands directly from inside the target repository worktree and follow
+  the command-form rule in `docs/repo-readiness.md`; do not wrap ordinary repo
+  commands in `zsh`, `bash`, `sh`, or equivalent shell forms.
+- For implementation changes, use a dedicated repo-local git worktree: one
+  repository, one branch, one worktree, and one PR per change. Run commands
+  from inside that target worktree and keep temporary or scratch state
+  repo-local.
+- The only worktree exceptions are read-only inspection or explicit human
+  instruction not to modify files.
 - Follow the direct PR inspection rule in `docs/review-packet.md` when a task
   asks for PR review, readiness, approval, or merge advice.
 - Follow the public API baseline in `docs/engineering-baseline.md` when code,
@@ -188,8 +209,8 @@ Parallel Execution Plan:
   `docs/engineering-baseline.md`.
 - Before parallel work begins, classify each task by lane and define merge order
   or state why merge order is flexible.
-- Preserve one-repo/one-branch/one-PR scope integrity, workspace isolation,
-  canonical validation, direct PR inspection, and authoritative source
+- Preserve one-repo/one-branch/one-worktree/one-PR scope integrity, workspace
+  isolation, canonical validation, direct PR inspection, and authoritative source
   requirements.
 
 Tasks:
@@ -375,30 +396,39 @@ Instructions:
   across repositories.
 - Update the playbook only where the lesson is durable, generic, and better captured centrally than locally.
 - Prefer tightening or extending existing playbook guidance over adding fragmented one-off notes.
+- Treat playbook updates and `AGENTS.md` rollout as separate work types.
 
 Constraints:
 - Treat <playbook_reference> as the canonical source for cross-repo workflow rules.
 - Do not copy project-specific implementation details, repo names, or local exceptions into the playbook.
 - Do not promote rules that are still speculative, unsupported by concrete
   evidence, or narrowly tied to one repository.
+- Do not update `AGENTS.md` files as part of this playbook update, including
+  the playbook repository's own `AGENTS.md`, unless the user explicitly
+  authorizes that edit or the task's primary purpose is `AGENTS.md` update,
+  rollout, or enforcement.
 - Keep the change scoped to one logical documentation update.
 
 Validation:
 - Verify that each promoted rule is backed by concrete cited evidence, not only
   plausible reuse.
 - Verify that any repo-local rule remains outside the shared playbook.
+- Verify that the change does not treat canonical playbook updates as implicit
+  `AGENTS.md` update or rollout.
 - Verify that updated wording does not conflict with existing core playbook documents.
 - Verify that the resulting file placement matches the playbook structure.
 - Verify that the update includes a notes cleanup follow-up or explicitly says
   no notes cleanup is needed.
 
 Output format:
-1. Proposed playbook changes: brief summary paragraph.
-2. Rules promoted: short bullets with rationale.
-3. Files to update: list of target files and why.
-4. Validation notes: short bullets covering evidence, reuse, scope, conflict
-   checks, and notes cleanup.
-5. Open questions: only if a rule boundary is still unclear.
+- Proposed playbook changes: brief summary paragraph.
+- Rules promoted: short bullets with rationale.
+- Files to update: list of target files and why.
+- Change classification: canonical playbook guidance only, unless there is
+  explicit authorization for an `AGENTS.md` update/enforcement task.
+- Validation notes: short bullets covering evidence, reuse, scope, conflict
+  checks, rollout boundary, and notes cleanup.
+- Open questions: only if a rule boundary is still unclear.
 ```
 
 ### Playbook Update Notes
@@ -600,12 +630,17 @@ Instructions:
 - Keep playbook-level rules in the playbook and repo-local execution rules in AGENTS.
 - Update AGENTS so it clearly acts as the thin repo-local execution layer on top of the shared playbook.
 - Preserve useful repo-specific instructions such as validation commands, file placement rules, and local workflow constraints.
+- Treat this as explicit rollout or enforcement work for the named repository,
+  not as a side effect of a generic playbook update.
 
 Constraints:
 - Treat <playbook_reference> as the canonical source for cross-repo workflow rules.
 - Explicitly distinguish shared playbook rules from repo-local rules.
 - Do not duplicate broad workflow guidance in AGENTS when the playbook already covers it.
 - Do not remove necessary repo-local instructions that the playbook cannot supply.
+- For global rollout and implementation changes, keep one repository, one
+  branch, one dedicated worktree, and one pull request per target repository
+  unless the target repository's documented process says otherwise.
 - Keep the document concise, operational, and easy to maintain.
 
 Validation:
@@ -616,15 +651,21 @@ Validation:
   shell-wrapped commands are used only when shell semantics are required, and
   ordinary repository commands are rewritten to direct argv form before
   execution.
+- Verify that `git` and `gh` guidance preserves both layers of directness:
+  standard CLI flows use `git` and `gh` rather than alternate APIs or helper
+  tools, and execution settings disable implicit shell or login-shell behavior
+  where the environment supports that.
 - Verify that the updated AGENTS file does not introduce conflicting guidance relative to the playbook.
 - Verify that the document still works as a practical execution layer for this repo type.
 
 Output format:
 1. AGENTS change summary: short paragraph.
 2. Shared-vs-local split: bullets showing what belongs in the playbook and what stays local.
-3. Files updated: list of touched files.
-4. Validation notes: short bullets.
-5. Residual gaps: optional bullets only if something still needs a human decision.
+3. Change classification: explicitly authorized `AGENTS.md` update/enforcement
+   for the named repository.
+4. Files updated: list of touched files.
+5. Validation notes: short bullets.
+6. Residual gaps: optional bullets only if something still needs a human decision.
 ```
 
 ### AGENTS Update Notes
@@ -743,8 +784,11 @@ Required startup:
 3. Select the interaction mode before acting.
 4. Identify the canonical source for reusable workflow rules.
 5. Confirm command form for ordinary repo commands.
-6. Identify the canonical validation path.
-7. Act only after these checks are clear, or report the blocker.
+6. Confirm the dedicated repo-local worktree for implementation changes.
+7. For `git` and `gh`, confirm execution settings avoid implicit shell or
+   login-shell wrapping where supported.
+8. Identify the canonical validation path.
+9. Act only after these checks are clear, or report the blocker.
 
 Interaction mode:
 - [implementation, review/audit, or orchestration/prompt-authoring]
@@ -762,12 +806,25 @@ Scope:
 
 Constraints:
 - Keep changes minimal, scoped, and structurally local.
+- Use a dedicated repo-local git worktree for implementation changes: one
+  repository, one branch, one worktree, and one PR per change. Run commands
+  from inside the target worktree and keep temporary or scratch state
+  repo-local.
 - Do not include unrelated cleanup.
 - Do not rely on noncanonical staging, runtime, generated, or local instruction
   surfaces as policy unless the rule has been promoted into the canonical
   source.
 - Use direct command execution for ordinary `git`, `gh`, `make`, `python`,
-  repo-local script, and tool commands.
+  repo-local script, and tool commands from inside the target worktree.
+- For standard Git and GitHub CLI work, use `git` and `gh` directly rather than
+  alternate APIs, helper tools, wrapper scripts, or connector substitutions
+  unless the task requires non-CLI capability or direct CLI access is blocked.
+- Prefer native argv-style execution such as `["git", "status"]`,
+  `["git", "commit"]`, and `["gh", "pr", "create"]` where supported.
+- If the execution tool defaults to shell or login-shell behavior, explicitly
+  disable it for `git` and `gh` commands where supported, using options such as
+  `shell=false`, `login=false`, `use_shell=false`, or the platform-native
+  equivalent.
 - Do not use `zsh -lc`, `bash -lc`, `sh -c`, or equivalent shell wrappers for
   ordinary repo commands.
 - Use shell wrappers only when shell syntax is genuinely required.
@@ -791,8 +848,11 @@ Delivery:
 
 Deliverable:
 - [complete expected final output]
+- Provide the full drop-in artifact by default, even when the task asks to add,
+  incorporate, or fold new material into existing prompt or instruction text.
 - Do not provide partial prompts, continuation fragments, diffs, partial edits,
-  or "change X to Y" pseudo-prompts unless explicitly requested.
+  delta-only responses, targeted edits without the full updated artifact, or
+  "change X to Y" pseudo-prompts unless explicitly requested.
 ```
 
 ## Implementation Delivery Footer
@@ -820,9 +880,18 @@ Delivery:
 - Follow the branch, PR readiness, and workspace rules in
   `docs/feature-lifecycle.md`, `docs/repo-readiness.md`, and
   `docs/tool-adapters/codex.md`.
+- Use a dedicated repo-local git worktree for implementation changes: one
+  repository, one branch, one worktree, and one PR per change. Run commands
+  from inside the target worktree and keep temporary or scratch state
+  repo-local.
 - Run ordinary `git`, `gh`, `make`, `python`, repo-local script, and tool
-  commands directly from the target repository; reserve shell wrapping for
+  commands directly from the target worktree; reserve shell wrapping for
   commands that genuinely require shell syntax.
+- For standard `git` and `gh` work, use the CLI directly rather than alternate
+  APIs, helper scripts, or connector substitutions; where supported, use native
+  argv-style execution and disable implicit shell or login-shell defaults with
+  settings such as `shell=false`, `login=false`, `use_shell=false`, or the
+  platform-native equivalent.
 - Before executing a shell-wrapped command, perform the command-form preflight
   from `docs/repo-readiness.md`; when shell semantics are unnecessary, rewrite
   the operation into direct argv form before execution.
@@ -863,22 +932,39 @@ Inputs:
 - Summary-only requested: [summary_only]
 
 Instructions:
-- Unless Summary-only requested is `yes`, inspect the PR directly before giving
-  any review, approval, readiness, or merge recommendation.
+- When a PR link or PR number is available, you must use connector inspection
+  and must open the PR through the GitHub connector before giving any review,
+  approval, readiness, or merge recommendation.
 - Stay in review/audit mode. Do not implement changes while performing the PR
   review unless the human explicitly changes the task to implementation.
-- Treat user-provided summaries as navigation and context only, not review
-  evidence.
-- Inspect the PR title and body, changed files, relevant diffs, CI and check
+- Local checkouts, `git diff`, and `gh` commands may be used as supplemental
+  evidence for PR review, but they must not replace connector inspection.
+- Treat "open the PR" as read-only connector inspection, not opening the PR in
+  a browser and not submitting a GitHub review.
+- Treat "review this PR" as inspect the PR and provide feedback in chat, unless
+  the human explicitly asks to post the review to GitHub.
+- Treat user-provided summaries, pasted titles, local path snippets, and copied
+  diff excerpts as navigation and context only, not review evidence, when a PR
+  link or PR number is available.
+- You must inspect the actual PR metadata, title and body, changed files,
+  relevant diffs, comments and unresolved review discussion, CI and check
   status, mergeability, and scope against the task or issue where those inputs
   are available.
-- If direct PR access is unavailable and Summary-only requested is not `yes`,
-  stop the PR review, state that direct PR access is unavailable, and ask for
-  access to be restored or for the PR and files to be made available.
+- You must not mutate the PR: do not submit, approve, request changes, comment
+  on, label, merge, close, or otherwise change the PR unless the human
+  explicitly asks for that GitHub action.
+- If GitHub connector access is unavailable or declined and Summary-only
+  requested is not `yes`, stop the PR review, state that connector access is
+  unavailable, and provide only clearly caveated feedback from the information
+  already present.
 - Do not claim the PR is safe to merge, ready to merge, or approved without
-  direct evidence from the PR itself.
-- If Summary-only requested is `yes`, state that the response is based only on
-  the supplied summary and does not establish merge readiness.
+  direct evidence from the PR itself through the connector.
+- If Summary-only requested is `yes` but a PR link or PR number is available,
+  state that summary-only material is not the review source of truth and still
+  perform connector inspection before review feedback.
+- If Summary-only requested is `yes` and no PR link or PR number is available,
+  state that the response is based only on the supplied summary and does not
+  establish merge readiness.
 
 Output format:
 1. Review findings: severity-ordered findings with file or PR references where
@@ -924,6 +1010,9 @@ Inputs:
 Instructions:
 - Inspect the current git state, existing diff, and branch context.
 - Confirm that the intended changes form one logical PR and identify any unrelated files or accidental scope.
+- Confirm that the changes are in a dedicated repo-local worktree, or stop and
+  report the mismatch unless the human explicitly instructed no file
+  modification.
 - If needed, create a fresh branch from current `origin/main`, keep only the
   intended diff, and prepare a clear commit and PR description.
 - Summarize the change in a way that supports quick human review and accurate merge decisions.

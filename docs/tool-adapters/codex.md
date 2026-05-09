@@ -54,11 +54,10 @@ change.
 
 - read-only exploration, audit, or review work may use the active checkout when
   no repo changes are required
-- for repo-changing implementation work that needs an isolated workspace, use
-  `git worktree` from the target repository and place every repo-changing
-  worktree under `<repo>/.worktrees/`; do not create sibling repo directories,
-  sibling worktree directories, or ad hoc full-copy repositories under the
-  project root
+- for repo-changing implementation work, always use `git worktree` from the
+  target repository and place every repo-changing worktree under
+  `<repo>/.worktrees/`; do not create sibling repo directories, sibling
+  worktree directories, or ad hoc full-copy repositories under the project root
 - before creating or reusing a repo-changing worktree, run `git worktree list`,
   select a repo-local `.worktrees/...` path, and report that selected path in
   setup or delivery notes
@@ -116,6 +115,16 @@ change.
 - prefer clear direct invocations for normal repository operations, such as
   `git status`, `git merge --ff-only origin/main`, `gh repo view`,
   `gh pr view`, `make check`, `python ...`, and repo-local scripts
+- for standard Git and GitHub CLI flows, use `git` and `gh` directly rather
+  than alternate APIs, helper scripts, connectors, or tool substitutions unless
+  the task requires a non-CLI capability or direct CLI access is blocked and
+  the fallback is reported
+- when the execution tool supports native argv arrays, prefer direct argv forms
+  such as `["git", "status"]` or `["gh", "pr", "view", "145"]`
+- if the execution surface defaults to shell or login-shell behavior, disable
+  that behavior for `git` and `gh` where supported, using options such as
+  `shell=false`, `login=false`, `use_shell=false`, or the platform-native
+  equivalent
 - do not use `zsh -lc`, `bash -lc`, `sh -c`, or equivalent wrapper forms for
   ordinary repo commands
 - before executing a shell-wrapped command, perform a command-form preflight:
@@ -131,21 +140,31 @@ change.
 - examples: use `git status`, not `zsh -lc 'git status'`; use `make check`, not
   `bash -lc 'make check'`; use `gh pr view 145`, not
   `sh -c 'gh pr view 145'`
-- use `gh repo view` to confirm the target repository is reachable
-- when PR state matters, use `gh pr view` to fetch current PR metadata before
-  making decisions
-- when asked to review, check, assess, approve, or comment on a PR, inspect the
-  PR directly unless the human explicitly asks for summary-only discussion
-- treat user-provided PR summaries as navigation and context only, not review
-  evidence
-- direct PR inspection should include the PR title and body, changed files,
-  relevant diffs, CI and check status, mergeability, and scope against the task
-  or issue where those inputs are available
-- if the required `gh` commands fail, stop and report the access or state
-  blocker instead of inferring remote state
-- if direct PR access is unavailable for a PR review, stop the review, state
-  that direct PR access is unavailable, and ask for access to be restored or for
-  the PR and files to be made available
+- when the human posts a GitHub PR link, provides a PR number, or asks to
+  review, check, assess, approve, or comment on a PR, Codex must use connector
+  inspection and must open the PR through the GitHub connector before giving
+  review feedback
+- local checkouts, `git diff`, and `gh` commands may be used as supplemental
+  evidence for PR review, but they must not replace connector inspection
+- treat "open the PR" as read-only connector inspection, not opening the PR in
+  a browser and not submitting a GitHub review
+- treat "review this PR" as inspect the PR and provide feedback in chat, unless
+  the human explicitly asks to post the review to GitHub
+- Codex must inspect the actual PR metadata, title and body, changed files,
+  relevant diffs, comments and unresolved review discussion, CI and check
+  status, mergeability, and scope against the task or issue where those inputs
+  are available
+- treat user-provided PR summaries, pasted titles, local path snippets, and
+  copied diff excerpts as navigation and context only, not review evidence,
+  when a PR link or PR number is available
+- Codex must not mutate the PR: do not submit, approve, request changes,
+  comment on, label, merge, close, or otherwise change the PR unless the human
+  explicitly asks for that GitHub action
+- if GitHub connector access is unavailable or declined for a PR review, stop
+  the review, state that connector access is unavailable, and provide only
+  clearly caveated feedback from the information already present
+- if the required `gh` commands fail on a non-review PR task, stop and report
+  the access or state blocker instead of inferring remote state
 - do not assume mergeability, checks, or branch protection without verification
 
 ## Public API Baseline Check
@@ -172,6 +191,44 @@ Treat permission boundaries as part of the execution environment, not as inciden
 Worktree cleanup can require elevated permission even when the visible worktree
 paths sit inside the repository, because Git also updates internal worktree
 metadata outside the leaf directories being removed.
+
+### Sandbox Writable Roots
+
+In `workspace-write` mode, do not assume
+`[sandbox_workspace_write].writable_roots` is the complete effective writable
+root list. Codex may also have implicit writable roots from the active project
+root and platform temp locations such as `/tmp` or `$TMPDIR`; on macOS, `/tmp`
+may appear in diagnostics as `/private/tmp`.
+
+Inspect the effective policy when sandbox boundaries matter:
+
+```sh
+codex debug prompt-input effective-sandbox-check
+```
+
+For stricter isolation, local Codex config can explicitly exclude the implicit
+temp roots:
+
+```toml
+[sandbox_workspace_write]
+exclude_slash_tmp = true
+exclude_tmpdir_env_var = true
+```
+
+Then verify the empty-explicit-roots case so temp roots do not silently
+reappear:
+
+```sh
+codex debug prompt-input -c 'sandbox_workspace_write.writable_roots=[]' effective-sandbox-check
+```
+
+Use repo-local scratch paths for workflow artifacts that need review later.
+Excluding temp roots can break tools that require writable temp directories, so
+redirect those tools to repo-local temp state when stricter isolation is
+required.
+
+The detailed runtime note lives in
+`ai-workflow-incubator/runtime-artifacts/codex-local-policy/sandbox-writable-roots.md`.
 
 ## Autonomous Lane
 

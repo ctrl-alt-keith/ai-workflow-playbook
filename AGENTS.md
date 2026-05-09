@@ -33,6 +33,9 @@ Repo-local rules take precedence only for repo-specific behavior.
 - Follow the command-form preflight rule in `docs/repo-readiness.md`: use direct
   `git ...`, `gh ...`, `make ...`, `python ...`, repo-local scripts, and tool
   commands for ordinary repository operations.
+- For standard `git` and `gh` work, preserve direct CLI execution at both the
+  command-selection and execution-tool layers; disable implicit shell or
+  login-shell behavior where the environment supports that.
 - Before using `zsh`, `bash`, `sh`, `zsh -lc`, `bash -lc`, `sh -c`, aliases, or
   equivalent wrapper shells, confirm shell semantics are genuinely required;
   otherwise rewrite the operation into direct argv form.

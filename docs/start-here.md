@@ -17,6 +17,11 @@
 - Use `ai-workflow-playbook` as the canonical source of reusable workflow rules.
 - Treat `AGENTS.md` as the repo-local execution layer.
 - Repo-local rules take precedence only for repo-specific behavior.
+- Treat canonical playbook changes and `AGENTS.md` edits as separate work
+  types. Updating the playbook does not implicitly authorize any `AGENTS.md`
+  edit, including in `ai-workflow-playbook` itself.
+- Edit `AGENTS.md` only with explicit user authorization or when the task's
+  primary purpose is `AGENTS.md` update, rollout, or enforcement.
 - Before acting on repository or software work, determine the interaction mode
   using `docs/repo-readiness.md`: implementation, review/audit, or
   orchestration/prompt-authoring.
@@ -30,7 +35,8 @@ Before acting on repository or software work:
 3. Select the interaction mode before acting: implementation, review/audit, or
    orchestration/prompt-authoring.
 4. Identify the canonical source for the rule, behavior, or context being used.
-5. Confirm the command form for planned repository commands.
+5. Confirm the command form and execution settings for planned repository
+   commands, especially direct `git` and `gh` usage.
 6. Identify the repository's canonical validation path.
 7. Act only after those checks are clear, or report the blocker,
    uncertainty, or missing context.
@@ -40,6 +46,8 @@ Before acting on repository or software work:
 - `ai-workflow-playbook` is the canonical source for reusable workflow policy.
 - Repo-local `AGENTS.md` files are repo-local execution guidance layered on top
   of the playbook.
+- `AGENTS.md` alignment is update, enforcement, or rollout work, not a side
+  effect of changing canonical playbook guidance.
 - Incubation, staging, and evidence repositories, including
   `ai-workflow-incubator`, are noncanonical unless a durable rule is explicitly
   promoted into the playbook.
@@ -64,10 +72,15 @@ Before acting on repository or software work:
 ## Rule of Thumb
 
 - Prefer small, scoped changes.
+- Report whether a workflow change is canonical playbook guidance only or an
+  explicitly authorized `AGENTS.md` update/enforcement task.
+- For global rollout and implementation changes, use one repository, one
+  branch, one dedicated worktree, and one pull request per target repository
+  unless that repository's documented process says otherwise.
 - In ctrl-alt-keith workflows, default ambiguous repository tasks to
   review/audit or orchestration/prompt-authoring unless the human explicitly
   asks for direct implementation.
-- Run commands directly from the target repository; follow
+- Run commands directly from inside the target repository worktree; follow
   `docs/repo-readiness.md` for command form and shell-wrapping rules.
 - Run repository validation through the repo's Makefile when it provides the
   canonical entrypoint.

@@ -29,8 +29,8 @@ requests, or running implementation-oriented workflows.
 Use one of these modes:
 
 - Implementation mode: directly make repo changes, validate them, commit them,
-  push the branch, and open or update a pull request when repo guidance calls
-  for PR delivery.
+  push the branch, and open or update a pull request from a dedicated
+  repo-local worktree when repo guidance calls for PR delivery.
 - Review/audit mode: inspect the requested repository, pull request, issue, or
   file surface and report findings, evidence, risks, and recommendations
   without mutating the repository.
@@ -67,6 +67,15 @@ uncertainty. The handoff must be complete, self-contained, and directly usable.
 Do not produce partial prompts, continuation fragments, diffs, partial edits,
 or "change X to Y" pseudo-prompts unless the human explicitly requested that
 form.
+
+When the requested artifact is a prompt, spec, plan, implementation brief,
+review brief, automation prompt, or agent instruction, provide the full
+drop-in version by default. This remains true when the human asks how to "add",
+"incorporate", "fold in", or otherwise update something in an existing
+artifact. Do not assume the human will manually stitch prior context,
+conversation history, or earlier snippets into the final artifact. Use a delta,
+patch, diff, targeted edit, or terse "change X to Y" response only when the
+human explicitly asks for that form.
 
 Keep this policy in the shared playbook. Repo-local `AGENTS.md` files should
 reference or rely on it rather than duplicate it, except where a repository
@@ -109,9 +118,19 @@ Open a pull request as draft when any of the following are true:
 Docs-only changes should default to ready for review when canonical validation
 passes and the diff is isolated.
 
-When working in a multi-repo workspace, treat each repository as an independent unit of change. Even if multiple repositories are visible, commits, branches, and PRs must be created and managed per repository. Do not create cross-repo commits or PRs.
+When working in a multi-repo workspace, treat each repository as an independent
+unit of change. Even if multiple repositories are visible, commits, branches,
+worktrees, and PRs must be created and managed per repository. Do not create
+cross-repo commits or PRs.
 
-Before opening a PR, ensure that all staged changes belong to a single repository. If changes span multiple repositories, split them into separate branches and PRs, one per repository.
+Before opening a PR, ensure that all staged changes belong to a single
+repository. If changes span multiple repositories, split them into separate
+branches, worktrees, and PRs, one per repository.
+
+Every implementation change must use a dedicated repo-local git worktree: one
+repository, one branch, one worktree, and one PR per change. The only
+exceptions are read-only inspection or explicit human instruction not to modify
+files.
 
 ## Workspace Boundary Discovery
 
@@ -134,8 +153,9 @@ workflow updates.
 
 ## Repo-Local Workflow State
 
-Run commands from the target repository working directory by default. Keep
-temporary workflow artifacts scoped to that repository whenever practical.
+For implementation changes, run commands from inside the target repository's
+dedicated worktree. Keep temporary workflow artifacts scoped to that repository
+whenever practical.
 Examples include local worktree directories, generated review artifacts,
 transient manifests, and task-specific scratch state.
 
@@ -153,6 +173,14 @@ artifacts that may need later inspection. Use disposable OS temp locations only
 for short-lived process-local files whose path and contents do not matter after
 the command finishes.
 
+For Codex specifically, configured
+`[sandbox_workspace_write].writable_roots` may not be the full effective
+writable root set. The active project root and platform temp directories can be
+implicit writable roots unless local config excludes them. When stricter
+isolation matters, inspect the effective policy with
+`codex debug prompt-input effective-sandbox-check` and use the Codex adapter's
+sandbox guidance for temp-root exclusions.
+
 Avoid spreading workflow state across sibling repositories or other ad hoc
 shared locations unless the task explicitly requires broader coordination. When
 broader coordination is required, state where the shared state lives and why
@@ -164,7 +192,7 @@ Use the structurally minimal command form that still expresses the intended
 operation clearly. Normal repository operations must be invoked as the command
 itself, rather than hidden inside an extra shell layer.
 
-Run commands from the target repository working directory by default. For
+Run commands from inside the target repository worktree by default. For
 ordinary repository operations, use direct `git ...`, `gh ...`, `make ...`,
 `python ...`, repo-local scripts, and tool-specific commands. Before choosing a
 wrapper shell, check whether the command has a direct form and use that direct
@@ -172,6 +200,19 @@ form when it does. Do not wrap those commands in `zsh`, `bash`, `sh`, shell
 aliases, or equivalent wrapper shells only for convenience. In particular,
 `zsh -lc`, `bash -lc`, `sh -c`, or equivalent forms are not normal wrappers for
 ordinary repo commands.
+
+For standard Git or GitHub CLI work, choose the `git` or `gh` command directly
+instead of substituting alternate APIs, helper tools, wrapper scripts, or
+connector-specific operations. Use alternate APIs or tools only when the task
+explicitly calls for capabilities the CLI cannot provide or when direct CLI
+access is unavailable and the fallback is reported clearly.
+
+Preserve that directness at the execution layer too. Prefer native argv-style
+execution, such as `["git", "status"]` or `["gh", "pr", "create"]`, when the
+environment supports it. If an execution tool defaults to a shell, login shell,
+or shell-like command string, explicitly disable that behavior for `git` and
+`gh` where supported, using settings such as `shell=false`, `login=false`,
+`use_shell=false`, or the platform's equivalent direct-exec option.
 
 This keeps operational intent visible in logs, prompts, review notes, and local
 approval surfaces. It also lets permission or approval systems reason about the
@@ -199,10 +240,12 @@ Examples:
 
 - incorrect: `zsh -lc 'git status'`
 - correct: `git status`
+- preferred native argv form where supported: `["git", "status"]`
 - incorrect: `bash -lc 'make check'`
 - correct: `make check`
 - incorrect: `sh -c 'gh pr view 145'`
 - correct: `gh pr view 145`
+- preferred native argv form where supported: `["gh", "pr", "view", "145"]`
 
 Avoid inflating simple commands into larger execution forms only for habit or
 convenience. The goal is not to forbid shells; it is to preserve clarity,
@@ -238,6 +281,21 @@ This document defines expectations, not exact GitHub settings.
 
 Reusable workflow rules belong in the playbook, not duplicated into each repository's `AGENTS.md`.
 
+Canonical playbook updates and `AGENTS.md` edits are separate work types:
+
+- Playbook guidance changes update reusable workflow policy in this repository.
+- `AGENTS.md` edits, including in `ai-workflow-playbook` itself, require
+  explicit user authorization or a task whose primary purpose is `AGENTS.md`
+  update, rollout, or enforcement.
+- Cross-repo `AGENTS.md` updates are rollout or enforcement work and should not
+  be inferred from a playbook docs change.
+- Global rollout and implementation changes must use one repository, one
+  branch, one dedicated worktree, and one pull request per target repository
+  unless a target repository's documented process says otherwise.
+- Reviews and delivery notes for workflow changes should state which category
+  the change belongs to: canonical playbook guidance only or explicitly
+  authorized `AGENTS.md` update/enforcement.
+
 ## Repository Categories
 
 Most repositories fit one or more broad surfaces: docs or workflow guidance,
@@ -252,8 +310,8 @@ repositories for org profile content, community health files, templates,
 metadata, or GitHub-supported defaults.
 
 Org infrastructure repositories still follow the shared workflow rules where
-they apply: one repo, one branch, one pull request; current `origin/main` as the
-base; purpose-based branch names; small scoped diffs; human-readable review
+they apply: one repo, one branch, one dedicated worktree, one pull request;
+current `origin/main` as the base; purpose-based branch names; small scoped diffs; human-readable review
 summaries; no unrelated cleanup; and public artifact path hygiene.
 
 Normal project-repository expectations may not apply until the repository grows:

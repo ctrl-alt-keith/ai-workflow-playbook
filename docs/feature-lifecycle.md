@@ -125,11 +125,13 @@ made it. AI-agent branches should use concise, non-tool-branded names such as
 broad tool-name prefixes such as `codex/`, `claude/`, or `copilot/` should be
 avoided unless a repository intentionally requires them.
 
-For same-repo parallel work, prefer isolated Git worktrees over multiple arcs
-sharing one checkout. Keep the main checkout clean and on `main`, fetch before
-creating task worktrees so `origin/main` is current, create one worktree per
-issue or task from that current `origin/main`, and do the issue work only
-inside its worktree.
+Every implementation change must happen in a dedicated Git worktree: one
+repository, one branch, one worktree, and one PR per change. Keep the main
+checkout clean and on `main`, fetch before creating task worktrees so
+`origin/main` is current, create one worktree per issue or task from that
+current `origin/main`, and do the issue work only inside its worktree. The only
+exceptions are read-only inspection or explicit human instruction not to modify
+files.
 
 Before starting a same-repo worktree run, inspect existing worktree metadata and
 clear stale entries so an old attempt does not distort the new setup. Reuse an
