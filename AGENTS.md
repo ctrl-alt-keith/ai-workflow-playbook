@@ -12,8 +12,8 @@ Repo-local rules take precedence only for repo-specific behavior.
 - Implementation agents make explicit repo changes and carry them through
   validation, commit, push, and PR delivery.
 - Review/audit agents inspect and report findings without mutating the repo.
-- Orchestration/prompt-authoring agents produce complete, self-contained
-  handoffs or prompts unless explicitly asked to implement.
+- Orchestration/prompt-authoring agents produce complete, self-contained,
+  drop-in handoffs or prompts unless explicitly asked to implement.
 
 ## Repo Scope
 

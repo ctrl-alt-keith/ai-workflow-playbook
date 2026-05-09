@@ -68,6 +68,15 @@ Do not produce partial prompts, continuation fragments, diffs, partial edits,
 or "change X to Y" pseudo-prompts unless the human explicitly requested that
 form.
 
+When the requested artifact is a prompt, spec, plan, implementation brief,
+review brief, automation prompt, or agent instruction, provide the full
+drop-in version by default. This remains true when the human asks how to "add",
+"incorporate", "fold in", or otherwise update something in an existing
+artifact. Do not assume the human will manually stitch prior context,
+conversation history, or earlier snippets into the final artifact. Use a delta,
+patch, diff, targeted edit, or terse "change X to Y" response only when the
+human explicitly asks for that form.
+
 Keep this policy in the shared playbook. Repo-local `AGENTS.md` files should
 reference or rely on it rather than duplicate it, except where a repository
 truly requires different behavior.
