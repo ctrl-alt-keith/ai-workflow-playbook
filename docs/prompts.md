@@ -382,11 +382,10 @@ Constraints:
 - Do not copy project-specific implementation details, repo names, or local exceptions into the playbook.
 - Do not promote rules that are still speculative, unsupported by concrete
   evidence, or narrowly tied to one repository.
-- Do not update `AGENTS.md` files in other repositories as part of this
-  playbook update. Cross-repo `AGENTS.md` rollout or enforcement requires a
-  separate explicit rollout task.
-- If the target is the playbook repository itself, update its local `AGENTS.md`
-  only when needed to keep the playbook repo's local entrypoint consistent.
+- Do not update `AGENTS.md` files as part of this playbook update, including
+  the playbook repository's own `AGENTS.md`, unless the user explicitly
+  authorizes that edit or the task's primary purpose is `AGENTS.md` update,
+  rollout, or enforcement.
 - Keep the change scoped to one logical documentation update.
 
 Validation:
@@ -394,7 +393,7 @@ Validation:
   plausible reuse.
 - Verify that any repo-local rule remains outside the shared playbook.
 - Verify that the change does not treat canonical playbook updates as implicit
-  cross-repo `AGENTS.md` rollout.
+  `AGENTS.md` update or rollout.
 - Verify that updated wording does not conflict with existing core playbook documents.
 - Verify that the resulting file placement matches the playbook structure.
 - Verify that the update includes a notes cleanup follow-up or explicitly says
@@ -404,8 +403,8 @@ Output format:
 1. Proposed playbook changes: brief summary paragraph.
 2. Rules promoted: short bullets with rationale.
 3. Files to update: list of target files and why.
-4. Change classification: one of canonical playbook guidance only, playbook repo
-   local `AGENTS.md` sync, or cross-repo `AGENTS.md` rollout/enforcement.
+4. Change classification: canonical playbook guidance only, unless there is
+   explicit authorization for an `AGENTS.md` update/enforcement task.
 5. Validation notes: short bullets covering evidence, reuse, scope, conflict
    checks, rollout boundary, and notes cleanup.
 6. Open questions: only if a rule boundary is still unclear.
@@ -637,8 +636,8 @@ Validation:
 Output format:
 1. AGENTS change summary: short paragraph.
 2. Shared-vs-local split: bullets showing what belongs in the playbook and what stays local.
-3. Change classification: canonical playbook guidance only, playbook repo local
-   `AGENTS.md` sync, or cross-repo `AGENTS.md` rollout/enforcement.
+3. Change classification: explicitly authorized `AGENTS.md` update/enforcement
+   for the named repository.
 4. Files updated: list of touched files.
 5. Validation notes: short bullets.
 6. Residual gaps: optional bullets only if something still needs a human decision.
