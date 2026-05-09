@@ -36,27 +36,42 @@ When relevant, say explicitly whether validation was mocked, contract-level, or 
 
 ## Direct PR Inspection
 
-When asked to review, check, assess, approve, or comment on a PR, inspect the PR
-directly unless the human explicitly asks for summary-only discussion.
+When the human posts a GitHub PR link, provides a PR number, or asks to review,
+check, assess, approve, or comment on a PR, the reviewer must open the PR
+through the GitHub connector before giving review feedback.
 
-User-provided PR summaries are useful navigation and context, but they are not
-review evidence. A PR review must be grounded in the actual PR surface,
-including, where available:
+Treat "open the PR" as read-only connector inspection. It does not mean opening
+the PR in a browser, and it does not mean submitting a GitHub review.
+
+User-provided PR summaries, pasted titles, local path snippets, and copied
+diff excerpts are useful navigation and context, but they are not the review
+source of truth when a PR link or PR number is available. A PR review must be
+grounded in the actual PR surface from the connector. The reviewer must inspect,
+where available:
 
 - PR title and body
 - changed files
 - relevant diffs
+- comments and unresolved review discussion
 - CI and check status
 - mergeability
 - scope against the task, issue, or stated goal
 
-Do not claim a PR is safe to merge, ready to merge, or approved without direct
-evidence from the PR itself.
+Return review feedback in chat by default. The reviewer must not mutate the PR:
+do not submit, approve, request changes, comment on, label, merge, close, or
+otherwise change the PR unless the human explicitly asks for that GitHub action.
 
-If direct PR access is unavailable, stop the PR review and say that direct PR
-access is unavailable. Do not provide a merge or readiness recommendation from
-secondhand text. Ask for access to be restored or for the PR and files to be
-made available for direct inspection.
+Treat "review this PR" as inspect the PR and provide feedback in chat. Do not
+post the review to GitHub unless the human explicitly asks to post the review
+to GitHub.
+
+Do not claim a PR is safe to merge, ready to merge, or approved without direct
+evidence from the PR itself through the connector.
+
+If GitHub connector access is unavailable or declined, stop the PR review and
+say that connector access is unavailable. Do not provide a merge or readiness
+recommendation from secondhand text. Provide only clearly caveated feedback
+from information already present, or ask for connector access to be restored.
 
 ## Optional Trust Or Evidence Context
 
