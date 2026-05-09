@@ -73,12 +73,13 @@ Before acting on repository or software work:
 - Prefer small, scoped changes.
 - Report whether a workflow change is canonical playbook guidance only or an
   explicitly authorized `AGENTS.md` update/enforcement task.
-- For global rollout, use one repository, one branch, and one pull request per
-  target repository unless that repository's documented process says otherwise.
+- For global rollout and implementation changes, use one repository, one
+  branch, one dedicated worktree, and one pull request per target repository
+  unless that repository's documented process says otherwise.
 - In ctrl-alt-keith workflows, default ambiguous repository tasks to
   review/audit or orchestration/prompt-authoring unless the human explicitly
   asks for direct implementation.
-- Run commands directly from the target repository; follow
+- Run commands directly from inside the target repository worktree; follow
   `docs/repo-readiness.md` for command form and shell-wrapping rules.
 - Run repository validation through the repo's Makefile when it provides the
   canonical entrypoint.

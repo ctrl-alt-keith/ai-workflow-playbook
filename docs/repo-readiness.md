@@ -29,8 +29,8 @@ requests, or running implementation-oriented workflows.
 Use one of these modes:
 
 - Implementation mode: directly make repo changes, validate them, commit them,
-  push the branch, and open or update a pull request when repo guidance calls
-  for PR delivery.
+  push the branch, and open or update a pull request from a dedicated
+  repo-local worktree when repo guidance calls for PR delivery.
 - Review/audit mode: inspect the requested repository, pull request, issue, or
   file surface and report findings, evidence, risks, and recommendations
   without mutating the repository.
@@ -118,9 +118,19 @@ Open a pull request as draft when any of the following are true:
 Docs-only changes should default to ready for review when canonical validation
 passes and the diff is isolated.
 
-When working in a multi-repo workspace, treat each repository as an independent unit of change. Even if multiple repositories are visible, commits, branches, and PRs must be created and managed per repository. Do not create cross-repo commits or PRs.
+When working in a multi-repo workspace, treat each repository as an independent
+unit of change. Even if multiple repositories are visible, commits, branches,
+worktrees, and PRs must be created and managed per repository. Do not create
+cross-repo commits or PRs.
 
-Before opening a PR, ensure that all staged changes belong to a single repository. If changes span multiple repositories, split them into separate branches and PRs, one per repository.
+Before opening a PR, ensure that all staged changes belong to a single
+repository. If changes span multiple repositories, split them into separate
+branches, worktrees, and PRs, one per repository.
+
+Every implementation change must use a dedicated repo-local git worktree: one
+repository, one branch, one worktree, and one PR per change. The only
+exceptions are read-only inspection or explicit human instruction not to modify
+files.
 
 ## Workspace Boundary Discovery
 
@@ -143,8 +153,9 @@ workflow updates.
 
 ## Repo-Local Workflow State
 
-Run commands from the target repository working directory by default. Keep
-temporary workflow artifacts scoped to that repository whenever practical.
+For implementation changes, run commands from inside the target repository's
+dedicated worktree. Keep temporary workflow artifacts scoped to that repository
+whenever practical.
 Examples include local worktree directories, generated review artifacts,
 transient manifests, and task-specific scratch state.
 
@@ -181,7 +192,7 @@ Use the structurally minimal command form that still expresses the intended
 operation clearly. Normal repository operations must be invoked as the command
 itself, rather than hidden inside an extra shell layer.
 
-Run commands from the target repository working directory by default. For
+Run commands from inside the target repository worktree by default. For
 ordinary repository operations, use direct `git ...`, `gh ...`, `make ...`,
 `python ...`, repo-local scripts, and tool-specific commands. Before choosing a
 wrapper shell, check whether the command has a direct form and use that direct
@@ -263,9 +274,9 @@ Canonical playbook updates and `AGENTS.md` edits are separate work types:
   update, rollout, or enforcement.
 - Cross-repo `AGENTS.md` updates are rollout or enforcement work and should not
   be inferred from a playbook docs change.
-- Global rollout should use one repository, one branch, and one pull request per
-  target repository unless a target repository's documented process says
-  otherwise.
+- Global rollout and implementation changes must use one repository, one
+  branch, one dedicated worktree, and one pull request per target repository
+  unless a target repository's documented process says otherwise.
 - Reviews and delivery notes for workflow changes should state which category
   the change belongs to: canonical playbook guidance only or explicitly
   authorized `AGENTS.md` update/enforcement.
@@ -284,8 +295,8 @@ repositories for org profile content, community health files, templates,
 metadata, or GitHub-supported defaults.
 
 Org infrastructure repositories still follow the shared workflow rules where
-they apply: one repo, one branch, one pull request; current `origin/main` as the
-base; purpose-based branch names; small scoped diffs; human-readable review
+they apply: one repo, one branch, one dedicated worktree, one pull request;
+current `origin/main` as the base; purpose-based branch names; small scoped diffs; human-readable review
 summaries; no unrelated cleanup; and public artifact path hygiene.
 
 Normal project-repository expectations may not apply until the repository grows:

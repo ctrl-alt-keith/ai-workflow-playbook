@@ -54,11 +54,10 @@ change.
 
 - read-only exploration, audit, or review work may use the active checkout when
   no repo changes are required
-- for repo-changing implementation work that needs an isolated workspace, use
-  `git worktree` from the target repository and place every repo-changing
-  worktree under `<repo>/.worktrees/`; do not create sibling repo directories,
-  sibling worktree directories, or ad hoc full-copy repositories under the
-  project root
+- for repo-changing implementation work, always use `git worktree` from the
+  target repository and place every repo-changing worktree under
+  `<repo>/.worktrees/`; do not create sibling repo directories, sibling
+  worktree directories, or ad hoc full-copy repositories under the project root
 - before creating or reusing a repo-changing worktree, run `git worktree list`,
   select a repo-local `.worktrees/...` path, and report that selected path in
   setup or delivery notes
