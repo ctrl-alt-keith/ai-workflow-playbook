@@ -50,6 +50,12 @@ named files, define the intended dataset boundary before traversal begins.
 - If the boundary is unclear, tighten the prompt or ask for clarification rather
   than widening the scan.
 
+For multi-repo audits or workspace-wide operations, define workspace scope from
+authoritative inventory sources before filesystem traversal. Reconcile
+organization-level repository enumeration with explicit workspace manifests such
+as `config/workspace-repos.txt`, and do not treat raw local checkout layout as
+authoritative scope.
+
 ## Prompt Output Contract
 
 Prompt and orchestration deliverables must be complete, self-contained, and

@@ -113,6 +113,25 @@ When working in a multi-repo workspace, treat each repository as an independent 
 
 Before opening a PR, ensure that all staged changes belong to a single repository. If changes span multiple repositories, split them into separate branches and PRs, one per repository.
 
+## Workspace Boundary Discovery
+
+When work spans multiple repositories, determine the active managed workspace
+set from authoritative repository inventory sources before broad scans or
+updates begin.
+
+Prefer organization-level repository enumeration and explicit workspace
+manifests such as `config/workspace-repos.txt`. Reconcile those sources before
+treating local checkouts as part of the active workspace scope.
+
+Do not treat raw local filesystem layout as authoritative workspace scope.
+Local checkout trees may contain stale repositories, archived repositories,
+detached worktrees, experiments, incomplete clones, temporary operational
+state, or local-only scratch repositories.
+
+Reconcile local workspace state against the canonical workspace inventory
+before cross-repo audits, `AGENTS.md` alignment, enforcement scans, or broad
+workflow updates.
+
 ## Repo-Local Workflow State
 
 Run commands from the target repository working directory by default. Keep
