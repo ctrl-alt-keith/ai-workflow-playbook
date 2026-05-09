@@ -12,6 +12,10 @@
 
 - [ ] This PR contains one logical change.
 
+## Interaction mode
+
+<!-- Implementation, review/audit, or orchestration/prompt-authoring. -->
+
 ## Validation
 
 - [ ] `make check`
