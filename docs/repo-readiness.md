@@ -238,6 +238,21 @@ This document defines expectations, not exact GitHub settings.
 
 Reusable workflow rules belong in the playbook, not duplicated into each repository's `AGENTS.md`.
 
+Canonical playbook updates and `AGENTS.md` edits are separate work types:
+
+- Playbook guidance changes update reusable workflow policy in this repository.
+- `AGENTS.md` edits, including in `ai-workflow-playbook` itself, require
+  explicit user authorization or a task whose primary purpose is `AGENTS.md`
+  update, rollout, or enforcement.
+- Cross-repo `AGENTS.md` updates are rollout or enforcement work and should not
+  be inferred from a playbook docs change.
+- Global rollout should use one repository, one branch, and one pull request per
+  target repository unless a target repository's documented process says
+  otherwise.
+- Reviews and delivery notes for workflow changes should state which category
+  the change belongs to: canonical playbook guidance only or explicitly
+  authorized `AGENTS.md` update/enforcement.
+
 ## Repository Categories
 
 Most repositories fit one or more broad surfaces: docs or workflow guidance,
