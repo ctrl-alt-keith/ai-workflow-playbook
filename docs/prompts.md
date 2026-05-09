@@ -400,14 +400,14 @@ Validation:
   no notes cleanup is needed.
 
 Output format:
-1. Proposed playbook changes: brief summary paragraph.
-2. Rules promoted: short bullets with rationale.
-3. Files to update: list of target files and why.
-4. Change classification: canonical playbook guidance only, unless there is
-   explicit authorization for an `AGENTS.md` update/enforcement task.
-5. Validation notes: short bullets covering evidence, reuse, scope, conflict
-   checks, rollout boundary, and notes cleanup.
-6. Open questions: only if a rule boundary is still unclear.
+- Proposed playbook changes: brief summary paragraph.
+- Rules promoted: short bullets with rationale.
+- Files to update: list of target files and why.
+- Change classification: canonical playbook guidance only, unless there is
+  explicit authorization for an `AGENTS.md` update/enforcement task.
+- Validation notes: short bullets covering evidence, reuse, scope, conflict
+  checks, rollout boundary, and notes cleanup.
+- Open questions: only if a rule boundary is still unclear.
 ```
 
 ### Playbook Update Notes
