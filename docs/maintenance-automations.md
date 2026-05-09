@@ -43,6 +43,10 @@ execution paths.
   reports, and follow-up.
 - Automation prompts that touch repositories should state the interaction mode
   from [`repo-readiness.md`](repo-readiness.md#interaction-mode-preflight).
+- Automation prompts intended for another agent or tool should be complete,
+  self-contained, and ready to paste by default. If an automation prompt update
+  asks to add or incorporate new guidance, provide the full updated prompt
+  unless the human explicitly asks for a delta, patch, diff, or targeted edit.
 - Report-only is the default for audits and validation checks.
 - Mutating automations must be bounded, conservative, and skip on uncertainty.
 - Skipped work should be reported with reasons, not hidden as a clean pass.

@@ -58,14 +58,20 @@ authoritative scope.
 
 ## Prompt Output Contract
 
-Prompt and orchestration deliverables must be complete, self-contained, and
-directly usable by default. A downstream agent should not need to reconstruct
-the task from conversation history, hidden assumptions, earlier partial output,
-or unstated repository context.
+Prompt, spec, plan, implementation brief, review brief, automation prompt, agent
+instruction, and orchestration deliverables must be complete, self-contained,
+and directly usable by default. A downstream agent should not need to
+reconstruct the task from conversation history, hidden assumptions, earlier
+partial output, or unstated repository context.
 
-When prompt text is the deliverable, provide one contiguous copyable block. Do
-not split the prompt across multiple fragments, follow-up messages, or
-continuation blocks unless the human explicitly requests an incremental draft.
+When prompt or instruction text is the deliverable, provide the full drop-in
+version in one contiguous copyable block. If the human asks how to "add",
+"incorporate", "fold in", or otherwise update something in an existing prompt,
+spec, instruction, or task envelope, still return the full updated artifact by
+default. Do not assume the human will manually stitch prior context or earlier
+snippets into the final artifact. Do not split the artifact across multiple
+fragments, follow-up messages, or continuation blocks unless the human
+explicitly requests an incremental draft.
 
 Avoid these forms unless explicitly requested:
 
@@ -74,8 +80,14 @@ Avoid these forms unless explicitly requested:
 - "change X to Y" pseudo-prompts
 - diffs
 - partial edits
+- delta-only responses
+- targeted edits without the full updated artifact
 - instructions that require the receiver to infer missing context from earlier
   discussion
+
+Prefer copy/paste-safe output over terse conversational deltas for
+agent-facing prompts. Preserve brevity only when it does not risk omitting
+required context.
 
 When a prompt is intended for implementation, include enough context for the
 receiver to start safely: repository, working directory, canonical source,
@@ -807,8 +819,11 @@ Delivery:
 
 Deliverable:
 - [complete expected final output]
+- Provide the full drop-in artifact by default, even when the task asks to add,
+  incorporate, or fold new material into existing prompt or instruction text.
 - Do not provide partial prompts, continuation fragments, diffs, partial edits,
-  or "change X to Y" pseudo-prompts unless explicitly requested.
+  delta-only responses, targeted edits without the full updated artifact, or
+  "change X to Y" pseudo-prompts unless explicitly requested.
 ```
 
 ## Implementation Delivery Footer
