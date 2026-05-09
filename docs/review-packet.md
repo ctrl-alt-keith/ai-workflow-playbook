@@ -10,6 +10,10 @@ The packet should include:
 
 - Objective: what this phase was meant to accomplish
 - Scope: what changed and what intentionally did not
+- Interaction mode: implementation, review/audit, or
+  orchestration/prompt-authoring
+- Source evidence: issue, PR, evidence note, docs, or review input that shaped
+  the work
 - Validation: what was run and what the results were
 - Risks: remaining concerns, edge cases, follow-up work, or any important gap between mocked or contract-level validation and real-world validation
 - Recommendation: `ready to merge`, `needs decision`, or `blocked`

@@ -16,6 +16,7 @@ tooling.
 
 - [Context Refresh Primitive](#context-refresh-primitive)
 - [Filesystem-Scoped Audit Boundaries](#filesystem-scoped-audit-boundaries)
+- [Prompt Output Contract](#prompt-output-contract)
 - [Codex Task Prompt Format](#codex-task-prompt-format)
 - [Repo Readiness Audit](#repo-readiness-audit)
 - [Playbook Update](#playbook-update)
@@ -23,6 +24,7 @@ tooling.
 - [Deferred Notes Issue Promotion](#deferred-notes-issue-promotion)
 - [AGENTS Update](#agents-update)
 - [Workflow Scaffolding](#workflow-scaffolding)
+- [Orchestration Handoff Prompt](#orchestration-handoff-prompt)
 - [Implementation Delivery Footer](#implementation-delivery-footer)
 - [PR Review](#pr-review)
 - [PR Creation](#pr-creation)
@@ -48,6 +50,33 @@ named files, define the intended dataset boundary before traversal begins.
 - If the boundary is unclear, tighten the prompt or ask for clarification rather
   than widening the scan.
 
+## Prompt Output Contract
+
+Prompt and orchestration deliverables must be complete, self-contained, and
+directly usable by default. A downstream agent should not need to reconstruct
+the task from conversation history, hidden assumptions, earlier partial output,
+or unstated repository context.
+
+When prompt text is the deliverable, provide one contiguous copyable block. Do
+not split the prompt across multiple fragments, follow-up messages, or
+continuation blocks unless the human explicitly requests an incremental draft.
+
+Avoid these forms unless explicitly requested:
+
+- partial prompts
+- continuation fragments
+- "change X to Y" pseudo-prompts
+- diffs
+- partial edits
+- instructions that require the receiver to infer missing context from earlier
+  discussion
+
+When a prompt is intended for implementation, include enough context for the
+receiver to start safely: repository, working directory, canonical source,
+interaction mode, goal, scope, constraints, command-form expectations,
+validation path, delivery expectations, source evidence, and any blockers or
+uncertainty.
+
 ## Codex Task Prompt Format
 
 Use this format for non-trivial Codex implementation tasks: work that changes an
@@ -58,9 +87,8 @@ Before writing or using a Codex task prompt, apply the interaction mode
 preflight in [`docs/repo-readiness.md`](repo-readiness.md#interaction-mode-preflight).
 Use this implementation prompt format only when the intended mode is direct
 implementation. For review/audit work, use the review or audit templates. For
-orchestration or prompt-authoring work, inspect enough context to produce a
-complete self-contained downstream prompt instead of appending implementation
-delivery instructions by habit.
+orchestration or prompt-authoring work, use the orchestration handoff prompt
+template instead of appending implementation delivery instructions by habit.
 
 ### Codex Task Prompt Format Sections
 
@@ -662,6 +690,105 @@ Output format:
 
 Prefer a minimal baseline that can be extended later over an elaborate template set that no one will keep current.
 
+## Orchestration Handoff Prompt
+
+### Orchestration Handoff Prompt Use When
+
+Use this prompt when the deliverable is a complete downstream task envelope for
+another implementation agent or tool, rather than direct repository mutation by
+the current agent.
+
+Do not use this template as a substitute for implementation delivery when the
+human explicitly asked the current agent to make the change, validate it,
+commit, push, and open a PR.
+
+### Orchestration Handoff Prompt Required Inputs
+
+- `repository`
+- `working_directory`
+- `canonical_source`
+- `source_evidence`
+- `interaction_mode`
+- `validation_path`
+- `delivery_expectation`
+
+### Orchestration Handoff Prompt Template
+
+Deliver the downstream prompt as one contiguous copyable block.
+
+```text
+Task:
+[clear action the downstream agent should complete]
+
+Working directory:
+[absolute or repo-relative working directory]
+
+Repository:
+[repository]
+
+Canonical sources:
+- Shared workflow policy: [canonical_source]
+- Repo-local execution guidance: [repo-local AGENTS.md or equivalent]
+- Source evidence: [source_evidence]
+
+Required startup:
+1. Read the shared playbook startup guidance first.
+2. Read the repo-local AGENTS.md before acting.
+3. Select the interaction mode before acting.
+4. Identify the canonical source for reusable workflow rules.
+5. Confirm command form for ordinary repo commands.
+6. Identify the canonical validation path.
+7. Act only after these checks are clear, or report the blocker.
+
+Interaction mode:
+- [implementation, review/audit, or orchestration/prompt-authoring]
+
+Goal:
+- [desired outcome]
+
+Context:
+- [relevant facts discovered by the orchestrator]
+- [issue, PR, evidence note, or prior-art context the receiver needs]
+
+Scope:
+- In scope: [files, behavior, docs, or workflow area]
+- Out of scope: [explicit exclusions]
+
+Constraints:
+- Keep changes minimal, scoped, and structurally local.
+- Do not include unrelated cleanup.
+- Do not rely on noncanonical staging, runtime, generated, or local instruction
+  surfaces as policy unless the rule has been promoted into the canonical
+  source.
+- Use direct command execution for ordinary `git`, `gh`, `make`, `python`,
+  repo-local script, and tool commands.
+- Do not use `zsh -lc`, `bash -lc`, `sh -c`, or equivalent shell wrappers for
+  ordinary repo commands.
+- Use shell wrappers only when shell syntax is genuinely required.
+- Report blockers, validation failures, residual risks, and uncertainty.
+
+Tasks:
+1. [ordered task]
+2. [ordered task]
+3. [ordered task]
+
+Validation:
+- Run [validation_path].
+- Report exactly what was run and the result.
+- If validation cannot run, explain why and do not substitute an undocumented
+  validation path.
+
+Delivery:
+- [branch, commit, push, PR, review packet, or report expectation]
+- Include summary, validation, source evidence, and residual risks or
+  follow-ups.
+
+Deliverable:
+- [complete expected final output]
+- Do not provide partial prompts, continuation fragments, diffs, partial edits,
+  or "change X to Y" pseudo-prompts unless explicitly requested.
+```
+
 ## Implementation Delivery Footer
 
 ### Implementation Delivery Footer Use When
@@ -687,8 +814,9 @@ Delivery:
 - Follow the branch, PR readiness, and workspace rules in
   `docs/feature-lifecycle.md`, `docs/repo-readiness.md`, and
   `docs/tool-adapters/codex.md`.
-- Run ordinary repo commands directly from the target repository; reserve
-  shell wrapping for commands that genuinely require shell syntax.
+- Run ordinary `git`, `gh`, `make`, `python`, repo-local script, and tool
+  commands directly from the target repository; reserve shell wrapping for
+  commands that genuinely require shell syntax.
 - Before executing a shell-wrapped command, perform the command-form preflight
   from `docs/repo-readiness.md`; when shell semantics are unnecessary, rewrite
   the operation into direct argv form before execution.
@@ -731,6 +859,8 @@ Inputs:
 Instructions:
 - Unless Summary-only requested is `yes`, inspect the PR directly before giving
   any review, approval, readiness, or merge recommendation.
+- Stay in review/audit mode. Do not implement changes while performing the PR
+  review unless the human explicitly changes the task to implementation.
 - Treat user-provided summaries as navigation and context only, not review
   evidence.
 - Inspect the PR title and body, changed files, relevant diffs, CI and check

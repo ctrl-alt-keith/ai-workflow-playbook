@@ -115,7 +115,7 @@ change.
   reserve shell wrapping for operations that need shell semantics
 - prefer clear direct invocations for normal repository operations, such as
   `git status`, `git merge --ff-only origin/main`, `gh repo view`,
-  `gh pr view`, `make check`, and `python ...`
+  `gh pr view`, `make check`, `python ...`, and repo-local scripts
 - do not use `zsh -lc`, `bash -lc`, `sh -c`, or equivalent wrapper forms for
   ordinary repo commands
 - before executing a shell-wrapped command, perform a command-form preflight:
