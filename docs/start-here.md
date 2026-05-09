@@ -35,7 +35,8 @@ Before acting on repository or software work:
 3. Select the interaction mode before acting: implementation, review/audit, or
    orchestration/prompt-authoring.
 4. Identify the canonical source for the rule, behavior, or context being used.
-5. Confirm the command form for planned repository commands.
+5. Confirm the command form and execution settings for planned repository
+   commands, especially direct `git` and `gh` usage.
 6. Identify the repository's canonical validation path.
 7. Act only after those checks are clear, or report the blocker,
    uncertainty, or missing context.

@@ -115,6 +115,16 @@ change.
 - prefer clear direct invocations for normal repository operations, such as
   `git status`, `git merge --ff-only origin/main`, `gh repo view`,
   `gh pr view`, `make check`, `python ...`, and repo-local scripts
+- for standard Git and GitHub CLI flows, use `git` and `gh` directly rather
+  than alternate APIs, helper scripts, connectors, or tool substitutions unless
+  the task requires a non-CLI capability or direct CLI access is blocked and
+  the fallback is reported
+- when the execution tool supports native argv arrays, prefer direct argv forms
+  such as `["git", "status"]` or `["gh", "pr", "view", "145"]`
+- if the execution surface defaults to shell or login-shell behavior, disable
+  that behavior for `git` and `gh` where supported, using options such as
+  `shell=false`, `login=false`, `use_shell=false`, or the platform-native
+  equivalent
 - do not use `zsh -lc`, `bash -lc`, `sh -c`, or equivalent wrapper forms for
   ordinary repo commands
 - before executing a shell-wrapped command, perform a command-form preflight:
