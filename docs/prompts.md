@@ -648,6 +648,10 @@ Validation:
   shell-wrapped commands are used only when shell semantics are required, and
   ordinary repository commands are rewritten to direct argv form before
   execution.
+- Verify that `git` and `gh` guidance preserves both layers of directness:
+  standard CLI flows use `git` and `gh` rather than alternate APIs or helper
+  tools, and execution settings disable implicit shell or login-shell behavior
+  where the environment supports that.
 - Verify that the updated AGENTS file does not introduce conflicting guidance relative to the playbook.
 - Verify that the document still works as a practical execution layer for this repo type.
 
@@ -778,8 +782,10 @@ Required startup:
 4. Identify the canonical source for reusable workflow rules.
 5. Confirm command form for ordinary repo commands.
 6. Confirm the dedicated repo-local worktree for implementation changes.
-7. Identify the canonical validation path.
-8. Act only after these checks are clear, or report the blocker.
+7. For `git` and `gh`, confirm execution settings avoid implicit shell or
+   login-shell wrapping where supported.
+8. Identify the canonical validation path.
+9. Act only after these checks are clear, or report the blocker.
 
 Interaction mode:
 - [implementation, review/audit, or orchestration/prompt-authoring]
@@ -807,6 +813,15 @@ Constraints:
   source.
 - Use direct command execution for ordinary `git`, `gh`, `make`, `python`,
   repo-local script, and tool commands from inside the target worktree.
+- For standard Git and GitHub CLI work, use `git` and `gh` directly rather than
+  alternate APIs, helper tools, wrapper scripts, or connector substitutions
+  unless the task requires non-CLI capability or direct CLI access is blocked.
+- Prefer native argv-style execution such as `["git", "status"]`,
+  `["git", "commit"]`, and `["gh", "pr", "create"]` where supported.
+- If the execution tool defaults to shell or login-shell behavior, explicitly
+  disable it for `git` and `gh` commands where supported, using options such as
+  `shell=false`, `login=false`, `use_shell=false`, or the platform-native
+  equivalent.
 - Do not use `zsh -lc`, `bash -lc`, `sh -c`, or equivalent shell wrappers for
   ordinary repo commands.
 - Use shell wrappers only when shell syntax is genuinely required.
@@ -869,6 +884,11 @@ Delivery:
 - Run ordinary `git`, `gh`, `make`, `python`, repo-local script, and tool
   commands directly from the target worktree; reserve shell wrapping for
   commands that genuinely require shell syntax.
+- For standard `git` and `gh` work, use the CLI directly rather than alternate
+  APIs, helper scripts, or connector substitutions; where supported, use native
+  argv-style execution and disable implicit shell or login-shell defaults with
+  settings such as `shell=false`, `login=false`, `use_shell=false`, or the
+  platform-native equivalent.
 - Before executing a shell-wrapped command, perform the command-form preflight
   from `docs/repo-readiness.md`; when shell semantics are unnecessary, rewrite
   the operation into direct argv form before execution.

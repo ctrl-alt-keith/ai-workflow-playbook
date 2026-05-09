@@ -201,6 +201,19 @@ aliases, or equivalent wrapper shells only for convenience. In particular,
 `zsh -lc`, `bash -lc`, `sh -c`, or equivalent forms are not normal wrappers for
 ordinary repo commands.
 
+For standard Git or GitHub CLI work, choose the `git` or `gh` command directly
+instead of substituting alternate APIs, helper tools, wrapper scripts, or
+connector-specific operations. Use alternate APIs or tools only when the task
+explicitly calls for capabilities the CLI cannot provide or when direct CLI
+access is unavailable and the fallback is reported clearly.
+
+Preserve that directness at the execution layer too. Prefer native argv-style
+execution, such as `["git", "status"]` or `["gh", "pr", "create"]`, when the
+environment supports it. If an execution tool defaults to a shell, login shell,
+or shell-like command string, explicitly disable that behavior for `git` and
+`gh` where supported, using settings such as `shell=false`, `login=false`,
+`use_shell=false`, or the platform's equivalent direct-exec option.
+
 This keeps operational intent visible in logs, prompts, review notes, and local
 approval surfaces. It also lets permission or approval systems reason about the
 specific operation being requested, instead of treating a simple repository
@@ -227,10 +240,12 @@ Examples:
 
 - incorrect: `zsh -lc 'git status'`
 - correct: `git status`
+- preferred native argv form where supported: `["git", "status"]`
 - incorrect: `bash -lc 'make check'`
 - correct: `make check`
 - incorrect: `sh -c 'gh pr view 145'`
 - correct: `gh pr view 145`
+- preferred native argv form where supported: `["gh", "pr", "view", "145"]`
 
 Avoid inflating simple commands into larger execution forms only for habit or
 convenience. The goal is not to forbid shells; it is to preserve clarity,
