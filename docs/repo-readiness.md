@@ -39,6 +39,16 @@ Use one of these modes:
   produce a complete, self-contained prompt or handoff for another agent or
   tool.
 
+Tool-role boundaries follow the selected mode:
+
+- Implementation agents implement explicit repository changes directly and
+  carry them through validation, commit, push, and PR delivery when repo
+  guidance calls for it.
+- Review or audit agents inspect and report findings, evidence, risks, and
+  recommendations without implementing changes.
+- Orchestration or prompt-authoring agents produce a complete handoff prompt or
+  task envelope unless the human explicitly asks them to implement the change.
+
 Do not infer implementation mode from vague wording such as "fix this",
 "handle this", or "let's fix the bug" when the surrounding context suggests
 advisory review, audit, orchestration, or prompt generation.
@@ -53,8 +63,10 @@ In orchestration/prompt-authoring mode, do enough direct inspection to make the
 handoff usable without hidden assumptions. A prompt that asks another agent to
 act should include the repository, goal, relevant context, constraints,
 validation path, deliverable expectations, and any known blockers or
-uncertainty. Do not produce partial prompts that leave the downstream agent to
-rediscover essential context.
+uncertainty. The handoff must be complete, self-contained, and directly usable.
+Do not produce partial prompts, continuation fragments, diffs, partial edits,
+or "change X to Y" pseudo-prompts unless the human explicitly requested that
+form.
 
 Keep this policy in the shared playbook. Repo-local `AGENTS.md` files should
 reference or rely on it rather than duplicate it, except where a repository
@@ -135,10 +147,12 @@ itself, rather than hidden inside an extra shell layer.
 
 Run commands from the target repository working directory by default. For
 ordinary repository operations, use direct `git ...`, `gh ...`, `make ...`,
-`python ...`, and tool-specific commands. Do not wrap those commands in `zsh`,
-`bash`, `sh`, shell aliases, or equivalent wrapper shells only for convenience.
-In particular, `zsh -lc`, `bash -lc`, `sh -c`, or equivalent forms must not be
-used for ordinary repo commands.
+`python ...`, repo-local scripts, and tool-specific commands. Before choosing a
+wrapper shell, check whether the command has a direct form and use that direct
+form when it does. Do not wrap those commands in `zsh`, `bash`, `sh`, shell
+aliases, or equivalent wrapper shells only for convenience. In particular,
+`zsh -lc`, `bash -lc`, `sh -c`, or equivalent forms are not normal wrappers for
+ordinary repo commands.
 
 This keeps operational intent visible in logs, prompts, review notes, and local
 approval surfaces. It also lets permission or approval systems reason about the

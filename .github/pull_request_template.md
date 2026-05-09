@@ -12,12 +12,20 @@
 
 - [ ] This PR contains one logical change.
 
+## Interaction mode
+
+<!-- Implementation, review/audit, or orchestration/prompt-authoring. -->
+
 ## Validation
 
 - [ ] `make check`
 - [ ] Manual review
 
-## Risks / notes
+## Source evidence
+
+<!-- Link or name evidence, issue, PR, docs, or review input that supports this change. -->
+
+## Residual risks / follow-ups
 
 <!-- Optional. -->
 

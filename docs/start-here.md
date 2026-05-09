@@ -21,6 +21,33 @@
   using `docs/repo-readiness.md`: implementation, review/audit, or
   orchestration/prompt-authoring.
 
+## Startup Contract
+
+Before acting on repository or software work:
+
+1. Read `docs/start-here.md` first.
+2. Read the target repository's repo-local `AGENTS.md`.
+3. Select the interaction mode before acting: implementation, review/audit, or
+   orchestration/prompt-authoring.
+4. Identify the canonical source for the rule, behavior, or context being used.
+5. Confirm the command form for planned repository commands.
+6. Identify the repository's canonical validation path.
+7. Act only after those checks are clear, or report the blocker,
+   uncertainty, or missing context.
+
+## Source Authority Map
+
+- `ai-workflow-playbook` is the canonical source for reusable workflow policy.
+- Repo-local `AGENTS.md` files are repo-local execution guidance layered on top
+  of the playbook.
+- Incubation, staging, and evidence repositories, including
+  `ai-workflow-incubator`, are noncanonical unless a durable rule is explicitly
+  promoted into the playbook.
+- Runtime artifacts, generated snapshots, copied custom instructions, local
+  workspace instructions, and temporary operational notes are reference or
+  execution surfaces, not canonical reusable policy unless they are explicitly
+  promoted.
+
 ## Staging vs Playbook
 
 - The private staging/incubation layer is for ideas and experiments.
