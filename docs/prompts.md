@@ -375,18 +375,26 @@ Instructions:
   across repositories.
 - Update the playbook only where the lesson is durable, generic, and better captured centrally than locally.
 - Prefer tightening or extending existing playbook guidance over adding fragmented one-off notes.
+- Treat playbook updates and `AGENTS.md` rollout as separate work types.
 
 Constraints:
 - Treat <playbook_reference> as the canonical source for cross-repo workflow rules.
 - Do not copy project-specific implementation details, repo names, or local exceptions into the playbook.
 - Do not promote rules that are still speculative, unsupported by concrete
   evidence, or narrowly tied to one repository.
+- Do not update `AGENTS.md` files in other repositories as part of this
+  playbook update. Cross-repo `AGENTS.md` rollout or enforcement requires a
+  separate explicit rollout task.
+- If the target is the playbook repository itself, update its local `AGENTS.md`
+  only when needed to keep the playbook repo's local entrypoint consistent.
 - Keep the change scoped to one logical documentation update.
 
 Validation:
 - Verify that each promoted rule is backed by concrete cited evidence, not only
   plausible reuse.
 - Verify that any repo-local rule remains outside the shared playbook.
+- Verify that the change does not treat canonical playbook updates as implicit
+  cross-repo `AGENTS.md` rollout.
 - Verify that updated wording does not conflict with existing core playbook documents.
 - Verify that the resulting file placement matches the playbook structure.
 - Verify that the update includes a notes cleanup follow-up or explicitly says
@@ -396,9 +404,11 @@ Output format:
 1. Proposed playbook changes: brief summary paragraph.
 2. Rules promoted: short bullets with rationale.
 3. Files to update: list of target files and why.
-4. Validation notes: short bullets covering evidence, reuse, scope, conflict
-   checks, and notes cleanup.
-5. Open questions: only if a rule boundary is still unclear.
+4. Change classification: one of canonical playbook guidance only, playbook repo
+   local `AGENTS.md` sync, or cross-repo `AGENTS.md` rollout/enforcement.
+5. Validation notes: short bullets covering evidence, reuse, scope, conflict
+   checks, rollout boundary, and notes cleanup.
+6. Open questions: only if a rule boundary is still unclear.
 ```
 
 ### Playbook Update Notes
@@ -600,12 +610,17 @@ Instructions:
 - Keep playbook-level rules in the playbook and repo-local execution rules in AGENTS.
 - Update AGENTS so it clearly acts as the thin repo-local execution layer on top of the shared playbook.
 - Preserve useful repo-specific instructions such as validation commands, file placement rules, and local workflow constraints.
+- Treat this as explicit rollout or enforcement work for the named repository,
+  not as a side effect of a generic playbook update.
 
 Constraints:
 - Treat <playbook_reference> as the canonical source for cross-repo workflow rules.
 - Explicitly distinguish shared playbook rules from repo-local rules.
 - Do not duplicate broad workflow guidance in AGENTS when the playbook already covers it.
 - Do not remove necessary repo-local instructions that the playbook cannot supply.
+- For global rollout, keep one repository, one branch, and one pull request per
+  target repository unless the target repository's documented process says
+  otherwise.
 - Keep the document concise, operational, and easy to maintain.
 
 Validation:
@@ -622,9 +637,11 @@ Validation:
 Output format:
 1. AGENTS change summary: short paragraph.
 2. Shared-vs-local split: bullets showing what belongs in the playbook and what stays local.
-3. Files updated: list of touched files.
-4. Validation notes: short bullets.
-5. Residual gaps: optional bullets only if something still needs a human decision.
+3. Change classification: canonical playbook guidance only, playbook repo local
+   `AGENTS.md` sync, or cross-repo `AGENTS.md` rollout/enforcement.
+4. Files updated: list of touched files.
+5. Validation notes: short bullets.
+6. Residual gaps: optional bullets only if something still needs a human decision.
 ```
 
 ### AGENTS Update Notes

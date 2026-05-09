@@ -17,6 +17,13 @@
 - Use `ai-workflow-playbook` as the canonical source of reusable workflow rules.
 - Treat `AGENTS.md` as the repo-local execution layer.
 - Repo-local rules take precedence only for repo-specific behavior.
+- Treat canonical playbook changes and `AGENTS.md` rollout as separate work
+  types. Updating the playbook does not implicitly authorize updates to
+  `AGENTS.md` files in other repositories.
+- A playbook documentation change may update this repository's own `AGENTS.md`
+  only when needed to keep the playbook repo's local entrypoint consistent.
+- Updating `AGENTS.md` in other repositories is cross-repo rollout or
+  enforcement work and requires an explicit rollout task.
 - Before acting on repository or software work, determine the interaction mode
   using `docs/repo-readiness.md`: implementation, review/audit, or
   orchestration/prompt-authoring.
@@ -40,6 +47,8 @@ Before acting on repository or software work:
 - `ai-workflow-playbook` is the canonical source for reusable workflow policy.
 - Repo-local `AGENTS.md` files are repo-local execution guidance layered on top
   of the playbook.
+- Cross-repo `AGENTS.md` alignment is enforcement or rollout work, not a side
+  effect of changing canonical playbook guidance.
 - Incubation, staging, and evidence repositories, including
   `ai-workflow-incubator`, are noncanonical unless a durable rule is explicitly
   promoted into the playbook.
@@ -64,6 +73,11 @@ Before acting on repository or software work:
 ## Rule of Thumb
 
 - Prefer small, scoped changes.
+- Report whether a workflow change is canonical playbook guidance only,
+  playbook repo local `AGENTS.md` sync, or cross-repo `AGENTS.md`
+  rollout/enforcement.
+- For global rollout, use one repository, one branch, and one pull request per
+  target repository unless that repository's documented process says otherwise.
 - In ctrl-alt-keith workflows, default ambiguous repository tasks to
   review/audit or orchestration/prompt-authoring unless the human explicitly
   asks for direct implementation.

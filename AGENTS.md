@@ -19,6 +19,10 @@ Repo-local rules take precedence only for repo-specific behavior.
 
 - This repo contains reusable AI workflow and playbook guidance.
 - It does not contain implementation code or project-specific automation.
+- Playbook documentation changes do not imply permission to update `AGENTS.md`
+  files in other repositories.
+- Update this repo's `AGENTS.md` with playbook changes only when needed to keep
+  the local execution entrypoint consistent.
 
 ## File Placement
 
