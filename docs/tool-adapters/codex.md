@@ -130,11 +130,12 @@ change.
 - examples: use `git status`, not `zsh -lc 'git status'`; use `make check`, not
   `bash -lc 'make check'`; use `gh pr view 145`, not
   `sh -c 'gh pr view 145'`
-- use `gh repo view` to confirm the target repository is reachable when
-  connector inspection is not the required path
 - when the human posts a GitHub PR link, provides a PR number, or asks to
-  review, check, assess, approve, or comment on a PR, Codex must open the PR
-  through the GitHub connector before giving review feedback
+  review, check, assess, approve, or comment on a PR, Codex must use connector
+  inspection and must open the PR through the GitHub connector before giving
+  review feedback
+- local checkouts, `git diff`, and `gh` commands may be used as supplemental
+  evidence for PR review, but they must not replace connector inspection
 - treat "open the PR" as read-only connector inspection, not opening the PR in
   a browser and not submitting a GitHub review
 - treat "review this PR" as inspect the PR and provide feedback in chat, unless

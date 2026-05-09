@@ -37,8 +37,12 @@ When relevant, say explicitly whether validation was mocked, contract-level, or 
 ## Direct PR Inspection
 
 When the human posts a GitHub PR link, provides a PR number, or asks to review,
-check, assess, approve, or comment on a PR, the reviewer must open the PR
-through the GitHub connector before giving review feedback.
+check, assess, approve, or comment on a PR, the reviewer must use connector
+inspection and must open the PR through the GitHub connector before giving
+review feedback.
+
+Local checkouts, `git diff`, and `gh` commands may be used as supplemental
+evidence for PR review, but they must not replace connector inspection.
 
 Treat "open the PR" as read-only connector inspection. It does not mean opening
 the PR in a browser, and it does not mean submitting a GitHub review.

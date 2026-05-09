@@ -912,11 +912,13 @@ Inputs:
 - Summary-only requested: [summary_only]
 
 Instructions:
-- When a PR link or PR number is available, you must open the PR through the
-  GitHub connector before giving any review, approval, readiness, or merge
-  recommendation.
+- When a PR link or PR number is available, you must use connector inspection
+  and must open the PR through the GitHub connector before giving any review,
+  approval, readiness, or merge recommendation.
 - Stay in review/audit mode. Do not implement changes while performing the PR
   review unless the human explicitly changes the task to implementation.
+- Local checkouts, `git diff`, and `gh` commands may be used as supplemental
+  evidence for PR review, but they must not replace connector inspection.
 - Treat "open the PR" as read-only connector inspection, not opening the PR in
   a browser and not submitting a GitHub review.
 - Treat "review this PR" as inspect the PR and provide feedback in chat, unless
