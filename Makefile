@@ -83,7 +83,7 @@ workspace-bootstrap: ## Generate fresh-thread and project-source bootstrap conte
 	mv "$$tmp" "$$out"; \
 	echo "Generated $$out"
 
-context-refresh: ## Generate current-state brief for fresh-thread handoff.
+context-refresh: ## Generate repository orientation brief for fresh-thread handoff.
 	python3 scripts/generate_context_refresh.py --repo-manifest $(WORKSPACE_REPOS_MANIFEST) --output dist/context-refresh.md
 
 github-context: ## Generate GitHub connector repo hydration snippet.

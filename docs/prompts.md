@@ -33,8 +33,8 @@ tooling.
 
 Canonical guidance for the verified org context refresh pattern lives in
 [`docs/context-refresh.md`](context-refresh.md). Use that page for when to run
-it, how to generate the current-state snapshot, and how to interpret blocked,
-unavailable, or stale output.
+it, how to generate the repository orientation snapshot, and how to interpret
+blocked, unavailable, or stale output.
 
 ## Filesystem-Scoped Audit Boundaries
 

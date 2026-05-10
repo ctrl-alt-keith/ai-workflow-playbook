@@ -55,14 +55,14 @@ Reusable pattern:
 
 Run `make workspace-bootstrap` to generate `dist/workspace-bootstrap.md`, a non-canonical hydration bundle for fresh-thread and project-source context loading. Canonical guidance remains in the source docs and repo-local `AGENTS.md`; the generated bundle is only a convenience snapshot and should be regenerated instead of edited directly.
 
-Run `make context-refresh` to generate `dist/context-refresh.md`, a non-canonical current-state brief for fresh-thread handoff and repo-state refresh.
+Run `make context-refresh` to generate `dist/context-refresh.md`, a non-canonical repository orientation brief for fresh-thread handoff and repo orientation refresh. Dynamic PR and issue state is intentionally omitted; inspect GitHub directly before acting.
 
 Run `make github-context` to generate `dist/github-context.md`, a paste-ready `@GitHub` repo list for connector rehydration in fresh threads. The artifact is non-canonical and generated from `config/workspace-repos.txt`.
 
 These generated artifacts are complementary:
 
 - `workspace-bootstrap` hydrates stable operating guidance.
-- `context-refresh` captures current repo state.
+- `context-refresh` captures durable repo orientation state.
 - `github-context` rehydrates GitHub connector repo scope.
 
 Repository code, issues, pull requests, docs, and repo-local `AGENTS.md` files remain the source of truth.
@@ -80,7 +80,7 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/tool-adapters/codex.md`](docs/tool-adapters/codex.md): Codex-specific adapter notes
 - [`docs/playbook-integrity-check.md`](docs/playbook-integrity-check.md): lightweight anti-drift check
 - [`docs/new-repo-bootstrap.md`](docs/new-repo-bootstrap.md): reusable bootstrap pattern for brand-new repositories
-- [`docs/context-refresh.md`](docs/context-refresh.md): verified context refresh primitive for baseline briefs plus verified repo state
+- [`docs/context-refresh.md`](docs/context-refresh.md): verified context refresh primitive for durable repository orientation briefs
 - [`docs/maintenance-automations.md`](docs/maintenance-automations.md): reusable operating rules plus reference inventory notes for recurring Codex maintenance automation
 - [`docs/prompts.md`](docs/prompts.md): reusable prompt templates, including the standard Codex task prompt format
 
