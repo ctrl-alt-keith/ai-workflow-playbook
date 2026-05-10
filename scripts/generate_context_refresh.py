@@ -17,62 +17,12 @@ from workspace_repos import (
 )
 
 DEFAULT_MANIFEST = Path("config/workspace-repos.txt")
-OPEN_ITEM_LIMIT = 100
-MERGED_PR_LIMIT = 5
 
 REPO_CONTEXT_QUERY = """
 query RepoContext($owner: String!, $name: String!) {
   repository(owner: $owner, name: $name) {
-    nameWithOwner
     defaultBranchRef {
       name
-    }
-    openPullRequests: pullRequests(
-      states: OPEN
-      first: 100
-      orderBy: {field: UPDATED_AT, direction: DESC}
-    ) {
-      totalCount
-      nodes {
-        number
-        title
-        url
-        updatedAt
-        author {
-          login
-        }
-      }
-    }
-    openIssues: issues(
-      states: OPEN
-      first: 100
-      orderBy: {field: UPDATED_AT, direction: DESC}
-    ) {
-      totalCount
-      nodes {
-        number
-        title
-        url
-        updatedAt
-        author {
-          login
-        }
-      }
-    }
-    recentMergedPullRequests: pullRequests(
-      states: MERGED
-      first: 5
-      orderBy: {field: UPDATED_AT, direction: DESC}
-    ) {
-      nodes {
-        number
-        title
-        url
-        mergedAt
-        author {
-          login
-        }
-      }
     }
   }
 }
@@ -83,9 +33,6 @@ query RepoContext($owner: String!, $name: String!) {
 class RepoReport:
     name: str
     default_branch: str | None
-    open_prs: dict[str, Any]
-    open_issues: dict[str, Any]
-    recent_merged_prs: list[dict[str, Any]]
 
 
 @dataclass(frozen=True)
@@ -96,7 +43,7 @@ class UnavailableRepo:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate a non-canonical current-state context refresh."
+        description="Generate a non-canonical repository orientation refresh."
     )
     parser.add_argument(
         "--output",
@@ -167,9 +114,6 @@ def collect_repo(repo: str) -> RepoReport:
     return RepoReport(
         name=repo,
         default_branch=default_branch.get("name"),
-        open_prs=repository["openPullRequests"],
-        open_issues=repository["openIssues"],
-        recent_merged_prs=repository["recentMergedPullRequests"]["nodes"],
     )
 
 
@@ -197,7 +141,7 @@ def render_report(
         "Status: generated snapshot",
         "Canonical: false",
         "",
-        "This file is a generated current-state brief for fresh-thread handoff.",
+        "This file is a generated repository orientation brief for fresh-thread handoff.",
         "",
         "Repository code, issues, pull requests, and docs remain the source of truth.",
         "",
@@ -209,6 +153,7 @@ def render_report(
         "",
         "This report is a point-in-time snapshot, not canonical guidance.",
         "Use GitHub and repository state as the source of truth before acting.",
+        "Dynamic PR/issue state intentionally omitted; inspect GitHub directly before acting.",
         "",
         "## Tracked Repositories",
         "",
@@ -224,22 +169,20 @@ def render_report(
         lines.extend(render_repo(report))
         lines.append("")
 
-    lines.extend(["## Blocked Or Unavailable", ""])
     if unavailable:
+        lines.extend(["## Blocked Or Unavailable", ""])
         lines.extend(
             f"- `{repo.name}`: {repo.reason}"
             for repo in unavailable
         )
-    else:
-        lines.append("- None.")
+        lines.append("")
 
     lines.extend(
         [
-            "",
             "## Reminder",
             "",
             "This file is a generated convenience artifact.",
-            "It is useful for fresh-thread handoff and repo-state refresh,",
+            "It is useful for fresh-thread handoff and repo orientation refresh,",
             "but it does not replace repository docs, issues, pull requests,",
             "or current GitHub state.",
             "",
@@ -253,57 +196,9 @@ def render_repo(report: RepoReport) -> list[str]:
         f"### `{report.name}`",
         "",
         f"- Default branch: `{report.default_branch or 'unknown'}`",
-        f"- Open PRs: {report.open_prs['totalCount']}",
-        f"- Open issues: {report.open_issues['totalCount']}",
-        "",
-        "#### Open PRs",
-        "",
+        "- Dynamic PR/issue state intentionally omitted; inspect GitHub directly before acting.",
     ]
-    lines.extend(render_items(report.open_prs, "PR", "updatedAt"))
-    lines.extend(["", "#### Open Issues", ""])
-    lines.extend(render_items(report.open_issues, "Issue", "updatedAt"))
-    lines.extend(
-        [
-            "",
-            f"#### Recent Merged PRs (latest {MERGED_PR_LIMIT})",
-            "",
-        ]
-    )
-    lines.extend(render_node_list(report.recent_merged_prs, "PR", "mergedAt"))
     return lines
-
-
-def render_items(items: dict[str, Any], kind: str, date_field: str) -> list[str]:
-    nodes = items["nodes"]
-    total_count = items["totalCount"]
-    lines = render_node_list(nodes, kind, date_field)
-    if total_count > len(nodes):
-        lines.append(
-            f"- Showing {len(nodes)} of {total_count}; rerun with direct GitHub"
-            " inspection for the complete list."
-        )
-    return lines
-
-
-def render_node_list(
-    nodes: list[dict[str, Any]],
-    kind: str,
-    date_field: str,
-) -> list[str]:
-    if not nodes:
-        return ["- None."]
-    return [render_node(node, kind, date_field) for node in nodes]
-
-
-def render_node(node: dict[str, Any], kind: str, date_field: str) -> str:
-    author = (node.get("author") or {}).get("login") or "unknown"
-    date_value = node.get(date_field) or "unknown date"
-    title = one_line(node.get("title") or "untitled")
-    url = node.get("url") or "unknown url"
-    return (
-        f"- {kind} #{node['number']}: {title} "
-        f"({date_field}: {date_value}; author: {author}) {url}"
-    )
 
 
 def one_line(value: str) -> str:

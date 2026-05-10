@@ -40,8 +40,8 @@ class ContextRefreshGeneratorTest(unittest.TestCase):
                         "Canonical: false",
                         "",
                         (
-                            "This file is a generated current-state brief for "
-                            "fresh-thread handoff."
+                            "This file is a generated repository orientation "
+                            "brief for fresh-thread handoff."
                         ),
                         "",
                         (
@@ -76,6 +76,33 @@ class ContextRefreshGeneratorTest(unittest.TestCase):
             "- `ctrl-alt-keith/example`: repository was not returned by GitHub",
             report,
         )
+
+    def test_repo_state_omits_dynamic_pr_issue_details(self) -> None:
+        report = generator.render_report(
+            reports=[
+                generator.RepoReport(
+                    "ctrl-alt-keith/example",
+                    "main",
+                )
+            ],
+            unavailable=[],
+            generated_at=datetime(2026, 5, 8, 12, 0, tzinfo=timezone.utc),
+            repos=("ctrl-alt-keith/example",),
+        )
+
+        self.assertIn("- Default branch: `main`", report)
+        self.assertIn(
+            (
+                "- Dynamic PR/issue state intentionally omitted; inspect "
+                "GitHub directly before acting."
+            ),
+            report,
+        )
+        self.assertNotIn("Open PRs", report)
+        self.assertNotIn("Open Issues", report)
+        self.assertNotIn("Recent Merged PRs", report)
+        self.assertNotIn("author:", report)
+        self.assertNotIn("updatedAt", report)
 
     def test_one_line_normalizes_whitespace(self) -> None:
         self.assertEqual(generator.one_line("hello\n  there"), "hello there")
