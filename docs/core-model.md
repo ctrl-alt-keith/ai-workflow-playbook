@@ -2,6 +2,11 @@
 
 The operating model is simple: humans own intent, standards, and decisions; AI accelerates drafting, execution, synthesis, and iteration inside clear boundaries.
 
+Repository tasks translate those role boundaries into the interaction modes in
+[`repo-readiness.md`](repo-readiness.md#interaction-mode-preflight):
+implementation, review/audit, and orchestration/prompt-authoring. Select the
+mode before acting so the AI role matches the human's intended delegation.
+
 ## Roles
 
 ### Human role

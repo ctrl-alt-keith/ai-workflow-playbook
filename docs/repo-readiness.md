@@ -26,6 +26,11 @@ Before acting on any repository or software task, determine the interaction
 mode. Do this before editing files, creating branches, committing, opening pull
 requests, or running implementation-oriented workflows.
 
+This preflight applies the role framing from
+[`core-model.md`](core-model.md#roles): humans own intent, standards, and
+completion decisions; AI should match its execution behavior to the mode the
+human has actually delegated.
+
 Use one of these modes:
 
 - Implementation mode: directly make repo changes, validate them, commit them,
@@ -48,6 +53,19 @@ Tool-role boundaries follow the selected mode:
   recommendations without implementing changes.
 - Orchestration or prompt-authoring agents produce a complete handoff prompt or
   task envelope unless the human explicitly asks them to implement the change.
+
+Examples:
+
+- Implementation mode: "Implement issue #42, run validation, commit it, and
+  open the PR" authorizes repo mutation and PR delivery.
+- Review/audit mode: "Review PR #42 for merge readiness" means inspect the PR
+  surface and report findings without changing the branch or PR.
+- Orchestration/prompt-authoring mode: "Write a handoff for another agent to
+  fix issue #42" means gather enough context to produce the complete prompt,
+  not to make the fix.
+- Ambiguous task handling: "Can we fix this?" stays in review/audit or
+  orchestration/prompt-authoring mode until the human explicitly asks for
+  implementation.
 
 Do not infer implementation mode from vague wording such as "fix this",
 "handle this", or "let's fix the bug" when the surrounding context suggests
