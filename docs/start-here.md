@@ -12,6 +12,8 @@
 - `docs/tool-adapters/codex.md` -> required adapter guidance for Codex
   executions; mandatory startup material for Codex runs, not optional
   deep-reference material
+- `docs/tool-adapters/` -> documented adapter guidance for other executors,
+  when a matching adapter exists
 - `docs/maintenance-automations.md` -> recurring Codex maintenance automation expectations
 - `docs/prompts.md` -> reusable prompt templates
 
@@ -35,10 +37,17 @@ Before acting on repository or software work:
 
 1. Read `docs/start-here.md` first.
 2. Read the target repository's repo-local `AGENTS.md`.
-3. If the executor is Codex, read and apply `docs/tool-adapters/codex.md`
-   before implementation, review/audit, or orchestration/prompt-authoring work.
-   Codex adapter guidance is part of the startup contract for Codex runs, not
-   optional reference material.
+3. Identify the current executor and apply any matching documented adapter:
+   - For Codex, read and apply `docs/tool-adapters/codex.md` before
+     implementation, review/audit, or orchestration/prompt-authoring work.
+     Codex adapter guidance is part of the startup contract for Codex runs, not
+     optional reference material.
+   - For other executors, read and apply the matching file under
+     `docs/tool-adapters/` when one exists.
+   - When no matching adapter exists, continue with the executor-neutral core
+     startup guidance and repo-local `AGENTS.md`; do not infer tool-specific
+     obligations or capability parity from references to other executor
+     ecosystems.
 4. Select the interaction mode before acting: implementation, review/audit, or
    orchestration/prompt-authoring.
 5. Identify the canonical source for the rule, behavior, or context being used.
@@ -47,6 +56,17 @@ Before acting on repository or software work:
 7. Identify the repository's canonical validation path.
 8. Act only after those checks are clear, or report the blocker,
    uncertainty, or missing context.
+
+## Adapter Authority
+
+- Only documented adapter files under `docs/tool-adapters/` are authoritative
+  for executor-specific workflow behavior.
+- Mentions of other AI tools, reviewers, or executor ecosystems elsewhere in
+  the playbook provide context unless a matching adapter promotes the behavior
+  into tool-specific guidance.
+- If a task needs executor-specific behavior that no adapter documents, keep
+  the reusable workflow policy executor-neutral and report the missing adapter
+  guidance instead of inventing a stub workflow.
 
 ## Source Authority Map
 
