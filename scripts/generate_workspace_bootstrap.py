@@ -18,7 +18,7 @@ DEFAULT_SOURCES = (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate the non-canonical workspace bootstrap context bundle."
+        description="Generate the noncanonical workspace bootstrap context bundle."
     )
     parser.add_argument(
         "--output",

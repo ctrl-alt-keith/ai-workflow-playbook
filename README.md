@@ -53,11 +53,11 @@ Reusable pattern:
 
 ## Workspace Bootstrap Bundle
 
-Run `make workspace-bootstrap` to generate `dist/workspace-bootstrap.md`, a non-canonical hydration bundle for fresh-thread and project-source context loading. Canonical guidance remains in the source docs and repo-local `AGENTS.md`; the generated bundle is only a convenience snapshot and should be regenerated instead of edited directly.
+Run `make workspace-bootstrap` to generate `dist/workspace-bootstrap.md`, a noncanonical hydration bundle for fresh-thread and project-source context loading. Canonical guidance remains in the source docs and repo-local `AGENTS.md`; the generated bundle is only a convenience snapshot and should be regenerated instead of edited directly.
 
-Run `make context-refresh` to generate `dist/context-refresh.md`, a non-canonical repository orientation brief for fresh-thread handoff and repo orientation refresh. Dynamic PR and issue state is intentionally omitted; inspect GitHub directly before acting.
+Run `make context-refresh` to generate `dist/context-refresh.md`, a noncanonical repository orientation brief for fresh-thread handoff and repo orientation refresh. Dynamic PR and issue state is intentionally omitted; inspect GitHub directly before acting.
 
-Run `make github-context` to generate `dist/github-context.md`, a paste-ready `@GitHub` repo list for connector rehydration in fresh threads. The artifact is non-canonical and generated from `config/workspace-repos.txt`.
+Run `make github-context` to generate `dist/github-context.md`, a paste-ready `@GitHub` repo list for connector rehydration in fresh threads. The artifact is noncanonical and generated from `config/workspace-repos.txt`.
 
 These generated artifacts are complementary:
 
