@@ -8,6 +8,8 @@
 ## Read Order
 
 - `docs/engineering-baseline.md` -> foundational engineering expectations
+- `docs/authoritative-source-check.md` -> advisory source scanner adoption and
+  reusable workflow operations
 - `docs/repo-readiness.md` -> repository workflow expectations
 - `docs/tool-adapters/codex.md` -> required adapter guidance for Codex
   executions; mandatory startup material for Codex runs, not optional
