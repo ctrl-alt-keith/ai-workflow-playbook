@@ -77,6 +77,24 @@ say that connector access is unavailable. Do not provide a merge or readiness
 recommendation from secondhand text. Provide only clearly caveated feedback
 from information already present, or ask for connector access to be restored.
 
+## Single-Operator Review Posture
+
+When a repository ecosystem fits the single-operator posture in
+[`repo-readiness.md`](repo-readiness.md#single-operator-review-posture), review
+feedback should distinguish:
+
+- blocking issues that should stop merge
+- non-blocking risks that are acceptable to test operationally
+- implementation opportunities that would make the current change more
+  cohesive
+- practical follow-on improvements that are useful but not required before
+  merge
+
+Do not turn locally testable, reversible improvements into automatic deferrals
+only because they are adjacent to the original request. Also do not soften
+security-sensitive, destructive, irreversible, compatibility-sensitive, or
+high-blast-radius findings into experiments.
+
 ## Optional Trust Or Evidence Context
 
 When prior validation, repeated usage, or unresolved uncertainty affects review

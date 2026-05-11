@@ -81,6 +81,27 @@ Keep this policy in the shared playbook. Repo-local `AGENTS.md` files should
 reference or rely on it rather than duplicate it, except where a repository
 truly requires different behavior.
 
+## Single-Operator Review Posture
+
+For repository ecosystems primarily operated by one maintainer with rapid
+iteration, clear rollback paths, and low coordination overhead, reviews should
+bias toward actionable experimentation and cohesive improvement.
+
+Prefer cohesive, locally testable changes over artificial PR splitting when
+the blast radius is understood and rollback is straightforward. Reviewers
+should surface concrete implementation opportunities early, recommend
+practical follow-on improvements freely, and avoid deferring useful cleanup
+only because it is adjacent to the requested change.
+
+This posture does not weaken rigor for security-sensitive changes, data-loss
+risks, irreversible migrations, compatibility hazards, destructive automation,
+release behavior, or high-blast-radius operational changes. In those cases,
+reviewers should apply the normal conservative review posture.
+
+When using this posture, distinguish blocking issues from non-blocking
+experiments, risks, and follow-on opportunities. The goal is faster
+operational learning without hiding real safety or maintainability concerns.
+
 ## Makefile Discoverability
 
 Any repository with a Makefile should include a `make help` target. `make help`
