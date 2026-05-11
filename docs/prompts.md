@@ -112,6 +112,8 @@ template instead of appending implementation delivery instructions by habit.
 
 - `Context`: repository, current situation, relevant background, and any known
   boundaries.
+- `Coordination`: optional GitHub issue IDs, planning ticket IDs such as Linear
+  IDs, PR linkage expectations, and post-merge coordination notes.
 - `Goal`: the desired outcome in one or two clear sentences.
 - `Scope`: optional when the goal is already precise; useful for naming included
   and excluded work.
@@ -162,6 +164,12 @@ Context:
 Context:
 - Repository: [repository]
 - Relevant background: [short context]
+
+Coordination:
+- GitHub issues: [none, or issues such as #163]
+- Planning tickets: [none, or IDs such as Linear CAK-5]
+- PR linkage: [closing keywords and planning references expected in the PR]
+- Post-merge notes: [none, or planning/status updates to verify after merge]
 
 Goal:
 - [desired outcome]
@@ -235,6 +243,10 @@ Deliverable:
 - Commit and push only the intended changes.
 - Open a PR in the appropriate readiness state against the intended base
   branch, usually `main`.
+- When GitHub issues and planning tickets are both provided, reference both in
+  the PR. Use GitHub closing keywords such as `Closes #163` for GitHub issue
+  closure and include planning identifiers such as `Linear: CAK-5` as
+  coordination context.
 - Ensure the PR contains only intended changes.
 - Include a summary, validation results, and any residual risks.
 ```
@@ -799,6 +811,8 @@ Goal:
 Context:
 - [relevant facts discovered by the orchestrator]
 - [issue, PR, evidence note, or prior-art context the receiver needs]
+- [GitHub issue IDs, planning-ticket IDs, PR linkage expectations, and
+  post-merge coordination notes, when relevant]
 
 Scope:
 - In scope: [files, behavior, docs, or workflow area]
@@ -845,6 +859,10 @@ Delivery:
 - [branch, commit, push, PR, review packet, or report expectation]
 - Include summary, validation, source evidence, and residual risks or
   follow-ups.
+- When both GitHub issues and planning tickets are in scope, include both in
+  the PR or handoff. Use GitHub closing keywords for GitHub issue closure and
+  treat planning tickets as coordination state unless repo-local guidance says
+  otherwise.
 
 Deliverable:
 - [complete expected final output]
@@ -902,6 +920,8 @@ Delivery:
 - Push the branch.
 - Open a PR in the appropriate readiness state against the intended base branch,
   usually `main`.
+- Include expected GitHub issue closing keywords and planning-ticket references
+  in the PR body when those identifiers are provided.
 - Report the PR link, files changed, and validation results.
 ```
 

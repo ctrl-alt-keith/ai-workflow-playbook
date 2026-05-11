@@ -121,6 +121,8 @@ Open a pull request as ready for review when all of the following are true:
 - no known follow-up work is required before merge
 - overlap and coordination risk are low
 - issue lifecycle should not affect pull request readiness; using `Closes #<issue>` follows standard GitHub behavior and should not delay marking a pull request as ready
+- planning-ticket status should not delay a completed implementation PR unless
+  it reflects real sequencing, overlap, or completion risk
 
 Before opening or updating a pull request, fetch current `origin/main` and
 verify whether the branch is mergeable against current `main`. Update or rebase
