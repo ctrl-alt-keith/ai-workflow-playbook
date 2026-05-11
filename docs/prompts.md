@@ -785,10 +785,10 @@ Working directory:
 Repository:
 [repository]
 
-Canonical sources:
-- Shared workflow policy: [canonical_source]
+Required context:
+- Canonical reusable workflow policy: [canonical_source]
 - Repo-local execution guidance: [repo-local AGENTS.md or equivalent]
-- Source evidence: [source_evidence]
+- Reference evidence: [source_evidence]
 
 Required startup:
 1. Read the shared playbook startup guidance first.
