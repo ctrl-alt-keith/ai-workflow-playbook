@@ -167,6 +167,20 @@ change.
   the access or state blocker instead of inferring remote state
 - do not assume mergeability, checks, or branch protection without verification
 
+Worked review-flow example:
+
+1. The human asks Codex to review PR `#123`.
+2. Codex opens PR `#123` through the GitHub connector and inspects the PR title,
+   body, changed files, relevant diffs, comments and unresolved review
+   discussion, CI and check status, mergeability, and scope against the stated
+   task.
+3. After connector inspection, Codex may use `gh pr view 123`, `gh pr diff 123`,
+   local checkout state, or `git diff` as supplemental evidence for details
+   that are easier to inspect locally.
+4. Codex bases review feedback on the connector-inspected PR surface. If the
+   connector is unavailable, `gh` output alone does not satisfy the
+   connector-first review rule.
+
 ## Public API Baseline Check
 
 - before changing code, tests, docs, risks, or user-facing claims that depend on
