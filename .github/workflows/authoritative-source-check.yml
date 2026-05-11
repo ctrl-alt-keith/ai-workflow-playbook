@@ -31,13 +31,13 @@ jobs:
 
     steps:
       - name: Check out caller repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           path: caller-repository
 
       - name: Check out ai-workflow-playbook
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ctrl-alt-keith/ai-workflow-playbook
           ref: ${{ inputs.playbook_ref || github.ref }}
