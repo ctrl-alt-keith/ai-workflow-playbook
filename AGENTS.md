@@ -75,9 +75,8 @@ Repo-local rules take precedence only for repo-specific behavior.
 - Start here: `docs/start-here.md`
 - This playbook builds on the engineering baseline defined in
   `docs/engineering-baseline.md`.
+- Codex runs must apply `docs/tool-adapters/codex.md` as part of startup.
 - For general workflow rules, refer to the playbook documents instead of
-  duplicating them here.
-- After `docs/start-here.md`, use `docs/core-model.md`,
-  `docs/feature-lifecycle.md`, `docs/alignment-checkpoints.md`,
-  `docs/review-packet.md`, and `docs/tool-adapters/codex.md` as reference
-  material for deeper workflow details.
+  duplicating them here. Use `docs/core-model.md`,
+  `docs/feature-lifecycle.md`, `docs/alignment-checkpoints.md`, and
+  `docs/review-packet.md` as reference material for deeper workflow details.
