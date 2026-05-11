@@ -15,7 +15,7 @@ DEFAULT_MANIFEST = Path("config/workspace-repos.txt")
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate a non-canonical GitHub connector context snippet."
+        description="Generate a noncanonical GitHub connector context snippet."
     )
     parser.add_argument(
         "--output",

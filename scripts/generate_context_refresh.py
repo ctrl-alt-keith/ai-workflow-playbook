@@ -43,7 +43,7 @@ class UnavailableRepo:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate a non-canonical repository orientation refresh."
+        description="Generate a noncanonical repository orientation refresh."
     )
     parser.add_argument(
         "--output",
