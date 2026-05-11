@@ -150,7 +150,11 @@ Keep this lightweight. Registration means inventories, audits, and context
 systems can classify the repo correctly. It does not imply mature automation
 support, operational ownership, or service guarantees. Distinguish
 intentionally excluded repositories from accidentally invisible ones, then
-update only the systems that should know about the repo.
+update only the systems that should know about the repo. When bootstrap reaches
+this point, use the repo-awareness and onboarding refresh procedure in
+[`repo-awareness-onboarding-refresh.md`](repo-awareness-onboarding-refresh.md)
+to keep inventory propagation separate from governance checks and manual
+org-admin follow-up.
 
 ## Reuse
 

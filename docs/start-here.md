@@ -11,6 +11,8 @@
 - `docs/authoritative-source-check.md` -> advisory source scanner adoption and
   reusable workflow operations
 - `docs/repo-readiness.md` -> repository workflow expectations
+- `docs/repo-awareness-onboarding-refresh.md` -> repository inventory and
+  governance refresh procedure
 - `docs/tool-adapters/codex.md` -> required adapter guidance for Codex
   executions; mandatory startup material for Codex runs, not optional
   deep-reference material

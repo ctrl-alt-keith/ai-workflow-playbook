@@ -53,6 +53,11 @@ execution paths.
 - Automation prompts should delegate reusable safety predicates to owning tools
   when such tools exist, and should not duplicate full implementation logic in
   prompt text.
+- When repository additions, removals, renames, archived state, visibility, or
+  coverage expectations change, refresh automation scope through the
+  repo-awareness and onboarding procedure in
+  [`repo-awareness-onboarding-refresh.md`](repo-awareness-onboarding-refresh.md)
+  instead of editing prompt allowlists in isolation.
 - Skipped work should be reported with reasons, not hidden as a clean pass.
 - Automations must not replace repo validation, pull request review, or human
   approval gates.

@@ -78,6 +78,7 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/engineering-baseline.md`](docs/engineering-baseline.md): foundational engineering expectations, including validation, source authority, review, merge authority, and ready-for-review defaults
 - [`docs/authoritative-source-check.md`](docs/authoritative-source-check.md): advisory authoritative-source scanner adoption, domain classification, source justifications, and reusable workflow pinning
 - [`docs/repo-readiness.md`](docs/repo-readiness.md): interaction-mode selection, repository workflow expectations, validation taxonomy, and `AGENTS.md` responsibilities
+- [`docs/repo-awareness-onboarding-refresh.md`](docs/repo-awareness-onboarding-refresh.md): repository discovery, inventory propagation, onboarding, and governance refresh procedure
 - [`docs/core-model.md`](docs/core-model.md): high-level operating model
 - [`docs/feature-lifecycle.md`](docs/feature-lifecycle.md): delivery lifecycle, branch behavior, and PR completion expectations
 - [`docs/alignment-checkpoints.md`](docs/alignment-checkpoints.md): pause points and branch/PR rules

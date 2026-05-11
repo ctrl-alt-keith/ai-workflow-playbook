@@ -15,6 +15,7 @@ tooling.
 ## Quick Navigation
 
 - [Context Refresh Primitive](#context-refresh-primitive)
+- [Repo Awareness And Onboarding Refresh](#repo-awareness-and-onboarding-refresh)
 - [Filesystem-Scoped Audit Boundaries](#filesystem-scoped-audit-boundaries)
 - [Prompt Output Contract](#prompt-output-contract)
 - [Codex Task Prompt Format](#codex-task-prompt-format)
@@ -35,6 +36,23 @@ Canonical guidance for the verified org context refresh pattern lives in
 [`docs/context-refresh.md`](context-refresh.md). Use that page for when to run
 it, how to generate the repository orientation snapshot, and how to interpret
 blocked, unavailable, or stale output.
+
+## Repo Awareness And Onboarding Refresh
+
+Canonical guidance for repository inventory and governance refresh work lives in
+[`docs/repo-awareness-onboarding-refresh.md`](repo-awareness-onboarding-refresh.md).
+Use that page to distinguish discovery and inventory refresh from onboarding
+and governance compliance.
+
+Short prompt:
+
+```text
+Run the repo-awareness and onboarding refresh for [repo names].
+```
+
+The receiving agent should report discovery/inventory changes separately from
+governance checks, repo-local PRs, automation or enforcement updates, and manual
+org-admin follow-ups.
 
 ## Filesystem-Scoped Audit Boundaries
 
