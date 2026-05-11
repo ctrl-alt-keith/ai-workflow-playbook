@@ -75,7 +75,8 @@ The first core module is delivery. Additional workflow families may be added lat
 
 - [`docs/start-here.md`](docs/start-here.md): mandatory startup, source authority map, and adapter-routing contract
 - [`docs/ai-workflow-ecosystem.md`](docs/ai-workflow-ecosystem.md): conceptual overview of the repository ecosystem, retained-knowledge boundaries, and architectural direction
-- [`docs/engineering-baseline.md`](docs/engineering-baseline.md): foundational engineering expectations, including validation, review, merge authority, and ready-for-review defaults
+- [`docs/engineering-baseline.md`](docs/engineering-baseline.md): foundational engineering expectations, including validation, source authority, review, merge authority, and ready-for-review defaults
+- [`docs/authoritative-source-check.md`](docs/authoritative-source-check.md): advisory authoritative-source scanner adoption, domain classification, source justifications, and reusable workflow pinning
 - [`docs/repo-readiness.md`](docs/repo-readiness.md): interaction-mode selection, repository workflow expectations, validation taxonomy, and `AGENTS.md` responsibilities
 - [`docs/core-model.md`](docs/core-model.md): high-level operating model
 - [`docs/feature-lifecycle.md`](docs/feature-lifecycle.md): delivery lifecycle, branch behavior, and PR completion expectations

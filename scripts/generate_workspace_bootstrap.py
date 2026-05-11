@@ -8,6 +8,7 @@ import sys
 DEFAULT_SOURCES = (
     Path("docs/start-here.md"),
     Path("docs/engineering-baseline.md"),
+    Path("docs/authoritative-source-check.md"),
     Path("docs/repo-readiness.md"),
     Path("docs/context-refresh.md"),
     Path("docs/tool-adapters/codex.md"),
