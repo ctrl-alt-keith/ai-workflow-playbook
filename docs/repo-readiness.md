@@ -141,6 +141,14 @@ Open a pull request as draft when any of the following are true:
 Docs-only changes should default to ready for review when canonical validation
 passes and the diff is isolated.
 
+Implementation agents may open or update ready-for-review pull requests by
+default when repository guidance calls for PR delivery. Ready-for-review status
+does not authorize merge. Do not merge pull requests or enable auto-merge
+unless the human explicitly instructs that action for the specific pull request
+or workflow step. Sequential workflows that depend on merges must pause for
+explicit human confirmation before merge and before continuing to downstream
+steps.
+
 When working in a multi-repo workspace, treat each repository as an independent
 unit of change. Even if multiple repositories are visible, commits, branches,
 worktrees, and PRs must be created and managed per repository. Do not create
