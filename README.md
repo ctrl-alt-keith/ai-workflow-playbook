@@ -81,6 +81,7 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/feature-lifecycle.md`](docs/feature-lifecycle.md): delivery lifecycle, branch behavior, and PR completion expectations
 - [`docs/alignment-checkpoints.md`](docs/alignment-checkpoints.md): pause points and branch/PR rules
 - [`docs/review-packet.md`](docs/review-packet.md): standard human review packet
+- [`docs/knowledge-ingestion-patterns.md`](docs/knowledge-ingestion-patterns.md): reusable patterns for provenance-aware ingestion and retained-knowledge governance boundaries
 - [`docs/tool-adapters/`](docs/tool-adapters/): documented executor-specific adapter guidance; Codex runs must apply [`docs/tool-adapters/codex.md`](docs/tool-adapters/codex.md)
 - [`docs/playbook-integrity-check.md`](docs/playbook-integrity-check.md): lightweight anti-drift check
 - [`docs/new-repo-bootstrap.md`](docs/new-repo-bootstrap.md): reusable bootstrap pattern for brand-new repositories
