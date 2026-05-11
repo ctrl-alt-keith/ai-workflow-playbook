@@ -41,15 +41,15 @@ Do not add content that behaves like a working notebook. If material is explorat
 
 Core guidance should stay tool-agnostic. The core docs should describe the operating model, lifecycle, checkpoints, and review expectations in language that survives tool changes.
 
-Tool-specific behavior belongs in adapter docs under [`docs/tool-adapters/`](docs/tool-adapters/). Adapters should explain how a specific tool maps onto the core model, but they should not redefine the model itself.
+Tool-specific behavior belongs in documented adapter docs under [`docs/tool-adapters/`](docs/tool-adapters/). Adapters explain how a specific executor maps onto the core model, but they do not redefine the model itself. When no matching adapter exists, use the executor-neutral startup guidance and repo-local `AGENTS.md`; do not infer tool-specific requirements from another executor's adapter.
 
 ## Repo-Local AGENTS.md
 
-The playbook is the canonical home for reusable workflow patterns. Repositories can reference it from a local `AGENTS.md`, but that local file should stay self-contained for execution and should remain the source of truth for repo-specific validation, commands, and PR expectations.
+The playbook is the canonical home for reusable workflow policy. A repo-local `AGENTS.md` is the execution layer for that repository, layered on top of the playbook and authoritative only for repo-specific validation, commands, and PR expectations. Playbook changes and `AGENTS.md` edits are separate work types; update `AGENTS.md` only with explicit authorization or when that update is the task's purpose.
 
 Reusable pattern:
 
-> This repository uses the shared AI workflow model defined in `ai-workflow-playbook` as a reference. `AGENTS.md` provides the repo-specific instructions (validation, commands, PR expectations). Repo-local rules take precedence only for repo-specific behavior.
+> This repository uses the shared playbook in `ai-workflow-playbook` as the canonical source for reusable workflow rules. `AGENTS.md` provides the repo-specific instructions (validation, commands, PR expectations). Repo-local rules take precedence only for repo-specific behavior.
 
 ## Workspace Bootstrap Bundle
 
@@ -73,11 +73,14 @@ The first core module is delivery. Additional workflow families may be added lat
 
 ## Initial Map
 
+- [`docs/start-here.md`](docs/start-here.md): mandatory startup, source authority map, and adapter-routing contract
+- [`docs/engineering-baseline.md`](docs/engineering-baseline.md): foundational engineering expectations, including validation, review, merge authority, and ready-for-review defaults
+- [`docs/repo-readiness.md`](docs/repo-readiness.md): interaction-mode selection, repository workflow expectations, validation taxonomy, and `AGENTS.md` responsibilities
 - [`docs/core-model.md`](docs/core-model.md): high-level operating model
-- [`docs/feature-lifecycle.md`](docs/feature-lifecycle.md): delivery lifecycle
+- [`docs/feature-lifecycle.md`](docs/feature-lifecycle.md): delivery lifecycle, branch behavior, and PR completion expectations
 - [`docs/alignment-checkpoints.md`](docs/alignment-checkpoints.md): pause points and branch/PR rules
 - [`docs/review-packet.md`](docs/review-packet.md): standard human review packet
-- [`docs/tool-adapters/codex.md`](docs/tool-adapters/codex.md): Codex-specific adapter notes
+- [`docs/tool-adapters/`](docs/tool-adapters/): documented executor-specific adapter guidance; Codex runs must apply [`docs/tool-adapters/codex.md`](docs/tool-adapters/codex.md)
 - [`docs/playbook-integrity-check.md`](docs/playbook-integrity-check.md): lightweight anti-drift check
 - [`docs/new-repo-bootstrap.md`](docs/new-repo-bootstrap.md): reusable bootstrap pattern for brand-new repositories
 - [`docs/context-refresh.md`](docs/context-refresh.md): verified context refresh primitive for durable repository orientation briefs
