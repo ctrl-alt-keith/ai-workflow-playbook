@@ -229,6 +229,9 @@ required.
 
 The detailed runtime note lives in
 `ai-workflow-incubator/runtime-artifacts/codex-local-policy/sandbox-writable-roots.md`.
+That runtime artifact is operational reference material for this adapter. It is
+not canonical reusable policy unless the guidance is explicitly promoted into
+the playbook.
 
 ## Autonomous Lane
 
