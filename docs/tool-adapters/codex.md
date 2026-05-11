@@ -52,12 +52,17 @@ change.
 
 ## Workspace Isolation
 
+The canonical implementation-isolation mandate lives in
+[`repo-readiness.md`](../repo-readiness.md#pr-readiness): one repository, one
+branch, one dedicated repo-local worktree, and one PR per change. This section
+adds Codex-specific execution details for creating, reusing, coordinating, and
+cleaning up those worktrees.
+
 - read-only exploration, audit, or review work may use the active checkout when
   no repo changes are required
-- for repo-changing implementation work, always use `git worktree` from the
-  target repository and place every repo-changing worktree under
-  `<repo>/.worktrees/`; do not create sibling repo directories, sibling
-  worktree directories, or ad hoc full-copy repositories under the project root
+- place every repo-changing Codex worktree under `<repo>/.worktrees/`; do not
+  create sibling repo directories, sibling worktree directories, or ad hoc
+  full-copy repositories under the project root
 - before creating or reusing a repo-changing worktree, run `git worktree list`,
   select a repo-local `.worktrees/...` path, and report that selected path in
   setup or delivery notes
@@ -141,25 +146,12 @@ change.
   `bash -lc 'make check'`; use `gh pr view 145`, not
   `sh -c 'gh pr view 145'`
 - when the human posts a GitHub PR link, provides a PR number, or asks to
-  review, check, assess, approve, or comment on a PR, Codex must use connector
-  inspection and must open the PR through the GitHub connector before giving
-  review feedback
-- local checkouts, `git diff`, and `gh` commands may be used as supplemental
-  evidence for PR review, but they must not replace connector inspection
-- treat "open the PR" as read-only connector inspection, not opening the PR in
-  a browser and not submitting a GitHub review
-- treat "review this PR" as inspect the PR and provide feedback in chat, unless
-  the human explicitly asks to post the review to GitHub
-- Codex must inspect the actual PR metadata, title and body, changed files,
-  relevant diffs, comments and unresolved review discussion, CI and check
-  status, mergeability, and scope against the task or issue where those inputs
-  are available
-- treat user-provided PR summaries, pasted titles, local path snippets, and
-  copied diff excerpts as navigation and context only, not review evidence,
-  when a PR link or PR number is available
-- Codex must not mutate the PR: do not submit, approve, request changes,
-  comment on, label, merge, close, or otherwise change the PR unless the human
-  explicitly asks for that GitHub action
+  review, check, assess, approve, or comment on a PR, Codex must follow the
+  canonical connector-first PR review rule in
+  [`review-packet.md`](../review-packet.md#direct-pr-inspection)
+- after connector inspection, local checkouts, `git diff`, and `gh` commands
+  may be used as supplemental evidence for PR review, but they must not replace
+  connector inspection
 - if GitHub connector access is unavailable or declined for a PR review, stop
   the review, state that connector access is unavailable, and provide only
   clearly caveated feedback from the information already present

@@ -197,10 +197,10 @@ External State Verification:
 - Run commands directly from inside the target repository worktree and follow
   the command-form rule in `docs/repo-readiness.md`; do not wrap ordinary repo
   commands in `zsh`, `bash`, `sh`, or equivalent shell forms.
-- For implementation changes, use a dedicated repo-local git worktree: one
-  repository, one branch, one worktree, and one PR per change. Run commands
-  from inside that target worktree and keep temporary or scratch state
-  repo-local.
+- For implementation changes, follow the dedicated worktree rule in
+  `docs/repo-readiness.md#pr-readiness`: one repository, one branch, one
+  dedicated repo-local worktree, and one PR per change. Run commands from
+  inside that target worktree and keep temporary or scratch state repo-local.
 - The only worktree exceptions are read-only inspection or explicit human
   instruction not to modify files.
 - Follow the direct PR inspection rule in `docs/review-packet.md` when a task
@@ -820,10 +820,10 @@ Scope:
 
 Constraints:
 - Keep changes minimal, scoped, and structurally local.
-- Use a dedicated repo-local git worktree for implementation changes: one
-  repository, one branch, one worktree, and one PR per change. Run commands
-  from inside the target worktree and keep temporary or scratch state
-  repo-local.
+- Follow the dedicated worktree rule in `docs/repo-readiness.md#pr-readiness`
+  for implementation changes: one repository, one branch, one dedicated
+  repo-local worktree, and one PR per change. Run commands from inside the
+  target worktree and keep temporary or scratch state repo-local.
 - Do not include unrelated cleanup.
 - Do not rely on noncanonical staging, runtime, generated, or local instruction
   surfaces as policy unless the rule has been promoted into the canonical
@@ -898,10 +898,10 @@ Delivery:
 - Follow the branch, PR readiness, and workspace rules in
   `docs/feature-lifecycle.md`, `docs/repo-readiness.md`, and
   `docs/tool-adapters/codex.md`.
-- Use a dedicated repo-local git worktree for implementation changes: one
-  repository, one branch, one worktree, and one PR per change. Run commands
-  from inside the target worktree and keep temporary or scratch state
-  repo-local.
+- Follow the dedicated worktree rule in `docs/repo-readiness.md#pr-readiness`
+  for implementation changes: one repository, one branch, one dedicated
+  repo-local worktree, and one PR per change. Run commands from inside the
+  target worktree and keep temporary or scratch state repo-local.
 - Run ordinary `git`, `gh`, `make`, `python`, repo-local script, and tool
   commands directly from the target worktree; reserve shell wrapping for
   commands that genuinely require shell syntax.
@@ -952,17 +952,17 @@ Inputs:
 - Summary-only requested: [summary_only]
 
 Instructions:
-- When a PR link or PR number is available, you must use connector inspection
-  and must open the PR through the GitHub connector before giving any review,
-  approval, readiness, or merge recommendation.
+- Apply the canonical direct PR inspection rule in
+  `docs/review-packet.md#direct-pr-inspection`. When a PR link or PR number is
+  available, use connector inspection before giving any review, approval,
+  readiness, or merge recommendation.
 - Stay in review/audit mode. Do not implement changes while performing the PR
   review unless the human explicitly changes the task to implementation.
 - Local checkouts, `git diff`, and `gh` commands may be used as supplemental
   evidence for PR review, but they must not replace connector inspection.
-- Treat "open the PR" as read-only connector inspection, not opening the PR in
-  a browser and not submitting a GitHub review.
-- Treat "review this PR" as inspect the PR and provide feedback in chat, unless
-  the human explicitly asks to post the review to GitHub.
+- Treat "open the PR" as read-only connector inspection, and treat "review this
+  PR" as inspect the PR and provide feedback in chat unless the human
+  explicitly asks to post the review to GitHub.
 - Apply the single-operator review posture from `docs/repo-readiness.md` when
   the repository ecosystem is primarily operated by one maintainer with rapid
   iteration and straightforward rollback. Bias toward actionable
@@ -973,13 +973,11 @@ Instructions:
 - Treat user-provided summaries, pasted titles, local path snippets, and copied
   diff excerpts as navigation and context only, not review evidence, when a PR
   link or PR number is available.
-- You must inspect the actual PR metadata, title and body, changed files,
-  relevant diffs, comments and unresolved review discussion, CI and check
-  status, mergeability, and scope against the task or issue where those inputs
-  are available.
-- You must not mutate the PR: do not submit, approve, request changes, comment
-  on, label, merge, close, or otherwise change the PR unless the human
-  explicitly asks for that GitHub action.
+- Inspect the PR surface described in
+  `docs/review-packet.md#direct-pr-inspection`, including metadata, changed
+  files, review discussion, CI/check status, mergeability, and scope where
+  available.
+- Do not mutate the PR unless the human explicitly asks for that GitHub action.
 - If GitHub connector access is unavailable or declined and Summary-only
   requested is not `yes`, stop the PR review, state that connector access is
   unavailable, and provide only clearly caveated feedback from the information
