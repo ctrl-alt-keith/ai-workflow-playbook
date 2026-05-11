@@ -943,6 +943,13 @@ Instructions:
   a browser and not submitting a GitHub review.
 - Treat "review this PR" as inspect the PR and provide feedback in chat, unless
   the human explicitly asks to post the review to GitHub.
+- Apply the single-operator review posture from `docs/repo-readiness.md` when
+  the repository ecosystem is primarily operated by one maintainer with rapid
+  iteration and straightforward rollback. Bias toward actionable
+  experimentation, cohesive local improvements, and practical follow-on
+  recommendations while preserving normal rigor for security-sensitive,
+  destructive, irreversible, compatibility-sensitive, release, or
+  high-blast-radius behavior.
 - Treat user-provided summaries, pasted titles, local path snippets, and copied
   diff excerpts as navigation and context only, not review evidence, when a PR
   link or PR number is available.
@@ -968,7 +975,8 @@ Instructions:
 
 Output format:
 1. Review findings: severity-ordered findings with file or PR references where
-   possible.
+   possible. Distinguish blockers from non-blocking risks, implementation
+   opportunities, and practical follow-ons.
 2. Scope and evidence notes: concise notes on inspected PR surface, CI/checks,
    mergeability, and task fit.
 3. Recommendation: `ready to merge`, `needs decision`, or `blocked`, only when
