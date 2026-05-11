@@ -145,11 +145,11 @@ for GitHub issue closure. Do not manually close the GitHub issue as a separate
 coordination step unless the repository workflow or human explicitly asks for
 it.
 
-Keep planning tickets open while the implementation PR is still open unless the
-planning system's local workflow says otherwise. Usually mark the planning
-ticket complete only after the PR has merged and the linked GitHub issue
-closure has been confirmed. During the PR-open state, planning status should
-reflect implementation in progress or in review, not merge-complete.
+Planning tickets will usually remain open while the implementation PR is still
+open unless the planning system's local workflow says otherwise. Usually mark
+the planning ticket complete only after the PR has merged and the linked GitHub
+issue closure has been confirmed. During the PR-open state, planning status
+should reflect implementation in progress or in review, not merge-complete.
 
 For multi-issue work, keep the mapping explicit: list every GitHub issue the PR
 intends to close and every planning ticket it coordinates with. If one PR
