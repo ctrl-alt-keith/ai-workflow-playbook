@@ -200,6 +200,12 @@ Reconcile local workspace state against the canonical workspace inventory
 before cross-repo audits, `AGENTS.md` alignment, enforcement scans, or broad
 workflow updates.
 
+For repository additions, removals, role changes, or governance checks, use the
+repo-awareness and onboarding refresh procedure in
+[`repo-awareness-onboarding-refresh.md`](repo-awareness-onboarding-refresh.md).
+That procedure keeps inventory refresh separate from onboarding and org-admin
+governance follow-up.
+
 ## Repo-Local Workflow State
 
 For implementation changes, run commands from inside the target repository's
