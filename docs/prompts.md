@@ -16,6 +16,7 @@ tooling.
 
 - [Context Refresh Primitive](#context-refresh-primitive)
 - [Repo Awareness And Onboarding Refresh](#repo-awareness-and-onboarding-refresh)
+- [GPT-5.5 Prompt Design Baseline](#gpt-55-prompt-design-baseline)
 - [Filesystem-Scoped Audit Boundaries](#filesystem-scoped-audit-boundaries)
 - [Prompt Output Contract](#prompt-output-contract)
 - [Codex Task Prompt Format](#codex-task-prompt-format)
@@ -53,6 +54,39 @@ Run the repo-awareness and onboarding refresh for [repo names].
 The receiving agent should report discovery/inventory changes separately from
 governance checks, repo-local PRs, automation or enforcement updates, and manual
 org-admin follow-ups.
+
+## GPT-5.5 Prompt Design Baseline
+
+For GPT-5.5-era prompts, prefer outcome-first structure over long procedural
+scripts. Include enough operational detail for safe execution, but keep each
+section short and tied to behavior that changes the result.
+
+Reusable prompts should normally define:
+
+- `Role`: the model's job in one or two sentences.
+- `Goal`: the user-visible outcome.
+- `Success criteria`: what must be true before final response or handoff.
+- `Available context`: the sources, files, systems, or evidence already
+  provided.
+- `Retrieval budget`: where to search, how far to search, what to skip, and
+  when to stop retrieving more context.
+- `Constraints`: safety, evidence, side-effect, branch, PR, validation, and
+  scope limits.
+- `Preamble/update expectations`: short user-visible progress notes for
+  long-running, multi-step, or tool-heavy work.
+- `Validation`: concrete checks to run and what to report if they fail or
+  cannot run.
+- `Output`: required sections, length, tone, and artifact shape.
+- `Stop rules`: when to ask, abstain, fallback, report a blocker, or pause for
+  human approval.
+
+Personality, tone, and collaboration style belong in their own section when
+they matter. Keep them separate from operational constraints so style guidance
+does not blur validation, safety, or side-effect rules.
+
+Use true invariants for strong language such as `must`, `never`, and `always`.
+For judgment calls, prefer decision rules that explain when the instruction
+applies.
 
 ## Filesystem-Scoped Audit Boundaries
 
@@ -128,20 +162,26 @@ template instead of appending implementation delivery instructions by habit.
 
 ### Codex Task Prompt Format Sections
 
+- `Role`: the implementation agent's job and repository context.
+- `Goal`: the desired outcome in one or two clear sentences.
+- `Success criteria`: observable conditions for completion.
 - `Context`: repository, current situation, relevant background, and any known
   boundaries.
 - `Coordination`: optional GitHub issue IDs, planning ticket IDs such as Linear
   IDs, PR linkage expectations, and post-merge coordination notes.
-- `Goal`: the desired outcome in one or two clear sentences.
+- `Retrieval budget`: startup docs, repo-local files, live external state, and
+  stopping point for additional search.
 - `Scope`: optional when the goal is already precise; useful for naming included
   and excluded work.
 - `Constraints`: guardrails that prevent overengineering, unrelated cleanup, and
   behavior drift.
-- `Tasks`: ordered work items when the path matters.
+- `Preamble/update expectations`: short progress notes for tool-heavy work.
+- `Tasks`: optional ordered work items when the path matters.
 - `Validation`: the canonical repo command, such as `make check`, when
   available, plus any explicitly advisory, CI-only, release-only, or manual
   review expectations.
 - `Deliverable`: branch, commit, PR, review packet, or handoff expectations.
+- `Stop rules`: blockers or human-gated actions that should pause execution.
 
 Keep prompts concise but complete. The goal is to remove ambiguity that would
 cause retries, not to turn every task into a process document.
@@ -179,7 +219,19 @@ Context:
 ### Codex Task Prompt Template
 
 ```text
-Context:
+Role:
+- You are implementing a scoped repository change in [repository].
+
+Goal:
+- [desired outcome]
+
+Success criteria:
+- [observable condition that proves the goal is met]
+- The diff is limited to the intended repo and scope.
+- Canonical validation has run or any inability to run it is reported.
+- A ready-for-review PR is opened unless PR delivery is explicitly excluded.
+
+Available context:
 - Repository: [repository]
 - Relevant background: [short context]
 
@@ -189,8 +241,14 @@ Coordination:
 - PR linkage: [closing keywords and planning references expected in the PR]
 - Post-merge notes: [none, or planning/status updates to verify after merge]
 
-Goal:
-- [desired outcome]
+Retrieval budget:
+- Read `ai-workflow-playbook/docs/start-here.md`, the target repo's
+  `AGENTS.md`, and the repo-local files needed for this change.
+- Verify live external state, such as GitHub repository or pull request state,
+  before relying on it.
+- Stop broad search once the target files, validation path, branch/PR
+  expectations, and any external-state dependencies are clear.
+- Do not traverse sibling repositories unless this task explicitly names them.
 
 Scope:
 - In scope: [files, behavior, or workflow area]
@@ -203,12 +261,10 @@ Constraints:
 - Follow existing repo patterns and validation paths.
 - Do not silently skip required steps; report any blockers or incomplete work.
 
-External State Verification:
+Side-effect constraints:
 - Determine the interaction mode before repo work begins. Implementation mode
   requires explicit user intent; ambiguous ctrl-alt-keith repo tasks default to
   review/audit or orchestration/prompt-authoring.
-- Verify live external state, such as GitHub repository or pull request state,
-  before relying on it.
 - When the human posts a GitHub PR link, provides a PR number, or asks to
   review a PR, follow the GitHub connector-first PR review rule in
   `docs/review-packet.md`.
@@ -229,6 +285,10 @@ External State Verification:
 - If live state cannot be verified, explicitly state that limitation and do not
   infer PR status, CI status, or branch protection from summaries or local
   files.
+
+Preamble/update expectations:
+- For multi-step or tool-heavy work, provide brief progress updates before
+  grouped tool use and before file edits.
 
 Parallel Execution Plan:
 - Follow the parallel execution and merge-order rules in
@@ -267,6 +327,13 @@ Deliverable:
   coordination context.
 - Ensure the PR contains only intended changes.
 - Include a summary, validation results, and any residual risks.
+
+Stop rules:
+- Pause before merge, release, tag, destructive, or permissions-sensitive
+  actions unless the human explicitly requested that action.
+- Stop and report if the repo context is mismatched, validation failure implies
+  broader work than requested, or live external state cannot be verified where
+  it is required.
 ```
 
 ### Codex Task Prompt Example
@@ -353,6 +420,20 @@ Inputs:
 - Repo type: <repo_type>
 - Target files: <target_files>
 
+Success criteria:
+- The audit identifies material readiness gaps with file-backed evidence.
+- Recommendations are scoped to workflow reliability, reviewability, or
+  maintainability.
+- The output distinguishes observed repo facts from assumptions or blockers.
+
+Retrieval budget:
+- Inspect <target_files> when provided; otherwise inspect the repository root,
+  README, AGENTS guidance, Makefile or validation docs, and workflow docs.
+- Do not traverse outside the repository unless the task explicitly asks for a
+  broader workspace audit.
+- Stop once validation, branch/PR practices, repo-local guidance placement, and
+  material gaps are clear.
+
 Instructions:
 - Inspect the current repository state and identify whether the repo is ready for normal feature work under the referenced playbook.
 - Compare the repo's current workflow, validation path, branch hygiene, PR hygiene, and key documentation against the playbook reference.
@@ -375,6 +456,11 @@ Validation:
 - Verify whether branch and PR practices are documented clearly enough for repeatable use.
 - Verify whether workflow guidance is placed in the right files for this repo type.
 - Verify whether any recommended follow-up is actually supported by the observed repo state.
+
+Stop rules:
+- If the target repository or playbook reference cannot be inspected, report
+  the blocked scope instead of inferring readiness.
+- Do not mutate files, branches, issues, or PRs during an audit prompt.
 
 Output format:
 1. Readiness summary: one short paragraph.
@@ -419,6 +505,20 @@ Inputs:
 - Repo type: <repo_type>
 - Target files: <target_files>
 
+Success criteria:
+- Each proposed playbook update is durable, generic, and evidence-supported.
+- Repo-local behavior remains outside the shared playbook unless it clearly
+  generalizes.
+- The output names scope boundaries, validation checks, and cleanup follow-up.
+
+Retrieval budget:
+- Inspect the named target files, source repository evidence, and current
+  playbook sections that would own the reusable rule.
+- Do not scan unrelated repositories or staging notes unless they are named as
+  evidence.
+- Stop once the candidate rule's owning source, reuse case, and conflict risk
+  are clear.
+
 Instructions:
 - Review the existing playbook reference and the source repository context.
 - Identify workflow rules or patterns that have concrete evidence from real use,
@@ -449,6 +549,11 @@ Validation:
 - Verify that the resulting file placement matches the playbook structure.
 - Verify that the update includes a notes cleanup follow-up or explicitly says
   no notes cleanup is needed.
+
+Stop rules:
+- Do not promote speculative, unsupported, or repo-specific material.
+- Do not edit `AGENTS.md` unless this task explicitly authorizes that rollout
+  or enforcement work.
 
 Output format:
 - Proposed playbook changes: brief summary paragraph.
@@ -494,6 +599,18 @@ Inputs:
 - Notes project root: <notes_project_root>
 - Playbook reference: <playbook_reference>
 
+Success criteria:
+- Each relevant notes file is classified as remove, trim, keep, or defer.
+- Remove and trim recommendations cite the canonical playbook location that
+  now owns the promoted guidance.
+- Deferred items name the blocker or missing local decision.
+
+Retrieval budget:
+- Inspect only files inside <notes_project_root> plus the playbook sections
+  needed to verify canonical ownership.
+- Do not re-audit unrelated repositories or reopen promotion decisions.
+- Stop once each relevant file has a justified classification.
+
 Instructions:
 - Audit the notes project against the playbook reference after promotion work has already been completed.
 - Treat the notes project as a staging layer and the playbook reference as the canonical source for promoted workflow guidance.
@@ -518,6 +635,12 @@ Validation:
 - Verify that keep recommendations preserve only notes-layer material that still belongs in staging.
 - Verify that defer recommendations explain the specific blocker or unresolved local dependency.
 - Verify that the audit output can drive a cleanup pass followed by a re-audit to confirm convergence.
+
+Stop rules:
+- If the notes root boundary is unclear, stop and ask for the intended root
+  instead of widening the traversal.
+- Do not mutate files during the audit unless the task explicitly changes to
+  implementation.
 
 Output format:
 1. Summary: one short paragraph describing the overall alignment state.
@@ -569,6 +692,18 @@ Inputs:
 - Duplicate check scope: [duplicate_check_scope]
 - Optional arc suggestions: [arc_suggestions]
 
+Success criteria:
+- Proposed issues are bounded to one owning repository and one focused PR-sized
+  change.
+- Duplicate checks are reported for each proposed or created issue.
+- Playbook candidates remain separate from repo issue promotion.
+
+Retrieval budget:
+- Inspect the named source material root and the named duplicate-check scope.
+- Check only the target repositories needed for ownership and duplication.
+- Stop once each candidate is classified as deferred, issue-ready, duplicate,
+  or playbook-candidate.
+
 Instructions:
 - Review the source material inside [source_material_root] and identify notes
   or deferred ideas that may be ready for issue promotion.
@@ -606,6 +741,10 @@ Validation:
 - Verify that grouped items belong together and are not masking unrelated work.
 - Verify that any playbook candidate is called out separately from repo issue
   promotion.
+
+Stop rules:
+- Do not create issues unless the task explicitly authorizes issue creation.
+- Do not promote vague themes, duplicates, or unsupported playbook candidates.
 
 Output format:
 1. Triage summary: one short paragraph.
@@ -655,6 +794,20 @@ Inputs:
 - Repo type: <repo_type>
 - Target files: <target_files>
 
+Success criteria:
+- `AGENTS.md` remains a thin repo-local execution layer.
+- Shared workflow rules are referenced from the playbook instead of duplicated.
+- Necessary repo-local validation, file placement, branch, PR, and constraint
+  details are preserved.
+
+Retrieval budget:
+- Inspect the current `AGENTS.md`, target files, repo README or workflow docs,
+  and the referenced playbook sections.
+- Do not inspect unrelated repositories unless this is explicitly a multi-repo
+  rollout with one repo/branch/PR per target.
+- Stop once shared-vs-local ownership, validation path, and conflict risk are
+  clear.
+
 Instructions:
 - Review the repository's current AGENTS guidance and the referenced playbook.
 - Keep playbook-level rules in the playbook and repo-local execution rules in AGENTS.
@@ -687,6 +840,11 @@ Validation:
   where the environment supports that.
 - Verify that the updated AGENTS file does not introduce conflicting guidance relative to the playbook.
 - Verify that the document still works as a practical execution layer for this repo type.
+
+Stop rules:
+- Stop if the task lacks explicit authorization for `AGENTS.md` update,
+  rollout, or enforcement.
+- Do not combine multiple repositories in one branch or pull request.
 
 Output format:
 1. AGENTS change summary: short paragraph.
@@ -734,6 +892,20 @@ Inputs:
 - Repo type: <repo_type>
 - Target files: <target_files>
 
+Success criteria:
+- Each scaffolded file has one clear job and matches the repo's actual
+  workflow maturity.
+- Templates do not imply unsupported validation, release, ownership, or branch
+  protection behavior.
+- The change is minimal, maintainable, and repo-local.
+
+Retrieval budget:
+- Inspect existing templates, README, AGENTS guidance, validation docs, release
+  docs, and target files.
+- Do not add broad process by searching unrelated repositories unless the task
+  explicitly asks for a comparison.
+- Stop once the smallest useful scaffold set is clear.
+
 Instructions:
 - Inspect the repository's current workflow scaffolding.
 - Add or update only the smallest set of files needed to support clear PRs, issue intake, and release or change-management guidance.
@@ -754,6 +926,12 @@ Validation:
   can interpret as inline HTML.
 - Verify that release guidance stays human-gated unless the repository already documents automation.
 - Verify that the resulting scaffolding is appropriate for the stated repo type.
+
+Stop rules:
+- Do not add CI, release, ownership, or process machinery only to satisfy a
+  generic template.
+- Stop and report if the requested scaffold would conflict with repo-local
+  guidance or the playbook.
 
 Output format:
 1. Scaffolding summary: short paragraph.
@@ -794,8 +972,18 @@ commit, push, and open a PR.
 Deliver the downstream prompt as one contiguous copyable block.
 
 ```text
-Task:
-[clear action the downstream agent should complete]
+Role:
+- You are a downstream agent completing a bounded task for [repository].
+
+Goal:
+- [clear user-visible outcome the downstream agent should complete]
+
+Success criteria:
+- [what must be true before final response]
+- The work stays within the named repository, branch, and scope.
+- Required validation has run or a blocker is reported.
+- The final answer includes the requested artifact, PR, review packet, or
+  handoff evidence.
 
 Working directory:
 [absolute or repo-relative working directory]
@@ -807,24 +995,23 @@ Required context:
 - Canonical reusable workflow policy: [canonical_source]
 - Repo-local execution guidance: [repo-local AGENTS.md or equivalent]
 - Reference evidence: [source_evidence]
+- Available source material: [specific files, issues, PRs, notes, or docs]
 
-Required startup:
-1. Read the shared playbook startup guidance first.
-2. Read the repo-local AGENTS.md before acting.
-3. Select the interaction mode before acting.
-4. Identify the canonical source for reusable workflow rules.
-5. Confirm command form for ordinary repo commands.
-6. Confirm the dedicated repo-local worktree for implementation changes.
-7. For `git` and `gh`, confirm execution settings avoid implicit shell or
-   login-shell wrapping where supported.
-8. Identify the canonical validation path.
-9. Act only after these checks are clear, or report the blocker.
+Retrieval budget:
+- Read the shared playbook startup guidance and repo-local `AGENTS.md` first.
+- Inspect only the files, issues, PRs, docs, or generated artifacts needed to
+  satisfy the goal and validation requirements.
+- For implementation, confirm the dedicated repo-local worktree and canonical
+  validation path before editing.
+- For `git` and `gh`, confirm execution settings avoid implicit shell or
+  login-shell wrapping where supported.
+- Stop retrieving once the target surface, constraints, validation path, and
+  delivery expectation are clear.
+- Do not broaden into sibling repos or noncanonical staging material unless it
+  is explicitly named as context.
 
 Interaction mode:
 - [implementation, review/audit, or orchestration/prompt-authoring]
-
-Goal:
-- [desired outcome]
 
 Context:
 - [relevant facts discovered by the orchestrator]
@@ -862,6 +1049,10 @@ Constraints:
 - Use shell wrappers only when shell syntax is genuinely required.
 - Report blockers, validation failures, residual risks, and uncertainty.
 
+Preamble/update expectations:
+- For multi-step, long-running, or tool-heavy work, give short progress updates
+  before grouped tool use and before file edits.
+
 Tasks:
 1. [ordered task]
 2. [ordered task]
@@ -889,6 +1080,12 @@ Deliverable:
 - Do not provide partial prompts, continuation fragments, diffs, partial edits,
   delta-only responses, targeted edits without the full updated artifact, or
   "change X to Y" pseudo-prompts unless explicitly requested.
+
+Stop rules:
+- Stop before merge, release, tag, destructive, externally visible, or
+  permissions-sensitive actions unless explicitly authorized.
+- Ask for human input when the repo context is wrong, required evidence is
+  unavailable, or the next step depends on a human judgment call.
 ```
 
 ## Implementation Delivery Footer
@@ -969,6 +1166,19 @@ Inputs:
 - Task or issue context: [task_or_issue_context]
 - Summary-only requested: [summary_only]
 
+Success criteria:
+- Review feedback is grounded in direct PR evidence when a PR link or number is
+  available.
+- Findings are severity-ordered and distinguish blockers from non-blocking
+  risks or follow-ons.
+- Merge readiness is stated only when supported by current PR evidence.
+
+Retrieval budget:
+- Inspect the PR through the GitHub connector first when available.
+- Use local checkout, `git diff`, and `gh` only as supplemental evidence.
+- Stop once PR metadata, changed files, relevant diffs, discussion, checks,
+  mergeability, and task fit are clear enough for the requested review depth.
+
 Instructions:
 - Apply the canonical direct PR inspection rule in
   `docs/review-packet.md#direct-pr-inspection`. When a PR link or PR number is
@@ -1008,6 +1218,11 @@ Instructions:
 - If Summary-only requested is `yes` and no PR link or PR number is available,
   state that the response is based only on the supplied summary and does not
   establish merge readiness.
+
+Stop rules:
+- If connector access is required but unavailable, stop the review and report
+  the access blocker instead of inferring readiness.
+- Do not mutate the PR unless the human explicitly asks for that GitHub action.
 
 Output format:
 1. Review findings: severity-ordered findings with file or PR references where
@@ -1051,6 +1266,19 @@ Inputs:
 - Repo type: <repo_type>
 - Target files: <target_files>
 
+Success criteria:
+- The PR contains one logical, intended change with unrelated files excluded.
+- The branch is anchored to the intended mainline state and checked for current
+  mergeability before PR.
+- Validation evidence is reported exactly as run or observed.
+
+Retrieval budget:
+- Inspect current git state, branch ancestry, existing diff, target files,
+  repo-local AGENTS guidance, and validation docs.
+- Inspect remote PR state only as needed to avoid duplicate or conflicting PRs.
+- Stop once diff scope, validation status, branch suitability, and PR body are
+  clear.
+
 Instructions:
 - Inspect the current git state, existing diff, and branch context.
 - Confirm that the intended changes form one logical PR and identify any unrelated files or accidental scope.
@@ -1073,6 +1301,12 @@ Validation:
   mainline state, and checked for current mergeability before PR.
 - Verify that the reported validation matches what was actually run or observed.
 - Verify that the PR summary explains user-facing, workflow, or documentation impact as appropriate for the repo type.
+
+Stop rules:
+- Stop if the diff spans multiple repositories or includes unrelated changes
+  that cannot be separated safely.
+- Do not merge, enable auto-merge, delete branches, or perform destructive
+  cleanup.
 
 Output format:
 1. PR scope summary: short paragraph.
