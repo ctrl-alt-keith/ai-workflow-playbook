@@ -83,6 +83,11 @@ eyes on this PR.
 Goal:
 <short goal or intent>
 
+Success criteria:
+- Return only high-signal review observations that could affect correctness,
+  completeness, or safe reuse.
+- Do not turn the review into implementation, redesign, or broad process advice.
+
 PR summary:
 <summary>
 
@@ -100,6 +105,10 @@ Constraints:
   inconsistencies.
 - Ignore style nits and minor preference comments.
 - If nothing stands out, say: LGTM
+
+Stop rules:
+- If the provided diff or summary is insufficient for a useful review, say what
+  evidence is missing instead of guessing.
 ```
 
 ## Reusable Prompt: System / Pattern Sanity Check
@@ -114,6 +123,10 @@ on this proposed pattern.
 Intent:
 <short statement of the pattern and why it exists>
 
+Success criteria:
+- Identify only issues that materially affect clarity, safety, or reuse.
+- Preserve the pattern's intended scope.
+
 Material:
 <paste the relevant guidance, summary, or diff>
 
@@ -123,6 +136,10 @@ Constraints:
 - Do not redesign the pattern.
 - Do not expand scope.
 - If nothing stands out, say: LGTM
+
+Stop rules:
+- If the material is too incomplete to judge, say what is missing instead of
+  inventing context.
 ```
 
 ## Failure Modes

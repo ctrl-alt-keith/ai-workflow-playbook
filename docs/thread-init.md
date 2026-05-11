@@ -56,8 +56,26 @@ Project description:
 Current goal:
 - [Describe the immediate task or outcome]
 
+Success criteria:
+- [What must be true before the final answer or handoff]
+
+Retrieval budget:
+- Start with the named project scope and applicable playbook docs.
+- Search additional files or external systems only when needed for the current
+  goal.
+- Stop gathering context once the relevant pattern, scope, blockers, and
+  validation path are clear.
+
 Constraints:
 - [Optional: deadlines, tooling limits, compatibility requirements, non-goals]
+
+Output:
+- [Expected final artifact, report shape, PR delivery, or answer format]
+
+Stop rules:
+- Ask for clarification when missing information blocks safe execution.
+- Pause before destructive, merge, release, tag, or externally visible actions
+  unless explicitly authorized.
 
 Start by:
 - Identify the relevant playbook pattern(s) for this task
@@ -89,8 +107,25 @@ Project description:
 Current goal:
 - [Describe the task]
 
+Success criteria:
+- [What must be true before the final answer or handoff]
+
+Retrieval budget:
+- Use only the stated project scope and explicitly authorized context.
+- Stop gathering context once assumptions, exclusions, blockers, and the
+  validation path are clear.
+
 Constraints:
 - [Optional]
+
+Output:
+- [Expected final artifact, report shape, PR delivery, or answer format]
+
+Stop rules:
+- If context is ambiguous, ask one focused clarification question before
+  acting.
+- Pause before destructive, merge, release, tag, or externally visible actions
+  unless explicitly authorized.
 
 Start by:
 - Name the playbook pattern(s) you are applying
