@@ -281,6 +281,10 @@ Codex should pause and ask for human input when:
   and local validation; finish the delivery path by using a focused branch,
   staging only the relevant changes, creating a clear commit, pushing, and
   opening or updating the PR against the intended base branch, usually `main`
+- when the task provides GitHub issue IDs and planning-ticket IDs such as
+  Linear IDs, include both in the PR body; use GitHub closing keywords for repo
+  issue closure and treat planning-ticket status as coordination state unless
+  repo-local guidance says otherwise
 - when reporting completion for implementation tasks, include the PR link,
   files changed, and validation results
 - for exploration, design, audit, or review-only tasks, do not force a PR when

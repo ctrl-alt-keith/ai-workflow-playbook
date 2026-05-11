@@ -14,6 +14,8 @@ The packet should include:
   orchestration/prompt-authoring
 - Source evidence: issue, PR, evidence note, docs, or review input that shaped
   the work
+- Coordination links: GitHub issue IDs, planning ticket IDs such as Linear IDs,
+  and expected PR linkage when relevant
 - Validation: what was run and what the results were
 - Risks: remaining concerns, edge cases, follow-up work, or any important gap between mocked or contract-level validation and real-world validation
 - Recommendation: `ready to merge`, `needs decision`, or `blocked`
@@ -134,6 +136,9 @@ During review:
 - confirm no unrelated changes are included
 - confirm the diff aligns with the intended arc
 - confirm issue linkage (if present) is accurate
+- confirm planning-ticket linkage (if present) is accurate and does not replace
+  GitHub as the repository closure source of truth unless repo-local guidance
+  says otherwise
 
 Quick check:
 
@@ -146,3 +151,7 @@ Before merge:
 
 - the PR diff must contain only the intended arc
 - issue-driven PRs must include `Closes #[issue number]`
+- when a planning ticket such as Linear is linked, the PR should reference it
+  for coordination, and post-merge notes should say whether planning status
+  needs to remain open or can be marked complete after GitHub closure is
+  confirmed

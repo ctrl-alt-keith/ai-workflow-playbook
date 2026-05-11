@@ -118,6 +118,49 @@ stop after the findings or recommendations unless the request also asks for
 shipped changes. If those tasks do produce repo changes, follow the same
 branch, validation, and PR flow before calling them complete.
 
+### Issue And Planning Coordination
+
+For repository implementation work, GitHub remains the implementation and
+closure source of truth unless repo-local guidance explicitly defines a
+different system of record. GitHub issues, pull requests, closing keywords, CI,
+review state, and merge state determine whether repo work is complete.
+
+Planning systems such as Linear are coordination layers by default. Use them to
+track planning intent, status, assignment, sequencing, or stakeholder context,
+but do not treat them as authoritative over repository implementation state
+unless the target repository explicitly says so. The same rule applies to
+similar planning mirrors or boards.
+
+When both GitHub and planning identifiers exist, implementation PRs should
+reference both. Keep the GitHub closing keyword tied to the GitHub issue and
+include the planning identifier as coordination context, for example:
+
+```text
+Closes #163
+Linear: CAK-5
+```
+
+Use GitHub closing keywords such as `Closes #163` as the preferred mechanism
+for GitHub issue closure. Do not manually close the GitHub issue as a separate
+coordination step unless the repository workflow or human explicitly asks for
+it.
+
+Keep planning tickets open while the implementation PR is still open unless the
+planning system's local workflow says otherwise. Usually mark the planning
+ticket complete only after the PR has merged and the linked GitHub issue
+closure has been confirmed. During the PR-open state, planning status should
+reflect implementation in progress or in review, not merge-complete.
+
+For multi-issue work, keep the mapping explicit: list every GitHub issue the PR
+intends to close and every planning ticket it coordinates with. If one PR
+resolves only part of a larger planning ticket, say that directly and leave the
+remaining planning item or follow-up open.
+
+Residual risks and follow-ups belong in the review packet and PR notes. Create
+or keep separate follow-up issues or planning tickets only when work remains
+after merge; do not hide unfinished required work behind a completed planning
+status.
+
 Use purpose-based branch prefixes that describe the change, not the tool that
 made it. AI-agent branches should use concise, non-tool-branded names such as
 `docs/<short-topic>`, `fix/<short-topic>`, `chore/<short-topic>`, or
