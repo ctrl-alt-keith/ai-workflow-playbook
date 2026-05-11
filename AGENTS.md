@@ -29,7 +29,10 @@ Repo-local rules take precedence only for repo-specific behavior.
 ## Local Execution
 
 - Run commands from this repository working directory by default.
-- Keep temporary workflow state repo-local, for example `.worktrees/`.
+- For implementation changes, use one repository, one branch, one dedicated
+  repo-local worktree under `.worktrees/`, and one pull request per change; see
+  `docs/repo-readiness.md#pr-readiness`.
+- Keep temporary workflow state repo-local.
 - Follow the command-form preflight rule in `docs/repo-readiness.md`: use direct
   `git ...`, `gh ...`, `make ...`, `python ...`, repo-local scripts, and tool
   commands for ordinary repository operations.
@@ -44,12 +47,15 @@ Repo-local rules take precedence only for repo-specific behavior.
 
 - Use `make check` as the canonical local validation entrypoint.
 - Run `make check` before opening or updating a PR.
-- `make check` runs Markdown lint and scanner unit tests.
+- `make check` runs Markdown lint, scanner unit tests, and generated dist
+  artifact drift checks.
 - Treat direct validation tool calls as implementation details of the Makefile
   target.
-- Authoritative-source scanning is advisory and non-blocking unless a caller
-  configures that workflow to be stricter.
-- CI remains the enforcing authority if local tooling is unavailable.
+- `make authoritative-source-check` runs advisory authoritative-source scanning;
+  it is separate from `make check` and non-blocking unless a caller configures
+  that workflow to be stricter.
+- CI is the enforcement layer for required remote checks and for checks that
+  local tooling cannot run.
 
 ## Branches
 
