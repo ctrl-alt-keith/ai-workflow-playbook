@@ -66,6 +66,16 @@ cleaning up those worktrees.
 - before creating or reusing a repo-changing worktree, run `git worktree list`,
   select a repo-local `.worktrees/...` path, and report that selected path in
   setup or delivery notes
+- create repo-changing Codex worktrees with a direct git worktree command, such
+  as `git worktree add <repo>/.worktrees/<task-name> -b <branch> origin/main`,
+  or the repository's equivalent direct `git worktree add` form
+- do not run `mkdir .worktrees` as a separate bootstrap step
+- if the `.worktrees` parent path does not exist, rely on `git worktree add`
+  with the full repo-local `.worktrees/<task-name>` path to create the required
+  path structure
+- if `git worktree add` cannot create the repo-local path, stop and report the
+  exact failure; do not fall back to manual directory creation, sibling clones,
+  full copies, or ad hoc workspace setup
 - when parallel repo-scoped work targets the same repository, use one worktree
   per issue or task from current `origin/main`, with each worktree located
   under the repository's `.worktrees/` directory; keep the main checkout clean
@@ -84,10 +94,7 @@ cleaning up those worktrees.
   validation in each affected worktree, and inspect the current PR surfaces
   before recommending or performing any merge
 - if `<repo>/.worktrees/` cannot be used, stop before making changes and report
-  why the required repo-local worktree location is not possible, what
-  alternative workspace is proposed, where it would be created, and how it will
-  be cleaned up
-- wait for explicit human approval before proceeding with a full copy or clone
+  why the required repo-local worktree location is not possible
 - before starting a same-repo worktree batch, inspect `git worktree list` and
   the underlying worktree metadata so stale entries from an earlier attempt do
   not confuse setup or cleanup
