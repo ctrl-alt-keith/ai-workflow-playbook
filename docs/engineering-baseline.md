@@ -41,6 +41,24 @@ Define shared engineering expectations across repositories. This baseline forms 
 - Keep commits clean and focused.
 - PRs are ready for review by default.
 
+## Regression Fixture Fidelity
+
+For deterministic extraction, parsing, normalization, or replay behavior, shift
+from slow integration loops to fast regression-fixture iteration once the
+failure shape is understood.
+
+Trust that loop only after the fixture faithfully reproduces a known real
+failure. Whenever practical, keep fail-before/pass-after evidence: the new
+fixture should fail on the broken implementation and pass after the fix.
+
+Treat fixture fidelity as suspect when the local fixture loop passes but
+milestone or integration replay remains unchanged, integration validation shows
+identical failure signatures, or "DORA-derived", "derived", or
+"representative" fixtures were never proven against the actual failing shape.
+
+Run periodic integration validation to confirm the fixture loop is still
+anchored to real behavior, not just a convenient local approximation.
+
 ## Config And CLI Default Changes
 
 When extending config/default precedence or CLI override logic, identify every
