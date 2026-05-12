@@ -433,6 +433,34 @@ readiness, merge, or release, document the check name, when it runs, what it
 blocks, and what to report when it is unavailable. Otherwise report the result
 as informational or advisory evidence, not as an unstated requirement.
 
+### Solo-Operator Iteration Economics
+
+For solo-operated workflows, choose the validation loop that answers the
+current question fastest without hiding real risk.
+
+Early integration-heavy validation is appropriate when the work is still
+proving workflow semantics, validating governance or retention boundaries, or
+establishing trust in a new pipeline. Full replays and cross-repo checks are
+useful while the question is whether the workflow behaves correctly end to end.
+
+Once failures are mostly deterministic extraction, parsing, or normalization
+behavior, move the primary iteration loop into fast local regression fixtures.
+Use representative real-world examples as a regression corpus, keep those
+fixtures deterministic, and reserve integration replays for milestone checks,
+boundary checks, or confidence revalidation after meaningful changes.
+
+Warning signs that integration validation has become a rabbit hole:
+
+- repeated cross-repo replay loops with little workflow learning
+- high-latency validation cycles that slow each small correction
+- deterministic extraction bugs discovered only after full integration runs
+- replay records quietly becoming the de facto regression suite
+
+The preferred steady state is fast local fixtures for day-to-day correction,
+a representative real-world regression corpus for coverage, explicit milestone
+checkpoints, and occasional integration revalidation to confirm the local loop
+still reflects end-to-end behavior.
+
 ### Minimum `make check` Coverage By Repo Type
 
 `make check` should be a single repo-local contract, not a mandate to use the
