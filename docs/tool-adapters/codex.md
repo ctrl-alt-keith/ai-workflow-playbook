@@ -69,7 +69,13 @@ cleaning up those worktrees.
 - create repo-changing Codex worktrees with a direct git worktree command, such
   as `git worktree add <repo>/.worktrees/<task-name> -b <branch> origin/main`,
   or the repository's equivalent direct `git worktree add` form
-- do not run `mkdir .worktrees` as a separate bootstrap step
+- treat standalone `.worktrees` directory creation as command-shape drift; do
+  not run `mkdir .worktrees` or `mkdir -p .worktrees` as a separate bootstrap
+  step
+- if Codex proposes or requests approval for standalone `.worktrees` directory
+  creation, cancel that command and rewrite setup to the direct
+  `git worktree add <repo>/.worktrees/<task-name> -b <branch> origin/main`
+  shape, or the repository's equivalent direct `git worktree add` form
 - if the `.worktrees` parent path does not exist, rely on `git worktree add`
   with the full repo-local `.worktrees/<task-name>` path to create the required
   path structure
