@@ -23,15 +23,14 @@ execution paths.
 
 ## Guidance Layers
 
-- Canonical playbook guidance lives in this repository and defines reusable
-  cross-repo workflow expectations.
+- Follow the authority boundary in
+  [`start-here.md`](start-here.md#source-authority-map).
 - Workspace-level routing guidance may live in a local-only workspace
   `AGENTS.md`. It can describe multi-repository boundaries, scratch usage,
   command form, and how to enter target repositories, but it is noncanonical
   and must not define repository branch, commit, PR, or validation policy.
-- Repo-local execution guidance lives in each repository's `AGENTS.md` and
-  remains authoritative for that repository's validation path, file placement,
-  branch conventions, PR expectations, and repo-specific constraints.
+- Repo-local execution guidance belongs in each repository's `AGENTS.md`; see
+  [`repo-readiness.md`](repo-readiness.md#agentsmd-responsibilities).
 - Drift review should compare repo-local `AGENTS.md` files against the playbook
   and any relevant workspace-routing guidance, while comparing workspace-level
   routing guidance against reusable playbook expectations and observed

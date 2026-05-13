@@ -128,30 +128,16 @@ cleaning up those worktrees.
   cached context, summaries, or local branch state
 - apply the command-form guidance in
   [`repo-readiness.md`](../repo-readiness.md#command-form-and-intent-visibility):
-  keep normal repository operations in their structurally minimal form, and
-  reserve shell wrapping for operations that need shell semantics
+  keep normal repository operations in their structurally minimal form
 - prefer clear direct invocations for normal repository operations, such as
   `git status`, `git merge --ff-only origin/main`, `gh repo view`,
   `gh pr view`, `make check`, `python ...`, and repo-local scripts
-- for standard Git and GitHub CLI flows, use `git` and `gh` directly rather
-  than alternate APIs, helper scripts, connectors, or tool substitutions unless
-  the task requires a non-CLI capability or direct CLI access is blocked and
-  the fallback is reported
 - when the execution tool supports native argv arrays, prefer direct argv forms
   such as `["git", "status"]` or `["gh", "pr", "view", "145"]`
 - if the execution surface defaults to shell or login-shell behavior, disable
   that behavior for `git` and `gh` where supported, using options such as
   `shell=false`, `login=false`, `use_shell=false`, or the platform-native
   equivalent
-- do not use `zsh -lc`, `bash -lc`, `sh -c`, or equivalent wrapper forms for
-  ordinary repo commands
-- before executing a shell-wrapped command, perform a command-form preflight:
-  decide whether shell semantics are genuinely required; if not, rewrite the
-  operation into direct argv form before execution
-- treat pipes, redirects, glob expansion, command chaining, shell builtins,
-  inline environment assignment, and compound shell conditionals as examples of
-  shell semantics that can justify a wrapper when no direct command form is
-  sufficient
 - when a `git` or `gh` operation needs shell composition, keep the wrapped
   command narrow enough that the requested operation remains visible to local
   approval and review surfaces
@@ -327,20 +313,8 @@ When behavior or supported capability changes, quickly check the existing docs f
 
 ## CI Expectations
 
-- use the repository's canonical validation command, such as `make check`, when
-  one exists
-- when the canonical validation command exists and can run locally, run it
-  before opening or updating a PR; do not treat CI as a replacement for that
-  local step
-- do not introduce, invoke, or rely on alternate local validation tools unless
-  they are explicitly part of the repository-defined workflow
-- if a tool needed by the canonical command is missing locally, report that
-  limitation, do not substitute another parser, linter, or manual validation
-  path, and rely on required CI checks for enforcement of checks that cannot be
-  run locally
-- treat checks as CI-only only when the repository does not expose a local
-  canonical path for them or the local canonical path cannot run in the current
-  environment
+- follow the validation rules and check taxonomy in
+  [`repo-readiness.md`](../repo-readiness.md#validation)
 - do not infer merge or release gates from check names alone; use the
   repository's documented validation taxonomy and required CI status
 - report clearly when no local validation path exists
