@@ -32,6 +32,17 @@
 - Before acting on repository or software work, determine the interaction mode
   using `docs/repo-readiness.md`: implementation, review/audit, or
   orchestration/prompt-authoring.
+- Deterministic workflow triggers, operational invariants, and source-of-truth
+  retrieval requirements execute before conversational interpretation,
+  continuity, or summary-based reasoning.
+- Conversational fluency, prior thread context, summaries, and pasted
+  descriptions do not justify skipping required retrieval or inspection of
+  canonical repository, pull request, runtime, or provider state when direct
+  inspection is available.
+- When a deterministic trigger applies, perform the required retrieval or
+  inspection first, then continue the conversation from the inspected state. If
+  the required source is unavailable, report that blocker instead of inferring
+  the state from conversation.
 
 ## Startup Contract
 
