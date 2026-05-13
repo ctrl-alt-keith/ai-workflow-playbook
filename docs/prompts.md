@@ -1167,22 +1167,24 @@ Inputs:
 - Summary-only requested: [summary_only]
 
 Success criteria:
-- Review feedback is grounded in direct PR evidence when a PR link or number is
-  available.
+- Review feedback is grounded in direct PR evidence when a PR link, name, or
+  number is available.
 - Findings are severity-ordered and distinguish blockers from non-blocking
   risks or follow-ons.
 - Merge readiness is stated only when supported by current PR evidence.
 
 Retrieval budget:
-- Inspect the PR through the GitHub connector first when available.
+- Inspect the PR through the GitHub connector first when available and not
+  explicitly forbidden by the human.
 - Use local checkout, `git diff`, and `gh` only as supplemental evidence.
 - Stop once PR metadata, changed files, relevant diffs, discussion, checks,
   mergeability, and task fit are clear enough for the requested review depth.
 
 Instructions:
 - Apply the canonical direct PR inspection rule in
-  `docs/review-packet.md#direct-pr-inspection`. When a PR link or PR number is
-  available, use connector inspection before giving any review, approval,
+  `docs/review-packet.md#direct-pr-inspection`. Linked review artifacts are
+  authoritative; pasted summaries are context. When a PR link, name, or number
+  is available, use connector inspection before giving any review, approval,
   readiness, or merge recommendation.
 - Stay in review/audit mode. Do not implement changes while performing the PR
   review unless the human explicitly changes the task to implementation.
@@ -1200,24 +1202,26 @@ Instructions:
   high-blast-radius behavior.
 - Treat user-provided summaries, pasted titles, local path snippets, and copied
   diff excerpts as navigation and context only, not review evidence, when a PR
-  link or PR number is available.
+  link, name, or number is available.
 - Inspect the PR surface described in
   `docs/review-packet.md#direct-pr-inspection`, including metadata, changed
   files, review discussion, CI/check status, mergeability, and scope where
   available.
 - Do not mutate the PR unless the human explicitly asks for that GitHub action.
-- If GitHub connector access is unavailable or declined and Summary-only
-  requested is not `yes`, stop the PR review, state that connector access is
-  unavailable, and provide only clearly caveated feedback from the information
-  already present.
+- If GitHub connector access is unavailable, fails, is declined, or is
+  explicitly forbidden by the human, state that clearly and provide only
+  clearly caveated feedback from the information already present.
 - Do not claim the PR is safe to merge, ready to merge, or approved without
   direct evidence from the PR itself through the connector.
-- If Summary-only requested is `yes` but a PR link or PR number is available,
-  state that summary-only material is not the review source of truth and still
-  perform connector inspection before review feedback.
-- If Summary-only requested is `yes` and no PR link or PR number is available,
-  state that the response is based only on the supplied summary and does not
-  establish merge readiness.
+- Do not perform summary-only PR reviews when a PR link, name, or number is
+  available unless connector access fails or the human explicitly says not to
+  use the connector.
+- If Summary-only requested is `yes` and no PR link, name, or number is
+  available, state that the response is based only on the supplied summary and
+  does not establish merge readiness.
+- If the human corrects tool or connector usage in the thread, treat that
+  correction as a hard workflow constraint for subsequent similar review
+  requests.
 
 Stop rules:
 - If connector access is required but unavailable, stop the review and report
