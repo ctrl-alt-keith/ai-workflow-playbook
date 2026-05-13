@@ -455,6 +455,33 @@ promotion decisions, and durable provenance. Use the implementation repository
 for extraction cleanup, noisy-shape reproduction, fixture iteration, and
 observability or debugging loops.
 
+Bounded hardening may require multiple tightly coupled passes before opening a
+pull request. Keep those passes in one PR when each pass directly enables or
+validates the next, such as detecting an observed failure mode, adding metadata
+or fixtures for that shape, applying a bounded correction, then validating live
+and non-regression behavior.
+
+One PR is appropriate when the phases share one goal, one source shape, one
+validation story, and one rollback unit. Split the work when phases have
+independent goals, different risk profiles, unrelated files, or different
+validation or rollback boundaries.
+
+In solo-operator workflows, prefer completing the coherent task before opening
+the PR when it is safe to do so. Avoid stopping after a diagnostic-only partial
+implementation when the safe bounded correction is part of the same task and
+can be validated locally.
+
+Pause and confirm before crawler-like behavior, broad external fetch or
+discovery, destructive changes, retention or promotion semantics, ambiguous
+target selection, or high-blast-radius architectural redesign. Multi-pass
+hardening is not permission for grab-bag PRs, unrelated cleanup, repo-hopping,
+or hidden scope expansion.
+
+Intermediate passes should leave evidence through fixtures or tests where
+useful. The final PR should include the relevant docs, tests, live checks, and
+non-regression evidence, and should explain the phases and why they form one
+cohesive task.
+
 For ingestion, extraction, ETL, scraping, OCR, export/import, and normalization
 systems, apply the source-shape hardening lifecycle in
 [`knowledge-ingestion-patterns.md`](knowledge-ingestion-patterns.md#source-shape-hardening-lifecycle).
