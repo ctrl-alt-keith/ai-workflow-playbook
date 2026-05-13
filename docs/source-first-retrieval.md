@@ -132,6 +132,38 @@ which one controls the decision. For repository completion, GitHub PR and issue
 state usually controls remote readiness, while local `git` state controls only
 the current checkout.
 
+## Recovery Re-Entry
+
+Recovery is required when source-first ordering has already been missed. This
+includes:
+
+- the assistant answered before opening the referenced PR, issue, repository,
+  branch, commit, path, or provider source
+- conversational continuity outran verification
+- inferred state was used before retrieval
+- a human explicitly calls out missing source inspection
+- conversational context conflicts with authoritative state
+
+When recovery is required, execute this sequence:
+
+1. Halt continuity reasoning.
+2. Identify every unresolved mandatory trigger.
+3. Retrieve the authoritative source state for those triggers.
+4. Discard, correct, or mark unverified any assumptions made before retrieval.
+5. Resume only from verified artifacts and stated unknowns.
+
+Acknowledgment alone is not recovery. Explaining the violation is not
+remediation. Recovery must perform the missing retrieval or inspection, not
+only discuss that retrieval should have happened. Continuity remains blocked
+until the recovery gate is `verified`, `partial`, or `blocked`.
+
+Useful human recovery commands are short and imperative:
+
+- "Stop. Open and verify PR #216 first."
+- "Source-first reset."
+- "Resume only from verified state."
+- "Treat prior claims as unverified until checked."
+
 ## Failure Modes
 
 Watch for these observable failure patterns:
@@ -150,6 +182,12 @@ Watch for these observable failure patterns:
   closure.
 - Coherent but unverified responses: producing plausible, well-structured
   recommendations without naming the verified source state that supports them.
+- Acknowledged-but-unrecovered drift: recognizing the source-first violation
+  while continuing from the same conversational state.
+- Conversational apology without operational correction: apologizing for missed
+  retrieval but not performing the retrieval.
+- Explanation replacing remediation: describing the correct ordering instead
+  of re-entering it.
 
 ## Enforceable Workflow Rules
 
@@ -167,3 +205,5 @@ future automation hooks:
   missing checks.
 - Stop on source-access failure when the requested output depends on that
   source.
+- After source-first drift, halt continuity and re-enter retrieval before
+  continuing.
