@@ -455,6 +455,13 @@ promotion decisions, and durable provenance. Use the implementation repository
 for extraction cleanup, noisy-shape reproduction, fixture iteration, and
 observability or debugging loops.
 
+For ingestion, extraction, ETL, scraping, OCR, export/import, and normalization
+systems, apply the source-shape hardening lifecycle in
+[`knowledge-ingestion-patterns.md`](knowledge-ingestion-patterns.md#source-shape-hardening-lifecycle).
+New source types should become diagnostic, review-ready, and
+promotion-capable inside the implementation repository before they become
+routine replay inputs.
+
 If replay validation repeatedly produces "still noisy", "still no-promotion",
 or unchanged review outcomes, stop accumulating low-yield evidence PRs. Move
 the failing source shape into the implementation repository, make it a
