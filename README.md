@@ -73,6 +73,9 @@ These generated artifacts are complementary:
 - `context-refresh` captures durable repo orientation state.
 - `github-context` rehydrates GitHub connector repo scope.
 
+Repository code, docs, issues, pull requests, and repo-local `AGENTS.md` remain
+source-of-truth surfaces.
+
 Generated artifacts are convenience snapshots; regenerate them instead of
 editing them directly.
 
