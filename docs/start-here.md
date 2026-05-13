@@ -24,13 +24,11 @@
 ## Execution Model
 
 - Use `ai-workflow-playbook` as the canonical source of reusable workflow rules.
-- Treat `AGENTS.md` as the repo-local execution layer.
-- Repo-local rules take precedence only for repo-specific behavior.
-- Treat canonical playbook changes and `AGENTS.md` edits as separate work
-  types. Updating the playbook does not implicitly authorize any `AGENTS.md`
-  edit, including in `ai-workflow-playbook` itself.
-- Edit `AGENTS.md` only with explicit user authorization or when the task's
-  primary purpose is `AGENTS.md` update, rollout, or enforcement.
+- Treat `AGENTS.md` as the repo-local execution layer; repo-local rules take
+  precedence only for repo-specific behavior.
+- Treat playbook changes and `AGENTS.md` edits as separate work types. Edit
+  `AGENTS.md` only with explicit authorization or when the task's primary
+  purpose is `AGENTS.md` update, rollout, or enforcement.
 - Before acting on repository or software work, determine the interaction mode
   using `docs/repo-readiness.md`: implementation, review/audit, or
   orchestration/prompt-authoring.
@@ -74,11 +72,7 @@ Before acting on repository or software work:
 
 ## Source Authority Map
 
-- `ai-workflow-playbook` is the canonical source for reusable workflow policy.
-- Repo-local `AGENTS.md` files are repo-local execution guidance layered on top
-  of the playbook.
-- `AGENTS.md` alignment is update, enforcement, or rollout work, not a side
-  effect of changing canonical playbook guidance.
+- The execution model above owns the playbook-vs-`AGENTS.md` boundary.
 - Incubation, staging, and evidence repositories, including
   `ai-workflow-incubator`, are noncanonical unless a durable rule is explicitly
   promoted into the playbook.
@@ -91,9 +85,9 @@ Before acting on repository or software work:
 
 - The private staging/incubation layer is for ideas and experiments.
 - It is not canonical and is not a direct path into playbook guidance.
-- Durable workflow guidance follows this order: idea -> notes staging ->
-  bounded repo issue or PR -> evidence-supported reusable lesson -> playbook
-  promotion -> notes cleanup.
+- Durable workflow guidance moves from staging to bounded repo work, then to an
+  evidence-supported playbook promotion and notes cleanup when it proves
+  reusable.
 - Treat repository code, tests, docs, reviews, and merged PRs as the evidence
   source for reusable lessons before promoting them into the playbook.
 - Canonical guidance should generally describe staging and incubation by role;
@@ -105,14 +99,6 @@ Before acting on repository or software work:
 - Prefer small, scoped changes.
 - Report whether a workflow change is canonical playbook guidance only or an
   explicitly authorized `AGENTS.md` update/enforcement task.
-- For global rollout and implementation changes, use one repository, one
-  branch, one dedicated worktree, and one pull request per target repository
-  unless that repository's documented process says otherwise.
-- In ctrl-alt-keith workflows, default ambiguous repository tasks to
-  review/audit or orchestration/prompt-authoring unless the human explicitly
-  asks for direct implementation.
-- Run commands directly from inside the target repository worktree; follow
-  `docs/repo-readiness.md` for command form and shell-wrapping rules.
-- Run repository validation through the repo's Makefile when it provides the
-  canonical entrypoint.
+- Follow `docs/repo-readiness.md` for implementation isolation, command form,
+  interaction mode, and validation rules.
 - Open PRs ready for review by default unless explicitly instructed otherwise.

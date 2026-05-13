@@ -285,12 +285,6 @@ Before executing any shell-wrapped command, perform a command-form preflight:
 - if shell semantics are required, keep the wrapped command narrow enough that
   the operational intent remains inspectable
 
-Use a shell wrapper when the operation genuinely needs shell semantics, such as
-pipes, redirection, glob expansion, command chaining, shell builtins, inline
-environment assignment, compound conditionals, or other composition that the
-command cannot express directly. When shell semantics are needed, keep the
-wrapped command narrow enough that the operational intent remains inspectable.
-
 Examples:
 
 - incorrect: `zsh -lc 'git status'`
@@ -334,22 +328,12 @@ This document defines expectations, not exact GitHub settings.
 - branch or commit conventions that are specific to the repository
 - repo-specific constraints, boundaries, or file placement rules
 
-Reusable workflow rules belong in the playbook, not duplicated into each repository's `AGENTS.md`.
-
-Canonical playbook updates and `AGENTS.md` edits are separate work types:
-
-- Playbook guidance changes update reusable workflow policy in this repository.
-- `AGENTS.md` edits, including in `ai-workflow-playbook` itself, require
-  explicit user authorization or a task whose primary purpose is `AGENTS.md`
-  update, rollout, or enforcement.
-- Cross-repo `AGENTS.md` updates are rollout or enforcement work and should not
-  be inferred from a playbook docs change.
-- Global rollout and implementation changes must use one repository, one
-  branch, one dedicated worktree, and one pull request per target repository
-  unless a target repository's documented process says otherwise.
-- Reviews and delivery notes for workflow changes should state which category
-  the change belongs to: canonical playbook guidance only or explicitly
-  authorized `AGENTS.md` update/enforcement.
+Reusable workflow rules belong in the playbook, not duplicated into each
+repository's `AGENTS.md`. Canonical playbook updates and `AGENTS.md` edits are
+separate work types; do not infer repo-local guidance rollout from a playbook
+docs change. Reviews and delivery notes for workflow changes should state
+whether the change is canonical playbook guidance only or an explicitly
+authorized `AGENTS.md` update/enforcement task.
 
 ## Repository Categories
 
@@ -365,9 +349,9 @@ repositories for org profile content, community health files, templates,
 metadata, or GitHub-supported defaults.
 
 Org infrastructure repositories still follow the shared workflow rules where
-they apply: one repo, one branch, one dedicated worktree, one pull request;
-current `origin/main` as the base; purpose-based branch names; small scoped diffs; human-readable review
-summaries; no unrelated cleanup; and public artifact path hygiene.
+they apply, including PR readiness, implementation isolation, scoped diffs,
+human-readable review summaries, no unrelated cleanup, and public artifact path
+hygiene.
 
 Normal project-repository expectations may not apply until the repository grows:
 `make check`, tests, package, build, release, or implementation-specific file

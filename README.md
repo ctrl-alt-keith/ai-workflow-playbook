@@ -45,7 +45,10 @@ Tool-specific behavior belongs in documented adapter docs under [`docs/tool-adap
 
 ## Repo-Local AGENTS.md
 
-The playbook is the canonical home for reusable workflow policy. A repo-local `AGENTS.md` is the execution layer for that repository, layered on top of the playbook and authoritative only for repo-specific validation, commands, and PR expectations. Playbook changes and `AGENTS.md` edits are separate work types; update `AGENTS.md` only with explicit authorization or when that update is the task's purpose.
+The playbook is the canonical home for reusable workflow policy. Repo-local
+`AGENTS.md` files provide thin repository execution guidance; see
+[`docs/start-here.md`](docs/start-here.md#execution-model) and
+[`docs/repo-readiness.md`](docs/repo-readiness.md#agentsmd-responsibilities).
 
 Reusable pattern:
 
@@ -53,9 +56,14 @@ Reusable pattern:
 
 ## Workspace Bootstrap Bundle
 
-Run `make workspace-bootstrap` to generate `dist/workspace-bootstrap.md`, a noncanonical hydration bundle for fresh-thread and project-source context loading. Canonical guidance remains in the source docs and repo-local `AGENTS.md`; the generated bundle is only a convenience snapshot and should be regenerated instead of edited directly.
+Run `make workspace-bootstrap` to generate `dist/workspace-bootstrap.md`, a
+noncanonical hydration bundle for fresh-thread and project-source context
+loading.
 
-Run `make context-refresh` to generate `dist/context-refresh.md`, a noncanonical repository orientation brief for fresh-thread handoff and repo orientation refresh. Dynamic PR and issue state is intentionally omitted; inspect GitHub directly before acting.
+Run `make context-refresh` to generate `dist/context-refresh.md`, a
+noncanonical repository orientation brief for fresh-thread handoff and repo
+orientation refresh. Dynamic PR and issue state is intentionally omitted;
+inspect GitHub directly before acting.
 
 Run `make github-context` to generate `dist/github-context.md`, a paste-ready `@GitHub` repo list for connector rehydration in fresh threads. The artifact is noncanonical and generated from `config/workspace-repos.txt`.
 
@@ -65,7 +73,11 @@ These generated artifacts are complementary:
 - `context-refresh` captures durable repo orientation state.
 - `github-context` rehydrates GitHub connector repo scope.
 
-Repository code, issues, pull requests, docs, and repo-local `AGENTS.md` files remain the source of truth.
+Repository code, docs, issues, pull requests, and repo-local `AGENTS.md` remain
+source-of-truth surfaces.
+
+Generated artifacts are convenience snapshots; regenerate them instead of
+editing them directly.
 
 ## Current Focus
 
