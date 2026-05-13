@@ -142,14 +142,16 @@ metadata, no-op safety fixtures, non-regression coverage, and observability or
 debugging loops. The goal is to make the source behavior explainable before a
 review repository has to spend human attention on it.
 
-Source-shape hardening can be a bounded multi-phase implementation task. Keep
-the phases together when they are one diagnostic-to-correction arc: detect the
-failure shape, preserve the metadata or fixture evidence, implement the bounded
+The bounded multi-phase hardening rule in
+[`repo-readiness.md`](repo-readiness.md#solo-operator-iteration-economics)
+applies here as one concrete case. For source-shape work, keep the phases
+together when they are one diagnostic-to-correction arc: detect the failure
+shape, preserve the metadata or fixture evidence, implement the bounded
 correction, and validate live and non-regression behavior. This keeps noisy
 iteration in the implementation repository until the source shape is
 review-ready.
 
-Split the work when the phases no longer share the same source shape,
+Split the work when the phases no longer share the same source type,
 validation story, or rollback boundary. A cohesive hardening PR should describe
 its phases clearly and should not include unrelated cleanup, new source
 families, crawler expansion, retention decisions, or broad redesign work.
