@@ -211,6 +211,21 @@ Worktree cleanup can require elevated permission even when the visible worktree
 paths sit inside the repository, because Git also updates internal worktree
 metadata outside the leaf directories being removed.
 
+### CLI Help Introspection
+
+Local permission allow rules may treat command help output as safe
+introspection when the command shape makes the non-mutating intent explicit.
+
+For GitHub CLI help, allow only argv shapes equivalent to `gh [command-path]
+--help`, where the command path is made of command-name tokens that do not
+begin with `-` and `--help` is the standalone final argument. Examples include
+`gh api --help`, `gh pr create --help`, and `gh repo sync --help`.
+
+Do not express this as a broad `gh *` or `gh [subcommand]` allowance. The same
+subcommands without the final help argument, such as `gh api`, `gh pr create`,
+or `gh repo sync`, remain normal GitHub operations and must keep their usual
+approval posture.
+
 ### Sandbox Writable Roots
 
 In `workspace-write` mode, do not assume
