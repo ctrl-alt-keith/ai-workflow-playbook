@@ -39,6 +39,10 @@ When relevant, say explicitly whether validation was mocked, contract-level, or 
 ## Direct PR Inspection
 
 Linked review artifacts are authoritative; pasted summaries are context.
+The source-first ordering rule in
+[`source-first-retrieval.md`](source-first-retrieval.md) applies before
+continuity or summary-based reasoning whenever a PR, issue, branch, commit, or
+repository trigger is present.
 
 When the human references, links, names, or asks to review, check, assess,
 approve, or comment on a GitHub PR or similar connector-backed review artifact,

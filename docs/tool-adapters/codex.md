@@ -126,6 +126,10 @@ cleaning up those worktrees.
 
 - before repo- or PR-dependent work, verify GitHub access instead of relying on
   cached context, summaries, or local branch state
+- apply the source-first retrieval model in
+  [`source-first-retrieval.md`](../source-first-retrieval.md): detect
+  repository triggers before continuity, retrieve authoritative source state,
+  and treat unavailable state as unknown instead of inferred
 - apply the command-form guidance in
   [`repo-readiness.md`](../repo-readiness.md#command-form-and-intent-visibility):
   keep normal repository operations in their structurally minimal form

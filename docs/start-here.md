@@ -8,6 +8,8 @@
 ## Read Order
 
 - `docs/engineering-baseline.md` -> foundational engineering expectations
+- `docs/source-first-retrieval.md` -> execution ordering for deterministic
+  repository triggers, source-of-truth gates, and continuity constraints
 - `docs/authoritative-source-check.md` -> advisory source scanner adoption and
   reusable workflow operations
 - `docs/repo-readiness.md` -> repository workflow expectations
@@ -43,6 +45,8 @@
   inspection first, then continue the conversation from the inspected state. If
   the required source is unavailable, report that blocker instead of inferring
   the state from conversation.
+- Use `docs/source-first-retrieval.md` for the reusable trigger
+  classification, ordering model, verification gate, and failure handling.
 
 ## Startup Contract
 
