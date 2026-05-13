@@ -439,49 +439,86 @@ For solo-operated workflows, choose the validation loop that answers the
 current question fastest without hiding real risk.
 
 Early integration-heavy validation is appropriate when the work is still
-proving workflow semantics, validating governance or retention boundaries, or
-establishing trust in a new pipeline. Full replays and cross-repo checks are
-useful while the question is whether the workflow behaves correctly end to end.
+proving workflow semantics, validating governance or trust boundaries, or
+establishing confidence in a new pipeline. Full environment checks,
+cross-system exercises, live smoke tests, and review environments are useful
+while the question is whether the workflow behaves correctly end to end.
 
-Once failures are mostly deterministic extraction, parsing, or normalization
-behavior, move the primary iteration loop into fast local regression fixtures.
-Use representative real-world examples as a regression corpus, keep those
-fixtures deterministic, and reserve integration replays for milestone checks,
+Once failures are mostly deterministic parsing, integration, normalization,
+state-transition, deployment, or automation behavior, move the primary
+iteration loop into fast local regression fixtures. Use representative
+real-world examples as a regression corpus where useful, keep those fixtures
+deterministic, and reserve full-environment validation for milestone checks,
 boundary checks, or confidence revalidation after meaningful changes.
 
-Replay repos validate usefulness; implementation repos absorb noisy iteration.
-Use replay or review repositories for milestone validation, retention review,
-promotion decisions, and durable provenance. Use the implementation repository
-for extraction cleanup, noisy-shape reproduction, fixture iteration, and
-observability or debugging loops.
+Review, replay, staging, or live-like environments validate usefulness and
+operational fit; implementation repositories absorb noisy iteration. Use those
+broader environments for milestone validation, governance or trust-boundary
+review, promotion decisions, and durable provenance. Use the implementation
+repository for deterministic reproduction, fixture iteration, bounded
+corrections, and observability or debugging loops.
+
+Bounded hardening may require multiple tightly coupled passes before opening a
+pull request. Keep those passes in one PR when each pass directly enables or
+validates the next: detect an observed issue or failure mode, preserve evidence
+through tests, fixtures, logs, or metadata, apply a bounded correction, then
+validate non-regression and live behavior where appropriate.
+
+This pattern applies across implementation domains: parsers and extractors,
+API integrations, schema migrations, deployment workflows, infrastructure
+automation, CI/CD hardening, observability and debugging loops,
+synchronization or reconciliation systems, and state repair or recovery logic.
+
+One PR is appropriate when the phases share one goal, one affected behavior or
+boundary, one validation story, and one rollback unit. Split the work when
+phases have independent goals, different risk profiles, unrelated files, or
+different validation or rollback boundaries.
+
+In solo-operator workflows, prefer completing the coherent task before opening
+the PR when it is safe to do so. Avoid stopping after a diagnostic-only partial
+implementation when the safe bounded correction is part of the same task and
+can be validated locally.
+
+Pause and confirm before external discovery or crawling, destructive behavior,
+irreversible state changes, ambiguous automation decisions,
+security/trust-boundary expansion, or high-blast-radius architectural change.
+Multi-pass hardening is not permission for grab-bag PRs, unrelated cleanup,
+repo-hopping, or hidden scope expansion.
+
+Intermediate passes should leave evidence through fixtures or tests where
+useful. The final PR should include the relevant docs, tests, live checks, and
+non-regression evidence, and should explain the phases and why they form one
+cohesive task.
 
 For ingestion, extraction, ETL, scraping, OCR, export/import, and normalization
-systems, apply the source-shape hardening lifecycle in
-[`knowledge-ingestion-patterns.md`](knowledge-ingestion-patterns.md#source-shape-hardening-lifecycle).
-New source types should become diagnostic, review-ready, and
-promotion-capable inside the implementation repository before they become
-routine replay inputs.
+systems, the source-shape hardening lifecycle in
+[`knowledge-ingestion-patterns.md`](knowledge-ingestion-patterns.md#source-shape-hardening-lifecycle)
+is one application of this broader rule. New source types should become
+diagnostic, review-ready, and promotion-capable inside the implementation
+repository before they become routine replay inputs.
 
-If replay validation repeatedly produces "still noisy", "still no-promotion",
-or unchanged review outcomes, stop accumulating low-yield evidence PRs. Move
-the failing source shape into the implementation repository, make it a
-deterministic fixture or regression case there, and iterate until the output
-crosses a reviewability threshold. Return to replay validation for milestone
-verification, promotion review, or retained-content decisions.
+If broader validation repeatedly produces unchanged review outcomes, stop
+accumulating low-yield evidence PRs. Move the failing behavior into the
+implementation repository, make it a deterministic fixture or regression case
+there, and iterate until the output crosses the relevant reviewability,
+operability, or safety threshold. Return to broader validation for milestone
+verification, promotion review, live confidence checks, or retained-content
+decisions.
 
-Warning signs that integration validation has become a rabbit hole:
+Warning signs that broad validation has become a rabbit hole:
 
-- repeated cross-repo replay loops with little workflow learning
+- repeated full-environment loops with little workflow learning
 - high-latency validation cycles that slow each small correction
-- deterministic extraction bugs discovered only after full integration runs
-- replay records quietly becoming the de facto regression suite
-- replay evidence PRs adding provenance without changing the retention or
-  promotion decision
+- deterministic bugs discovered only after broad integration runs
+- review, replay, or live-check artifacts quietly becoming the de facto
+  regression suite
+- evidence PRs adding provenance without changing the review, release,
+  retention, or promotion decision
 
-The preferred steady state is fast local fixtures for day-to-day correction,
-a representative real-world regression corpus for coverage, explicit milestone
-checkpoints, and occasional integration revalidation to confirm the local loop
-still reflects end-to-end behavior.
+The preferred steady state is fast local fixtures for day-to-day correction, a
+representative real-world regression corpus where useful, explicit milestone
+checkpoints, and occasional broad revalidation to confirm the local loop still
+reflects end-to-end behavior.
 
 ### Minimum `make check` Coverage By Repo Type
 
