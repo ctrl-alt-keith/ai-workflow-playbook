@@ -113,6 +113,62 @@ Design ingestion systems so phase boundaries are visible:
 Automation should preserve the boundary between capture and retention. A fetch
 job can collect material, but a review step should decide what becomes durable.
 
+## Source-Shape Hardening Lifecycle
+
+New source types should mature in the implementation repository before they
+become routine replay inputs. This applies broadly to ingestion, extraction,
+ETL, scraping, OCR, export/import, and normalization systems where each source
+format, site, document class, or data feed can introduce a distinct failure
+shape.
+
+Use explicit maturity states:
+
+- `experimental`: the source type is being explored through live checks,
+  throwaway captures, or early implementation probes. It should not be treated
+  as a stable replay input or a retainable content source.
+- `diagnostic`: the implementation can reproduce important source shapes, but
+  the output is still mainly useful for debugging, fixture design, and failure
+  classification.
+- `review-ready`: fixtures and diagnostics make the source type predictable
+  enough for reviewers to inspect outputs, cleanup needs, provenance, and known
+  limits without rediscovering the extraction behavior each time.
+- `promotion-capable`: replay economics, provenance, and retention boundaries
+  are understood well enough that replay can support a bounded retain or
+  no-retain decision.
+
+Implementation repositories should absorb noisy source-shape work. They own
+live source checks, sanitized fixtures, failure-shape corpora, replay-quality
+metadata, no-op safety fixtures, non-regression coverage, and observability or
+debugging loops. The goal is to make the source behavior explainable before a
+review repository has to spend human attention on it.
+
+Replay and review repositories should stay focused on milestone validation,
+retention review, promotion or no-promotion decisions, and durable provenance.
+They should not become the primary place where extraction heuristics, parser
+edge cases, OCR cleanup, or normalization noise are discovered and debugged
+again and again.
+
+Before broader replay, require a maturity threshold:
+
+- no surprising replay failures for the known source shape
+- fixture fidelity established against real examples
+- source-shape diagnostics available for expected failure modes
+- bounded replay economics understood, including expected review effort
+- known limitations documented plainly
+
+Replay should be boring. A mature source type is predictable, explainable,
+auditable, bounded, and economically reviewable. "Just work" does not require
+perfect extraction; it requires predictable cleanup behavior and clear review
+boundaries so reviewers can decide what to retain, reject, or revisit.
+
+Use explicit review classifications in replay artifacts and decision records:
+
+- `diagnostic-only`: useful for implementation learning, not retention review
+- `review-ready`: suitable for bounded human review, with known cleanup limits
+- `promotion-capable`: suitable for retain/no-retain decisions with provenance
+- `unsafe-to-promote`: blocked by extraction risk, provenance gaps, policy
+  concerns, privacy hazards, or uneconomic review effort
+
 ## Validation Role
 
 Validation can check paths, metadata shape, review status values, obvious
