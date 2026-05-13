@@ -38,10 +38,13 @@ When relevant, say explicitly whether validation was mocked, contract-level, or 
 
 ## Direct PR Inspection
 
-When the human posts a GitHub PR link, provides a PR number, or asks to review,
-check, assess, approve, or comment on a PR, the reviewer must use connector
-inspection and must open the PR through the GitHub connector before giving
-review feedback.
+Linked review artifacts are authoritative; pasted summaries are context.
+
+When the human references, links, names, or asks to review, check, assess,
+approve, or comment on a GitHub PR or similar connector-backed review artifact,
+the reviewer must inspect the artifact through the matching connector before
+giving review feedback. For GitHub PRs, open the PR through the GitHub
+connector.
 
 Local checkouts, `git diff`, and `gh` commands may be used as supplemental
 evidence for PR review, but they must not replace connector inspection.
@@ -51,9 +54,9 @@ the PR in a browser, and it does not mean submitting a GitHub review.
 
 User-provided PR summaries, pasted titles, local path snippets, and copied
 diff excerpts are useful navigation and context, but they are not the review
-source of truth when a PR link or PR number is available. A PR review must be
-grounded in the actual PR surface from the connector. The reviewer must inspect,
-where available:
+source of truth when a PR link, name, or number is available. A PR review must
+be grounded in the actual PR surface from the connector. The reviewer must
+inspect, where available:
 
 - PR title and body
 - changed files
@@ -74,10 +77,18 @@ to GitHub.
 Do not claim a PR is safe to merge, ready to merge, or approved without direct
 evidence from the PR itself through the connector.
 
-If GitHub connector access is unavailable or declined, stop the PR review and
-say that connector access is unavailable. Do not provide a merge or readiness
+Do not perform summary-only PR reviews when a PR link, name, or number is
+available unless connector access fails or the human explicitly says not to use
+the connector.
+
+If connector access is unavailable, fails, is declined, or is explicitly
+forbidden by the human, say so clearly. Do not provide a merge or readiness
 recommendation from secondhand text. Provide only clearly caveated feedback
 from information already present, or ask for connector access to be restored.
+
+If the human corrects tool or connector usage in the thread, treat that
+correction as a hard workflow constraint for subsequent similar review
+requests.
 
 ## Single-Operator Review Posture
 
