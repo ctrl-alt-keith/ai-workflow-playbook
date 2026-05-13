@@ -56,8 +56,21 @@ milestone or integration replay remains unchanged, integration validation shows
 identical failure signatures, or "DORA-derived", "derived", or
 "representative" fixtures were never proven against the actual failing shape.
 
+Faithful fixtures do not guarantee execution-path equivalence. A
+fail-before/pass-after fixture is necessary, but not always sufficient, when
+the real system still behaves as if nothing changed.
+
+If the fixture passes but integration behavior remains unchanged, stop adding
+speculative fixtures or heuristics and treat the problem as possible
+execution-path divergence. Compare the real integration path against the tested
+layer before making another logic change. Check stage ordering, alternate code
+paths, configuration skew, preprocessing differences, caching or state reuse,
+runtime wiring, and artifact generation paths.
+
 Run periodic integration validation to confirm the fixture loop is still
 anchored to real behavior, not just a convenient local approximation.
+Use integration validation to confirm path equivalence at milestones, not as
+the repeated inner loop for every candidate fix.
 
 ## Config And CLI Default Changes
 
