@@ -449,12 +449,27 @@ Use representative real-world examples as a regression corpus, keep those
 fixtures deterministic, and reserve integration replays for milestone checks,
 boundary checks, or confidence revalidation after meaningful changes.
 
+Replay repos validate usefulness; implementation repos absorb noisy iteration.
+Use replay or review repositories for milestone validation, retention review,
+promotion decisions, and durable provenance. Use the implementation repository
+for extraction cleanup, noisy-shape reproduction, fixture iteration, and
+observability or debugging loops.
+
+If replay validation repeatedly produces "still noisy", "still no-promotion",
+or unchanged review outcomes, stop accumulating low-yield evidence PRs. Move
+the failing source shape into the implementation repository, make it a
+deterministic fixture or regression case there, and iterate until the output
+crosses a reviewability threshold. Return to replay validation for milestone
+verification, promotion review, or retained-content decisions.
+
 Warning signs that integration validation has become a rabbit hole:
 
 - repeated cross-repo replay loops with little workflow learning
 - high-latency validation cycles that slow each small correction
 - deterministic extraction bugs discovered only after full integration runs
 - replay records quietly becoming the de facto regression suite
+- replay evidence PRs adding provenance without changing the retention or
+  promotion decision
 
 The preferred steady state is fast local fixtures for day-to-day correction,
 a representative real-world regression corpus for coverage, explicit milestone
