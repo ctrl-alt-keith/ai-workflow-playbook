@@ -35,6 +35,8 @@ reasoning or recommendations:
 - GitHub issue URLs, issue numbers, or requests such as "continue from this
   issue", "implement this issue", or "what is left on this issue?"
 - repository identifiers, repository URLs, or local repository paths
+- repo-aware advisory or evaluation requests where a repository is explicitly
+  named and the requested answer depends on that repository's actual state
 - branch names, refs, tags, commit SHAs, comparison ranges, or release refs
 - requests to assess mergeability, CI status, review state, changed files,
   issue closure, validation status, or current implementation scope
@@ -64,6 +66,36 @@ Resolve ambiguity by inspecting the likely authoritative source when the
 target is clear. If the target is not clear, ask a narrow clarifying question
 or report the missing identifier. Do not fill the gap with conversational
 inference.
+
+## Repo-Aware Advisory Heuristic
+
+Treat repo-aware suggestions as retrieval tasks first and advisory tasks
+second. When a repository is explicitly named and the human asks for analysis,
+review, suggestions, evaluation, "what should we add", "what do you think",
+architecture direction, or repo-aware prioritization, inspect the referenced
+repository before producing repo-specific recommendations.
+
+Keep the inspection proportional to the question. Retrieve enough current
+files, pull request, issue, branch, validation, or documentation state to ground
+the recommendation; do not turn the heuristic into a mandatory full audit.
+Purely conceptual discussion remains optional unless the answer claims or
+depends on current repository state.
+
+Examples:
+
+- Good: inspect the named repository before suggesting feature priorities.
+- Good: inspect the pull request before reviewing architecture direction.
+- Good: retrieve actual files, issues, or validation state before advising
+  what to add next.
+- Bad: brainstorm repo-specific recommendations from the repository name alone.
+- Bad: use continuity or a pasted summary as a replacement for available
+  repository inspection.
+- Bad: after missing retrieval, explain why retrieval mattered before
+  performing the available inspection.
+
+If this heuristic was missed, recovery starts by retrieving the referenced
+repository state. Then correct, discard, or mark prior repo-specific advice as
+unverified before explaining the failure pattern.
 
 ## Ordering Model
 
