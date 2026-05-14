@@ -1,48 +1,26 @@
 # Reusable Workflow Prompt Templates
 
-This file contains high-signal prompt templates for repeatable workflow tasks in
-a generic, parameterized form. Keep core workflow rules in the core playbook
-docs, tool-specific execution guidance in `docs/tool-adapters/`, and repo-local
-execution rules in `AGENTS.md`. Prompts here should reference those canonical
-sources rather than duplicate them.
+This file holds reusable prompt shapes. Keep workflow rules in the core
+playbook docs, Codex-specific execution guidance in `docs/tool-adapters/codex.md`,
+and repo-local execution rules in `AGENTS.md`.
 
-Use the placeholders shown in each prompt as inputs. In plain-text prompt bodies,
-angle-bracket placeholders are acceptable, but in markdown templates or copied
-instructions prefer lint-safe placeholders such as `[repository]` or backticked
-tokens. Angle-bracket placeholders can be interpreted as inline HTML by markdown
-tooling.
+Use lint-safe placeholders such as `[repository]`, `[validation_path]`, or
+backticked tokens in Markdown templates. Angle-bracket placeholders can be
+interpreted as inline HTML by Markdown tooling.
 
 ## Quick Navigation
 
-- [Codex Task Prompt Format](#codex-task-prompt-format)
+- [Codex Implementation Task](#codex-implementation-task)
 - [Parallel Batch Add-On](#parallel-batch-add-on)
 - [Notes vs Playbook Alignment Audit](#notes-vs-playbook-alignment-audit)
-- [Orchestration Handoff Prompt](#orchestration-handoff-prompt)
-- [Implementation Delivery Footer](#implementation-delivery-footer)
+- [Orchestration Handoff](#orchestration-handoff)
+- [Implementation Delivery Add-On](#implementation-delivery-add-on)
 - [PR Review](#pr-review)
 
-## Codex Task Prompt Format
+## Codex Implementation Task
 
-Use this format for non-trivial Codex implementation tasks: work that changes an
-existing system, has meaningful constraints, needs validation, or should end in a
-branch and PR. Simple one-step tasks do not need this much structure.
-
-Before writing or using a Codex task prompt, apply the interaction mode
-preflight in [`docs/repo-readiness.md`](repo-readiness.md#interaction-mode-preflight).
-Use this implementation prompt format only when the intended mode is direct
-implementation. For review/audit work, use the review or audit templates. For
-orchestration or prompt-authoring work, use the orchestration handoff prompt
-template instead of appending implementation delivery instructions by habit.
-
-Keep prompts concise but complete. The goal is to remove ambiguity that would
-cause retries, not to turn every task into a process document.
-
-Any implementation task that modifies repository files MUST include the
-Implementation Delivery Footer unless PR delivery is explicitly excluded.
-Omitting the footer can leave delivery incomplete: changes made locally but not
-pushed and opened for review in a PR.
-
-### Codex Task Prompt Template
+Use this template only when the intended interaction mode is direct
+implementation. For review or orchestration, use the matching template instead.
 
 ```text
 Role:
@@ -53,88 +31,56 @@ Goal:
 
 Success criteria:
 - [observable condition that proves the goal is met]
-- The diff is limited to the intended repo and scope.
+- The diff is limited to the intended repository and scope.
 - Canonical validation has run or any inability to run it is reported.
-- A ready-for-review PR is opened unless PR delivery is explicitly excluded.
+- PR delivery is complete unless explicitly excluded.
 
-Available context:
+Context:
 - Repository: [repository]
+- Working directory: [working_directory]
 - Relevant background: [short context]
+- GitHub issues or planning references: [none or identifiers]
 
-Coordination:
-- GitHub issues: [none, or issues such as #163]
-- Planning tickets: [none, or IDs such as Linear CAK-5]
-- PR linkage: [closing keywords and planning references expected in the PR]
-- Post-merge notes: [none, or planning/status updates to verify after merge]
-
-Retrieval budget:
+Retrieval:
 - Read `ai-workflow-playbook/docs/start-here.md`, the target repo's
-  `AGENTS.md`, and the repo-local files needed for this change.
-- Verify live external state, such as GitHub repository or pull request state,
-  before relying on it.
-- Stop broad search once the target files, validation path, branch/PR
-  expectations, and any external-state dependencies are clear.
-- Do not traverse sibling repositories unless this task explicitly names them.
+  `AGENTS.md`, and any required tool adapter before acting.
+- Retrieve or revalidate authoritative repository, issue, PR, file, CI, log, or
+  artifact state before relying on it.
+- Treat summaries, memory, and pasted descriptions as navigation, not proof of
+  current source state.
+- Stop broad search once the target files, constraints, validation path, and
+  delivery expectation are clear.
 
 Scope:
 - In scope: [files, behavior, or workflow area]
 - Out of scope: [explicit non-goals]
 
 Constraints:
-- Do not include unrelated changes or opportunistic cleanup.
-- Make the smallest possible change that satisfies the goal.
-- Default behavior must remain unchanged unless explicitly required.
-- Follow existing repo patterns and validation paths.
-- Do not silently skip required steps; report any blockers or incomplete work.
-
-Side-effect constraints:
+- Keep the change minimal, scoped, and structurally local.
+- Follow existing repo patterns and canonical validation.
 - Follow `docs/repo-readiness.md`, `docs/tool-adapters/codex.md`, and
-  repo-local `AGENTS.md` for interaction mode, direct command execution,
-  dedicated worktrees, validation, and PR delivery.
-- Follow `docs/review-packet.md` when a task asks for PR review, readiness,
-  approval, or merge advice.
-- Follow `docs/engineering-baseline.md` when code, tests, docs, risks, or
-  user-facing claims depend on external public API behavior.
-
-Preamble/update expectations:
-- For multi-step or tool-heavy work, provide brief progress updates before
-  grouped tool use and before file edits.
+  repo-local `AGENTS.md` for interaction mode, command form, worktree,
+  validation, and delivery.
+- Report blockers, validation failures, residual risks, and uncertainty.
 
 Tasks:
-1. Inspect the existing structure and related docs or code.
+1. Inspect the existing structure and relevant source material.
 2. Make the smallest scoped change that satisfies the goal.
 3. Update nearby docs or tests only when they are part of the same change.
 
 Validation:
-- Follow the validation rules in `docs/repo-readiness.md` and repo-local
-  `AGENTS.md`.
-- Run the repository's canonical validation command, such as `make check`, when
-  it exists and can run locally.
-- Report the actual result of validation; do not assume success.
-- If validation fails, include the failure details.
-- If validation cannot be run, explain why.
+- Run [validation_path].
+- Report the exact result.
 
-Deliverable:
-- Follow the branch, workspace, and PR delivery rules in
-  `docs/feature-lifecycle.md`, `docs/repo-readiness.md`, and
-  `docs/tool-adapters/codex.md`.
-- Stage only relevant changes.
-- Commit and push only the intended changes.
-- Open a PR in the appropriate readiness state against the intended base
-  branch, usually `main`.
-- When GitHub issues and planning tickets are both provided, reference both in
-  the PR. Use GitHub closing keywords such as `Closes #163` for GitHub issue
-  closure and include planning identifiers such as `Linear: CAK-5` as
-  coordination context.
-- Ensure the PR contains only intended changes.
-- Include a summary, validation results, and any residual risks.
+Delivery:
+- [branch, commit, push, and PR expectation, or explicit exclusion]
+- Include a concise summary, validation results, and residual risks.
 
 Stop rules:
-- Pause before merge, release, tag, destructive, or permissions-sensitive
-  actions unless the human explicitly requested that action.
-- Stop and report if the repo context is mismatched, validation failure implies
-  broader work than requested, or live external state cannot be verified where
-  it is required.
+- Stop before merge, release, tag, destructive, externally visible, or
+  permissions-sensitive actions unless explicitly authorized.
+- Stop and report if required source state cannot be retrieved, the repo
+  context is mismatched, or validation failure implies broader work.
 ```
 
 ## Parallel Batch Add-On
@@ -144,49 +90,30 @@ parallel batch. Keep the concrete lane count and topology task-specific.
 
 ```text
 Parallel execution:
-- Classify each task as an independent capability lane, governance lane, or
-  deferred consolidation lane before launch.
-- Run independent capability or governance lanes in parallel only when they are
-  separated by file area, behavior surface, or risk surface.
-- Define merge-order dependencies before launch. If merge order is flexible,
-  state why.
+- Separate lanes by repository, file area, behavior surface, or risk surface.
+- Define any merge-order dependencies before launch.
 - Keep one repository, one branch, one worktree, and one PR per lane.
 - Validate each lane with the repository's canonical validation path.
-- Gate deferred consolidation lanes until upstream PRs are merged, current
-  main is fetched, and the human explicitly confirms continuation.
-- Have consolidation lanes reconcile vocabulary, docs, contracts, examples, or
-  shared semantics from current main rather than chasing moving branches.
-- Stop before merge and before downstream gated consolidation steps.
+- Stop before merge and before any downstream step that depends on a merge.
 ```
 
 ## Notes vs Playbook Alignment Audit
 
-### Notes vs Playbook Alignment Audit Use When
+Use this prompt when a staging or notes repository needs cleanup after workflow
+guidance has been promoted into the playbook.
 
-Use this prompt when a notes repository needs cleanup after workflow rules were
-promoted into the playbook and the remaining notes should be aligned to the
-canonical source.
+Required inputs:
 
-### Notes vs Playbook Alignment Audit Required Inputs
-
-- `notes_project_root` (working directory)
-- `playbook_reference` (this repository)
-
-### Notes vs Playbook Alignment Audit Repo-Type Notes
-
-- The notes repo is a staging layer for material that may later become reusable guidance.
-- The playbook repo is the canonical source for promoted cross-repo workflow rules.
-- The audit must stay inside the notes project root and must not traverse outside it.
-
-### Notes vs Playbook Alignment Audit Prompt
+- `notes_project_root`
+- `playbook_reference`
 
 ```text
 Task:
-Run a notes vs playbook alignment audit for <notes_project_root>.
+Run a notes vs playbook alignment audit for [notes_project_root].
 
 Inputs:
-- Notes project root: <notes_project_root>
-- Playbook reference: <playbook_reference>
+- Notes project root: [notes_project_root]
+- Playbook reference: [playbook_reference]
 
 Success criteria:
 - Each relevant notes file is classified as remove, trim, keep, or defer.
@@ -194,84 +121,35 @@ Success criteria:
   now owns the promoted guidance.
 - Deferred items name the blocker or missing local decision.
 
-Retrieval budget:
-- Inspect only files inside <notes_project_root> plus the playbook sections
-  needed to verify canonical ownership.
+Retrieval:
+- Inspect only files inside [notes_project_root] plus playbook sections needed
+  to verify canonical ownership.
 - Do not re-audit unrelated repositories or reopen promotion decisions.
-- Stop once each relevant file has a justified classification.
 
 Instructions:
-- Audit the notes project against the playbook reference after promotion work
-  has already been completed.
-- Treat the notes project as a staging layer and the playbook reference as the
-  canonical source for promoted workflow guidance.
-- Review only files inside <notes_project_root>.
-- For each relevant file, classify it as remove, trim, keep, or defer.
-- Use remove when the file is fully superseded by canonical playbook guidance
-  and no longer needs to remain in notes.
-- Use trim when the file should stay but only after redundant or
-  already-promoted material is removed.
-- Use keep when the file still serves a valid notes-layer purpose without
-  conflicting with the canonical playbook.
-- Use defer when cleanup depends on a separate local decision, missing context,
-  or unfinished follow-up work.
-- Do not re-evaluate whether content should be promoted into the playbook. This
-  audit is for cleanup and alignment after promotion, not for promotion
-  decisions.
-- When a file overlaps with promoted guidance, reference the canonical playbook
-  location that now owns that guidance.
-- Recommend only cleanup actions that can be justified from the observed notes
-  files and the referenced playbook.
-
-Constraints:
-- Do not inspect, traverse, or recommend changes outside <notes_project_root>.
-- Do not treat the notes repository as a second canonical source.
-- Do not reopen already-settled promotion decisions during this audit.
-- Keep the audit operational, concise, and file-specific.
-
-Validation:
-- Verify that each remove or trim recommendation points to the canonical
-  playbook location that replaced or now owns the guidance.
-- Verify that keep recommendations preserve only notes-layer material that still belongs in staging.
-- Verify that defer recommendations explain the specific blocker or unresolved local dependency.
-- Verify that the audit output can drive a cleanup pass followed by a re-audit
-  to confirm convergence.
+- Treat the notes project as staging and the playbook as canonical only for
+  guidance already promoted there.
+- Classify each relevant file as remove, trim, keep, or defer.
+- Recommend only cleanup actions justified by observed notes files and the
+  referenced playbook.
+- Do not mutate files unless the task explicitly changes to implementation.
 
 Stop rules:
-- If the notes root boundary is unclear, stop and ask for the intended root
-  instead of widening the traversal.
-- Do not mutate files during the audit unless the task explicitly changes to
-  implementation.
+- If the notes root boundary is unclear, stop and ask for the intended root.
 
 Output format:
-1. Summary: one short paragraph describing the overall alignment state.
-2. Per-file classification: a list of files with one of remove, trim, keep, or
-   defer and a short rationale for each.
-3. Cleanup recommendations: a short numbered list of the highest-leverage
-   remove or trim actions, including canonical playbook references where
-   applicable.
-4. Re-audit trigger: one short sentence stating when to rerun the audit to confirm convergence.
+1. Summary: one short paragraph.
+2. Per-file classification: file, classification, and short rationale.
+3. Cleanup recommendations: highest-leverage remove or trim actions.
+4. Re-audit trigger: when to rerun the audit.
 ```
 
-### Notes vs Playbook Alignment Audit Notes
+## Orchestration Handoff
 
-This audit is for cleanup, not promotion. Run it after promotion work, then use a
-follow-up re-audit to confirm the notes set has converged on the playbook as the
-canonical source.
+Use this prompt when the deliverable is a complete downstream task envelope, not
+direct mutation by the current agent.
 
-## Orchestration Handoff Prompt
-
-### Orchestration Handoff Prompt Use When
-
-Use this prompt when the deliverable is a complete downstream task envelope for
-another implementation agent or tool, rather than direct repository mutation by
-the current agent.
-
-Do not use this template as a substitute for implementation delivery when the
-human explicitly asked the current agent to make the change, validate it,
-commit, push, and open a PR.
-
-### Orchestration Handoff Prompt Required Inputs
+Required inputs:
 
 - `repository`
 - `working_directory`
@@ -281,57 +159,37 @@ commit, push, and open a PR.
 - `validation_path`
 - `delivery_expectation`
 
-### Orchestration Handoff Prompt Template
-
-Deliver the downstream prompt as one contiguous copyable block.
-
 ```text
 Role:
 - You are a downstream agent completing a bounded task for [repository].
 
 Goal:
-- [clear user-visible outcome the downstream agent should complete]
+- [clear user-visible outcome]
 
 Success criteria:
 - [what must be true before final response]
-- The work stays within the named repository, branch, and scope.
+- The work stays within the named repository and scope.
 - Required validation has run or a blocker is reported.
 - The final answer includes the requested artifact, PR, review packet, or
   handoff evidence.
 
-Working directory:
-[absolute or repo-relative working directory]
+Inputs:
+- Repository: [repository]
+- Working directory: [working_directory]
+- Canonical source: [canonical_source]
+- Repo-local guidance: [AGENTS.md or equivalent]
+- Source evidence: [source_evidence]
+- Interaction mode: [implementation, review/audit, or orchestration]
+- Validation path: [validation_path]
+- Delivery expectation: [delivery_expectation]
 
-Repository:
-[repository]
-
-Required context:
-- Canonical reusable workflow policy: [canonical_source]
-- Repo-local execution guidance: [repo-local AGENTS.md or equivalent]
-- Reference evidence: [source_evidence]
-- Available source material: [specific files, issues, PRs, notes, or docs]
-
-Retrieval budget:
+Retrieval:
 - Read the shared playbook startup guidance and repo-local `AGENTS.md` first.
-- Inspect only the files, issues, PRs, docs, or generated artifacts needed to
-  satisfy the goal and validation requirements.
-- For implementation, confirm the dedicated repo-local worktree and canonical
-  validation path before editing.
-- For `git` and `gh`, confirm execution settings avoid implicit shell or
-  login-shell wrapping where supported.
-- Stop retrieving once the target surface, constraints, validation path, and
-  delivery expectation are clear.
-- Do not broaden into sibling repos or noncanonical staging material unless it
-  is explicitly named as context.
-
-Interaction mode:
-- [implementation, review/audit, or orchestration/prompt-authoring]
-
-Context:
-- [relevant facts discovered by the orchestrator]
-- [issue, PR, evidence note, or prior-art context the receiver needs]
-- [GitHub issue IDs, planning-ticket IDs, PR linkage expectations, and
-  post-merge coordination notes, when relevant]
+- Inspect only the files, issues, PRs, docs, or artifacts needed for the goal.
+- Retrieve authoritative source state before relying on it; treat summaries as
+  navigation only.
+- Stop once the target surface, constraints, validation path, and delivery
+  expectation are clear.
 
 Scope:
 - In scope: [files, behavior, docs, or workflow area]
@@ -339,18 +197,10 @@ Scope:
 
 Constraints:
 - Keep changes minimal, scoped, and structurally local.
-- Do not include unrelated cleanup.
-- Do not rely on noncanonical staging, runtime, generated, or local instruction
-  surfaces as policy unless the rule has been promoted into the canonical
-  source.
-- Follow `docs/repo-readiness.md`, `docs/tool-adapters/codex.md`, and
-  repo-local `AGENTS.md` for worktree, command-form, validation, and delivery
-  rules.
+- Do not rely on staging, runtime, generated, or local instruction surfaces as
+  policy unless the rule has been promoted into the canonical source.
+- Follow the referenced playbook, adapter, and repo-local guidance.
 - Report blockers, validation failures, residual risks, and uncertainty.
-
-Preamble/update expectations:
-- For multi-step, long-running, or tool-heavy work, give short progress updates
-  before grouped tool use and before file edits.
 
 Tasks:
 1. [ordered task]
@@ -358,99 +208,47 @@ Tasks:
 3. [ordered task]
 
 Validation:
-- Run [validation_path].
-- Report exactly what was run and the result.
-- If validation cannot run, explain why and do not substitute an undocumented
-  validation path.
+- Run [validation_path], or report why it cannot run.
 
 Delivery:
 - [branch, commit, push, PR, review packet, or report expectation]
-- Include summary, validation, source evidence, and residual risks or
-  follow-ups.
-- When both GitHub issues and planning tickets are in scope, include both in
-  the PR or handoff. Use GitHub closing keywords for GitHub issue closure and
-  treat planning tickets as coordination state unless repo-local guidance says
-  otherwise.
-
-Deliverable:
-- [complete expected final output]
-- Provide the full drop-in artifact by default, even when the task asks to add,
-  incorporate, or fold new material into existing prompt or instruction text.
+- Include summary, validation, source evidence, and residual risks.
 
 Stop rules:
 - Stop before merge, release, tag, destructive, externally visible, or
   permissions-sensitive actions unless explicitly authorized.
-- Ask for human input when the repo context is wrong, required evidence is
-  unavailable, or the next step depends on a human judgment call.
+- Ask for human input when required evidence is unavailable or the next step
+  depends on a human judgment call.
 ```
 
-## Implementation Delivery Footer
+## Implementation Delivery Add-On
 
-### Implementation Delivery Footer Use When
-
-Append this footer to implementation prompts when the task is expected to make
-repo changes and deliver them through the normal branch, commit, push, and PR
-flow.
-
-Use this footer only after the interaction mode is clearly implementation mode.
-
-### Implementation Delivery Footer Do Not Use When
-
-Do not append this footer for exploration, design, or review-only tasks unless
-they are also expected to make and deliver repo changes.
-
-Do not append this footer for orchestration or prompt-authoring tasks whose
-deliverable is a complete downstream prompt rather than repo mutation.
-
-### Implementation Delivery Footer Snippet
+Append this only when the task is implementation mode and normal PR delivery is
+expected.
 
 ```text
 Delivery:
-- Follow the branch, PR readiness, and workspace rules in
-  `docs/feature-lifecycle.md`, `docs/repo-readiness.md`, and
-  `docs/tool-adapters/codex.md`.
-- Follow the dedicated worktree rule in `docs/repo-readiness.md#pr-readiness`
-  for implementation changes: one repository, one branch, one dedicated
-  repo-local worktree, and one PR per change. Run commands from inside the
-  target worktree and keep temporary or scratch state repo-local.
-- Run ordinary `git`, `gh`, `make`, `python`, repo-local script, and tool
-  commands directly from the target worktree; reserve shell wrapping for
-  commands that genuinely require shell syntax.
-- For standard `git` and `gh` work, use the CLI directly rather than alternate
-  APIs, helper scripts, or connector substitutions; where supported, use native
-  argv-style execution and disable implicit shell or login-shell defaults with
-  settings such as `shell=false`, `login=false`, `use_shell=false`, or the
-  platform-native equivalent.
-- Before executing a shell-wrapped command, perform the command-form preflight
-  from `docs/repo-readiness.md`; when shell semantics are unnecessary, rewrite
-  the operation into direct argv form before execution.
-- Fetch current `origin/main` at task start, anchor implementation to that
-  fetched baseline, and verify current mergeability before PR.
-- Stage only the relevant changes.
-- Commit with a clear message.
-- Push the branch.
-- Open a PR in the appropriate readiness state against the intended base branch,
-  usually `main`.
-- Include expected GitHub issue closing keywords and planning-ticket references
-  in the PR body when those identifiers are provided.
-- Report the PR link, files changed, and validation results.
+- Follow the branch, worktree, validation, and PR delivery rules in
+  `docs/repo-readiness.md`, `docs/tool-adapters/codex.md`, and repo-local
+  `AGENTS.md`.
+- Stage, commit, push, and open or update the intended PR only with relevant
+  changes.
+- Include expected GitHub issue closing keywords and planning references when
+  those identifiers are provided.
+- Report the PR link, files changed, validation results, and residual risks.
 ```
 
 ## PR Review
 
-### PR Review Use When
-
 Use this prompt when the task is to review, check, assess, approve, or comment
 on an existing pull request.
 
-### PR Review Required Inputs
+Required inputs:
 
 - `repository`
 - `pull_request`
-- `task_or_issue_context` (optional; use `none` when not available)
+- `task_or_issue_context` (`none` when unavailable)
 - `summary_only` (`yes` or `no`)
-
-### PR Review Prompt
 
 ```text
 Task:
@@ -463,49 +261,31 @@ Inputs:
 - Summary-only requested: [summary_only]
 
 Success criteria:
-- Review feedback is grounded in direct PR evidence when a PR link, name, or
-  number is available.
+- Review feedback is grounded in direct PR evidence.
 - Findings are severity-ordered and distinguish blockers from non-blocking
   risks or follow-ons.
 - Merge readiness is stated only when supported by current PR evidence.
 
-Retrieval budget:
+Retrieval:
 - Inspect the PR through the GitHub connector first when available and not
-  explicitly forbidden by the human.
+  explicitly forbidden.
 - Use local checkout, `git diff`, and `gh` only as supplemental evidence.
 - Stop once PR metadata, changed files, relevant diffs, discussion, checks,
-  mergeability, and task fit are clear enough for the requested review depth.
+  mergeability, and task fit are clear enough for the requested depth.
 
 Instructions:
-- Apply the canonical direct PR inspection rule in
-  `docs/review-packet.md#direct-pr-inspection`.
-- Stay in review/audit mode. Do not implement changes while performing the PR
-  review unless the human explicitly changes the task to implementation.
-- Treat user-provided summaries, pasted titles, local path snippets, and copied
-  diff excerpts as navigation and context only, not review evidence, when a PR
-  link, name, or number is available.
-- Use local checkout, `git diff`, and `gh` only as supplemental evidence after
-  direct PR inspection.
-- Apply the single-operator review posture from `docs/repo-readiness.md` when
-  it fits the repository context.
-- Do not mutate the PR unless the human explicitly asks for that GitHub action.
-- If GitHub connector access is unavailable, fails, is declined, or is
-  explicitly forbidden by the human, state that clearly and provide only
-  clearly caveated feedback from the information already present.
-- Do not claim the PR is safe to merge, ready to merge, or approved without
-  direct evidence from the PR itself through the connector.
-
-Stop rules:
-- If connector access is required but unavailable, stop the review and report
-  the access blocker instead of inferring readiness.
-- Do not mutate the PR unless the human explicitly asks for that GitHub action.
+- Apply `docs/review-packet.md#direct-pr-inspection`.
+- Stay in review/audit mode unless the human explicitly changes the task.
+- Treat user summaries and pasted excerpts as navigation, not PR evidence.
+- Do not mutate the PR unless explicitly asked.
+- If required PR evidence is unavailable, state that blocker and caveat any
+  feedback from already-present information.
 
 Output format:
 1. Review findings: severity-ordered findings with file or PR references where
-   possible. Distinguish blockers from non-blocking risks, implementation
-   opportunities, and practical follow-ons.
-2. Scope and evidence notes: concise notes on inspected PR surface, CI/checks,
-   mergeability, and task fit.
+   possible.
+2. Scope and evidence notes: inspected PR surface, checks, mergeability, and
+   task fit.
 3. Recommendation: `ready to merge`, `needs decision`, or `blocked`, only when
    direct PR evidence supports it.
 ```
