@@ -135,6 +135,27 @@ which one controls the decision. For repository completion, GitHub PR and issue
 state usually controls remote readiness, while local `git` state controls only
 the current checkout.
 
+## Operational State Language Experiment
+
+When continuity pressure, stale state, partial retrieval, or recovery makes
+source status easy to blur, add a few plain words to the claim itself. The goal
+is not a new report format; it is to keep directly verified state,
+continuity-based assumptions, and unknowns from collapsing into one fluent
+answer.
+
+Useful phrases are intentionally lightweight:
+
+- "verified from direct PR inspection"
+- "mergeability inferred from cached state; not revalidated"
+- "repo state not verified after branch update"
+- "continuity assumption only"
+- "remote CI status unknown because retrieval did not occur"
+
+Prefer this in status updates, recovery messages, review summaries, and
+stale-state handling when it changes what the next action should trust. Preserve
+unknowns when retrieval did not happen. Do not add confidence scores, fixed
+tiers, required labels, templates, audit requirements, or governance process.
+
 ## Recovery Re-Entry
 
 Recovery is required when source-first ordering has already been missed. This
