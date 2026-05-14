@@ -43,9 +43,7 @@ Use the cleanup loop in this order:
 
 ### 1. Audit
 
-Run the
-[`Notes vs Playbook Alignment Audit`](prompts.md#notes-vs-playbook-alignment-audit)
-against the notes project after promotion work has landed.
+Audit the notes project after promotion work has landed.
 
 During the audit:
 

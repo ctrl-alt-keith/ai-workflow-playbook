@@ -128,10 +128,8 @@ playbook as the source of truth.
 - rerun the alignment pass until the remaining notes serve only a staging-layer
   purpose
 
-Use the notes cleanup lifecycle in
-[`playbook-integrity-check.md`](playbook-integrity-check.md) and the
-[`Notes vs Playbook Alignment Audit`](prompts.md#notes-vs-playbook-alignment-audit)
-prompt in [`prompts.md`](prompts.md) for the cleanup pass.
+Use the notes cleanup workflow in
+[`notes-cleanup-workflow.md`](notes-cleanup-workflow.md) for the cleanup pass.
 
 ## Guardrails
 

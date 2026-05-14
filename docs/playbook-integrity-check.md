@@ -30,9 +30,8 @@ playbook:
 5. converge
 
 In this lifecycle, the playbook remains canonical and notes remain a staging
-layer. Use the [`Notes vs Playbook Alignment Audit`](prompts.md#notes-vs-playbook-alignment-audit)
-prompt in [`prompts.md`](prompts.md) for the cleanup pass, then rerun it after
-changes to confirm convergence.
+layer. Use [`notes-cleanup-workflow.md`](notes-cleanup-workflow.md) for the
+cleanup pass, then rerun the audit step after changes to confirm convergence.
 
 ## What To Look For
 
