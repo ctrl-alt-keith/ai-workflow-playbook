@@ -107,6 +107,9 @@ Use this reusable gate whenever a mandatory trigger is present:
 - Result: mark the gate `verified`, `partial`, or `blocked`.
 - Unknowns: state anything required for the task that remains unverified.
 
+If direct verification did not happen, say exactly:
+`unknown → referenced repo state was not verified`.
+
 Acceptable authoritative sources depend on the claim:
 
 - Repository files, local `git` state, and checked-out refs are authoritative
@@ -154,8 +157,9 @@ When recovery is required, execute this sequence:
 
 Acknowledgment alone is not recovery. Explaining the violation is not
 remediation. Recovery must perform the missing retrieval or inspection, not
-only discuss that retrieval should have happened. Continuity remains blocked
-until the recovery gate is `verified`, `partial`, or `blocked`.
+only discuss that retrieval should have happened. When the missing step is
+available, do it before analyzing the workflow failure. Continuity remains
+blocked until the recovery gate is `verified`, `partial`, or `blocked`.
 
 Useful human recovery commands are short and imperative:
 
@@ -188,6 +192,9 @@ Watch for these observable failure patterns:
   retrieval but not performing the retrieval.
 - Explanation replacing remediation: describing the correct ordering instead
   of re-entering it.
+- Meta-analysis replacing action: recognizing a concrete operational request
+  but discussing the workflow issue instead of inspecting, reviewing, updating,
+  or generating the requested artifact.
 
 ## Enforceable Workflow Rules
 
