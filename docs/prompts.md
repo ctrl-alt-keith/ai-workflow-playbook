@@ -15,6 +15,7 @@ tooling.
 ## Quick Navigation
 
 - [Codex Task Prompt Format](#codex-task-prompt-format)
+- [Parallel Batch Add-On](#parallel-batch-add-on)
 - [Notes vs Playbook Alignment Audit](#notes-vs-playbook-alignment-audit)
 - [Orchestration Handoff Prompt](#orchestration-handoff-prompt)
 - [Implementation Delivery Footer](#implementation-delivery-footer)
@@ -134,6 +135,28 @@ Stop rules:
 - Stop and report if the repo context is mismatched, validation failure implies
   broader work than requested, or live external state cannot be verified where
   it is required.
+```
+
+## Parallel Batch Add-On
+
+Use this compact add-on when asking an implementation agent to coordinate a
+parallel batch. Keep the concrete lane count and topology task-specific.
+
+```text
+Parallel execution:
+- Classify each task as an independent capability lane, governance lane, or
+  deferred consolidation lane before launch.
+- Run independent capability or governance lanes in parallel only when they are
+  separated by file area, behavior surface, or risk surface.
+- Define merge-order dependencies before launch. If merge order is flexible,
+  state why.
+- Keep one repository, one branch, one worktree, and one PR per lane.
+- Validate each lane with the repository's canonical validation path.
+- Gate deferred consolidation lanes until upstream PRs are merged, current
+  main is fetched, and the human explicitly confirms continuation.
+- Have consolidation lanes reconcile vocabulary, docs, contracts, examples, or
+  shared semantics from current main rather than chasing moving branches.
+- Stop before merge and before downstream gated consolidation steps.
 ```
 
 ## Notes vs Playbook Alignment Audit

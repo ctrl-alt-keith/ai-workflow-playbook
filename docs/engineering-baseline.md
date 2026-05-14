@@ -135,24 +135,41 @@ weakening reviewability, validation, or merge safety.
 
 Before launching parallel work, classify each task by lane:
 
-- docs/governance
+- independent capability
+- governance
 - isolated code path
 - shared API/client behavior
 - mutation/safety-critical path
 - release/checking
+- deferred consolidation
 
 Do not parallelize changes that share mutation paths, release state, schema
 contracts, or fragile overlapping files unless the dependency is explicit and a
 clear merge order exists before work starts.
 
+Independent capability lanes and governance lanes may run in parallel when they
+are separated by file area, behavior surface, or risk surface. Consolidation or
+reconciliation lanes that depend on outputs from other lanes should be gated,
+not launched against moving branches.
+
 For every parallel batch, define the intended merge order up front. If the work
 is truly independent, say that merge order is flexible and why. When ordering
 does matter, prefer the order that reduces conflict and review risk:
 
-- docs/governance before dependent docs
+- governance before dependent docs
 - reusable infrastructure before repo adoption
 - shared client/API behavior before callers
 - safety/mutation changes after dependent semantics are clear
+- deferred consolidation after upstream PRs have merged
+
+Start deferred consolidation lanes only after the upstream PRs are merged,
+current `main` has been fetched, and the human explicitly confirms
+continuation. These lanes should reconcile vocabulary, docs, contracts,
+examples, or shared semantics from current `main` rather than chasing moving
+branches.
+
+This gating avoids semantic churn, avoidable rebases, and accidental behavior
+changes during parallel implementation.
 
 If two PRs overlap unexpectedly, pause and re-establish the order before merging:
 
