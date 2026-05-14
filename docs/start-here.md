@@ -37,14 +37,26 @@
 - Deterministic workflow triggers, operational invariants, and source-of-truth
   retrieval requirements execute before conversational interpretation,
   continuity, or summary-based reasoning.
-- Conversational fluency, prior thread context, summaries, and pasted
-  descriptions do not justify skipping required retrieval or inspection of
-  canonical repository, pull request, runtime, or provider state when direct
-  inspection is available.
+- Conversational coherence is subordinate to operational trigger handling:
+  references to authoritative operational state, including pull requests,
+  issues, repositories, runtime state, CI state, files, logs, and uploaded
+  artifacts, require retrieval or revalidation before conversational
+  continuation.
+- Conversational fluency, prior thread context, summaries, inferred intent, and
+  pasted descriptions must not suppress required retrieval, inspection, or
+  validation steps.
+- If authoritative state is accessible through available tools or connectors,
+  retrieve it before asking the human to restate, summarize, or paste it. Merely
+  acknowledging missing state without performing available retrieval is not
+  sufficient recovery.
 - When a deterministic trigger applies, perform the required retrieval or
   inspection first, then continue the conversation from the inspected state. If
   the required source is unavailable, report that blocker instead of inferring
   the state from conversation.
+- Anti-pattern: a human references a PR, and the assistant continues
+  philosophical or meta discussion instead of retrieving the PR state.
+- Anti-pattern: the assistant asks the human to paste retrievable PR, CI, file,
+  log, or artifact state instead of inspecting the available source.
 - Use `docs/source-first-retrieval.md` for the reusable trigger
   classification, ordering model, verification gate, and failure handling.
 
