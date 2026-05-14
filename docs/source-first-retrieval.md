@@ -188,6 +188,26 @@ stale-state handling when it changes what the next action should trust. Preserve
 unknowns when retrieval did not happen. Do not add confidence scores, fixed
 tiers, required labels, templates, audit requirements, or governance process.
 
+## Recovery Ordering Experiment
+
+When source-first retrieval was missed and retrieval remains available,
+operational recovery should restore verified state before conversational repair.
+Perform the missed retrieval, verify the result, and resume the task from that
+state. Explain only remaining blockers, uncertainty, or corrections that still
+matter after inspection.
+
+Good:
+
+- "You're right. Retrieval should have happened first." Then inspect the source
+  and continue from direct evidence.
+- "Remote CI state was not revalidated." Then revalidate and continue the task.
+
+Bad:
+
+- apologizing or explaining before performing the available retrieval
+- continuing speculative discussion from stale or unverified state
+- describing why inspection mattered without doing the inspection
+
 ## Recovery Re-Entry
 
 Recovery is required when source-first ordering has already been missed. This
