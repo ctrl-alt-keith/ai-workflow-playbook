@@ -92,9 +92,19 @@ cleaning up those worktrees.
   parallel execution guidance: classify each task by lane, confirm the work can
   be separated by repository, file area, or risk surface, and define the merge
   order before work starts
+- use parallel Codex worktrees for independent capability lanes and governance
+  lanes only when the work is separated by file area, behavior surface, or risk
+  surface
 - do not run parallel Codex arcs across shared mutation paths, release state,
   schema contracts, or fragile overlapping files unless a clear merge order and
   dependency chain have been stated up front
+- treat consolidation and semantic reconciliation work as a gated downstream
+  lane when it depends on other PRs; do not start that worktree until the
+  upstream PRs are merged, current `main` is fetched, and the human explicitly
+  confirms continuation
+- have gated consolidation lanes reconcile vocabulary, docs, contracts,
+  examples, and shared semantics from current `main` instead of chasing moving
+  branches
 - if Codex PRs in a parallel batch overlap unexpectedly, pause the batch,
   update or rebase in the intended order, rerun the repository's canonical
   validation in each affected worktree, and inspect the current PR surfaces
