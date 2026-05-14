@@ -49,6 +49,9 @@
   issues, repositories, runtime state, CI state, files, logs, and uploaded
   artifacts, require retrieval or revalidation before conversational
   continuation.
+- Repo-aware advisory and evaluation requests are retrieval tasks first and
+  advisory tasks second when a repository is explicitly named and the answer
+  depends on that repository's actual state.
 - In fresh threads, assume no repository, pull request, branch, issue, or local
   path state is verified until the referenced source is directly inspected.
 - Treat advisory summaries, generated snapshots, organization briefs, staged
