@@ -33,15 +33,27 @@
   purpose is `AGENTS.md` update, rollout, or enforcement.
 - Before acting on repository or software work, determine the interaction mode
   using `docs/repo-readiness.md`: implementation, review/audit, or
-  orchestration/prompt-authoring.
+  orchestration/prompt-authoring. This applies before implementation, review,
+  audit, architecture analysis, workflow analysis, PR/issue/branch
+  recommendations, "what changed?", and "what should we do next?" responses.
 - Deterministic workflow triggers, operational invariants, and source-of-truth
   retrieval requirements execute before conversational interpretation,
   continuity, or summary-based reasoning.
+- When the human asks for a concrete operational action and the needed tools
+  and context are available, perform that action before discussing workflow
+  philosophy, intent analysis, or speculative improvements. Examples include
+  inspecting a repo or PR, generating the requested implementation prompt,
+  reviewing the actual PR, updating an open PR, or running validation.
 - Conversational coherence is subordinate to operational trigger handling:
   references to authoritative operational state, including pull requests,
   issues, repositories, runtime state, CI state, files, logs, and uploaded
   artifacts, require retrieval or revalidation before conversational
   continuation.
+- In fresh threads, assume no repository, pull request, branch, issue, or local
+  path state is verified until the referenced source is directly inspected.
+- Treat advisory summaries, generated snapshots, organization briefs, staged
+  notes, memory, and conversational context as aids for finding what to inspect,
+  not proof of current repository state.
 - Conversational fluency, prior thread context, summaries, inferred intent, and
   pasted descriptions must not suppress required retrieval, inspection, or
   validation steps.
@@ -49,12 +61,17 @@
   retrieve it before asking the human to restate, summarize, or paste it. Merely
   acknowledging missing state without performing available retrieval is not
   sufficient recovery.
+- If referenced repository state was not directly verified, state
+  `unknown → referenced repo state was not verified` before answering from that
+  state.
 - When a deterministic trigger applies, perform the required retrieval or
   inspection first, then continue the conversation from the inspected state. If
   the required source is unavailable, report that blocker instead of inferring
   the state from conversation.
 - Anti-pattern: a human references a PR, and the assistant continues
   philosophical or meta discussion instead of retrieving the PR state.
+- Anti-pattern: the assistant recognizes an operational request but explains
+  the workflow problem instead of performing the available action.
 - Anti-pattern: the assistant asks the human to paste retrievable PR, CI, file,
   log, or artifact state instead of inspecting the available source.
 - Use `docs/source-first-retrieval.md` for the reusable trigger
@@ -62,7 +79,9 @@
 
 ## Startup Contract
 
-Before acting on repository or software work:
+Before acting on repository or software work, including read-only analysis,
+review, audit, advisory, architecture/workflow analysis, PR/issue/branch
+recommendations, and "what changed?" or "what should we do next?" requests:
 
 1. Read `docs/start-here.md` first.
 2. Read the target repository's repo-local `AGENTS.md`.
