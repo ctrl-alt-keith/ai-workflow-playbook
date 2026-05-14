@@ -158,6 +158,24 @@ The preferred path is:
 Schemas and automation should follow durable patterns, not lead them before the
 workflow is understood.
 
+### Solo Operator Scaling Direction
+
+As AI-assisted work scales, the limiting factor becomes decomposition,
+verification, and review compression rather than raw implementation speed.
+Prefer small, repo-local, independently verifiable changes with clear
+validation and stop rules.
+
+Repo-local sovereignty remains the default. Discovery should be report-only
+before mutation, and cross-repo changes should be decomposed into separately
+reviewable repository PRs rather than bundled into mega-changes. Avoid
+centralized orchestration, unbounded autonomy, and premature standardization.
+
+Promote new workflow abstractions only after repeated evidence from real repo
+work shows that they reduce review or coordination burden without becoming
+ceremony. Noncanonical exploration may be staged in
+[`ai-workflow-incubator`](https://github.com/ctrl-alt-keith/ai-workflow-incubator/blob/main/architecture/solo-operator-operational-architecture-2026-05-14.md),
+but incubator notes do not create playbook policy.
+
 ## Public And Non-Work Boundary
 
 Current retained-knowledge workflows are intentionally focused on public and
