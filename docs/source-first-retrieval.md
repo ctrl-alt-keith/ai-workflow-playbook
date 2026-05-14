@@ -50,6 +50,8 @@ answers:
 - pasted summaries, copied diffs, screenshots, or release notes without a live
   artifact identifier
 - references to earlier conversation, prior work, or a remembered plan
+- previous operational syntheses, repo trajectory analyses, or
+  continuity-heavy advisory models that the next answer would extend
 - broad repository names without an action that depends on current state
 - conceptual questions about workflow patterns, review posture, or tradeoffs
 
@@ -80,6 +82,10 @@ files, pull request, issue, branch, validation, or documentation state to ground
 the recommendation; do not turn the heuristic into a mandatory full audit.
 Purely conceptual discussion remains optional unless the answer claims or
 depends on current repository state.
+
+Before extending a previous operational synthesis, repo trajectory analysis, or
+continuity-heavy advisory model, revalidate whether the underlying source state
+is still current and authoritative.
 
 Examples:
 
@@ -128,6 +134,15 @@ constraints, tone, previous decisions, and desired output shape. Continuity is
 not allowed to substitute for source state. Summaries, memory, generated
 context-refresh output, and pasted descriptions may help navigate, but they
 must not outrank direct repository, GitHub, CI, runtime, or provider evidence.
+Conversational continuity is not operational verification. Repeated operational
+summaries, trajectory narratives, checkpoint syntheses, or continuity-heavy
+advisory framing can accumulate implied authority beyond their current
+verification state. When continuity becomes uncertain, stale, overly
+synthesized, hard to distinguish from verified source state, or heavy after a
+long interaction chain, re-ground from authoritative sources before continuing
+advisory reasoning. A fresh interaction or project context can sometimes reduce
+continuity noise, but it is only a recovery aid; it does not replace retrieval
+or create a required reset workflow.
 
 ## Verification Gate Pattern
 
@@ -193,8 +208,9 @@ tiers, required labels, templates, audit requirements, or governance process.
 When source-first retrieval was missed and retrieval remains available,
 operational recovery should restore verified state before conversational repair.
 Perform the missed retrieval, verify the result, and resume the task from that
-state. Explain only remaining blockers, uncertainty, or corrections that still
-matter after inspection.
+state. Keep the recovery small: retrieve or revalidate first, minimize
+speculative narration, avoid explanation loops, and explain only remaining
+blockers, uncertainty, or corrections that still matter after inspection.
 
 Good:
 
@@ -226,7 +242,7 @@ When recovery is required, execute this sequence:
 2. Identify every unresolved mandatory trigger.
 3. Retrieve the authoritative source state for those triggers.
 4. Discard, correct, or mark unverified any assumptions made before retrieval.
-5. Resume only from verified artifacts and stated unknowns.
+5. Resume from the restored verified state and stated unknowns.
 
 Acknowledgment alone is not recovery. Explaining the violation is not
 remediation. Recovery must perform the missing retrieval or inspection, not
