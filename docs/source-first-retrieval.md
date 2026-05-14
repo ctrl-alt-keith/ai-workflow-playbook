@@ -141,22 +141,12 @@ the current checkout.
 
 ## State Language
 
-When source status could blur, add a few plain words to the claim itself. The
-goal is not a new report format; it is to keep directly verified state,
-continuity-based assumptions, and unknowns from collapsing into one fluent
-answer.
-
-Useful phrases:
-
-- "verified from direct PR inspection"
-- "mergeability inferred from cached state; not revalidated"
-- "repo state not verified after branch update"
-- "continuity assumption only"
-- "remote CI status unknown because retrieval did not occur"
-
-Use this when it changes what the next action should trust. Preserve unknowns
-when retrieval did not happen. Do not add confidence scores, fixed tiers,
-required labels, templates, audit requirements, or governance process.
+When source status could blur, add a few plain words to the claim itself:
+whether the state was directly verified, inferred from continuity, or unknown
+because retrieval did not happen. Use this only when it changes what the next
+action should trust. Preserve unknowns when retrieval did not happen. Do not
+add confidence scores, fixed tiers, required labels, templates, audit
+requirements, or governance process.
 
 ## Recovery
 
