@@ -234,6 +234,10 @@ done
 require_sqlite3
 require_db
 
+if [[ "$apply" -eq 1 ]]; then
+  require_codex_stopped
+fi
+
 print_sizes "Before"
 require_expected_schema
 print_inspection
@@ -243,7 +247,6 @@ if [[ "$apply" -eq 0 ]]; then
   exit 0
 fi
 
-require_codex_stopped
 apply_cleanup
 print_sizes "After"
 printf 'Codex log cleanup completed.\n'
