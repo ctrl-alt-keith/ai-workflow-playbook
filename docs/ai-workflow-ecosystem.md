@@ -165,10 +165,23 @@ verification, and review compression rather than raw implementation speed.
 Prefer small, repo-local, independently verifiable changes with clear
 validation and stop rules.
 
+The preferred scaling model is one top-level orchestration prompt for the run,
+with safe parallel work delegated to self-contained subagents or workers. The
+top-level prompt owns decomposition, lane boundaries, reconciliation, and
+reporting. Workers own only their assigned task envelope and should not depend
+on full conversation history, implicit role inheritance, or shared hidden state.
+
+Worker envelopes should make the repository, goal, scope, constraints,
+validation path, stop conditions, and reporting expectations explicit. Parallel
+workers should operate independently on separate worktrees and branches, or on
+clearly non-overlapping file, behavior, or risk surfaces when a branch split is
+not the right unit. If overlap appears, reconciliation belongs to the
+orchestrator or human reviewer, not to unsupervised worker coordination.
+
 Repo-local sovereignty remains the default. Discovery should be report-only
 before mutation, and cross-repo changes should be decomposed into separately
-reviewable repository PRs rather than bundled into mega-changes. Avoid
-centralized orchestration, unbounded autonomy, and premature standardization.
+reviewable repository PRs rather than bundled into mega-changes. Avoid standing
+centralized control planes, unbounded autonomy, and premature standardization.
 
 Promote new workflow abstractions only after repeated evidence from real repo
 work shows that they reduce review or coordination burden without becoming

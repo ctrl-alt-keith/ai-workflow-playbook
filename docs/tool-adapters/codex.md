@@ -66,6 +66,33 @@ Codex-specific application:
 - When cleanup is in scope, remove only the task worktrees and account for any
   blocked or deferred cleanup.
 
+## Subagent And Worker Prompts
+
+The ecosystem-level scaling direction prefers one top-level orchestration
+prompt that delegates safe parallel work through explicit task envelopes. For
+Codex, treat this as a compatibility constraint as well as a workflow
+preference: some Codex execution surfaces reject or cannot reliably honor
+requests for full-history conversation forking with explicit worker roles.
+
+Codex prompts should therefore avoid asking workers to inherit the complete chat
+history, parent-agent role, implicit project state, or hidden constraints. Do
+not rely on phrases such as "fork this conversation" or "use the same role and
+context as above" as the source of authority for worker behavior.
+
+Prefer standalone worker prompts that include:
+
+- repository and working directory
+- interaction mode and expected deliverable
+- goal, scope, and explicit exclusions
+- relevant source evidence or retrieval instructions
+- constraints, validation path, and stop conditions
+- branch, worktree, file-surface, or non-overlap expectations
+- reporting expectations for summary, validation, blockers, and residual risks
+
+This is a Codex execution quirk, not a universal playbook rule. Other adapters
+may describe different context-passing mechanisms when their execution surfaces
+support them, but Codex orchestration should remain self-contained by default.
+
 ## Command Execution
 
 Follow the command-form guidance in
