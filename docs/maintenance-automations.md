@@ -21,20 +21,241 @@ handwritten rows that have not been compared with live `automation.toml` files
 and referenced companion configs.
 
 Registry entries are canonical only for intended semantics, governance
-expectations, and reconciliation guidance. They are not executable automation
-state and must not be treated as proof that an automation exists, is enabled,
-uses a particular schedule, or currently contains a matching prompt.
+expectations, and reconciliation guidance. They are normalized summaries
+derived from inspected local config, not raw TOML mirrors. They are not
+executable automation state and must not be treated as proof that an
+automation exists, is enabled, uses a particular schedule, or currently
+contains a matching prompt.
 
-| Automation | ID | Scope | Mode | Intended Prompt Semantics | Companion Config / Drift Handling |
-| --- | --- | --- | --- | --- | --- |
-| 🧹 Delete merged repo branches | `delete-merged-repo-branches` | Automation-owned branch-cleanup config covers `knowledge-adapters`, `knowledge-vault`, `ka-destinations`, `ai-workflow-playbook`, `ai-workflow-enforcement`, `ai-workflow-incubator`, `linode-image-lab`, `linode-backup-lab`, `nexus`, and `.github`. | Mutating through the tool's explicit `--apply` path for normal Git-proven cleanup; stale non-ancestor cleanup remains report-only unless explicit approval evidence is supplied in the automation config. | Use `enforcement.branch_cleanup` to dry-run and apply Git-proven merged branch cleanup, then report preserved stale or blocked refs. Refresh the enforcement tool only through the safe local refresh rule below, run dry-run first, and rely on tool output for reporting. | Inspect the active `automation.toml` and `branch-cleanup.json` before judging alignment. Skip dirty repos, detached checkouts, non-default branches, missing upstreams, and non-fast-forward updates; preserve protected refs, symbolic refs, unsafe worktrees, ambiguous refs, and stale non-ancestor refs without explicit approval evidence. Reconcile only prompt/config intent drift that conflicts with this guidance; never recreate cleanup logic in the prompt, switch branches to normalize state, use `merge --ff-only` as a pull fallback, force-delete ad hoc, commit, or open PRs. |
-| 🧠 Staging vs Canon Audit | `staging-vs-canon-audit` | The `ctrl-alt-keith` workspace guidance layer, including the playbook, repo-local `AGENTS.md` files, and staging/reference material. | Report-only. | Audit drift between staging notes, canonical playbook guidance, and repo-local execution layers. | Inspect the active `automation.toml` before judging alignment. The prompt should stay read-only; do not modify files, refs, branches, working trees, automation prompts, or repository state. Ignore generated and dependency paths. Treat freshness findings as context only. |
-| 🔍 AGENTS Drift Detector | `agents-drift-detector` | `ai-workflow-playbook`, `ai-workflow-enforcement`, `ai-workflow-incubator`, `knowledge-adapters`, `knowledge-vault`, `ka-destinations`, `linode-image-lab`, `linode-backup-lab`, `nexus`, `.github`, plus the local-only workspace-level `~/src/ctrl-alt-keith/AGENTS.md`. | Report-only. | Audit repo-local `AGENTS.md` guidance and local workspace-routing guidance against the canonical playbook. | Inspect the active `automation.toml` before judging alignment. The prompt should inspect latest `origin/main` state for repositories and review the workspace-level `AGENTS.md` as local-only, noncanonical routing guidance, not as a repository policy document. If a repository or the local workspace file cannot be inspected, mark that scope blocked. Do not modify files or branches, and do not invent missing repo details. |
-| 🛡️ Workflow Drift Audit | `workflow-drift-audit` | `ctrl-alt-keith` workspace guidance and workflow-policy surfaces covered by the scanner drift config. | Report-only advisory scan. | Invoke the calibrated `ai-workflow-enforcement` advisory drift scanner directly and report workflow-policy drift findings. | Inspect the active `automation.toml` and referenced scanner config before judging alignment. Treat findings as advisory, not failures. Do not modify files, branches, worktrees, automation state, or repository state. Skip and report when the enforcement checkout, scanner config, dependencies, workspace scope, command result, or mutation safety is uncertain. Do not create a secondary drift scanner or duplicate scanner semantics in automation. |
-| 🛡️ Repo Governance Audit | `repo-governance-audit` | Dynamically enumerated repositories in the `ctrl-alt-keith` GitHub organization. | Report-only advisory scan. | Invoke the centralized `ai-workflow-enforcement` repo settings audit directly across visible organization repositories and report hosted governance drift. | Inspect the active `automation.toml` before judging alignment. The prompt should use existing `gh` authentication and run `python3 -m enforcement.repo_settings_audit` from merged `main`, after safe local refresh succeeds or with a clear stale-local blocker if it does not. Do not pass `--fail-on-drift`, mutate hosted settings, auto-remediate, or create a wrapper audit engine. Clearly separate hosted drift, unknowns, stale local/source-ref drift, and audit/runtime failures. |
-| 🔎 Org PR and Issue Scan | `org-pr-issue-scan` | Dynamically enumerated repositories in the `ctrl-alt-keith` GitHub organization. | Report-only. | Report current open pull requests and open issues across visible repositories in the `ctrl-alt-keith` GitHub organization. | Inspect the active `automation.toml` before judging alignment. The prompt should use existing `gh` authentication and invoke the owning `ai-workflow-enforcement` scanner directly. Do not create, edit, close, label, assign, comment on GitHub issues or pull requests, or recreate scanner behavior in automation. Clearly report skipped or inaccessible repositories and skip when the scanner, auth, organization access, or mutation safety is uncertain. |
-| 🧪 knowledge-adapters weekly chaos-all validation | `knowledge-adapters-weekly-chaos-all-validation` | `knowledge-adapters`. | Report-only validation. | Run exhaustive scheduled validation for `knowledge-adapters` and report the result. | Inspect the active `automation.toml` before judging alignment. The prompt should refresh from current `origin/main` only through the safe local refresh rule below, run `make chaos-all`, and report the tested commit SHA. If the checkout cannot be refreshed safely, skip validation and report the blocker instead of changing branches, rebasing, stashing, resetting, or cleaning local state. Do not modify files, open PRs, or run live-service or credential-dependent checks. |
-| 🗜️ Compact Memory | `compact-memory` | Local Codex automation memory files. | Report-only proposal. | Inspect `~/.codex/automations/*/memory.md`, report memories over 25 KiB, and propose compact replacements that preserve durable state. | Inspect the active `automation.toml` before judging alignment. Reconcile only prompt intent drift; do not mutate `memory.md` automatically. |
+### 🧹 Delete Merged Repo Branches
+
+- Automation name: 🧹 Delete merged repo branches
+- Automation ID: `delete-merged-repo-branches`
+- Scope / target repositories: `knowledge-adapters`, `knowledge-vault`,
+  `ka-destinations`, `ai-workflow-playbook`, `ai-workflow-enforcement`,
+  `ai-workflow-incubator`, `linode-image-lab`, `linode-backup-lab`, `nexus`,
+  and `.github`.
+- Mode: Mutating only through the owning tool's explicit `--apply` path for
+  Git-proven normal cleanup. Stale non-ancestor cleanup remains report-only
+  unless explicit human-approved evidence exists in the companion config and
+  the owning tool validates it.
+- Purpose / intent: Keep local and remote branch refs tidy by delegating
+  cleanup decisions to `enforcement.branch_cleanup`, while reporting preserved,
+  blocked, failed, and stale refs.
+- Canonical prompt intent summary: Read the playbook startup guidance,
+  maintenance automation guidance, and branch-cleanup tool guidance before
+  running. Use only configured target repositories. Treat the enforcement tool
+  output as authoritative for cleanup classifications and never recreate branch
+  cleanup or stale-validation policy in prompt text.
+- Canonical execution expectations: Use direct Git and Python commands from
+  the `ai-workflow-enforcement` checkout. Refresh the enforcement checkout and
+  configured target repositories only through the safe local refresh rule
+  below. Run bounded normal cleanup with
+  `python3 -m enforcement.branch_cleanup --config <branch-cleanup-config> --apply --retry-normal-cleanup --max-apply-passes 3`,
+  then run stale/non-ancestor audit with
+  `python3 -m enforcement.branch_cleanup --config <branch-cleanup-config> --audit-stale --audit-github-prs`.
+  Report deleted, preserved, skipped, blocked, failed, stale-candidate, and
+  human-review refs from tool output.
+- Companion config references:
+  `~/.codex/automations/delete-merged-repo-branches/branch-cleanup.json`
+  owns target repositories, protected branches, and stale approval evidence.
+  `ai-workflow-enforcement/docs/branch-cleanup.md` owns tool behavior.
+- Reconciliation / drift handling: Freshly inspect the active `automation.toml`
+  and companion config before comparison. The inspected live prompt contains
+  older prompt-content drift around branch switching and `merge --ff-only`
+  fallback refresh behavior; reconcile that prompt content to the safe local
+  refresh rule below only when explicitly directed. Do not copy stale approval
+  entries, runtime state, or raw config into the playbook.
+
+### 🧠 Staging Vs Canon Audit
+
+- Automation name: 🧠 Staging vs Canon Audit
+- Automation ID: `staging-vs-canon-audit`
+- Scope / target repositories: The `ctrl-alt-keith` workspace guidance layer,
+  including `ai-workflow-playbook`, repo-local `AGENTS.md` files,
+  `ai-workflow-incubator` staging/reference material, and local workspace
+  routing guidance.
+- Mode: Report-only read-only audit.
+- Purpose / intent: Detect documentation drift, accidental authority,
+  shadow-canonical guidance, stale staging material, and repo-level
+  duplication of canonical workflow rules.
+- Canonical prompt intent summary: Treat `ai-workflow-playbook` as canonical
+  reusable guidance, repo-local `AGENTS.md` files as repository execution
+  layers, and `ai-workflow-incubator` as private noncanonical staging. Audit
+  only inside the workspace boundary and treat sibling repositories as
+  independent units.
+- Canonical execution expectations: Stay read-only. Do not fetch, pull,
+  checkout, merge, rebase, reset, or modify refs. Ignore generated,
+  dependency, cache, virtualenv, and tool-managed paths. Classify findings as
+  remove, trim, keep, defer, or promotion candidate, and report repository
+  freshness only as context when it can be checked without mutation.
+- Companion config references: None.
+- Reconciliation / drift handling: Freshly inspect the active `automation.toml`
+  before comparison. Prompt drift includes any change that makes staging
+  material canonical, mixes repository findings as one shared working tree, or
+  permits repository, automation, or workspace mutation.
+
+### 🔍 AGENTS Drift Detector
+
+- Automation name: 🔍 AGENTS Drift Detector
+- Automation ID: `agents-drift-detector`
+- Scope / target repositories: `ai-workflow-playbook`,
+  `ai-workflow-enforcement`, `ai-workflow-incubator`, `knowledge-adapters`,
+  `knowledge-vault`, `ka-destinations`, `linode-image-lab`,
+  `linode-backup-lab`, `nexus`, and `.github`, plus the local-only workspace
+  `AGENTS.md`.
+- Mode: Report-only audit.
+- Purpose / intent: Audit repo-local `AGENTS.md` guidance and local
+  workspace-routing guidance against the canonical playbook.
+- Canonical prompt intent summary: Treat `ai-workflow-playbook` as canonical
+  reusable workflow guidance, each repo-local `AGENTS.md` as the repository
+  execution layer, the workspace `AGENTS.md` as local-only routing guidance,
+  and `ai-workflow-incubator` as private noncanonical staging.
+- Canonical execution expectations: For each repository, fetch `origin main`
+  and inspect current `origin/main` state without modifying files or branches.
+  Mark repositories blocked when `origin/main` cannot be fetched or inspected.
+  Inspect the local workspace `AGENTS.md` as local-only guidance. Compare
+  repo-local guidance against the playbook and relevant workspace-routing
+  guidance; report High/Medium findings separately from Low-only observations.
+- Companion config references: None.
+- Reconciliation / drift handling: Freshly inspect the active `automation.toml`
+  before comparison. Prompt drift includes treating the workspace `AGENTS.md`
+  as canonical repository policy, auditing local working trees instead of
+  fetched `origin/main`, inventing missing repo details, or allowing mutation.
+
+### 🛡️ Workflow Drift Audit
+
+- Automation name: 🛡️ Workflow Drift Audit
+- Automation ID: `workflow-drift-audit`
+- Scope / target repositories: The `ctrl-alt-keith` workspace guidance and
+  workflow-policy surfaces covered by the enforcement drift scanner config:
+  `ai-workflow-incubator` notes roots, `ai-workflow-playbook/docs`, the
+  workspace manifest, and the configured organization repositories `.github`,
+  `ai-workflow-incubator`, `ai-workflow-playbook`,
+  `ai-workflow-enforcement`, `linode-image-lab`, `linode-backup-lab`,
+  `knowledge-adapters`, `knowledge-vault`, `ka-destinations`, and `nexus`.
+- Mode: Report-only advisory scan.
+- Purpose / intent: Invoke the calibrated `ai-workflow-enforcement` drift
+  scanner directly and report workflow-policy drift findings.
+- Canonical prompt intent summary: Treat the scanner as advisory, local
+  automation config as runtime state, and generated reports as local-only.
+  Do not auto-fix findings or duplicate scanner semantics in prompt text.
+- Canonical execution expectations: Work from the `ai-workflow-enforcement`
+  checkout. Verify the scanner config exists, inspect git status, skip if the
+  working tree would make results ambiguous, record the tested commit SHA, and
+  run `python3 -m enforcement.cli --config examples/drift-scan.json`.
+  Do not fetch, pull, switch branches, commit, open PRs, modify files, delete
+  worktrees, or delete branches.
+- Companion config references: `ai-workflow-enforcement/examples/drift-scan.json`
+  owns scanner roots, repository coverage, ignored paths, and scanner
+  calibration thresholds.
+- Reconciliation / drift handling: Freshly inspect the active `automation.toml`
+  and scanner config before comparison. Prompt drift includes mutating
+  repositories, treating advisory scanner findings as failures, changing
+  scanner scope in prompt text instead of the companion config, or creating a
+  secondary drift scanner.
+
+### 🛡️ Repo Governance Audit
+
+- Automation name: 🛡️ Repo Governance Audit
+- Automation ID: `repo-governance-audit`
+- Scope / target repositories: All visible repositories in the
+  `ctrl-alt-keith` GitHub organization, discovered dynamically at runtime.
+- Mode: Report-only advisory scan.
+- Purpose / intent: Invoke the centralized `ai-workflow-enforcement`
+  repository settings audit directly across visible organization repositories
+  and report hosted governance drift.
+- Canonical prompt intent summary: Use the merged `main` state of
+  `ai-workflow-enforcement` as the audit implementation source. Enumerate
+  repositories with `gh`; do not use a hard-coded allowlist as the source of
+  repository scope. Report drift, unknowns, stale local/source-ref drift, and
+  audit/runtime failures without remediation.
+- Canonical execution expectations: Inspect the enforcement checkout, update
+  local `main` only through safe local refresh, confirm it matches
+  `origin/main`, record the tested commit SHA, verify `gh` organization
+  access, and run
+  `python3 -m enforcement.repo_settings_audit --repo ctrl-alt-keith/<repo> --source-ref main --output-format json`
+  for each visible repository. Do not pass `--fail-on-drift`, mutate hosted
+  settings, commit, push, open PRs, delete branches, delete worktrees, or edit
+  automation config.
+- Companion config references: None.
+- Reconciliation / drift handling: Freshly inspect the active `automation.toml`
+  before comparison. Prompt drift includes hard-coded repository scope,
+  hosted remediation, failure-on-drift behavior, stale local source ambiguity,
+  or unsafe local refresh semantics.
+
+### 🔎 Org PR And Issue Scan
+
+- Automation name: 🔎 Org PR and Issue Scan
+- Automation ID: `org-pr-issue-scan`
+- Scope / target repositories: All visible repositories in the
+  `ctrl-alt-keith` GitHub organization, discovered by the owning enforcement
+  scanner.
+- Mode: Report-only inventory scan.
+- Purpose / intent: Report current open pull requests and open issues across
+  visible organization repositories.
+- Canonical prompt intent summary: Use the owning `ai-workflow-enforcement`
+  scanner directly, keep generated reports local-only, and treat the result as
+  inventory rather than remediation.
+- Canonical execution expectations: Work from the `ai-workflow-enforcement`
+  checkout. Inspect git status, skip if the working tree would make results
+  ambiguous, record the tested commit SHA, verify `gh` organization access,
+  and run `python3 -m enforcement.org_pr_issue_scan --org ctrl-alt-keith`.
+  Do not fetch, pull, switch branches, commit, open PRs, modify files, delete
+  worktrees, delete branches, or create, edit, close, label, assign, or comment
+  on GitHub issues or pull requests.
+- Companion config references: None.
+- Reconciliation / drift handling: Freshly inspect the active `automation.toml`
+  before comparison. Prompt drift includes recreating scanner behavior in
+  prompt text, mutating GitHub issues or pull requests, omitting skipped or
+  inaccessible repositories, or treating inventory as remediation.
+
+### 🧪 Knowledge-Adapters Weekly Chaos-All Validation
+
+- Automation name: 🧪 knowledge-adapters weekly chaos-all validation
+- Automation ID: `knowledge-adapters-weekly-chaos-all-validation`
+- Scope / target repositories: `knowledge-adapters`.
+- Mode: Report-only scheduled validation.
+- Purpose / intent: Run exhaustive validation for `knowledge-adapters` and
+  report the result.
+- Canonical prompt intent summary: Refresh the target repository from current
+  `origin/main` only when safe, run the canonical exhaustive validation command,
+  report the tested commit SHA, and summarize failures with the smallest useful
+  follow-up when validation fails.
+- Canonical execution expectations: Use the safe local refresh rule below.
+  Run `make chaos-all`. Do not modify files, open PRs, or run live-service or
+  credential-dependent checks.
+- Companion config references: None.
+- Reconciliation / drift handling: Freshly inspect the active `automation.toml`
+  before comparison. Prompt drift includes underspecified or unsafe refresh
+  behavior, mutation, PR creation, live-service checks, or replacing
+  `make chaos-all` with a narrower validation command.
+
+### 🗜️ Compact Memory
+
+- Automation name: 🗜️ Compact Memory
+- Automation ID: `compact-memory`
+- Scope / target repositories: Active Codex automation memory files matching
+  `~/.codex/automations/*/memory.md`.
+- Mode: Report-only proposal.
+- Purpose / intent: Identify oversized automation memory files and propose
+  compact replacements that preserve durable operational state.
+- Canonical prompt intent summary: Treat 25 KiB as the default oversized
+  threshold. Preserve automation purpose, durable decisions, active risks,
+  unresolved TODOs or blockers, and recent operational state while reducing
+  repetitive historical run detail.
+- Canonical execution expectations: Inspect active `memory.md` files only.
+  Do not mutate memory files, automation configs, repositories, branches, or
+  working trees. Do not create archive copies or `memory.*.md` siblings under
+  `~/.codex/automations/*/`. Do not introduce scripts, enforcement tools, or
+  automatic rewriters. If preservation is explicitly requested for a rewrite,
+  use an archive location outside active automation directories.
+- Companion config references: None. Active `memory.md` files are inspected
+  data for the report, not repository-owned companion config.
+- Reconciliation / drift handling: Freshly inspect the active `automation.toml`
+  before comparison. Prompt drift includes automatic memory mutation,
+  repository mutation, archive sibling creation inside active automation
+  directories, or discarding durable state.
 
 ## Guidance Layers
 
