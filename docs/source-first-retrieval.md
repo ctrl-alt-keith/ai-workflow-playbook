@@ -19,6 +19,22 @@ issue, branch, commit, validation, runtime, provider, or external API state.
 This guidance describes observable workflow behavior and operational
 safeguards. It does not assume or describe platform internals.
 
+## Evidence Hierarchy
+
+Prefer evidence in this order when repository state is available:
+
+1. Live connector or tool inspection of the referenced artifact.
+2. Direct repository state from the inspected worktree or remote ref.
+3. Validation output executed in the current session.
+4. Raw logs or artifacts.
+5. User summaries.
+6. Prior-thread summaries.
+7. Agent-generated summaries or status claims.
+
+Summaries are leads, not state. They may guide what to inspect, but they are
+never authoritative when a live artifact, repository, check, workflow, log, or
+file can be inspected directly.
+
 ## Triggers
 
 Classify triggers before using prior conversation, summaries, memory, or pasted
@@ -37,6 +53,9 @@ stateful reasoning or recommendations:
 - branch names, refs, tags, commit SHAs, comparison ranges, or release refs
 - requests to assess mergeability, CI status, review state, changed files,
   issue closure, validation status, or current implementation scope
+- requests involving PRs, issues, branches, workflows, checks, validation
+  state, merge sequencing, or implementation quality; default these to
+  operational evaluation mode, not conversational analysis mode
 - claims or requested changes that depend on current external provider,
   public API, SDK, CLI, package, or hosted-platform behavior
 
@@ -64,11 +83,14 @@ For repository workflows:
 1. Detect deterministic triggers in the request, visible context, and provided
    artifacts.
 2. Classify each trigger as mandatory, optional, or ambiguous.
-3. For every mandatory trigger, identify and inspect the authoritative source.
-4. Block stateful reasoning until required checks complete or fail.
-5. Use conversational continuity only after source retrieval establishes the
+3. For every mandatory trigger, inspect referenced PRs, issues, branches,
+   checks, workflows, files, or other authoritative sources directly.
+4. Verify current live state.
+5. Summarize verified findings first.
+6. Only then interpret, prioritize, recommend, or explain.
+7. Use conversational continuity only after source retrieval establishes the
    current state.
-6. Treat any source that could not be checked as unknown or unverified.
+8. Treat any source that could not be checked as unknown or unverified.
 
 When a mandatory trigger is present, verification blocks:
 
@@ -80,6 +102,12 @@ When a mandatory trigger is present, verification blocks:
   the branch currently contains
 - decisions that depend on current external API, SDK, CLI, provider, or hosted
   platform behavior
+
+No evaluative commentary may come before live inspection. Evaluative
+commentary includes architecture assessment, correctness claims,
+implementation quality judgments, merge guidance, prioritization, risk
+analysis, validation confidence, workflow recommendations, and
+scope/completeness claims.
 
 Continuity may help interpret intent, constraints, tone, previous decisions,
 and desired output shape after retrieval. It must not substitute for direct
@@ -124,6 +152,12 @@ Acceptable authoritative sources depend on the claim:
   they actually ran.
 - Official provider documentation, schemas, SDK docs, CLI docs, changelogs, or
   release notes are authoritative for external public API behavior.
+
+For pull requests and issues, do not infer implementation quality, scope, risk,
+merge readiness, or correctness from titles, summaries, commit messages,
+reported check status, or conversational descriptions. Inspect changed files,
+validation or check state, scope boundaries, and overlap or conflict risk
+directly.
 
 If the required source is unavailable, blocked, or access is declined, stop the
 stateful workflow and report the blocker. Do not provide readiness,
@@ -203,6 +237,8 @@ Watch for these observable failure patterns:
 
 - Detect repository triggers before continuity.
 - Retrieve authoritative source state before stateful reasoning.
+- Treat summaries as leads, not state, whenever live inspection is available.
+- Provide no evaluative commentary before direct live inspection.
 - Block readiness, mergeability, approval, closure, and implementation-scope
   claims until verification completes.
 - Use summaries and memory only as navigation aids after source retrieval.
