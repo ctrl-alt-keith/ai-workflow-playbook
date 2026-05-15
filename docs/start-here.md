@@ -36,9 +36,11 @@ advisory, architecture/workflow analysis, PR/issue/branch recommendations, and
 4. Select the interaction mode from `docs/repo-readiness.md`: implementation,
    review/audit, or orchestration/prompt-authoring.
 5. Identify the canonical source for the rule, behavior, or state being used.
-6. Confirm command form and execution settings for planned repository commands.
-7. Identify the repository's canonical validation path.
-8. Act only after those checks are clear, or report the blocker, uncertainty,
+6. For policy-sensitive changes, apply the repo-family alignment check in
+   `docs/repo-readiness.md`.
+7. Confirm command form and execution settings for planned repository commands.
+8. Identify the repository's canonical validation path.
+9. Act only after those checks are clear, or report the blocker, uncertainty,
    or missing context.
 
 ## Core Invariants
