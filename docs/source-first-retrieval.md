@@ -54,8 +54,9 @@ stateful reasoning or recommendations:
 - requests to assess mergeability, CI status, review state, changed files,
   issue closure, validation status, or current implementation scope
 - requests involving PRs, issues, branches, workflows, checks, validation
-  state, merge sequencing, or implementation quality; default these to
-  operational evaluation mode, not conversational analysis mode
+  state, merge sequencing, or implementation quality; treat these as mandatory
+  source-first triggers and select the appropriate repo-readiness interaction
+  mode rather than defaulting to conversational analysis
 - claims or requested changes that depend on current external provider,
   public API, SDK, CLI, package, or hosted-platform behavior
 
