@@ -165,7 +165,7 @@ verification, and review compression rather than raw implementation speed.
 Prefer small, repo-local, independently verifiable changes with clear
 validation and stop rules.
 
-The preferred scaling model is one top-level orchestration prompt for the run,
+A preferred scaling model is one top-level orchestration prompt for the run,
 with safe parallel work delegated to self-contained subagents or workers. The
 top-level prompt owns decomposition, lane boundaries, reconciliation, and
 reporting. Workers own only their assigned task envelope and should not depend
