@@ -194,10 +194,26 @@ backup_database() {
   printf 'Backup: %s\n' "$backup_path"
 }
 
+print_checkpoint_status() {
+  local result=$1
+  local busy log_frames checkpointed_frames remainder
+
+  IFS='|' read -r busy log_frames checkpointed_frames remainder <<<"$result"
+  if [[ -n "$busy" && -n "$log_frames" && -n "$checkpointed_frames" && -z "$remainder" ]]; then
+    printf 'WAL checkpoint: busy=%s log=%s checkpointed=%s\n' \
+      "$busy" "$log_frames" "$checkpointed_frames"
+  else
+    printf 'WAL checkpoint: %s\n' "$result"
+  fi
+}
+
 apply_cleanup() {
+  local checkpoint_result
+
   backup_database
+  checkpoint_result=$(sqlite_rw "PRAGMA wal_checkpoint(TRUNCATE);")
+  print_checkpoint_status "$checkpoint_result"
   sqlite_rw "
-    PRAGMA wal_checkpoint(TRUNCATE);
     DELETE FROM logs;
     VACUUM;
     PRAGMA optimize;
