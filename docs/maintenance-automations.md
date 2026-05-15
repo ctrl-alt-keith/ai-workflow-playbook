@@ -71,5 +71,8 @@ execution paths.
   operational state, not canonical workflow guidance.
 - Detailed automation configuration should remain in local configuration files,
   not in the playbook.
+- When local automation configuration is human-maintained, follow the TOML
+  readability guidance in
+  [`engineering-baseline.md`](engineering-baseline.md#human-maintained-toml-readability).
 - Do not expose secrets, local-only paths, raw prompts containing private
   context, or environment-specific details in the playbook.

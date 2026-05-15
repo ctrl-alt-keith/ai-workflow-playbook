@@ -127,6 +127,12 @@ human-maintained configuration. Compact serialized TOML is usually appropriate
 for intentionally machine-generated artifacts or local runtime state where
 round-trip serialization is more important than review readability.
 
+This applies to local operational configuration such as Codex
+`automation.toml` files when humans are expected to inspect, tune, or review
+their prompts, schedules, or execution settings. Keep long prompt fields as
+real multiline strings and prefer one setting per line over compact generated
+serialization.
+
 ## Parallel Execution And Merge Ordering
 
 Prefer parallel task execution when work can be cleanly separated by repository,
