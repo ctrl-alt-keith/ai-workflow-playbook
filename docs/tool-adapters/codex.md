@@ -31,6 +31,9 @@ Before repo-scoped work:
   [`source-first-retrieval.md`](../source-first-retrieval.md): retrieve or
   revalidate authoritative repository, PR, issue, file, CI, log, artifact, and
   external-state sources before relying on them.
+- For policy-sensitive changes, apply the repo-family alignment check in
+  [`repo-readiness.md`](../repo-readiness.md#repo-family-policy-alignment)
+  before implementation.
 - Treat summaries, memory, pasted descriptions, generated notes, and local
   branch state as navigation only until the relevant source has been inspected.
 - If required source state is unavailable, report it as unknown or blocked
@@ -85,6 +88,7 @@ Prefer standalone worker prompts that include:
 - interaction mode and expected deliverable
 - goal, scope, and explicit exclusions
 - relevant source evidence or retrieval instructions
+- repo-family policy alignment expectations for policy-sensitive changes
 - constraints, validation path, and stop conditions
 - branch, worktree, file-surface, or non-overlap expectations
 - reporting expectations for summary, validation, blockers, and residual risks

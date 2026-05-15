@@ -206,6 +206,32 @@ repo-awareness and onboarding refresh procedure in
 That procedure keeps inventory refresh separate from onboarding and org-admin
 governance follow-up.
 
+## Repo-Family Policy Alignment
+
+Local repository metadata is not always the full policy. Before changing
+policy-sensitive surfaces, check repo-local guidance and nearby sibling
+repositories for an established ecosystem direction.
+
+This applies when a change would widen or reinterpret:
+
+- Python or runtime support policy
+- CI version matrices
+- packaging, release, publication, install, or distribution posture
+- branch protection, governance, or review settings
+- provider-live validation policy
+- compatibility shims, legacy dependencies, or support floors
+
+Prefer intentional consistency across a repo family unless the human or
+repo-local guidance explicitly asks for divergence. Do not silently widen
+compatibility, support, release, or governance scope only because local
+metadata permits it.
+
+If local metadata points one way and sibling precedent points another, stop and
+report the mismatch before implementing the policy-sensitive change. Example:
+a package metadata floor such as `>=3.10` may describe installability, while a
+repo family may be intentionally using a current-runtime-only CI and support
+posture.
+
 ## Repo-Local Workflow State
 
 For implementation changes, run commands from inside the target repository's
