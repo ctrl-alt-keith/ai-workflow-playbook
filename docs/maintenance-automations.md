@@ -61,6 +61,16 @@ execution paths.
   non-authoritative. They may enumerate targets, call canonical commands, cache
   raw outputs, collate results, and summarize reports, but they must not fork
   parser behavior, reinterpret core semantics, or duplicate validation logic.
+- When report-only automations use local checkouts for advisory diagnostics,
+  they may refresh a checkout before reporting stale-local drift only when the
+  checkout exists, the working tree is clean, the checkout is on the expected
+  default branch, the branch tracks the expected upstream, and the update can
+  be completed with `git fetch` plus `git pull --ff-only`. If the checkout is
+  dirty, detached, on a feature branch, has unpushed work, lacks upstream
+  tracking, or cannot fast-forward cleanly, do not modify it; report the local
+  state as stale or blocked instead. Safe local refresh is not hosted
+  remediation. Do not reset, rebase, stash, force checkout, delete branches, or
+  discard work.
 - When repository additions, removals, renames, archived state, visibility, or
   coverage expectations change, refresh automation scope through the
   repo-awareness and onboarding procedure in
