@@ -149,6 +149,23 @@ human request. Keep any conflict resolution within the original task scope,
 avoid unrelated cleanup, rerun the canonical validation entrypoint after the
 update, then push.
 
+In coordinated pull request batches, later pull requests can become behind
+`main` after earlier pull requests merge even when there are no file conflicts.
+When strict branch protection requires branches to be current, repeat this loop
+for each queued pull request after its dependency is merged:
+
+- fetch current `origin/main`
+- rebase the next branch onto updated `origin/main`
+- rerun the canonical validation entrypoint
+- push with `--force-with-lease`
+- wait for required checks to pass
+- re-check readiness before continuing the merge sequence
+
+Run independent capability lanes before semantic reconciliation or
+consolidation lanes. Defer consolidation until upstream semantic work has
+landed, and use staged merge ordering when lanes share contract surfaces,
+generated artifacts, public API or client behavior, or sequencing dependencies.
+
 Open a pull request as draft when any of the following are true:
 
 - work is incomplete
@@ -395,6 +412,18 @@ Org infrastructure repositories should not own project-specific docs,
 implementation code, or reusable workflow policy for other repositories.
 Reusable workflow guidance belongs in this playbook; project-specific rules
 belong in the affected project repository.
+
+## Contract Groundwork
+
+For contract-bearing repositories, prefer inventory, compatibility mapping, and
+documented boundaries before generating or enforcing schemas, fixtures, or other
+contract artifacts. Avoid freezing an unstable contract from a single golden
+example. Generated artifacts should follow stabilized semantics and have
+deterministic validation.
+
+Small synchronization tests can keep documentation aligned with emitted or
+current behavior. Use them as lightweight drift guards, not as broad gates that
+freeze entire implementations, unstable contracts, or documentation workflows.
 
 ## Validation
 
