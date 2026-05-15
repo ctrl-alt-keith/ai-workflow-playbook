@@ -20,6 +20,90 @@ Define the smallest reusable baseline a repository should have before normal AI-
 - Repositories with a Makefile include `make help` for local target discovery.
 - Defaults should favor safe, explicit behavior over implied shortcuts.
 
+## Governance Operating Model
+
+Prefer meaningful protections over inherited process friction. Governance
+defaults should reflect the repository's actual operating model and risk
+surface, not process assumptions copied from larger-team workflows.
+
+Adopt large-team or enterprise-style requirements only when they materially
+improve safety, integrity, recoverability, auditability, or operational clarity.
+When evaluating governance, CI, release, or review process, distinguish:
+
+- integrity and safety controls, such as protected source history, required
+  validation before merge, explicit visibility policy, rollback paths, release
+  correctness, secret exposure safeguards, and durable audit evidence
+- coordination and process controls, such as approval counts, strict
+  up-to-date gates, broad CI version matrices, duplicated repo-local policy,
+  handoff gates, or sequencing rules whose primary value is coordinating
+  multiple people
+
+Default toward preserving integrity and safety controls while minimizing
+coordination overhead when the operating model does not need it. Explicit
+policy still matters: document the intended posture, the rationale for any
+exception, and which layer owns the rule.
+
+### Solo-Operator Governance Profile
+
+A solo-operated repository can be strongly governed without copying
+coordination-heavy process. Match governance to the actual operational risk and
+team size; do not frame a solo profile as a weaker safety posture.
+
+For solo-operated repositories, the following protections remain valuable by
+default:
+
+- pull request workflow for reviewability, change packaging, and durable
+  discussion history
+- required checks before merge, with one canonical local validation path where
+  practical
+- squash-only merges to keep `main` reviewable and easy to reason about
+- explicit repository visibility policy
+- force-push and default-branch deletion protection
+- centralized governance policy where practical, with repo-local governance
+  only for local rationale, transition notes, or explicit exceptions
+- recoverability and auditability for branch cleanup, hosted settings, release
+  decisions, and other operational changes
+
+The following can also be intentional in a solo-operated repository when
+documented:
+
+- zero required approving reviews
+- owner or administrator self-merge after required checks pass
+- omitting strict branch up-to-date checks when they create rebase churn
+  without materially improving safety
+- using a focused runtime or CI matrix when multi-version coverage does not
+  justify the maintenance cost
+- lightweight governance declarations instead of duplicated coordination
+  process in every repository
+
+This profile does not relax caution for security-sensitive changes, destructive
+automation, data-loss risks, irreversible migrations, credentialed workflows,
+public release behavior, or high-blast-radius operational changes. It preserves
+explicit policy and auditability while avoiding operational drag that exists
+only to coordinate a larger team.
+
+### Automation And Orchestration
+
+When proposing or implementing governance changes, automation and Codex workers
+should classify each proposed requirement as either an integrity/safety control
+or coordination/process overhead. Do not silently import enterprise defaults.
+
+Before widening governance or process, compare repo-family precedent and the
+documented operating model. Prefer the narrowest rule that preserves safety,
+integrity, recoverability, auditability, and operational clarity without
+creating unnecessary drag for solo-maintainer repositories.
+
+### Enforcement Relationship
+
+The playbook defines the philosophy, operating model, and reusable workflow
+expectations. `ai-workflow-enforcement` defines centralized governance policy,
+read-only audit implementation, and advisory drift reporting.
+
+Repo-local governance should exist only when the repository needs local
+rationale, a documented transition, or an explicit exception from central
+policy. Do not duplicate centralized governance prose into repo-local files only
+to restate inherited policy.
+
 ## Interaction Mode Preflight
 
 Before acting on any repository or software task, determine the interaction
@@ -237,6 +321,10 @@ This applies when a change would widen or reinterpret:
 - branch protection, governance, or review settings
 - provider-live validation policy
 - compatibility shims, legacy dependencies, or support floors
+
+For governance and process changes, apply the governance operating model above:
+identify which parts are safety or integrity protections and which parts are
+coordination overhead before changing defaults.
 
 Prefer intentional consistency across a repo family unless the human or
 repo-local guidance explicitly asks for divergence. Do not silently widen

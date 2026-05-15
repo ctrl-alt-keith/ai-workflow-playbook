@@ -34,6 +34,11 @@ Before repo-scoped work:
 - For policy-sensitive changes, apply the repo-family alignment check in
   [`repo-readiness.md`](../repo-readiness.md#repo-family-policy-alignment)
   before implementation.
+- For governance, CI, release, or review-process changes, apply the governance
+  operating model in
+  [`repo-readiness.md`](../repo-readiness.md#governance-operating-model):
+  distinguish safety and integrity protections from coordination overhead
+  before proposing new gates or widening existing ones.
 - Treat summaries, memory, pasted descriptions, generated notes, and local
   branch state as navigation only until the relevant source has been inspected.
 - If required source state is unavailable, report it as unknown or blocked
