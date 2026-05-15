@@ -17,6 +17,14 @@ Define shared engineering expectations across repositories. This baseline forms 
 - Command intent stays visible
   - Run ordinary repo commands directly from the target repository worktree,
     following the command-form rules in `docs/repo-readiness.md`.
+- Canonical executable truth
+  - Keep executable behavior in one authoritative tool, module, workflow, or
+    validation entrypoint.
+  - Orchestration may enumerate targets, invoke canonical commands, collect
+    outputs, and summarize or report results.
+  - Do not create wrapper scripts, aggregation scripts, secondary audit
+    engines, parser forks, or validation-semantic copies that partially
+    reimplement canonical tooling.
 - Repository isolation
   - One repository per PR.
   - One dedicated worktree per implementation change.
