@@ -93,6 +93,13 @@ documented operating model. Prefer the narrowest rule that preserves safety,
 integrity, recoverability, auditability, and operational clarity without
 creating unnecessary drag for solo-maintainer repositories.
 
+When governance behavior already has an authoritative tool, module, workflow,
+or CLI, invoke that executable source directly. Orchestration layers may
+enumerate targets, invoke canonical commands, collect outputs, and summarize
+or report results, but they should not partially reimplement the canonical
+logic, fork parser behavior, duplicate validation semantics, or create a
+competing audit engine.
+
 ### Enforcement Relationship
 
 The playbook defines the philosophy, operating model, and reusable workflow
@@ -404,6 +411,14 @@ This keeps operational intent visible in logs, prompts, review notes, and local
 approval surfaces. It also lets permission or approval systems reason about the
 specific operation being requested, instead of treating a simple repository
 action as a broad shell execution.
+
+Preserve the same directness for canonical tooling. When an authoritative
+module, CLI, reusable workflow, or Makefile target owns executable behavior,
+call it instead of building a wrapper, aggregation script, or orchestration
+layer that duplicates part of its logic. Helper artifacts are acceptable when
+they are orchestration-only or report-only: they may cache raw outputs, collate
+command results, or format summaries, but should not reinterpret core
+semantics independently.
 
 Before executing any shell-wrapped command, perform a command-form preflight:
 
