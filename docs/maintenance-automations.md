@@ -15,17 +15,16 @@ enablement, execution paths, and operator-controlled runtime fields.
 ## Automation Intent Registry
 
 The registry below records intended prompt semantics and drift-handling
-expectations for known maintenance automations. Refresh registry entries from
-inspected active local automation config; do not maintain disconnected
-handwritten rows that have not been compared with live `automation.toml` files
-and referenced companion configs.
+expectations for known maintenance automations. Update registry entries only
+when durable intended semantics, governance expectations, scope, or companion
+ownership changes. Do not use registry rows as a live conformance log,
+operational audit ledger, or runtime observation store.
 
 Registry entries are canonical only for intended semantics, governance
 expectations, and reconciliation guidance. They are normalized summaries
-derived from inspected local config, not raw TOML mirrors. They are not
-executable automation state and must not be treated as proof that an
-automation exists, is enabled, uses a particular schedule, or currently
-contains a matching prompt.
+of intended behavior, not raw TOML mirrors. They are not executable automation
+state and must not be treated as proof that an automation exists, is enabled,
+uses a particular schedule, or currently contains a matching prompt.
 
 ### 🧹 Delete Merged Repo Branches
 
@@ -61,11 +60,10 @@ contains a matching prompt.
   owns target repositories, protected branches, and stale approval evidence.
   `ai-workflow-enforcement/docs/branch-cleanup.md` owns tool behavior.
 - Reconciliation / drift handling: Freshly inspect the active `automation.toml`
-  and companion config before comparison. The inspected live prompt contains
-  older prompt-content drift around branch switching and `merge --ff-only`
-  fallback refresh behavior; reconcile that prompt content to the safe local
-  refresh rule below only when explicitly directed. Do not copy stale approval
-  entries, runtime state, or raw config into the playbook.
+  and companion config before comparison. Reconcile prompt content to the
+  intended semantics and safe local refresh rule below only when explicitly
+  directed. Do not copy stale approval entries, runtime state, raw config,
+  operational findings, or run records into the playbook.
 
 ### 🧠 Staging Vs Canon Audit
 
@@ -356,8 +354,9 @@ platform-managed state into the repository.
 
 ## Configuration Notes
 
-- Entries reflect currently active maintenance automations at the time this
-  registry was last refreshed from inspected local config.
+- Entries describe known maintenance automation intent at the time durable
+  guidance was last updated; they are not a live inventory or conformance
+  report.
 - This document summarizes behavior, intent, and drift-handling expectations;
   it does not replicate full prompt bodies or local configuration.
 - Treat automation configuration, run state, schedules, and logs as local
