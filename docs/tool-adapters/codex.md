@@ -154,6 +154,41 @@ policy with:
 codex debug prompt-input effective-sandbox-check
 ```
 
+In `workspace-write` mode, effective writable roots may include more than the
+explicit `[sandbox_workspace_write].writable_roots` list. Codex can also expose
+the current trusted project root, `/tmp` as `/private/tmp` on macOS, and the
+Darwin `$TMPDIR` under `/private/var/folders/.../T`. Removing paths from
+`writable_roots` does not remove those implicit temp roots.
+
+When stricter isolation should exclude implicit temp roots, use the dedicated
+sandbox flags and keep `writable_roots` for durable paths that must remain
+writable:
+
+```toml
+[sandbox_workspace_write]
+exclude_slash_tmp = true
+exclude_tmpdir_env_var = true
+writable_roots = [
+  "/ABSOLUTE/PATH/TO/TRUSTED/WORKSPACE/.codex/automations",
+  "/ABSOLUTE/PATH/TO/TRUSTED/WORKSPACE/.codex/sessions",
+]
+```
+
+Verify the effective policy with both the normal config and an empty explicit
+override:
+
+```sh
+codex debug prompt-input effective-sandbox-check
+codex debug prompt-input -c 'sandbox_workspace_write.writable_roots=[]' effective-sandbox-check
+```
+
+Confirm the project root and intended durable roots remain writable, while
+`/private/tmp` and `/private/var/folders/.../T` are absent when the exclusion
+flags are enabled. Some tools need a writable temp directory; when implicit
+temp roots are excluded, configure those tools to use a repo-local temp path
+inside the effective sandbox or expect failures from compilers, archives,
+caches, and other temp-file users.
+
 Use repo-local scratch paths for workflow artifacts that need review later. Use
 temporary OS paths only for short-lived process-local files whose path and
 contents do not matter after the command finishes.
