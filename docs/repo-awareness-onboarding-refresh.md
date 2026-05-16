@@ -24,13 +24,13 @@ lists.
 ## Source Boundaries
 
 Repository awareness is layered. Do not collapse these sources into one
-document or one generated artifact.
+document or artifact.
 
 - GitHub organization state owns whether a repository exists, its visibility,
   archived state, default branch, topics, description, settings, branch
   protection, security features, installed apps, and other hosted metadata.
 - Maintained workspace manifests, such as `config/workspace-repos.txt`, own
-  the explicit repository set used by generated playbook context artifacts.
+  explicit repository sets for workspace-scope checks and reconciliation.
 - Repo-local files own repository execution truth: `AGENTS.md`, `README.md`,
   Makefile targets, CI workflow files, CODEOWNERS, dependency config, tests,
   and docs.
@@ -56,7 +56,8 @@ Use it for:
 - new repositories
 - renamed repositories
 - archived or deleted repositories
-- visibility changes that affect generated public or private artifacts
+- visibility changes that affect public or private documentation, inventory,
+  or automation scope
 - repository role changes that affect workspace context, automation coverage,
   or enforcement scope
 
@@ -65,7 +66,7 @@ Discovery should reconcile, not guess:
 1. Enumerate the relevant GitHub organization repositories or inspect the named
    repositories directly.
 2. Compare live org state with explicit workspace manifests that intentionally
-   feed generated context, such as `config/workspace-repos.txt`.
+   record workspace scope, such as `config/workspace-repos.txt`.
 3. Compare local checkout state only after the explicit sources are known. Do
    not treat the filesystem as authoritative workspace scope.
 4. Classify each repository as included, intentionally excluded, inaccessible,
@@ -119,9 +120,9 @@ docs PR enforced a hosted setting.
 A repo-awareness refresh should inspect these target families and update only
 the owning source when a change is needed:
 
-- Playbook references: canonical docs, reusable prompts, generated-context
-  source manifests, and reference inventories that intentionally summarize
-  current automation scope.
+- Playbook references: canonical docs, reusable prompts, workspace manifests,
+  and reference inventories that intentionally summarize current automation
+  scope.
 - Incubator and bootstrap assumptions: staging checklists, bootstrap templates,
   examples, and evidence notes that need to mention the new workflow shape
   without becoming canonical policy.
@@ -145,8 +146,8 @@ role-based language in canonical docs. Use concrete private repository names
 only when operational paths, examples, provenance, or ecosystem topology need
 them and the artifact's visibility supports that disclosure.
 
-For public repositories, verify that docs, generated artifacts, descriptions,
-topics, examples, and validation notes do not leak local paths, private topology,
+For public repositories, verify that docs, descriptions, topics, examples,
+workspace inventories, and validation notes do not leak local paths, private topology,
 credentials, account identifiers, private hostnames, or sensitive operational
 context.
 

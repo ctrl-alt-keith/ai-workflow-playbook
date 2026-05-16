@@ -219,9 +219,9 @@ Watch for these observable failure patterns:
   status report as current after repo or remote state may have changed
 - inferred repo or PR state: claiming files, checks, comments, mergeability, or
   readiness from expectations instead of inspection
-- summary substitution for live state: using generated context refresh output,
-  pasted PR summaries, or copied diffs as the source of truth when a live
-  artifact is available
+- summary substitution for live state: using cached summaries, pasted PR
+  summaries, or copied diffs as the source of truth when a live artifact is
+  available
 - local-state versus remote-state confusion: treating a clean local checkout as
   proof of GitHub mergeability, CI success, review resolution, or issue closure
 - coherent but unverified responses: producing plausible recommendations

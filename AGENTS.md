@@ -47,8 +47,7 @@ Repo-local rules take precedence only for repo-specific behavior.
 
 - Use `make check` as the canonical local validation entrypoint.
 - Run `make check` before opening or updating a PR.
-- `make check` runs Markdown lint, scanner unit tests, and generated dist
-  artifact drift checks.
+- `make check` runs Markdown lint and scanner unit tests.
 - Treat direct validation tool calls as implementation details of the Makefile
   target.
 - `make authoritative-source-check` runs advisory authoritative-source scanning;

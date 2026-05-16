@@ -1,4 +1,4 @@
-# Workspace repositories used by generated context artifacts.
+# Workspace repositories used by workspace-scope checks.
 ctrl-alt-keith/.github
 ctrl-alt-keith/ai-workflow-incubator
 ctrl-alt-keith/ai-workflow-playbook
