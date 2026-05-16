@@ -76,6 +76,12 @@ Codex-specific application:
 
 ## Subagent And Worker Prompts
 
+Use
+[`orchestration-and-parallelism.md`](../orchestration-and-parallelism.md) for
+the canonical decision model: default to one Codex thread for one coherent
+review surface, fan out only when worker lanes are bounded before launch, and
+keep integration or merge decisions with the orchestrator or human.
+
 The ecosystem-level scaling direction prefers one top-level orchestration
 prompt that delegates safe parallel work through explicit task envelopes. For
 Codex, treat this as a compatibility constraint as well as a workflow
@@ -97,6 +103,12 @@ Prefer standalone worker prompts that include:
 - constraints, validation path, and stop conditions
 - branch, worktree, file-surface, or non-overlap expectations
 - reporting expectations for summary, validation, blockers, and residual risks
+
+Worker authority stops at the assigned task envelope. A worker may implement,
+validate, commit, and open or prepare the requested PR surface. It should not
+merge, enable auto-merge, update other workers' branches, absorb unassigned
+issues, or continue into downstream reconciliation unless the human explicitly
+authorizes that specific step.
 
 This is a Codex execution quirk, not a universal playbook rule. Other adapters
 may describe different context-passing mechanisms when their execution surfaces

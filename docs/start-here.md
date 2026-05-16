@@ -13,6 +13,8 @@ acting.
   state before stateful repository reasoning
 - `docs/repo-readiness.md` -> interaction mode, governance operating model,
   command form, worktree, branch, validation, and PR expectations
+- `docs/orchestration-and-parallelism.md` -> single-thread, worker fan-out,
+  reconciliation, validation, and merge sequencing guidance
 - `docs/tool-adapters/codex.md` -> required Codex-specific deltas for Codex
   executions
 - `docs/tool-adapters/` -> adapter guidance for other executors when a
@@ -80,4 +82,6 @@ advisory, architecture/workflow analysis, PR/issue/branch recommendations, and
 - Keep changes in the target repository, branch, and worktree.
 - Follow `docs/repo-readiness.md` for implementation isolation, governance
   operating model, command form, interaction mode, validation, and PR readiness.
+- Use `docs/orchestration-and-parallelism.md` before splitting a task across
+  workers or parallel PR lanes.
 - Open PRs ready for review by default unless explicitly instructed otherwise.

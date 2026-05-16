@@ -143,6 +143,11 @@ serialization.
 
 ## Parallel Execution And Merge Ordering
 
+For the full solo-operator decision model, worker envelope, reconciliation
+sequence, and "when not to parallelize" guidance, use
+[`orchestration-and-parallelism.md`](orchestration-and-parallelism.md). This
+section records the engineering baseline that applies to any parallel batch.
+
 Prefer parallel task execution when work can be cleanly separated by repository,
 file area, or risk surface. Parallelism should improve throughput without
 weakening reviewability, validation, or merge safety.
