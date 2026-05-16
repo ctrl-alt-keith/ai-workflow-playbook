@@ -10,7 +10,6 @@ interpreted as inline HTML by Markdown tooling.
 
 ## Quick Navigation
 
-- [New Thread Bootstrap](prompts/new-thread-bootstrap.md)
 - [Codex Implementation Task](#codex-implementation-task)
 - [Parallel Batch Add-On](#parallel-batch-add-on)
 - [Orchestration Handoff](#orchestration-handoff)
