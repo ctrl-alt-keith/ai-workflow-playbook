@@ -4,6 +4,10 @@ This file holds reusable prompt shapes. Keep workflow rules in the core
 playbook docs, Codex-specific execution guidance in `docs/tool-adapters/codex.md`,
 and repo-local execution rules in `AGENTS.md`.
 
+Prompts should remain routing and execution envelopes, not duplicated workflow
+doctrine. For the rationale, see
+[`sparse-rehydration-and-source-grounding.md`](sparse-rehydration-and-source-grounding.md).
+
 Use lint-safe placeholders such as `[repository]`, `[validation_path]`, or
 backticked tokens in Markdown templates. Angle-bracket placeholders can be
 interpreted as inline HTML by Markdown tooling.
