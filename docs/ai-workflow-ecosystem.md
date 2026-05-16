@@ -170,6 +170,9 @@ with safe parallel work delegated to self-contained subagents or workers. The
 top-level prompt owns decomposition, lane boundaries, reconciliation, and
 reporting. Workers own only their assigned task envelope and should not depend
 on full conversation history, implicit role inheritance, or shared hidden state.
+The canonical operating guidance for deciding when to stay single-threaded,
+when to fan out, and how to reconcile worker outputs lives in
+[`orchestration-and-parallelism.md`](orchestration-and-parallelism.md).
 
 Worker envelopes should make the repository, goal, scope, constraints,
 validation path, stop conditions, and reporting expectations explicit. Parallel

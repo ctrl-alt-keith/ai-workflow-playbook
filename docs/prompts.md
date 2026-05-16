@@ -87,6 +87,8 @@ Stop rules:
 
 Use this compact add-on when asking an implementation agent to coordinate a
 parallel batch. Keep the concrete lane count and topology task-specific.
+Use [`orchestration-and-parallelism.md`](orchestration-and-parallelism.md) to
+decide whether the work should be split at all.
 
 ```text
 Parallel execution:
@@ -94,7 +96,11 @@ Parallel execution:
 - Define any merge-order dependencies before launch.
 - Keep one repository, one branch, one worktree, and one PR per lane.
 - Validate each lane with the repository's canonical validation path.
-- Stop before merge and before any downstream step that depends on a merge.
+- Workers stop at PR readiness and report changed files, validation, overlap,
+  blockers, residual risk, and merge-order dependencies.
+- The orchestrator inspects outputs directly, reconciles sequentially, reruns
+  canonical validation after updates, and stops before merge unless explicitly
+  authorized.
 ```
 
 ## Orchestration Handoff
