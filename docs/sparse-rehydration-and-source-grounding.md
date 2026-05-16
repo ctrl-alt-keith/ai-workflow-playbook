@@ -101,6 +101,11 @@ memory as leads, not proof. That reduces hallucinated continuity: the agent
 cannot safely claim the branch is ready, the PR is clean, the issue is solved,
 or the policy says something unless the controlling source has been inspected.
 
+A polished completion report is still a summary. When a live PR, issue,
+branch, check run, or file is referenced, inspect that source before relying on
+the reported state. Coherent operational narratives are especially easy to
+mistake for evidence because they already match the expected workflow shape.
+
 This model also makes recovery clearer. When continuity outruns source
 inspection, the repair is not more explanation. The repair is to retrieve the
 authoritative source, mark unsupported assumptions, and continue from verified
