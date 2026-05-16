@@ -131,6 +131,10 @@ reviewability. It becomes risky when it silently absorbs source material,
 forgets attribution, or makes retained state dependent on a platform that users
 cannot inspect.
 
+For the architectural rationale behind sparse rehydration,
+topology-as-authority, semantic compression, and source-grounded operation, see
+[`sparse-rehydration-and-source-grounding.md`](sparse-rehydration-and-source-grounding.md).
+
 ### Portability Over Vendor Lock-In
 
 The system should prefer ordinary files, documented workflows, portable
@@ -191,6 +195,11 @@ work shows that they reduce review or coordination burden without becoming
 ceremony. Noncanonical exploration may be staged in
 [`ai-workflow-incubator`](https://github.com/ctrl-alt-keith/ai-workflow-incubator/blob/main/architecture/solo-operator-operational-architecture-2026-05-14.md),
 but incubator notes do not create playbook policy.
+
+The rationale for keeping worker prompts compact, source-grounded, and bounded
+by explicit topology is described in
+[`sparse-rehydration-and-source-grounding.md`](sparse-rehydration-and-source-grounding.md);
+the operating rules remain in the orchestration guidance above.
 
 ## Public And Non-Work Boundary
 
