@@ -177,7 +177,7 @@ read-only or the human explicitly says not to modify files.
 
 For Codex-specific worktree creation, reuse, cleanup, parallel-batch handling,
 and blocked cleanup reporting, follow
-[`tool-adapters/codex.md`](tool-adapters/codex.md#workspace-isolation). For
+[`tool-adapters/codex.md`](tool-adapters/codex.md#worktrees). For
 other executors, follow the matching adapter when one documents stricter
 worktree handling.
 

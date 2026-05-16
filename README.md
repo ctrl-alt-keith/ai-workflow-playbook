@@ -47,7 +47,7 @@ Tool-specific behavior belongs in documented adapter docs under [`docs/tool-adap
 
 The playbook is the canonical home for reusable workflow policy. Repo-local
 `AGENTS.md` files provide thin repository execution guidance; see
-[`docs/start-here.md`](docs/start-here.md#execution-model) and
+[`docs/start-here.md`](docs/start-here.md#startup-contract) and
 [`docs/repo-readiness.md`](docs/repo-readiness.md#agentsmd-responsibilities).
 
 Reusable pattern:
@@ -60,7 +60,7 @@ The first core module is delivery. Additional workflow families may be added lat
 
 ## Initial Map
 
-- [`docs/start-here.md`](docs/start-here.md): mandatory startup, source authority map, and adapter-routing contract
+- [`docs/start-here.md`](docs/start-here.md): mandatory startup, core invariants, and adapter-routing contract
 - [`docs/ai-workflow-ecosystem.md`](docs/ai-workflow-ecosystem.md): conceptual overview of the repository ecosystem, retained-knowledge boundaries, and architectural direction
 - [`docs/engineering-baseline.md`](docs/engineering-baseline.md): foundational engineering expectations, including validation, source authority, review, merge authority, and ready-for-review defaults
 - [`docs/authoritative-source-check.md`](docs/authoritative-source-check.md): advisory authoritative-source scanner adoption, domain classification, source justifications, and reusable workflow pinning
