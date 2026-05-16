@@ -295,10 +295,11 @@ When work spans multiple repositories, determine the active managed workspace
 set from authoritative repository inventory sources before broad scans or
 updates begin.
 
-Prefer organization-level repository enumeration and explicit inventory owned by
-the consuming workflow, such as enforcement scanner configs, automation
-allowlists, or caller-supplied manifests. Reconcile those sources before
-treating local checkouts as part of the active workspace scope.
+Prefer organization-level repository enumeration as the authoritative inventory
+source. Use workflow-owned inventories, such as enforcement scanner configs,
+automation allowlists, or caller-supplied manifests, as explicit scoped
+overrides or narrowed inputs. Reconcile those sources before treating local
+checkouts as part of the active workspace scope.
 
 Do not treat raw local filesystem layout as authoritative workspace scope.
 Local checkout trees may contain stale repositories, archived repositories,

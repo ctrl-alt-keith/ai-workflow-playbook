@@ -30,8 +30,8 @@ document or artifact.
   archived state, default branch, topics, description, settings, branch
   protection, security features, installed apps, and other hosted metadata.
 - Workflow-owned inventories, such as enforcement scanner configs, automation
-  allowlists, or caller-supplied manifests, own explicit repository sets for
-  workspace-scope checks and reconciliation.
+  allowlists, or caller-supplied manifests, own explicit scoped overrides,
+  narrowed scan inputs, or reconciliation lists for workspace-scope checks.
 - Repo-local files own repository execution truth: `AGENTS.md`, `README.md`,
   Makefile targets, CI workflow files, CODEOWNERS, dependency config, tests,
   and docs.
@@ -66,9 +66,10 @@ Discovery should reconcile, not guess:
 
 1. Enumerate the relevant GitHub organization repositories or inspect the named
    repositories directly.
-2. Compare live org state with explicit workspace inventories owned by the
-   consuming workflow, such as enforcement scanner configs, automation
-   allowlists, or caller-supplied manifests.
+2. Treat live org state as the preferred authoritative inventory, then compare
+   it with explicit workflow-owned inventories, such as enforcement scanner
+   configs, automation allowlists, or caller-supplied manifests, when a scoped
+   override or narrowed scan is intended.
 3. Compare local checkout state only after the explicit sources are known. Do
    not treat the filesystem as authoritative workspace scope.
 4. Classify each repository as included, intentionally excluded, inaccessible,
