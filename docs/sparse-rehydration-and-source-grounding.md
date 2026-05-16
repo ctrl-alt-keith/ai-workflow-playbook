@@ -21,6 +21,8 @@ executable workflow rules already live in the relevant playbook documents:
   [`prompts.md`](prompts.md)
 - ecosystem repository roles:
   [`ai-workflow-ecosystem.md`](ai-workflow-ecosystem.md)
+- optional local orchestration telemetry:
+  [`orchestration-telemetry.md`](orchestration-telemetry.md)
 
 Do not promote this page into a shadow canon or second doctrine layer. Use it
 to understand why the existing architecture works.
@@ -186,6 +188,10 @@ The architecture improved after removing context because the remaining context
 had clearer authority. Less prompt mass made the system easier to inspect. Less
 duplicated policy made it easier to change safely. Less hidden state made it
 easier to reconstruct the workflow from sources.
+
+Optional local orchestration logs can help replay a run without reversing this
+model. They remain append-only operational telemetry, not memory, policy, or
+proof of current source state.
 
 ## Placement Guidance
 
