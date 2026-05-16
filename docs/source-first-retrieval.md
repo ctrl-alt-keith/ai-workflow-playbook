@@ -29,11 +29,11 @@ Prefer evidence in this order when repository state is available:
 4. Raw logs or artifacts.
 5. User summaries.
 6. Prior-thread summaries.
-7. Agent-generated summaries or status claims.
+7. Agent-generated summaries, completion reports, or status claims.
 
-Summaries are leads, not state. They may guide what to inspect, but they are
-never authoritative when a live artifact, repository, check, workflow, log, or
-file can be inspected directly.
+Summaries, reports, and completion narratives are leads, not state. They may
+guide what to inspect, but they are never authoritative when a live artifact,
+repository, check, workflow, log, or file can be inspected directly.
 
 ## Triggers
 
@@ -64,8 +64,8 @@ Optional triggers may guide retrieval when the next action depends on current
 state, but they do not require source inspection for purely conversational
 answers:
 
-- pasted summaries, copied diffs, screenshots, or release notes without a live
-  artifact identifier
+- pasted summaries, completion reports, copied diffs, screenshots, or release
+  notes without a live artifact identifier
 - references to earlier conversation, prior work, a remembered plan, previous
   operational synthesis, or broad repository names without a state-dependent
   action
@@ -219,9 +219,9 @@ Watch for these observable failure patterns:
   status report as current after repo or remote state may have changed
 - inferred repo or PR state: claiming files, checks, comments, mergeability, or
   readiness from expectations instead of inspection
-- summary substitution for live state: using cached summaries, pasted PR
-  summaries, or copied diffs as the source of truth when a live artifact is
-  available
+- summary substitution for live state: using cached summaries, completion
+  reports, pasted PR summaries, or copied diffs as the source of truth when a
+  live artifact is available
 - local-state versus remote-state confusion: treating a clean local checkout as
   proof of GitHub mergeability, CI success, review resolution, or issue closure
 - coherent but unverified responses: producing plausible recommendations

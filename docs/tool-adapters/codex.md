@@ -39,8 +39,9 @@ Before repo-scoped work:
   [`repo-readiness.md`](../repo-readiness.md#governance-operating-model):
   distinguish safety and integrity protections from coordination overhead
   before proposing new gates or widening existing ones.
-- Treat summaries, memory, pasted descriptions, generated notes, and local
-  branch state as navigation only until the relevant source has been inspected.
+- Treat summaries, completion reports, memory, pasted descriptions, generated
+  notes, and local branch state as navigation only until the relevant source
+  has been inspected.
 - If required source state is unavailable, report it as unknown or blocked
   instead of inferring from conversation.
 

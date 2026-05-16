@@ -38,7 +38,8 @@ When relevant, say explicitly whether validation was mocked, contract-level, or 
 
 ## Direct PR Inspection
 
-Linked review artifacts are authoritative; pasted summaries are context.
+Linked review artifacts are authoritative; pasted summaries and completion
+reports are context.
 The source-first ordering rule in
 [`source-first-retrieval.md`](source-first-retrieval.md) applies before
 continuity or summary-based reasoning whenever a PR, issue, branch, commit, or
@@ -56,11 +57,11 @@ evidence for PR review, but they must not replace connector inspection.
 Treat "open the PR" as read-only connector inspection. It does not mean opening
 the PR in a browser, and it does not mean submitting a GitHub review.
 
-User-provided PR summaries, pasted titles, local path snippets, and copied
-diff excerpts are useful navigation and context, but they are not the review
-source of truth when a PR link, name, or number is available. A PR review must
-be grounded in the actual PR surface from the connector. The reviewer must
-inspect, where available:
+User-provided PR summaries, completion reports, pasted titles, local path
+snippets, and copied diff excerpts are useful navigation and context, but they
+are not the review source of truth when a PR link, name, or number is
+available. A PR review must be grounded in the actual PR surface from the
+connector. The reviewer must inspect, where available:
 
 - PR title and body
 - changed files
