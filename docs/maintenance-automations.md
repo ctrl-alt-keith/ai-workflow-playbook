@@ -258,7 +258,7 @@ uses a particular schedule, or currently contains a matching prompt.
 ## Guidance Layers
 
 - Follow the authority boundary in
-  [`start-here.md`](start-here.md#source-authority-map).
+  [`start-here.md`](start-here.md#core-invariants).
 - Live local automation configuration is authoritative for discovered
   automation inventory, current runtime prompt/config state, schedules,
   enablement state, execution environment, model selection, runtime IDs,
