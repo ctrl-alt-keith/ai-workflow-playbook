@@ -49,8 +49,8 @@ Retrieval:
   `AGENTS.md`, and any required tool adapter before acting.
 - Retrieve or revalidate authoritative repository, issue, PR, file, CI, log, or
   artifact state before relying on it.
-- Treat summaries, memory, and pasted descriptions as navigation, not proof of
-  current source state.
+- Treat summaries, completion reports, memory, and pasted descriptions as
+  navigation, not proof of current source state.
 - Stop broad search once the target files, constraints, validation path, and
   delivery expectation are clear.
 
@@ -148,8 +148,8 @@ Inputs:
 Retrieval:
 - Read the shared playbook startup guidance and repo-local `AGENTS.md` first.
 - Inspect only the files, issues, PRs, docs, or artifacts needed for the goal.
-- Retrieve authoritative source state before relying on it; treat summaries as
-  navigation only.
+- Retrieve authoritative source state before relying on it; treat summaries and
+  completion reports as navigation only.
 - Stop once the target surface, constraints, validation path, and delivery
   expectation are clear.
 
@@ -238,7 +238,8 @@ Retrieval:
 Instructions:
 - Apply `docs/review-packet.md#direct-pr-inspection`.
 - Stay in review/audit mode unless the human explicitly changes the task.
-- Treat user summaries and pasted excerpts as navigation, not PR evidence.
+- Treat user summaries, completion reports, and pasted excerpts as navigation,
+  not PR evidence.
 - Do not mutate the PR unless explicitly asked.
 - If required PR evidence is unavailable, state that blocker and caveat any
   feedback from already-present information.
