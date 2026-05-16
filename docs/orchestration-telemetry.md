@@ -41,7 +41,7 @@ a correction event rather than editing the previous event.
 Use ordinary local files under the workspace log directory:
 
 ```text
-/Users/keith/src/ctrl-alt-keith/logs/
+[workspace-root]/logs/
   codex/
     [date]/
       [run-id]/
@@ -119,7 +119,7 @@ useful. It is illustrative, not mandatory.
 ```text
 Optional local telemetry:
 - Write append-only operational telemetry for this run under
-  `/Users/keith/src/ctrl-alt-keith/logs/codex/[date]/[run-id]/`.
+  `[workspace-root]/logs/codex/[date]/[run-id]/`.
 - Use `events.jsonl` for sparse JSONL events and `transcript.md` for compact
   orchestration notes.
 - Record lane lifecycle events, source-retrieval attempts, reported-vs-verified
