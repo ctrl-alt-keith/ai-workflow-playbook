@@ -98,6 +98,12 @@ After workers report, the orchestrator should:
 - rerun canonical validation after each reconciliation update
 - keep implementation records separate from staging or promotion notes
 
+When a batch needs later replay, the orchestrator may keep append-only local
+telemetry for lane lifecycle events, source-verification transitions, and
+reconciliation notes. Treat this as optional operational context, not canonical
+workflow state; see
+[`orchestration-telemetry.md`](orchestration-telemetry.md).
+
 ## Reconciliation And Merge Sequence
 
 Parallel execution ends at lane readiness. Integration is a sequential workflow.
