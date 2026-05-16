@@ -29,8 +29,9 @@ document or artifact.
 - GitHub organization state owns whether a repository exists, its visibility,
   archived state, default branch, topics, description, settings, branch
   protection, security features, installed apps, and other hosted metadata.
-- Maintained workspace manifests, such as `config/workspace-repos.txt`, own
-  explicit repository sets for workspace-scope checks and reconciliation.
+- Workflow-owned inventories, such as enforcement scanner configs, automation
+  allowlists, or caller-supplied manifests, own explicit repository sets for
+  workspace-scope checks and reconciliation.
 - Repo-local files own repository execution truth: `AGENTS.md`, `README.md`,
   Makefile targets, CI workflow files, CODEOWNERS, dependency config, tests,
   and docs.
@@ -41,8 +42,8 @@ document or artifact.
   registration, repository visibility, secret scanning, push protection,
   Dependabot enablement, and app permissions.
 - The playbook owns reusable procedure and source-of-truth layering. It should
-  not duplicate volatile repository inventories except where a maintained
-  manifest or reference inventory is already intentionally part of the repo.
+  not duplicate volatile repository inventories; consuming workflows should own
+  the inventories they need for execution.
 - `ai-workflow-incubator` may stage operational checklists, examples, prompt
   drafts, and evidence. Incubator material is noncanonical until a separate
   promotion task moves a durable rule into the playbook.
@@ -65,8 +66,9 @@ Discovery should reconcile, not guess:
 
 1. Enumerate the relevant GitHub organization repositories or inspect the named
    repositories directly.
-2. Compare live org state with explicit workspace manifests that intentionally
-   record workspace scope, such as `config/workspace-repos.txt`.
+2. Compare live org state with explicit workspace inventories owned by the
+   consuming workflow, such as enforcement scanner configs, automation
+   allowlists, or caller-supplied manifests.
 3. Compare local checkout state only after the explicit sources are known. Do
    not treat the filesystem as authoritative workspace scope.
 4. Classify each repository as included, intentionally excluded, inaccessible,
@@ -120,9 +122,8 @@ docs PR enforced a hosted setting.
 A repo-awareness refresh should inspect these target families and update only
 the owning source when a change is needed:
 
-- Playbook references: canonical docs, reusable prompts, workspace manifests,
-  and reference inventories that intentionally summarize current automation
-  scope.
+- Playbook references: canonical docs and reusable prompts that describe
+  inventory ownership without duplicating the current repository list.
 - Incubator and bootstrap assumptions: staging checklists, bootstrap templates,
   examples, and evidence notes that need to mention the new workflow shape
   without becoming canonical policy.

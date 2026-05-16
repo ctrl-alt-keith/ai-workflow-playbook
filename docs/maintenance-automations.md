@@ -127,8 +127,8 @@ uses a particular schedule, or currently contains a matching prompt.
 - Automation ID: `workflow-drift-audit`
 - Scope / target repositories: The `ctrl-alt-keith` workspace guidance and
   workflow-policy surfaces covered by the enforcement drift scanner config:
-  `ai-workflow-incubator` notes roots, `ai-workflow-playbook/docs`, the
-  workspace manifest, and the configured organization repositories `.github`,
+  `ai-workflow-incubator` notes roots, `ai-workflow-playbook/docs`, and the
+  configured organization repositories `.github`,
   `ai-workflow-incubator`, `ai-workflow-playbook`,
   `ai-workflow-enforcement`, `linode-image-lab`, `linode-backup-lab`,
   `knowledge-adapters`, `knowledge-vault`, `ka-destinations`, and `nexus`.

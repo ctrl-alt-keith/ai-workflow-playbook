@@ -295,8 +295,9 @@ When work spans multiple repositories, determine the active managed workspace
 set from authoritative repository inventory sources before broad scans or
 updates begin.
 
-Prefer organization-level repository enumeration and explicit workspace
-manifests such as `config/workspace-repos.txt`. Reconcile those sources before
+Prefer organization-level repository enumeration and explicit inventory owned by
+the consuming workflow, such as enforcement scanner configs, automation
+allowlists, or caller-supplied manifests. Reconcile those sources before
 treating local checkouts as part of the active workspace scope.
 
 Do not treat raw local filesystem layout as authoritative workspace scope.
@@ -304,9 +305,9 @@ Local checkout trees may contain stale repositories, archived repositories,
 detached worktrees, experiments, incomplete clones, temporary operational
 state, or local-only scratch repositories.
 
-Reconcile local workspace state against the canonical workspace inventory
-before cross-repo audits, `AGENTS.md` alignment, enforcement scans, or broad
-workflow updates.
+Reconcile local workspace state against the owning inventory source before
+cross-repo audits, `AGENTS.md` alignment, enforcement scans, or broad workflow
+updates.
 
 For repository additions, removals, role changes, or governance checks, use the
 repo-awareness and onboarding refresh procedure in
