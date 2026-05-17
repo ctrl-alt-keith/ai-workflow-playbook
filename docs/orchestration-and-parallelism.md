@@ -73,6 +73,10 @@ Parallel work is a good fit when:
 For same-repository Codex fan-out, use repo-local `.worktrees/` and keep each
 worker on its own branch. One issue, one branch, one worktree, and one PR per
 worker is the preferred shape when issues already describe the work cleanly.
+When several lanes belong to one batch, a short lane prefix can make the local
+state easier to scan, for example `.worktrees/lane-a-fixtures` and
+`.worktrees/lane-b-provider-normalization`. Treat lane prefixes as a worked
+example, not a required naming taxonomy.
 
 ## Worker Envelope
 
@@ -99,6 +103,11 @@ stop. They should not merge, enable auto-merge, update other branches, absorb
 unassigned issues, or decide the next lane unless the human explicitly grants
 that authority for the specific step.
 
+The worker's final report is the lane stop receipt. It should make the stop
+boundary easy to audit by naming changed files, validation results, overlap or
+merge-order dependencies, blockers, residual risk, and any authority it did not
+exercise.
+
 ## Orchestrator Responsibilities
 
 The orchestrator owns the batch-level view. In a solo-operator workflow this is
@@ -113,6 +122,12 @@ Before fan-out, the orchestrator should:
   creation when needed
 - name expected overlap and the intended merge order
 - define stop conditions for dependency, validation, or scope surprises
+
+For batches that may need replay, interruption recovery, or a fresh-thread
+handoff, the orchestrator may write a short plan note before fan-out. The note
+can record lanes, ownership, expected overlap, intended merge order, validation
+paths, stop conditions, and human gates. Treat the note as planning evidence,
+not as authority over current repository, issue, PR, or validation state.
 
 After workers report, the orchestrator should:
 
@@ -129,6 +144,12 @@ telemetry for lane lifecycle events, source-verification transitions, and
 reconciliation notes. Treat this as optional operational context, not canonical
 workflow state; see
 [`orchestration-telemetry.md`](orchestration-telemetry.md).
+
+A lightweight reconciliation log can serve the same purpose for human-readable
+review decisions: append what changed in the merge order, which source was
+checked, which validation result was used, and which human gate remains. The
+log is evidence for recovery and review; workers and orchestrators must still
+re-fetch current source state before acting.
 
 ## Reconciliation And Merge Sequence
 
