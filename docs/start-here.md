@@ -15,6 +15,8 @@ acting.
   command form, worktree, branch, validation, and PR expectations
 - `docs/orchestration-and-parallelism.md` -> single-thread, worker fan-out,
   reconciliation, validation, and merge sequencing guidance
+- `docs/multi-agent-synthesis.md` -> comparative discovery, convergence and
+  divergence interpretation, and promotion boundaries
 - `docs/tool-adapters/codex.md` -> required Codex-specific deltas for Codex
   executions
 - `docs/tool-adapters/` -> adapter guidance for other executors when a
@@ -84,4 +86,6 @@ advisory, architecture/workflow analysis, PR/issue/branch recommendations, and
   operating model, command form, interaction mode, validation, and PR readiness.
 - Use `docs/orchestration-and-parallelism.md` before splitting a task across
   workers or parallel PR lanes.
+- Use `docs/multi-agent-synthesis.md` before treating independent agent outputs
+  as promotion, planning, or implementation evidence.
 - Open PRs ready for review by default unless explicitly instructed otherwise.
