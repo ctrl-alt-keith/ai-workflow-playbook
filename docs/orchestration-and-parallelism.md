@@ -5,6 +5,27 @@ thread, split into multiple worker lanes, or pause for sequencing. The goal is
 solo-operator leverage, not ceremony: parallelism is useful only when it keeps
 work easier to review, validate, and merge.
 
+## Distributed-Systems Lens For Multi-Agent Work
+
+Treat multi-agent repository work like a small distributed system. The analogy
+is operational, not literal: each worker has partial local state, can drift from
+current truth, and may conflict with other workers unless ownership, source of
+truth, validation, and reconciliation rules are explicit.
+
+Use the lens to reinforce the existing rules:
+
+- authoritative repo, provider, issue, PR, and documentation state controls over
+  agent context, memory, pasted summaries, and prior-thread reports
+- worker lanes need explicit ownership, scope, exclusions, and stop conditions
+- overlapping writes require sequencing or reconciliation before mutation
+- commands and validation should be rerunnable enough for safe retry
+- the orchestrator or human owns coordination, merge order, and trust-boundary
+  decisions
+- worker implementation stops at the assigned lane unless further authority is
+  explicitly granted
+- canonical validation is the health check before readiness or reconciliation
+- review, rebase, validation, and merge sequencing are the reconciliation path
+
 ## Default To One Thread
 
 Prefer single-thread Codex work when the task has one coherent review surface.
