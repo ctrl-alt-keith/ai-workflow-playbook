@@ -26,6 +26,11 @@ Use the lens to reinforce the existing rules:
 - canonical validation is the health check before readiness or reconciliation
 - review, rebase, validation, and merge sequencing are the reconciliation path
 
+For comparative discovery and synthesis across multiple agents, use
+[`multi-agent-synthesis.md`](multi-agent-synthesis.md). Convergence and
+divergence can guide what deserves inspection, but source verification and
+human judgment still decide what becomes doctrine, planning, or implementation.
+
 ## Default To One Thread
 
 Prefer single-thread Codex work when the task has one coherent review surface.
