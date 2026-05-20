@@ -35,6 +35,13 @@ Summaries, reports, and completion narratives are leads, not state. They may
 guide what to inspect, but they are never authoritative when a live artifact,
 repository, check, workflow, log, or file can be inspected directly.
 
+Reasoning traces, telemetry, generated summaries, and agent self-reports are
+supplementary evidence only. They are not authoritative proof of source state,
+intent, or correctness. When they conflict with verified source state or
+observed action and outcome, the verified source state or action and outcome
+control. This matters because reasoning traces can be post-hoc, incomplete, or
+optimized toward what the workflow appears to reward.
+
 ## Triggers
 
 Classify triggers before using prior conversation, summaries, memory, or pasted
