@@ -613,10 +613,13 @@ API integrations, schema migrations, deployment workflows, infrastructure
 automation, CI/CD hardening, observability and debugging loops,
 synchronization or reconciliation systems, and state repair or recovery logic.
 
-One PR is appropriate when the phases share one goal, one affected behavior or
-boundary, one validation story, and one rollback unit. Split the work when
-phases have independent goals, different risk profiles, unrelated files, or
-different validation or rollback boundaries.
+Prefer one coherent PR per reviewable outcome. In solo-operator or
+low-coordination contexts, multiple meaningful commits inside that PR can
+preserve phase-level auditability when work naturally progresses through
+foundation, hardening, docs, tests, provider-source verification, or follow-up
+refinement. Do not split into ceremony PRs solely to expose internal phases.
+Split the work when review scope, risk, ownership, validation path, merge
+timing, or rollback or revert strategy diverges.
 
 In solo-operator workflows, prefer completing the coherent task before opening
 the PR when it is safe to do so. Avoid stopping after a diagnostic-only partial

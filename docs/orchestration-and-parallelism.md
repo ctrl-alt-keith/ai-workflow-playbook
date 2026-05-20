@@ -50,7 +50,9 @@ Single-thread work is usually right when:
 
 Do not split work merely because several agents are available. If the split
 would create coordination work larger than the task itself, keep the task in one
-thread and ship the smallest coherent change.
+thread and ship the smallest coherent change. For PR packaging guidance in
+solo-operator or low-coordination contexts, use
+[`repo-readiness.md`](repo-readiness.md#solo-operator-iteration-economics).
 
 ## Fan Out Deliberately
 
