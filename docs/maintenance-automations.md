@@ -234,18 +234,23 @@ uses a particular schedule, or currently contains a matching prompt.
 
 - Automation name: 🛰️ Region Policy Drift Review
 - Automation ID: `region-policy-drift-review`
-- Scope / target repositories: `ai-workflow-playbook` and
-  `linode-image-lab`.
+- Scope / target repositories: Single execution root in `linode-image-lab`.
+  `ai-workflow-playbook` is a source to rehydrate from, not a second
+  automation workspace root.
 - Mode: Report-only scheduled drift review. Local artifact regeneration,
   validation, and diff inspection are allowed only inside the checked-out
   repository state being reviewed.
 - Purpose / intent: Detect drift in the checked-in
   `linode-image-lab` region policy artifact workflow and recommend whether a
   PR or playbook guidance update is warranted.
-- Canonical prompt intent summary: Use GitHub as the source of truth and treat
-  detached or ephemeral worktree execution as normal for this report-only job.
-  Rehydrate from the playbook startup guidance, `linode-image-lab/AGENTS.md`,
-  and the documented region-policy commands in `linode-image-lab/README.md`.
+- Canonical prompt intent summary: Use GitHub as the source of truth, keep the
+  automation single-rooted so the runner starts one job, and treat detached or
+  ephemeral worktree execution as normal for this report-only job. Rehydrate
+  from the playbook startup guidance, `linode-image-lab/AGENTS.md`, and the
+  documented region-policy commands in `linode-image-lab/README.md`.
+  Read playbook guidance from a sibling checkout when available, or from
+  `ctrl-alt-keith/ai-workflow-playbook` current GitHub `main` when the sibling
+  checkout is not present in the automation workspace.
   Verify current `main`, regenerate and validate `policy/region-policy.toml`,
   run the repository's canonical validation entrypoint when available, then
   inspect the resulting artifact diff. Report the verified main commit,
@@ -268,7 +273,8 @@ uses a particular schedule, or currently contains a matching prompt.
 - Companion config references: None.
 - Reconciliation / drift handling: Freshly inspect the active `automation.toml`
   before comparison. Prompt drift includes using local repository state as the
-  source of truth instead of current GitHub state, treating detached worktree
+  source of truth instead of current GitHub state, adding multiple automation
+  workspace roots that cause one run per repository, treating detached worktree
   execution as an implementation-mode problem, omitting regeneration,
   validation, canonical validation, or diff inspection, dropping reported drift
   categories, doing unnecessary external research after an empty artifact diff,
