@@ -230,6 +230,39 @@ uses a particular schedule, or currently contains a matching prompt.
   behavior, mutation, PR creation, live-service checks, or replacing
   `make chaos-all` with a narrower validation command.
 
+### 🛰️ Region Policy Drift Review
+
+- Automation name: 🛰️ Region Policy Drift Review
+- Automation ID: `region-policy-drift-review`
+- Scope / target repositories: `ai-workflow-playbook` and
+  `linode-image-lab`.
+- Mode: Report-only scheduled drift review. Local artifact regeneration,
+  validation, and diff inspection are allowed only inside the checked-out
+  repository state being reviewed.
+- Purpose / intent: Detect drift in the checked-in
+  `linode-image-lab` region policy artifact workflow and recommend whether a
+  PR or playbook guidance update is warranted.
+- Canonical prompt intent summary: Use GitHub as the source of truth. Rehydrate
+  from the playbook startup guidance and `linode-image-lab/AGENTS.md`, inspect
+  current `main`, regenerate and validate `policy/region-policy.toml`, then
+  inspect the resulting git diff. Report validation status, new and removed
+  provider regions, capability changes, generated group changes,
+  image-replication helper group changes, provider override changes, stale or
+  removable `provider_overrides.image_replication_excluded_regions` entries,
+  and whether a PR is warranted.
+- Canonical execution expectations: Use the documented `linode-image-lab`
+  workflow for regeneration and validation. Do not mutate provider resources,
+  read `LINODE_TOKEN`, open a PR, or update playbook guidance unless explicitly
+  asked.
+- Companion config references: None.
+- Reconciliation / drift handling: Freshly inspect the active `automation.toml`
+  before comparison. Prompt drift includes using local repository state as the
+  source of truth instead of current GitHub state, omitting regeneration,
+  validation, or diff inspection, dropping reported drift categories, reading
+  provider credentials, mutating provider resources, opening PRs without
+  explicit instruction, or treating observed drift as automatic authorization
+  to update playbook guidance.
+
 ### 🗜️ Compact Memory
 
 - Automation name: 🗜️ Compact Memory
