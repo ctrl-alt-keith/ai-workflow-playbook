@@ -242,26 +242,39 @@ uses a particular schedule, or currently contains a matching prompt.
 - Purpose / intent: Detect drift in the checked-in
   `linode-image-lab` region policy artifact workflow and recommend whether a
   PR or playbook guidance update is warranted.
-- Canonical prompt intent summary: Use GitHub as the source of truth. Rehydrate
-  from the playbook startup guidance and `linode-image-lab/AGENTS.md`, inspect
-  current `main`, regenerate and validate `policy/region-policy.toml`, then
-  inspect the resulting git diff. Report validation status, new and removed
-  provider regions, capability changes, generated group changes,
-  image-replication helper group changes, provider override changes, stale or
-  removable `provider_overrides.image_replication_excluded_regions` entries,
-  and whether a PR is warranted.
-- Canonical execution expectations: Use the documented `linode-image-lab`
-  workflow for regeneration and validation. Do not mutate provider resources,
-  read `LINODE_TOKEN`, open a PR, or update playbook guidance unless explicitly
-  asked.
+- Canonical prompt intent summary: Use GitHub as the source of truth and treat
+  detached or ephemeral worktree execution as normal for this report-only job.
+  Rehydrate from the playbook startup guidance, `linode-image-lab/AGENTS.md`,
+  and the documented region-policy commands in `linode-image-lab/README.md`.
+  Verify current `main`, regenerate and validate `policy/region-policy.toml`,
+  run the repository's canonical validation entrypoint when available, then
+  inspect the resulting artifact diff. Report the verified main commit,
+  validation status, new and removed provider regions, capability changes,
+  generated group changes, image-replication helper group changes, provider
+  override changes, stale or removable
+  `provider_overrides.image_replication_excluded_regions` entries, and whether
+  a PR is warranted.
+- Canonical execution expectations: Prefer the documented
+  `linode-image-lab region-policy ...` commands, and use the repo-local
+  `PYTHONPATH=src python3 -m linode_image_lab.cli region-policy ...`
+  equivalent when the package command is unavailable in the automation
+  environment. If regeneration succeeds and the artifact diff is empty, report
+  no drift without an extra external web research pass. Use official Linode
+  documentation only when the regenerated artifact, repository assumptions, or
+  provider override status creates a concrete ambiguity that repository sources
+  cannot resolve. Do not mutate provider resources, run live provider
+  operations, read `LINODE_TOKEN`, create summary or memory files, open a PR,
+  or update playbook guidance unless explicitly asked.
 - Companion config references: None.
 - Reconciliation / drift handling: Freshly inspect the active `automation.toml`
   before comparison. Prompt drift includes using local repository state as the
-  source of truth instead of current GitHub state, omitting regeneration,
-  validation, or diff inspection, dropping reported drift categories, reading
-  provider credentials, mutating provider resources, opening PRs without
-  explicit instruction, or treating observed drift as automatic authorization
-  to update playbook guidance.
+  source of truth instead of current GitHub state, treating detached worktree
+  execution as an implementation-mode problem, omitting regeneration,
+  validation, canonical validation, or diff inspection, dropping reported drift
+  categories, doing unnecessary external research after an empty artifact diff,
+  reading provider credentials, mutating provider resources, creating local
+  report or memory files, opening PRs without explicit instruction, or treating
+  observed drift as automatic authorization to update playbook guidance.
 
 ### 🗜️ Compact Memory
 
