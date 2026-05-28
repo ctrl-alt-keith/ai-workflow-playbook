@@ -32,8 +32,8 @@ uses a particular schedule, or currently contains a matching prompt.
 - Automation ID: `delete-merged-repo-branches`
 - Scope / target repositories: `knowledge-adapters`, `knowledge-vault`,
   `ka-destinations`, `ai-workflow-playbook`, `ai-workflow-enforcement`,
-  `ai-workflow-incubator`, `linode-image-lab`, `linode-backup-lab`, `nexus`,
-  `trusted-network-registry`, and `.github`.
+  `ai-workflow-incubator`, `linode-image-lab`, `lke-image-lab`,
+  `linode-backup-lab`, `nexus`, `trusted-network-registry`, and `.github`.
 - Mode: Mutating only through the owning tool's explicit `--apply` path for
   Git-proven normal cleanup. Stale non-ancestor cleanup remains report-only
   unless explicit human-approved evidence exists in the companion config and
@@ -100,8 +100,9 @@ uses a particular schedule, or currently contains a matching prompt.
 - Scope / target repositories: `ai-workflow-playbook`,
   `ai-workflow-enforcement`, `ai-workflow-incubator`, `knowledge-adapters`,
   `knowledge-vault`, `ka-destinations`, `linode-image-lab`,
-  `linode-backup-lab`, `nexus`, `trusted-network-registry`, and `.github`,
-  plus the local-only workspace `AGENTS.md`.
+  `lke-image-lab`, `linode-backup-lab`, `nexus`,
+  `trusted-network-registry`, and `.github`, plus the local-only workspace
+  `AGENTS.md`.
 - Mode: Report-only audit.
 - Purpose / intent: Audit repo-local `AGENTS.md` guidance and local
   workspace-routing guidance against the canonical playbook.
@@ -130,9 +131,9 @@ uses a particular schedule, or currently contains a matching prompt.
   `ai-workflow-incubator` notes roots, `ai-workflow-playbook/docs`, and the
   configured organization repositories `.github`,
   `ai-workflow-incubator`, `ai-workflow-playbook`,
-  `ai-workflow-enforcement`, `linode-image-lab`, `linode-backup-lab`,
-  `knowledge-adapters`, `knowledge-vault`, `ka-destinations`, `nexus`, and
-  `trusted-network-registry`.
+  `ai-workflow-enforcement`, `linode-image-lab`, `lke-image-lab`,
+  `linode-backup-lab`, `knowledge-adapters`, `knowledge-vault`,
+  `ka-destinations`, `nexus`, and `trusted-network-registry`.
 - Mode: Report-only advisory scan.
 - Purpose / intent: Invoke the calibrated `ai-workflow-enforcement` drift
   scanner directly and report workflow-policy drift findings.
