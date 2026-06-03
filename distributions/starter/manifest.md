@@ -2,8 +2,9 @@
 
 ## Package Role
 
-`distributions/starter/` is a lightweight adoption scaffold for applying the AI
-Workflow Playbook in an existing team repository.
+`distributions/starter/` is a lightweight adoption scaffold for establishing a
+work-local AI Workflow Playbook repository and, when needed, project-local
+workflow notes.
 
 It is not canonical doctrine. It is not a fork of the playbook. It is not an
 enforcement layer.
@@ -27,8 +28,8 @@ entry points:
 - `README.md`: distribution overview and boundaries
 - `onboarding.md`: first-pass adoption path
 - `manifest.md`: this package inventory
-- `prompts/bootstrap-local-starter.md`: LLM prompt for creating local
-  `.ai-workflow/` scaffolding
+- `prompts/bootstrap-local-starter.md`: LLM prompt for selecting an adoption
+  destination and creating starter scaffold
 - `templates/AGENTS.template.md`: optional repo-local agent instruction
   template
 - `templates/review-packet-template.md`: local review packet template
@@ -36,8 +37,11 @@ entry points:
 
 ## Expected Adopter Outputs
 
-The bootstrap prompt is expected to create advisory local files under the
-target repository's `.ai-workflow/` directory, such as:
+The primary expected destination is a GitHub or GitHub Enterprise playbook
+repository that workplace AI tools can reference as canonical guidance.
+
+Secondary project-repository adoption can create advisory local files under
+the target repository's `.ai-workflow/` directory, such as:
 
 - `.ai-workflow/repo-notes.md`
 - `.ai-workflow/review-packet-template.md`
@@ -46,6 +50,9 @@ target repository's `.ai-workflow/` directory, such as:
 
 The bootstrap prompt must not create or modify root `AGENTS.md` unless the
 human explicitly requests that specific change.
+
+Local-only folder output is a fallback for experimentation. It should report
+the created path and should not imply the team has adopted durable process.
 
 ## Explicit Non-Goals
 

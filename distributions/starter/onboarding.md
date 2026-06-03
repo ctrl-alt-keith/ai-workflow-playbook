@@ -2,8 +2,8 @@
 
 ## Goal
 
-Adopt the playbook in an existing team repository with the smallest useful local
-scaffold: notes, review packet shape, and optional repo-local agent guidance.
+Adopt the playbook through a work-local AI Workflow Playbook repository that
+workplace AI tools can reference as the canonical guidance source.
 
 Canonical workflow guidance stays in [`../../docs/`](../../docs/). This
 distribution helps a team point to that guidance from local working files; it
@@ -13,20 +13,31 @@ does not replace it.
 
 1. Read the canonical startup guidance in
    [`../../docs/start-here.md`](../../docs/start-here.md).
-2. Inspect the target repository's existing contributor guidance, review norms,
-   validation commands, and team process.
-3. Create local `.ai-workflow/` scaffolding in the target repository using
+2. Choose the adoption destination:
+   - an existing GitHub or GitHub Enterprise playbook repository
+   - a new GitHub or GitHub Enterprise playbook repository
+   - a project repository that needs `.ai-workflow/` scaffolding
+   - a local-only folder for experimentation
+3. Prefer a hosted playbook repository when workplace AI tools need one
+   canonical place to read guidance.
+4. Use project-repo `.ai-workflow/` scaffolding when a specific repository
+   needs local notes or templates.
+5. Use a local-only folder when the team is not ready to publish anything.
+6. Apply the selected path with
    [`prompts/bootstrap-local-starter.md`](prompts/bootstrap-local-starter.md).
-4. Fill in repo-specific notes from observed source evidence, not memory or
-   assumptions.
-5. Use the review packet template for one or two small PRs before changing
-   team-wide process.
-6. Consider a root `AGENTS.md` only if the team explicitly wants repo-local
+7. Fill in notes from observed source evidence, not memory or assumptions.
+8. Use reviewable PRs for hosted repository changes when tooling is available.
+9. Consider a root `AGENTS.md` only if the team explicitly wants repo-local
    agent instructions.
 
-## First-Pass Local Outputs
+## First-Pass Outputs
 
-The bootstrap prompt should create local workflow scaffolding only, such as:
+For a hosted playbook repository, the bootstrap prompt should create a small,
+reviewable branch that points workplace AI tools to canonical playbook docs and
+captures adoption notes or templates without duplicating doctrine.
+
+For a project repository, the bootstrap prompt may create local workflow
+scaffolding such as:
 
 - `.ai-workflow/repo-notes.md`
 - `.ai-workflow/review-packet-template.md`
@@ -36,9 +47,12 @@ These files should describe current local practice and point to canonical
 playbook docs. They should not impose requirements that the repository or team
 has not accepted.
 
+For a local-only folder, the bootstrap prompt should create files locally and
+report the path clearly.
+
 ## Team Compatibility
 
-When applying the starter in a workplace repository:
+When applying the starter in a workplace context:
 
 - respect existing review, approval, release, and incident processes
 - identify the repository's actual validation command before proposing changes
