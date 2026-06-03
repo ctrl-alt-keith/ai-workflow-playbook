@@ -49,6 +49,20 @@ repositories should retain a reference to the upstream refresh prompt for
 periodic review. The destination itself is the playbook repository, so starter
 content belongs at repository level rather than under `.ai-workflow/`.
 
+Expected work-local playbook skeleton:
+
+- `README.md`
+- `docs/start-here.md`
+- `docs/source-first-retrieval.md`
+- `docs/repo-readiness.md`
+- `docs/review-packet.md`
+- `prompts/upstream-refresh.md`
+- `templates/AGENTS.template.md`
+- `templates/review-packet-template.md`
+
+Local `docs/start-here.md` is the canonical entrypoint for that environment.
+Upstream provides source material and future improvements to review and adapt.
+
 Secondary project-repository adoption can create advisory local files under
 the target repository's `.ai-workflow/` directory, such as:
 

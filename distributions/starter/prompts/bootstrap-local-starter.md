@@ -12,9 +12,11 @@ work-local AI Workflow Playbook repository hosted on GitHub or GitHub
 Enterprise. Repo-local `.ai-workflow/` scaffolds are a secondary path for
 project repositories, and local-only folders are a fallback for experimentation.
 
-Canonical workflow guidance remains in the playbook `docs/` directory. Treat
-this starter output as advisory adoption support, not a fork of the playbook
-and not an enforcement layer.
+For a generated work-local playbook repository, local `docs/start-here.md`
+becomes the canonical starting point for that environment. Upstream
+`ctrl-alt-keith/ai-workflow-playbook` is the provenance and refresh source, not
+the day-to-day authority. Treat this starter output as advisory adoption
+support, not an enforcement layer.
 
 ## Destination Selection
 
@@ -36,11 +38,17 @@ create a top-level `.ai-workflow/` directory.
 Expected playbook-repository structure should resemble:
 
 - `README.md`
-- `docs/`
-- `prompts/`
-- `templates/`
+- `docs/start-here.md`
+- `docs/source-first-retrieval.md`
+- `docs/repo-readiness.md`
+- `docs/review-packet.md`
+- `prompts/upstream-refresh.md`
+- `templates/AGENTS.template.md`
+- `templates/review-packet-template.md`
 
 Adjust that structure only when local context shows a better lightweight shape.
+Keep the content lightweight and adapted to the environment; do not wholesale
+copy upstream doctrine.
 
 For an existing project repository, create local workflow scaffolding under
 `.ai-workflow/`. This is the only destination type that should receive a
@@ -65,16 +73,16 @@ Before writing files:
 6. Do not assume solo-operator governance.
 
 For an existing playbook repository, create or update only lightweight
-repository-level content that points workplace AI tools to canonical playbook
-docs. Retain a reference to
-`distributions/starter/prompts/upstream-refresh.md` for periodic upstream
-review.
+repository-level content that points workplace AI tools to local
+`docs/start-here.md`. Retain a reference to `prompts/upstream-refresh.md` for
+periodic upstream review.
 
 For a new playbook repository, create the repository when tooling, user-provided
 repository details, and permissions allow. If repository creation is
 unavailable, provide explicit repository creation instructions and stop before
-making assumptions. Include a reference to
-`distributions/starter/prompts/upstream-refresh.md` for future upstream review.
+making assumptions. Include local `docs/start-here.md` as the environment's
+canonical starting point and `prompts/upstream-refresh.md` for future upstream
+review.
 
 For an existing project repository, create or update only project-local
 workflow scaffold files under `.ai-workflow/`. Recommended files:
@@ -87,6 +95,20 @@ For a local-only future playbook repository, create repository-level content
 directly in the selected folder. For a local-only project scaffold, create the
 selected scaffold files under `.ai-workflow/` and report the path.
 
+Work-local playbook repository content should include:
+
+- a `README.md` that tells users and tools to start with local
+  `docs/start-here.md`
+- a lightweight local `docs/start-here.md` that identifies this repository as
+  the environment's canonical playbook entrypoint
+- lightweight local docs for source-first retrieval, repo readiness, and review
+  packets, adapted to local context
+- `prompts/upstream-refresh.md`, describing upstream as source material and
+  future improvements to review, not blindly sync
+- `templates/AGENTS.template.md`, pointing adopters to local
+  `docs/start-here.md`
+- `templates/review-packet-template.md`
+
 Project repo notes should capture:
 
 - repository purpose and main technologies, based on inspected sources
@@ -94,12 +116,11 @@ Project repo notes should capture:
 - current review or contribution process, if documented
 - source-first retrieval reminders for this repository
 - known unknowns where source evidence was not available
-- links back to canonical playbook docs:
-  - `docs/start-here.md`
-  - `docs/source-first-retrieval.md`
-  - `docs/repo-readiness.md`
-  - `docs/engineering-baseline.md`
-  - `docs/review-packet.md`
+- links to the local playbook's canonical docs:
+  - `[local-playbook]/docs/start-here.md`
+  - `[local-playbook]/docs/source-first-retrieval.md`
+  - `[local-playbook]/docs/repo-readiness.md`
+  - `[local-playbook]/docs/review-packet.md`
 
 The review packet template should help contributors report:
 

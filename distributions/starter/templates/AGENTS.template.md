@@ -6,18 +6,19 @@ team explicitly requests that change.
 
 ## Canonical Guidance
 
-This repository uses the AI Workflow Playbook as the canonical source for
-reusable workflow guidance. Repo-local instructions describe only this
-repository's execution details, such as setup, validation, branch conventions,
-and team process.
+This repository uses the local AI Workflow Playbook as the canonical source for
+reusable workflow guidance in this environment. Repo-local instructions
+describe only this repository's execution details, such as setup, validation,
+branch conventions, and team process.
 
-Recommended canonical entry points:
+Recommended canonical entry points are local to the generated playbook
+repository. When installing this template into a project repository, replace
+`docs/` paths with the URL or path to the local playbook repository.
 
-- `[playbook]/docs/start-here.md`
-- `[playbook]/docs/source-first-retrieval.md`
-- `[playbook]/docs/repo-readiness.md`
-- `[playbook]/docs/engineering-baseline.md`
-- `[playbook]/docs/review-packet.md`
+- `docs/start-here.md`
+- `docs/source-first-retrieval.md`
+- `docs/repo-readiness.md`
+- `docs/review-packet.md`
 
 ## Repository Startup
 
