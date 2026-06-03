@@ -61,7 +61,10 @@ Expected work-local playbook skeleton:
 - `templates/review-packet-template.md`
 
 Local `docs/start-here.md` is the canonical entrypoint for that environment.
-Upstream provides source material and future improvements to review and adapt.
+The fully qualified upstream source,
+`https://github.com/ctrl-alt-keith/ai-workflow-playbook`, provides source
+material and future improvements to review and adapt. The local playbook and
+upstream source may live on different repository hosts.
 
 Secondary project-repository adoption can create advisory local files under
 the target repository's `.ai-workflow/` directory, such as:

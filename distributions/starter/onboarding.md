@@ -6,8 +6,8 @@ Adopt the playbook through a work-local AI Workflow Playbook repository that
 workplace AI tools can reference as the canonical guidance source.
 
 The generated work-local playbook becomes the canonical starting point for that
-environment. Upstream `ctrl-alt-keith/ai-workflow-playbook` remains provenance
-and refresh source material.
+environment. Upstream `https://github.com/ctrl-alt-keith/ai-workflow-playbook`
+remains provenance and refresh source material.
 
 ## Adoption Path
 
@@ -76,8 +76,13 @@ repository-level playbook content. If it is a project-local scaffold, use
 ## Ongoing Upstream Review
 
 Use [`prompts/upstream-refresh.md`](prompts/upstream-refresh.md) periodically to
-compare the local playbook with upstream `ctrl-alt-keith/ai-workflow-playbook`.
-The goal is to review and decide, not synchronize.
+compare the local playbook with upstream
+`https://github.com/ctrl-alt-keith/ai-workflow-playbook`. The goal is to review
+and decide, not synchronize.
+
+The local playbook and upstream source do not need to share a repository host.
+Resolve upstream from the explicit URL, and ask for an alternate source if that
+URL is unavailable.
 
 Classify candidate changes as adopt now, adapt with edits, not applicable, or
 human decision required. Preserve local ownership and workplace context.

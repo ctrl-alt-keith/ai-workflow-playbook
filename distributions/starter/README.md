@@ -23,8 +23,8 @@ becomes the canonical location referenced by workplace AI tools.
 
 After creation, the work-local playbook is the daily authority for its
 environment. Its local `docs/start-here.md` is the entrypoint for users and
-tools. Upstream `ctrl-alt-keith/ai-workflow-playbook` remains the provenance
-and refresh source.
+tools. Upstream `https://github.com/ctrl-alt-keith/ai-workflow-playbook`
+remains the provenance and refresh source.
 
 Repo-local `.ai-workflow/` scaffolds remain useful when a project repository
 needs local adoption notes. Local-only folders are a fallback for
@@ -74,8 +74,12 @@ the full implementation prompt.
 Work-local playbook repositories should retain a reference to
 [`prompts/upstream-refresh.md`](prompts/upstream-refresh.md). Use it
 periodically to review upstream changes from
-`ctrl-alt-keith/ai-workflow-playbook` and decide whether to adopt, adapt, skip,
-or escalate them.
+`https://github.com/ctrl-alt-keith/ai-workflow-playbook` and decide whether to
+adopt, adapt, skip, or escalate them.
+
+The local work playbook may live on GitHub Enterprise, GitHub.com, or another
+host. The upstream source may live on a different host. Use the fully qualified
+upstream URL; do not infer upstream from the local repository host.
 
 This is not synchronization, enforcement, or automatic promotion. Local
 ownership and workplace context control the final decision.
