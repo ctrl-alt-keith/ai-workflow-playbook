@@ -80,6 +80,14 @@ Hard boundaries:
 Make every suggested workflow change advisory unless the user explicitly
 requests implementation.
 
+## Deliverable
+
+If repository write access and GitHub/PR tooling are available, create a
+branch, commit the `.ai-workflow/` scaffold changes, and open a pull request
+ready for review. If PR creation is unavailable or the user requested a
+local-only pass, leave the changes in the working tree and report the exact
+files changed.
+
 When finished, report:
 
 - files created or updated
