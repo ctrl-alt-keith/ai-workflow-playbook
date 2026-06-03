@@ -42,12 +42,15 @@ Before writing files:
 6. Do not assume solo-operator governance.
 
 For an existing playbook repository, create or update only lightweight adoption
-scaffold that points workplace AI tools to canonical playbook docs.
+scaffold that points workplace AI tools to canonical playbook docs. Retain a
+reference to `distributions/starter/prompts/upstream-refresh.md` for periodic
+upstream review.
 
 For a new playbook repository, create the repository when tooling, user-provided
 repository details, and permissions allow. If repository creation is
 unavailable, provide explicit repository creation instructions and stop before
-making assumptions.
+making assumptions. Include a reference to
+`distributions/starter/prompts/upstream-refresh.md` for future upstream review.
 
 For an existing project repository, create or update only local workflow
 scaffold files under `.ai-workflow/`. Recommended files:

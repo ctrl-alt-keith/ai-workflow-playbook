@@ -32,6 +32,8 @@ entry points:
   adoption
 - `prompts/bootstrap-local-starter.md`: LLM prompt for selecting an adoption
   destination and creating starter scaffold
+- `prompts/upstream-refresh.md`: review-oriented prompt for evaluating upstream
+  changes without blind synchronization
 - `templates/AGENTS.template.md`: optional repo-local agent instruction
   template
 - `templates/review-packet-template.md`: local review packet template
@@ -42,7 +44,9 @@ entry points:
 The primary expected destination is a GitHub or GitHub Enterprise playbook
 repository that workplace AI tools can reference as canonical guidance. The
 preferred entrypoint is the URL-first launcher prompt, which points an agent at
-the canonical bootstrap prompt in this repository.
+the canonical bootstrap prompt in this repository. Work-local playbook
+repositories should retain a reference to the upstream refresh prompt for
+periodic review.
 
 Secondary project-repository adoption can create advisory local files under
 the target repository's `.ai-workflow/` directory, such as:
@@ -63,6 +67,7 @@ the created path and should not imply the team has adopted durable process.
 This starter must not:
 
 - duplicate large amounts of doctrine from `docs/`
+- introduce automatic synchronization with upstream
 - create secondary governance, policy, or enforcement rules
 - assume administrator rights
 - assume solo-operator governance

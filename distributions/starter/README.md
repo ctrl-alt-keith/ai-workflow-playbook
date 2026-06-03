@@ -35,6 +35,7 @@ The starter is optimized for:
 - human review and compatibility with existing team process
 - hosted playbook adoption before repo-local scaffolds, governance, or
   automation
+- periodic upstream review without blind synchronization
 
 ## Usage
 
@@ -59,6 +60,17 @@ entrypoint and
 [`prompts/bootstrap-local-starter.md`](prompts/bootstrap-local-starter.md) as
 the full implementation prompt.
 
+## Upstream Refresh
+
+Work-local playbook repositories should retain a reference to
+[`prompts/upstream-refresh.md`](prompts/upstream-refresh.md). Use it
+periodically to review upstream changes from
+`ctrl-alt-keith/ai-workflow-playbook` and decide whether to adopt, adapt, skip,
+or escalate them.
+
+This is not synchronization, enforcement, or automatic promotion. Local
+ownership and workplace context control the final decision.
+
 ## Contents
 
 - [`onboarding.md`](onboarding.md): a short adoption path for teams
@@ -68,6 +80,8 @@ the full implementation prompt.
   copy/paste launcher prompt for URL-first adoption
 - [`prompts/bootstrap-local-starter.md`](prompts/bootstrap-local-starter.md):
   prompt for selecting an adoption destination and creating starter scaffold
+- [`prompts/upstream-refresh.md`](prompts/upstream-refresh.md): review-oriented
+  prompt for evaluating upstream changes
 - [`templates/AGENTS.template.md`](templates/AGENTS.template.md): optional
   repo-local instruction template
 - [`templates/review-packet-template.md`](templates/review-packet-template.md):
