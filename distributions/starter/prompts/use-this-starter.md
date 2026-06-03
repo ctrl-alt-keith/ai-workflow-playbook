@@ -16,7 +16,7 @@ bootstrap prompt instead.
 Destination:
 - Type: [existing GitHub/GitHub Enterprise playbook repository | new GitHub/GitHub Enterprise playbook repository | existing project repository requiring .ai-workflow/ scaffolding | local-only folder]
 - Repository or folder: [URL, owner/name, or path]
-- Constraints: [team process, local-only pass, unavailable PR tooling, or none]
+- Constraints: [team process, local-only future playbook repo, local-only project scaffold, unavailable PR tooling, or none]
 
 If the destination is ambiguous, stop and ask which target to use.
 ```

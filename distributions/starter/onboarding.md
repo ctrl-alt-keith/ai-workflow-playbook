@@ -26,7 +26,9 @@ does not replace it.
    agent at the canonical bootstrap prompt in this repository.
 6. Use project-repo `.ai-workflow/` scaffolding when a specific repository
    needs local notes or templates.
-7. Use a local-only folder when the team is not ready to publish anything.
+7. Use a local-only folder when the team is not ready to publish anything, but
+   first decide whether that folder is a future playbook repository or a
+   project-local scaffold.
 8. Apply the selected path with
    [`prompts/bootstrap-local-starter.md`](prompts/bootstrap-local-starter.md).
 9. Fill in notes from observed source evidence, not memory or assumptions.
@@ -41,7 +43,8 @@ reviewable branch that points workplace AI tools to canonical playbook docs and
 captures adoption notes or templates without duplicating doctrine. It should
 also retain a reference to
 [`prompts/upstream-refresh.md`](prompts/upstream-refresh.md) for future
-upstream review.
+upstream review. This content belongs directly at the repository level; do not
+wrap it in `.ai-workflow/`.
 
 For a project repository, the bootstrap prompt may create local workflow
 scaffolding such as:
@@ -55,7 +58,9 @@ playbook docs. They should not impose requirements that the repository or team
 has not accepted.
 
 For a local-only folder, the bootstrap prompt should create files locally and
-report the path clearly.
+report the path clearly. If the folder is a future playbook repository, create
+repository-level playbook content. If it is a project-local scaffold, use
+`.ai-workflow/`.
 
 ## Ongoing Upstream Review
 

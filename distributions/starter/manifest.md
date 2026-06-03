@@ -46,7 +46,8 @@ repository that workplace AI tools can reference as canonical guidance. The
 preferred entrypoint is the URL-first launcher prompt, which points an agent at
 the canonical bootstrap prompt in this repository. Work-local playbook
 repositories should retain a reference to the upstream refresh prompt for
-periodic review.
+periodic review. The destination itself is the playbook repository, so starter
+content belongs at repository level rather than under `.ai-workflow/`.
 
 Secondary project-repository adoption can create advisory local files under
 the target repository's `.ai-workflow/` directory, such as:
@@ -59,8 +60,10 @@ the target repository's `.ai-workflow/` directory, such as:
 The bootstrap prompt must not create or modify root `AGENTS.md` unless the
 human explicitly requests that specific change.
 
-Local-only folder output is a fallback for experimentation. It should report
-the created path and should not imply the team has adopted durable process.
+Local-only folder output is a fallback for experimentation. Before creating
+files, determine whether the folder is a future playbook repository or a
+project-local scaffold. Report the created path and do not imply the team has
+adopted durable process.
 
 ## Explicit Non-Goals
 
