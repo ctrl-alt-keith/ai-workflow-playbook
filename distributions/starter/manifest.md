@@ -28,6 +28,8 @@ entry points:
 - `README.md`: distribution overview and boundaries
 - `onboarding.md`: first-pass adoption path
 - `manifest.md`: this package inventory
+- `prompts/use-this-starter.md`: tiny copy/paste launcher prompt for URL-first
+  adoption
 - `prompts/bootstrap-local-starter.md`: LLM prompt for selecting an adoption
   destination and creating starter scaffold
 - `templates/AGENTS.template.md`: optional repo-local agent instruction
@@ -38,7 +40,9 @@ entry points:
 ## Expected Adopter Outputs
 
 The primary expected destination is a GitHub or GitHub Enterprise playbook
-repository that workplace AI tools can reference as canonical guidance.
+repository that workplace AI tools can reference as canonical guidance. The
+preferred entrypoint is the URL-first launcher prompt, which points an agent at
+the canonical bootstrap prompt in this repository.
 
 Secondary project-repository adoption can create advisory local files under
 the target repository's `.ai-workflow/` directory, such as:

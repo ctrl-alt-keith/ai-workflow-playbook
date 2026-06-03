@@ -11,8 +11,7 @@ does not replace it.
 
 ## Adoption Path
 
-1. Read the canonical startup guidance in
-   [`../../docs/start-here.md`](../../docs/start-here.md).
+1. Create or identify the destination repository or local folder.
 2. Choose the adoption destination:
    - an existing GitHub or GitHub Enterprise playbook repository
    - a new GitHub or GitHub Enterprise playbook repository
@@ -20,14 +19,19 @@ does not replace it.
    - a local-only folder for experimentation
 3. Prefer a hosted playbook repository when workplace AI tools need one
    canonical place to read guidance.
-4. Use project-repo `.ai-workflow/` scaffolding when a specific repository
+4. Open Codex, Claude, ChatGPT, or another agent with access to the selected
+   destination.
+5. Copy the tiny launcher prompt from
+   [`prompts/use-this-starter.md`](prompts/use-this-starter.md). It points the
+   agent at the canonical bootstrap prompt in this repository.
+6. Use project-repo `.ai-workflow/` scaffolding when a specific repository
    needs local notes or templates.
-5. Use a local-only folder when the team is not ready to publish anything.
-6. Apply the selected path with
+7. Use a local-only folder when the team is not ready to publish anything.
+8. Apply the selected path with
    [`prompts/bootstrap-local-starter.md`](prompts/bootstrap-local-starter.md).
-7. Fill in notes from observed source evidence, not memory or assumptions.
-8. Use reviewable PRs for hosted repository changes when tooling is available.
-9. Consider a root `AGENTS.md` only if the team explicitly wants repo-local
+9. Fill in notes from observed source evidence, not memory or assumptions.
+10. Use reviewable PRs for hosted repository changes when tooling is available.
+11. Consider a root `AGENTS.md` only if the team explicitly wants repo-local
    agent instructions.
 
 ## First-Pass Outputs

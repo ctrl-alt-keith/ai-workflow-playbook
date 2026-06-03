@@ -36,11 +36,36 @@ The starter is optimized for:
 - hosted playbook adoption before repo-local scaffolds, governance, or
   automation
 
+## Usage
+
+### URL-First Preferred
+
+1. Create or identify the destination repository, typically a personal GitHub
+   Enterprise repository named `ai-workflow-playbook`.
+2. Open Codex, Claude, ChatGPT, or another agent with access to that
+   destination.
+3. Copy the launcher prompt from
+   [`prompts/use-this-starter.md`](prompts/use-this-starter.md).
+4. Fill in the destination type and repository or folder.
+5. Let the launcher point the agent at the canonical bootstrap prompt in this
+   repository.
+
+### Clone Or Download Fallback
+
+If URL access is unavailable, clone or download this repository and provide the
+agent with the local starter files. Use
+[`prompts/use-this-starter.md`](prompts/use-this-starter.md) as the tiny
+entrypoint and
+[`prompts/bootstrap-local-starter.md`](prompts/bootstrap-local-starter.md) as
+the full implementation prompt.
+
 ## Contents
 
 - [`onboarding.md`](onboarding.md): a short adoption path for teams
 - [`manifest.md`](manifest.md): package contents, boundaries, and intended
   outputs
+- [`prompts/use-this-starter.md`](prompts/use-this-starter.md): tiny
+  copy/paste launcher prompt for URL-first adoption
 - [`prompts/bootstrap-local-starter.md`](prompts/bootstrap-local-starter.md):
   prompt for selecting an adoption destination and creating starter scaffold
 - [`templates/AGENTS.template.md`](templates/AGENTS.template.md): optional
