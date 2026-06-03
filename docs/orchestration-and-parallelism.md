@@ -86,6 +86,13 @@ Every worker lane needs a self-contained task envelope. Do not rely on hidden
 conversation history, implicit role inheritance, or broad instructions such as
 "continue from the same context."
 
+Prompts intended for delegated execution should name the expected deliverable
+whenever practical, such as research findings, an audit report, a design
+proposal, an implementation plan, an implementation, or an implementation that
+results in a pull request. When delegated work will modify a repository, the
+default expected deliverable is a reviewable pull request unless another
+artifact is explicitly requested.
+
 Include:
 
 - repository and working directory

@@ -162,6 +162,15 @@ Do not infer implementation mode from vague wording such as "fix this",
 "handle this", or "let's fix the bug" when the surrounding context suggests
 advisory review, audit, orchestration, or prompt generation.
 
+Re-evaluate the interaction mode when a review, audit, planning, architecture,
+or prompt-authoring discussion converges on a selected direction and the
+remaining work becomes implementation-oriented. Convergence on a direction does
+not by itself authorize repository mutation. Before continuing, briefly decide
+whether the next step is to continue design, capture the decision, implement
+directly, delegate implementation, open or update a pull request, or stop.
+Keep this checkpoint lightweight: use the current user intent, repository
+guidance, and visible completion state instead of adding a separate ceremony.
+
 For ctrl-alt-keith workflows, default ambiguous repository tasks to
 review/audit mode or orchestration/prompt-authoring mode unless the human
 explicitly asks for direct implementation. Implementation mode requires clear
