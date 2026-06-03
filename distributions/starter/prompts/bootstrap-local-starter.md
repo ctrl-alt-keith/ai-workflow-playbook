@@ -14,9 +14,10 @@ project repositories, and local-only folders are a fallback for experimentation.
 
 For a generated work-local playbook repository, local `docs/start-here.md`
 becomes the canonical starting point for that environment. Upstream
-`ctrl-alt-keith/ai-workflow-playbook` is the provenance and refresh source, not
-the day-to-day authority. Treat this starter output as advisory adoption
-support, not an enforcement layer.
+`https://github.com/ctrl-alt-keith/ai-workflow-playbook` is the provenance and
+refresh source, not the day-to-day authority. The local playbook and upstream
+source may live on different repository hosts. Treat this starter output as
+advisory adoption support, not an enforcement layer.
 
 ## Destination Selection
 
@@ -104,7 +105,8 @@ Work-local playbook repository content should include:
 - lightweight local docs for source-first retrieval, repo readiness, and review
   packets, adapted to local context
 - `prompts/upstream-refresh.md`, describing upstream as source material and
-  future improvements to review, not blindly sync
+  future improvements to review from
+  `https://github.com/ctrl-alt-keith/ai-workflow-playbook`, not blindly sync
 - `templates/AGENTS.template.md`, pointing adopters to local
   `docs/start-here.md`
 - `templates/review-packet-template.md`

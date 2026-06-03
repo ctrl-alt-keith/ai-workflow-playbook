@@ -2,7 +2,7 @@
 
 Use this prompt in a work-local or organization-local AI Workflow Playbook
 repository when you want to review upstream changes from
-`ctrl-alt-keith/ai-workflow-playbook`.
+`https://github.com/ctrl-alt-keith/ai-workflow-playbook`.
 
 ## Prompt
 
@@ -19,18 +19,29 @@ differs.
 ## Inputs
 
 - Local playbook repository: `[local repository URL, owner/name, or path]`
-- Upstream repository: `ctrl-alt-keith/ai-workflow-playbook`
+- Upstream source: `https://github.com/ctrl-alt-keith/ai-workflow-playbook`
 - Review range or period: `[since last refresh, date range, commit range, or recent merged PRs]`
 - Requested output: `[review report only | implement recommended updates]`
 
 If the local repository, upstream source, or review range is ambiguous, stop
 and ask for the missing target.
 
+## Host Separation
+
+Repository identity and repository host are separate. The local playbook
+repository may live on GitHub Enterprise, GitHub.com, or another accessible
+repository host. The upstream source may live on a different host.
+
+Do not assume the upstream repository exists on the same Git host as the local
+repository. Resolve the upstream source from its fully qualified repository URL.
+If the upstream source cannot be reached, stop and ask for an alternate source
+location.
+
 ## Review Process
 
 1. Inspect the local playbook repository, including its README, local adoption
    notes, templates, prompts, and any local `AGENTS.md`.
-2. Inspect upstream `ctrl-alt-keith/ai-workflow-playbook`.
+2. Inspect upstream `https://github.com/ctrl-alt-keith/ai-workflow-playbook`.
 3. Review relevant canonical upstream docs, especially:
    - `docs/start-here.md`
    - `docs/source-first-retrieval.md`
