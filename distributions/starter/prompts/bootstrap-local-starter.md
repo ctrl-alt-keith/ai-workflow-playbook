@@ -6,14 +6,14 @@ Use this prompt with an LLM that can inspect the intended adoption destination.
 
 You are helping adopt the AI Workflow Playbook in a workplace or team context.
 
-Your task is to inspect the intended destination and create workflow
-scaffolding only. The primary recommended destination is a work-local AI
-Workflow Playbook repository hosted on GitHub or GitHub Enterprise. Repo-local
-`.ai-workflow/` scaffolds are a secondary path for project repositories, and
-local-only folders are a fallback for experimentation.
+Your task is to inspect the intended destination and create the correct starter
+structure for that destination. The primary recommended destination is a
+work-local AI Workflow Playbook repository hosted on GitHub or GitHub
+Enterprise. Repo-local `.ai-workflow/` scaffolds are a secondary path for
+project repositories, and local-only folders are a fallback for experimentation.
 
 Canonical workflow guidance remains in the playbook `docs/` directory. Treat
-this local scaffold as advisory adoption support, not a fork of the playbook
+this starter output as advisory adoption support, not a fork of the playbook
 and not an enforcement layer.
 
 ## Destination Selection
@@ -26,6 +26,29 @@ Before writing files, determine which adoption target is intended:
 - local-only folder
 
 If the destination is ambiguous, stop and ask which target to use.
+
+## Destination Outcomes
+
+For a work-local playbook repository, the destination itself becomes the
+playbook. Create repository-level content directly in the destination. Do not
+create a top-level `.ai-workflow/` directory.
+
+Expected playbook-repository structure should resemble:
+
+- `README.md`
+- `docs/`
+- `prompts/`
+- `templates/`
+
+Adjust that structure only when local context shows a better lightweight shape.
+
+For an existing project repository, create local workflow scaffolding under
+`.ai-workflow/`. This is the only destination type that should receive a
+top-level `.ai-workflow/` directory by default.
+
+For a local-only folder, determine whether the folder represents a future
+playbook repository or project-local workflow scaffolding before creating
+files. If that intent is ambiguous, stop and ask.
 
 Before writing files:
 
@@ -41,10 +64,11 @@ Before writing files:
 5. Do not assume administrator rights.
 6. Do not assume solo-operator governance.
 
-For an existing playbook repository, create or update only lightweight adoption
-scaffold that points workplace AI tools to canonical playbook docs. Retain a
-reference to `distributions/starter/prompts/upstream-refresh.md` for periodic
-upstream review.
+For an existing playbook repository, create or update only lightweight
+repository-level content that points workplace AI tools to canonical playbook
+docs. Retain a reference to
+`distributions/starter/prompts/upstream-refresh.md` for periodic upstream
+review.
 
 For a new playbook repository, create the repository when tooling, user-provided
 repository details, and permissions allow. If repository creation is
@@ -52,17 +76,18 @@ unavailable, provide explicit repository creation instructions and stop before
 making assumptions. Include a reference to
 `distributions/starter/prompts/upstream-refresh.md` for future upstream review.
 
-For an existing project repository, create or update only local workflow
-scaffold files under `.ai-workflow/`. Recommended files:
+For an existing project repository, create or update only project-local
+workflow scaffold files under `.ai-workflow/`. Recommended files:
 
 - `.ai-workflow/repo-notes.md`
 - `.ai-workflow/review-packet-template.md`
 - `.ai-workflow/AGENTS.template.md` when useful
 
-For a local-only destination, create the selected scaffold files locally and
-report the path.
+For a local-only future playbook repository, create repository-level content
+directly in the selected folder. For a local-only project scaffold, create the
+selected scaffold files under `.ai-workflow/` and report the path.
 
-The repo notes should capture:
+Project repo notes should capture:
 
 - repository purpose and main technologies, based on inspected sources
 - canonical local setup and validation commands, if discoverable
@@ -119,7 +144,8 @@ user-provided repository details, and permissions allow. If creation is
 unavailable, provide explicit repository creation instructions and stop before
 making assumptions.
 
-For a local-only destination, create files locally and report the path.
+For a local-only destination, create files locally using the selected
+playbook-repository or project-scaffold structure and report the path.
 
 When finished, report:
 

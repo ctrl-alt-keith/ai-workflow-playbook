@@ -25,6 +25,10 @@ Repo-local `.ai-workflow/` scaffolds remain useful when a project repository
 needs local adoption notes. Local-only folders are a fallback for
 experimentation before publishing anything.
 
+These are intentionally different structures: a work-local playbook repository
+gets repository-level `README.md`, `docs/`, `prompts/`, and `templates/`
+content, while an existing project repository gets `.ai-workflow/` scaffolding.
+
 The starter assumes ordinary contributor access, not administrator rights.
 
 The starter is optimized for:
@@ -99,3 +103,5 @@ Start with a reviewable hosted playbook repository when possible. Use
 repo-local scaffolds second, and local-only folders only when experimentation is
 the right first move. Capture what the team already does. Make suggested
 workflow changes advisory unless the team explicitly requests implementation.
+Do not create `.ai-workflow/` at the top level of a destination that is itself
+meant to become a standalone playbook repository.
