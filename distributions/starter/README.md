@@ -21,6 +21,11 @@ Use this package when the intended first step is a work-local AI Workflow
 Playbook repository hosted on GitHub or GitHub Enterprise. That repository
 becomes the canonical location referenced by workplace AI tools.
 
+After creation, the work-local playbook is the daily authority for its
+environment. Its local `docs/start-here.md` is the entrypoint for users and
+tools. Upstream `ctrl-alt-keith/ai-workflow-playbook` remains the provenance
+and refresh source.
+
 Repo-local `.ai-workflow/` scaffolds remain useful when a project repository
 needs local adoption notes. Local-only folders are a fallback for
 experimentation before publishing anything.
@@ -74,6 +79,10 @@ or escalate them.
 
 This is not synchronization, enforcement, or automatic promotion. Local
 ownership and workplace context control the final decision.
+
+Model:
+
+`upstream playbook -> refresh/adapt -> work-local playbook -> work/project repos`
 
 ## Contents
 

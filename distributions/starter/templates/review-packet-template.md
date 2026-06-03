@@ -1,7 +1,8 @@
 # Review Packet Template
 
 Use this template to make human review faster and more grounded. Canonical
-review packet guidance remains in `[playbook]/docs/review-packet.md`.
+review packet guidance for this environment starts in
+`[local-playbook]/docs/review-packet.md`.
 
 ## Objective
 

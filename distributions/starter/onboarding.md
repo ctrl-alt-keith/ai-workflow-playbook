@@ -5,9 +5,9 @@
 Adopt the playbook through a work-local AI Workflow Playbook repository that
 workplace AI tools can reference as the canonical guidance source.
 
-Canonical workflow guidance stays in [`../../docs/`](../../docs/). This
-distribution helps a team point to that guidance from local working files; it
-does not replace it.
+The generated work-local playbook becomes the canonical starting point for that
+environment. Upstream `ctrl-alt-keith/ai-workflow-playbook` remains provenance
+and refresh source material.
 
 ## Adoption Path
 
@@ -39,12 +39,23 @@ does not replace it.
 ## First-Pass Outputs
 
 For a hosted playbook repository, the bootstrap prompt should create a small,
-reviewable branch that points workplace AI tools to canonical playbook docs and
-captures adoption notes or templates without duplicating doctrine. It should
-also retain a reference to
+reviewable branch that points workplace AI tools to local `docs/start-here.md`
+and captures adapted docs, prompts, and templates without duplicating upstream
+doctrine. It should also retain a reference to
 [`prompts/upstream-refresh.md`](prompts/upstream-refresh.md) for future
 upstream review. This content belongs directly at the repository level; do not
 wrap it in `.ai-workflow/`.
+
+Minimum work-local playbook skeleton:
+
+- `README.md`
+- `docs/start-here.md`
+- `docs/source-first-retrieval.md`
+- `docs/repo-readiness.md`
+- `docs/review-packet.md`
+- `prompts/upstream-refresh.md`
+- `templates/AGENTS.template.md`
+- `templates/review-packet-template.md`
 
 For a project repository, the bootstrap prompt may create local workflow
 scaffolding such as:

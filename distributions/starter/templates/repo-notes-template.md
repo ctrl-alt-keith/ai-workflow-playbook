@@ -3,13 +3,12 @@
 Use this file for local adoption notes under `.ai-workflow/`. Keep it factual,
 source-grounded, and advisory.
 
-Canonical workflow guidance remains in the playbook `docs/` directory:
+Canonical workflow guidance for this environment starts in the local playbook:
 
-- `[playbook]/docs/start-here.md`
-- `[playbook]/docs/source-first-retrieval.md`
-- `[playbook]/docs/repo-readiness.md`
-- `[playbook]/docs/engineering-baseline.md`
-- `[playbook]/docs/review-packet.md`
+- `[local-playbook]/docs/start-here.md`
+- `[local-playbook]/docs/source-first-retrieval.md`
+- `[local-playbook]/docs/repo-readiness.md`
+- `[local-playbook]/docs/review-packet.md`
 
 ## Repository Purpose
 
