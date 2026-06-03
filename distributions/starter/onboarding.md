@@ -38,7 +38,10 @@ does not replace it.
 
 For a hosted playbook repository, the bootstrap prompt should create a small,
 reviewable branch that points workplace AI tools to canonical playbook docs and
-captures adoption notes or templates without duplicating doctrine.
+captures adoption notes or templates without duplicating doctrine. It should
+also retain a reference to
+[`prompts/upstream-refresh.md`](prompts/upstream-refresh.md) for future
+upstream review.
 
 For a project repository, the bootstrap prompt may create local workflow
 scaffolding such as:
@@ -53,6 +56,15 @@ has not accepted.
 
 For a local-only folder, the bootstrap prompt should create files locally and
 report the path clearly.
+
+## Ongoing Upstream Review
+
+Use [`prompts/upstream-refresh.md`](prompts/upstream-refresh.md) periodically to
+compare the local playbook with upstream `ctrl-alt-keith/ai-workflow-playbook`.
+The goal is to review and decide, not synchronize.
+
+Classify candidate changes as adopt now, adapt with edits, not applicable, or
+human decision required. Preserve local ownership and workplace context.
 
 ## Team Compatibility
 
