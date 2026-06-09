@@ -31,9 +31,13 @@ Prefer evidence in this order when repository state is available:
 6. Prior-thread summaries.
 7. Agent-generated summaries, completion reports, or status claims.
 
-Summaries, reports, and completion narratives are leads, not state. They may
-guide what to inspect, but they are never authoritative when a live artifact,
-repository, check, workflow, log, or file can be inspected directly.
+Summaries, reports, and completion narratives, including user-provided PR,
+implementation, repository, issue, audit, status, and change summaries, are
+navigation rather than evidence for source-verifiable judgments. They may guide
+what to inspect, but when a live artifact, repository, check, workflow, log, or
+file can be inspected directly, verify the underlying source before reviewing,
+approving, critiquing, validating, recommending merge, assessing completion, or
+making implementation judgments.
 
 Reasoning traces, telemetry, generated summaries, and agent self-reports are
 supplementary evidence only. They are not authoritative proof of source state,
