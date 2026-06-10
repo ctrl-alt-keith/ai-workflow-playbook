@@ -67,10 +67,22 @@ create locally. Keep this intentionally narrow: include repo-local workflow path
 such as `.worktrees/`, and avoid expanding bootstrap into generic workstation,
 editor, runtime, or temporary-file policy.
 
+The starter baseline is intentionally concrete:
+
+```gitignore
+.worktrees/
+```
+
 Dirty-tree safety checks depend on this baseline. If standardized local workflow
 artifacts appear as untracked files, conservative automation should skip rather
 than mutate the repository, but the repo has lost the predictable clean state the
 workflow expects.
+
+For existing repositories, the doctrine-consistent enforcement home is
+`ai-workflow-enforcement`: add a local-source advisory check that reports a
+missing root `.gitignore` `.worktrees/` rule for repositories that follow the
+repo-local worktree baseline. Keep the playbook as the rule source, and avoid
+copying this as repo-local policy except for repository-specific exceptions.
 
 ### Positioning, Scope, And Architecture
 
