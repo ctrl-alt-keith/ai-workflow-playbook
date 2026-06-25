@@ -34,6 +34,9 @@ uses a particular schedule, or currently contains a matching prompt.
   `ka-destinations`, `ai-workflow-playbook`, `ai-workflow-enforcement`,
   `ai-workflow-incubator`, `linode-image-lab`, `lke-image-lab`,
   `linode-backup-lab`, `nexus`, `trusted-network-registry`, and `.github`.
+  `leadership-workbench` is intentionally excluded because the repository is a
+  private, Markdown-only leadership workspace whose current policy does not
+  clearly opt it into mutating branch-cleanup automation.
 - Mode: Mutating only through the owning tool's explicit `--apply` path for
   Git-proven normal cleanup. Stale non-ancestor cleanup remains report-only
   unless explicit human-approved evidence exists in the companion config and
@@ -98,8 +101,8 @@ uses a particular schedule, or currently contains a matching prompt.
 - Automation name: 🔍 AGENTS Drift Detector
 - Automation ID: `agents-drift-detector`
 - Scope / target repositories: `ai-workflow-playbook`,
-  `ai-workflow-enforcement`, `ai-workflow-incubator`, `knowledge-adapters`,
-  `knowledge-vault`, `ka-destinations`, `linode-image-lab`,
+  `ai-workflow-enforcement`, `ai-workflow-incubator`, `leadership-workbench`,
+  `knowledge-adapters`, `knowledge-vault`, `ka-destinations`, `linode-image-lab`,
   `lke-image-lab`, `linode-backup-lab`, `nexus`,
   `trusted-network-registry`, and `.github`, plus the local-only workspace
   `AGENTS.md`.
@@ -127,13 +130,10 @@ uses a particular schedule, or currently contains a matching prompt.
 - Automation name: 🛡️ Workflow Drift Audit
 - Automation ID: `workflow-drift-audit`
 - Scope / target repositories: The `ctrl-alt-keith` workspace guidance and
-  workflow-policy surfaces covered by the enforcement drift scanner config:
-  `ai-workflow-incubator` notes roots, `ai-workflow-playbook/docs`, and the
-  configured organization repositories `.github`,
-  `ai-workflow-incubator`, `ai-workflow-playbook`,
-  `ai-workflow-enforcement`, `linode-image-lab`, `lke-image-lab`,
-  `linode-backup-lab`, `knowledge-adapters`, `knowledge-vault`,
-  `ka-destinations`, `nexus`, and `trusted-network-registry`.
+  workflow-policy surfaces covered by the enforcement drift scanner:
+  `ai-workflow-incubator` notes roots, `ai-workflow-playbook/docs`, and all
+  visible repositories in the `ctrl-alt-keith` GitHub organization, discovered
+  dynamically at runtime.
 - Mode: Report-only advisory scan.
 - Purpose / intent: Invoke the calibrated `ai-workflow-enforcement` drift
   scanner directly and report workflow-policy drift findings.
@@ -141,19 +141,18 @@ uses a particular schedule, or currently contains a matching prompt.
   automation config as runtime state, and generated reports as local-only.
   Do not auto-fix findings or duplicate scanner semantics in prompt text.
 - Canonical execution expectations: Work from the `ai-workflow-enforcement`
-  checkout. Verify the scanner config exists, inspect git status, skip if the
-  working tree would make results ambiguous, record the tested commit SHA, and
-  run `python3 -m enforcement.cli --config examples/drift-scan.json`.
+  checkout. Inspect git status, skip if the working tree would make results
+  ambiguous, record the tested commit SHA, verify `gh` organization access, and
+  run
+  `python3 -m enforcement.cli --notes-root ../ai-workflow-incubator --playbook-root ../ai-workflow-playbook/docs --workspace-root .. --organization ctrl-alt-keith --ignore 'archive/**'`.
   Do not fetch, pull, switch branches, commit, open PRs, modify files, delete
   worktrees, or delete branches.
-- Companion config references: `ai-workflow-enforcement/examples/drift-scan.json`
-  owns scanner roots, repository coverage, ignored paths, and scanner
-  calibration thresholds.
+- Companion config references: None. Repository scope comes from live GitHub
+  organization enumeration, not a local allowlist.
 - Reconciliation / drift handling: Freshly inspect the active `automation.toml`
-  and scanner config before comparison. Prompt drift includes mutating
-  repositories, treating advisory scanner findings as failures, changing
-  scanner scope in prompt text instead of the companion config, or creating a
-  secondary drift scanner.
+  before comparison. Prompt drift includes mutating repositories, treating
+  advisory scanner findings as failures, narrowing repository scope with a
+  local allowlist, or creating a secondary drift scanner.
 
 ### 🛡️ Repo Governance Audit
 
