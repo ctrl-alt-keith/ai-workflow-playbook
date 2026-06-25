@@ -47,11 +47,20 @@ posture, compliance notes, and other local execution constraints. When
 repo-local instructions intentionally disable, narrow, or replace a global
 default, follow the repo-local rule for that repository.
 
-Before selecting a workflow, identify the repository or workspace's primary
-purpose: documentation, research, planning, leadership, knowledge management,
-experimentation, enforcement, tooling, implementation, or a mix of those
-surfaces. Then choose the appropriate validation, review, inspection, Git, PR,
-or non-Git workflow from repo-local policy and the task type.
+Before selecting a workflow, distinguish repository or workspace purpose from
+interaction mode. Purpose describes what kind of workspace this is:
+implementation, documentation, research, planning, leadership, knowledge
+management, experimentation, enforcement, tooling, or a mix of those surfaces.
+Interaction mode describes what kind of work the agent is doing there:
+implementing, reviewing, auditing, planning, advising, orchestrating, or
+authoring prompts.
+
+Purpose and mode are related, but they are not the same. A documentation
+repository can have a review or audit task. An implementation repository can
+have a planning task. A leadership workspace can have a prompt-authoring task.
+A tooling repository can have an implementation task. Use both purpose and
+mode to choose the appropriate validation, review, inspection, Git, PR, or
+non-Git workflow from repo-local policy and the interaction mode.
 
 If instructions appear to conflict, resolve them by authority and specificity:
 use the narrowest applicable instruction from the strongest source. If the
@@ -78,16 +87,17 @@ changed?" or "what should we do next?" requests:
 2. Read the target repository's repo-local `AGENTS.md`.
 3. Apply the matching executor adapter. Codex runs must apply
    `docs/tool-adapters/codex.md`.
-4. Identify the repository or workspace's primary purpose and task type.
+4. Identify the repository or workspace's primary purpose.
 5. Select the interaction mode from `docs/repo-readiness.md`: implementation,
    review/audit, or orchestration/prompt-authoring.
-6. Identify the canonical source for the rule, behavior, or state being used.
-7. For policy-sensitive changes, apply the repo-family alignment check in
+6. Use the purpose and mode to choose the appropriate workflow path.
+7. Identify the canonical source for the rule, behavior, or state being used.
+8. For policy-sensitive changes, apply the repo-family alignment check in
    `docs/repo-readiness.md`.
-8. Confirm command form and execution settings for planned repository commands,
+9. Confirm command form and execution settings for planned repository commands,
    if commands are needed.
-9. Identify the repository's canonical validation, review, or inspection path.
-10. Act only after those checks are clear, or report the blocker, uncertainty,
+10. Identify the repository's canonical validation, review, or inspection path.
+11. Act only after those checks are clear, or report the blocker, uncertainty,
    or missing context.
 
 ## Required Core Invariants
