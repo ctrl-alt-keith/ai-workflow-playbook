@@ -101,6 +101,10 @@ Check at least these surfaces:
   auto-merge policy, and whether ready-for-review PR defaults still make sense
 - required CI and status checks: hosted checks that should be required, checks
   that are intentionally advisory, and checks that remain local-only
+- local automation coverage: active local automation configs, companion
+  allowlists, scheduled validation targets, skip conditions, and whether each
+  relevant surface should include the repository, intentionally exclude it, or
+  require a human decision
 - ownership and review routing: CODEOWNERS expectations, responsible maintainers
   or teams, and repo-local escalation notes where applicable
 - Actions and automation policy: default token permissions, workflow write
@@ -130,7 +134,9 @@ the owning source when a change is needed:
   without becoming canonical policy.
 - Automation allowlists and configuration: local Codex automations, enforcement
   configs, branch-cleanup coverage, drift-scan scope, scheduled validation
-  targets, and org scanners.
+  targets, and org scanners. Inspect active local automation configuration and
+  companion files; do not infer coverage from the filesystem or duplicate live
+  allowlists in playbook prose.
 - Org-level metadata and settings: repository visibility, description, topics,
   default branch, branch protection, required status checks, Actions policy,
   auto-merge policy, security features, Dependabot, installed apps, and access.
