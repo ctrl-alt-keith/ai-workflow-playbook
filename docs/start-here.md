@@ -27,11 +27,46 @@ acting.
   expectations
 - `docs/prompts.md` -> reusable prompt templates
 
-## Startup Contract
+## Instruction Hierarchy
 
-Before repository or software work, including read-only review, audit,
-advisory, architecture/workflow analysis, PR/issue/branch recommendations, and
-"what changed?" or "what should we do next?" requests:
+Repository work combines reusable workflow guidance with local execution
+policy. Apply instructions in this order when they overlap:
+
+1. The human's explicit task, plus any tool, safety, environment, or access
+   constraints that govern the current run.
+2. The target repository's repo-local `AGENTS.md` and other repo-local policy
+   for repository-specific execution details.
+3. The matching executor adapter, such as `docs/tool-adapters/codex.md` for
+   Codex-specific behavior.
+4. The shared playbook docs as global workflow defaults and reusable operating
+   guidance.
+
+Repo-local instructions own repository-specific policy: allowed tools, Git
+usage, validation path, file placement, release posture, compliance notes, and
+other local execution constraints. When repo-local instructions intentionally
+disable, narrow, or replace a global default, follow the repo-local rule for
+that repository.
+
+If instructions appear to conflict, resolve them by authority and specificity:
+use the narrowest applicable instruction from the strongest source. If the
+conflict cannot be resolved safely from the available sources, stop and report
+the conflict instead of silently choosing a side. Do not edit repo-local
+`AGENTS.md` merely to reconcile the conflict unless that edit is explicitly in
+scope.
+
+When following repo-local policy causes a significant deviation from the normal
+playbook workflow, explain it briefly. Significant deviations include skipping
+Git or PR workflow, using inspection-based validation, avoiding a normal
+validation command, changing worktree or branch behavior, or treating a
+repository as documentation, research, planning, leadership, or other non-code
+work rather than implementation code.
+
+## Required Startup Contract
+
+Before repository-scoped work, including code, documentation, research,
+planning, leadership, read-only review, audit, advisory,
+architecture/workflow analysis, PR/issue/branch recommendations, and "what
+changed?" or "what should we do next?" requests:
 
 1. Read this page.
 2. Read the target repository's repo-local `AGENTS.md`.
@@ -42,16 +77,17 @@ advisory, architecture/workflow analysis, PR/issue/branch recommendations, and
 5. Identify the canonical source for the rule, behavior, or state being used.
 6. For policy-sensitive changes, apply the repo-family alignment check in
    `docs/repo-readiness.md`.
-7. Confirm command form and execution settings for planned repository commands.
-8. Identify the repository's canonical validation path.
+7. Confirm command form and execution settings for planned repository commands,
+   if commands are needed.
+8. Identify the repository's canonical validation, review, or inspection path.
 9. Act only after those checks are clear, or report the blocker, uncertainty,
    or missing context.
 
-## Core Invariants
+## Required Core Invariants
 
 - `ai-workflow-playbook` is the canonical source for reusable workflow rules.
-- `AGENTS.md` is the repo-local execution layer; repo-local rules take
-  precedence only for repo-specific behavior.
+- `AGENTS.md` is the repo-local execution layer. Repo-local rules override
+  shared playbook defaults for repo-specific behavior.
 - Playbook changes and `AGENTS.md` edits are separate work types. Edit
   `AGENTS.md` only with explicit authorization or when the task's primary
   purpose is an `AGENTS.md` update, rollout, or enforcement.
@@ -78,14 +114,19 @@ advisory, architecture/workflow analysis, PR/issue/branch recommendations, and
   are noncanonical unless a durable rule is explicitly promoted into the
   playbook.
 
-## Rule of Thumb
+## Defaults And Recommendations
 
 - Prefer small, scoped changes.
 - Keep changes in the target repository, branch, and worktree.
 - Follow `docs/repo-readiness.md` for implementation isolation, governance
   operating model, command form, interaction mode, validation, and PR readiness.
+- Treat Git, branch, worktree, validation, and PR guidance as implementation
+  defaults when the repository's policy and task type support them; do not
+  force those workflows onto repositories that intentionally use another
+  operating model.
 - Use `docs/orchestration-and-parallelism.md` before splitting a task across
   workers or parallel PR lanes.
 - Use `docs/multi-agent-synthesis.md` before treating independent agent outputs
   as promotion, planning, or implementation evidence.
-- Open PRs ready for review by default unless explicitly instructed otherwise.
+- Open PRs ready for review by default when repo-local guidance calls for PR
+  delivery and validation is complete.
