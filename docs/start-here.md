@@ -41,11 +41,17 @@ policy. Apply instructions in this order when they overlap:
 4. The shared playbook docs as global workflow defaults and reusable operating
    guidance.
 
-Repo-local instructions own repository-specific policy: allowed tools, Git
-usage, validation path, file placement, release posture, compliance notes, and
-other local execution constraints. When repo-local instructions intentionally
-disable, narrow, or replace a global default, follow the repo-local rule for
-that repository.
+Repo-local instructions are the authoritative source for repository-specific
+policy: allowed tools, Git usage, validation path, file placement, release
+posture, compliance notes, and other local execution constraints. When
+repo-local instructions intentionally disable, narrow, or replace a global
+default, follow the repo-local rule for that repository.
+
+Before selecting a workflow, identify the repository or workspace's primary
+purpose: documentation, research, planning, leadership, knowledge management,
+experimentation, enforcement, tooling, implementation, or a mix of those
+surfaces. Then choose the appropriate validation, review, inspection, Git, PR,
+or non-Git workflow from repo-local policy and the task type.
 
 If instructions appear to conflict, resolve them by authority and specificity:
 use the narrowest applicable instruction from the strongest source. If the
@@ -72,15 +78,16 @@ changed?" or "what should we do next?" requests:
 2. Read the target repository's repo-local `AGENTS.md`.
 3. Apply the matching executor adapter. Codex runs must apply
    `docs/tool-adapters/codex.md`.
-4. Select the interaction mode from `docs/repo-readiness.md`: implementation,
+4. Identify the repository or workspace's primary purpose and task type.
+5. Select the interaction mode from `docs/repo-readiness.md`: implementation,
    review/audit, or orchestration/prompt-authoring.
-5. Identify the canonical source for the rule, behavior, or state being used.
-6. For policy-sensitive changes, apply the repo-family alignment check in
+6. Identify the canonical source for the rule, behavior, or state being used.
+7. For policy-sensitive changes, apply the repo-family alignment check in
    `docs/repo-readiness.md`.
-7. Confirm command form and execution settings for planned repository commands,
+8. Confirm command form and execution settings for planned repository commands,
    if commands are needed.
-8. Identify the repository's canonical validation, review, or inspection path.
-9. Act only after those checks are clear, or report the blocker, uncertainty,
+9. Identify the repository's canonical validation, review, or inspection path.
+10. Act only after those checks are clear, or report the blocker, uncertainty,
    or missing context.
 
 ## Required Core Invariants
