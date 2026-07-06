@@ -1,0 +1,105 @@
+#!/usr/bin/env sh
+# Keep this script POSIX sh compatible; it is intended for prompt preflight use.
+
+set -u
+
+REPO_URL="${CODEX_PREFLIGHT_REPO_URL:-git@github.com:ctrl-alt-keith/ai-workflow-playbook.git}"
+SSH_TARGET="${CODEX_PREFLIGHT_GITHUB_SSH_TARGET:-git@github.com}"
+
+pass_check() {
+    printf 'PASS %s\n' "$1"
+}
+
+fail_check() {
+    printf 'FAIL %s\n' "$1"
+    printf '  Remediation: %s\n' "$2"
+    exit 1
+}
+
+require_command() {
+    command_name="$1"
+    remediation="$2"
+
+    if command -v "$command_name" >/dev/null 2>&1; then
+        pass_check "$command_name is installed"
+        return
+    fi
+
+    fail_check "$command_name is installed" "$remediation"
+}
+
+require_command "ssh-add" "Install OpenSSH client tools, then rerun this preflight."
+
+ssh_add_output="$(ssh-add -l 2>&1)"
+ssh_add_status="$?"
+
+if [ "$ssh_add_status" -eq 0 ]; then
+    pass_check "ssh-agent is reachable via ssh-add -l"
+    pass_check "at least one SSH identity is loaded"
+else
+    case "$ssh_add_output" in
+        *"The agent has no identities"*|*"no identities"*)
+            pass_check "ssh-agent is reachable via ssh-add -l"
+            fail_check \
+                "at least one SSH identity is loaded" \
+                "Load a private key into the existing agent with ssh-add /path/to/private/key, then rerun this preflight."
+            ;;
+        *)
+            fail_check \
+                "ssh-agent is reachable via ssh-add -l" \
+                "Start or reconnect to ssh-agent, export SSH_AUTH_SOCK if needed, then rerun ssh-add -l."
+            ;;
+    esac
+fi
+
+require_command "ssh" "Install OpenSSH client tools, then rerun this preflight."
+
+ssh_output="$(
+    ssh \
+        -T \
+        -o BatchMode=yes \
+        -o StrictHostKeyChecking=yes \
+        -o ConnectTimeout=15 \
+        "$SSH_TARGET" 2>&1
+)"
+ssh_status="$?"
+
+case "$ssh_output" in
+    *"successfully authenticated"*)
+        if [ "$ssh_status" -eq 0 ] || [ "$ssh_status" -eq 1 ]; then
+            pass_check "GitHub SSH connectivity works via ssh -T $SSH_TARGET"
+        else
+            fail_check \
+                "GitHub SSH connectivity works via ssh -T $SSH_TARGET" \
+                "Resolve SSH authentication for GitHub, then rerun ssh -T $SSH_TARGET."
+        fi
+        ;;
+    *)
+        fail_check \
+            "GitHub SSH connectivity works via ssh -T $SSH_TARGET" \
+            "Run ssh -T $SSH_TARGET and resolve the reported SSH auth or known_hosts issue; load a key with ssh-add if needed."
+        ;;
+esac
+
+require_command "gh" "Install GitHub CLI from https://cli.github.com/, then rerun this preflight."
+
+if gh auth status >/dev/null 2>&1; then
+    pass_check "gh auth status succeeds"
+else
+    fail_check \
+        "gh auth status succeeds" \
+        "Authenticate GitHub CLI with gh auth login, then rerun gh auth status."
+fi
+
+require_command "git" "Install Git, then rerun this preflight."
+
+if GIT_SSH_COMMAND="ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15" \
+    git ls-remote --exit-code "$REPO_URL" HEAD >/dev/null 2>&1; then
+    pass_check "playbook repository is reachable with git ls-remote"
+else
+    fail_check \
+        "playbook repository is reachable with git ls-remote" \
+        "Confirm GitHub SSH access and repository permission, then rerun git ls-remote $REPO_URL HEAD."
+fi
+
+printf 'PASS Codex local automation preflight complete\n'
