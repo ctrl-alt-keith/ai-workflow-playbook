@@ -7,11 +7,15 @@ prerequisites before Codex automation fan-out or real repository work begins.
 
 It verifies:
 
-- `ssh-add -l` can reach an agent
-- at least one SSH identity is loaded
 - GitHub SSH authentication succeeds with `ssh -T git@github.com`
 - `gh` is installed and authenticated
 - the playbook repository is reachable through `git ls-remote`
+
+When available, `ssh-add -l` is used only for diagnostic context. It is not a
+readiness gate because some agent-backed flows, including 1Password SSH agent,
+can authenticate to GitHub without listing identities through `ssh-add -l`.
+The authoritative SSH readiness check is actual GitHub SSH authentication via
+`ssh -T git@github.com`.
 
 The script does not install tools, mutate Git state, change credentials, push,
 commit, or update SSH configuration. SSH checks use batch mode and strict host
@@ -32,8 +36,9 @@ cd /Users/keith/src/ctrl-alt-keith/ai-workflow-playbook
 If it exits non-zero, stop and report the failing check and remediation.
 ```
 
-This catches common stale Monday-morning failures, such as an empty SSH agent or
-expired GitHub CLI session, while the task is still cheap to restart.
+This catches common stale Monday-morning failures, such as broken GitHub SSH
+authentication or an expired GitHub CLI session, while the task is still cheap
+to restart.
 
 Set `CODEX_PREFLIGHT_REPO_URL` only when checking a different GitHub repository
 with the same read-only pattern.

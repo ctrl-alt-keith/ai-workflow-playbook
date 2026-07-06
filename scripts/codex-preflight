@@ -10,6 +10,10 @@ pass_check() {
     printf 'PASS %s\n' "$1"
 }
 
+info_check() {
+    printf 'INFO %s\n' "$1"
+}
+
 fail_check() {
     printf 'FAIL %s\n' "$1"
     printf '  Remediation: %s\n' "$2"
@@ -28,31 +32,29 @@ require_command() {
     fail_check "$command_name is installed" "$remediation"
 }
 
-require_command "ssh-add" "Install OpenSSH client tools, then rerun this preflight."
-
-ssh_add_output="$(ssh-add -l 2>&1)"
-ssh_add_status="$?"
-
-if [ "$ssh_add_status" -eq 0 ]; then
-    pass_check "ssh-agent is reachable via ssh-add -l"
-    pass_check "at least one SSH identity is loaded"
-else
-    case "$ssh_add_output" in
-        *"The agent has no identities"*|*"no identities"*)
-            pass_check "ssh-agent is reachable via ssh-add -l"
-            fail_check \
-                "at least one SSH identity is loaded" \
-                "Load a private key into the existing agent with ssh-add /path/to/private/key, then rerun this preflight."
-            ;;
-        *)
-            fail_check \
-                "ssh-agent is reachable via ssh-add -l" \
-                "Start or reconnect to ssh-agent, export SSH_AUTH_SOCK if needed, then rerun ssh-add -l."
-            ;;
-    esac
-fi
-
 require_command "ssh" "Install OpenSSH client tools, then rerun this preflight."
+require_command "gh" "Install GitHub CLI from https://cli.github.com/, then rerun this preflight."
+require_command "git" "Install Git, then rerun this preflight."
+
+if command -v ssh-add >/dev/null 2>&1; then
+    ssh_add_output="$(ssh-add -l 2>&1)"
+    ssh_add_status="$?"
+
+    if [ "$ssh_add_status" -eq 0 ]; then
+        pass_check "ssh-add -l listed identities for diagnostic context"
+    else
+        case "$ssh_add_output" in
+            *"The agent has no identities"*|*"no identities"*)
+                info_check "ssh-add -l reported no identities; continuing to GitHub SSH authentication"
+                ;;
+            *)
+                info_check "ssh-add -l was unavailable or inconclusive; continuing to GitHub SSH authentication"
+                ;;
+        esac
+    fi
+else
+    info_check "ssh-add is unavailable; continuing to GitHub SSH authentication"
+fi
 
 ssh_output="$(
     ssh \
@@ -77,11 +79,9 @@ case "$ssh_output" in
     *)
         fail_check \
             "GitHub SSH connectivity works via ssh -T $SSH_TARGET" \
-            "Run ssh -T $SSH_TARGET and resolve the reported SSH auth or known_hosts issue; load a key with ssh-add if needed."
+            "Run ssh -T $SSH_TARGET and resolve the reported GitHub SSH authentication or known_hosts issue."
         ;;
 esac
-
-require_command "gh" "Install GitHub CLI from https://cli.github.com/, then rerun this preflight."
 
 if gh auth status >/dev/null 2>&1; then
     pass_check "gh auth status succeeds"
@@ -90,8 +90,6 @@ else
         "gh auth status succeeds" \
         "Authenticate GitHub CLI with gh auth login, then rerun gh auth status."
 fi
-
-require_command "git" "Install Git, then rerun this preflight."
 
 if GIT_SSH_COMMAND="ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15" \
     git ls-remote --exit-code "$REPO_URL" HEAD >/dev/null 2>&1; then
