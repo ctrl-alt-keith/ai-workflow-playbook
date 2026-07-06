@@ -44,13 +44,15 @@ class CodexPreflightTest(unittest.TestCase):
             "ssh": """
                 batch=0
                 strict=0
+                timeout=0
                 target=0
                 for arg in "$@"; do
                     [ "$arg" = "BatchMode=yes" ] && batch=1
                     [ "$arg" = "StrictHostKeyChecking=yes" ] && strict=1
+                    [ "$arg" = "ConnectTimeout=15" ] && timeout=1
                     [ "$arg" = "git@github.com" ] && target=1
                 done
-                if [ "$batch" -eq 1 ] && [ "$strict" -eq 1 ] && [ "$target" -eq 1 ]; then
+                if [ "$batch" -eq 1 ] && [ "$strict" -eq 1 ] && [ "$timeout" -eq 1 ] && [ "$target" -eq 1 ]; then
                     printf '%s\\n' "Hi test! You've successfully authenticated, but GitHub does not provide shell access." >&2
                     exit 1
                 fi
@@ -65,7 +67,7 @@ class CodexPreflightTest(unittest.TestCase):
             "git": """
                 if [ "$1" = "ls-remote" ]; then
                     case "$GIT_SSH_COMMAND" in
-                        *"BatchMode=yes"*"StrictHostKeyChecking=yes"*) exit 0 ;;
+                        *"BatchMode=yes"*"StrictHostKeyChecking=yes"*"ConnectTimeout=15"*) exit 0 ;;
                     esac
                     exit 128
                 fi
@@ -77,11 +79,12 @@ class CodexPreflightTest(unittest.TestCase):
         result = self.run_preflight(self.fake_success_commands())
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("PASS ssh-add -l listed identities for diagnostic context", result.stdout)
         self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
         self.assertIn("PASS Codex local automation preflight complete", result.stdout)
         self.assertEqual(result.stderr, "")
 
-    def test_empty_ssh_agent_fails_with_load_key_remediation(self) -> None:
+    def test_onepassword_style_empty_ssh_add_still_succeeds_with_github_ssh_auth(self) -> None:
         commands = self.fake_success_commands()
         commands["ssh-add"] = """
             if [ "$1" = "-l" ]; then
@@ -93,10 +96,32 @@ class CodexPreflightTest(unittest.TestCase):
 
         result = self.run_preflight(commands)
 
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("PASS ssh-agent is reachable via ssh-add -l", result.stdout)
-        self.assertIn("FAIL at least one SSH identity is loaded", result.stdout)
-        self.assertIn("ssh-add /path/to/private/key", result.stdout)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn(
+            "INFO ssh-add -l reported no identities; continuing to GitHub SSH authentication",
+            result.stdout,
+        )
+        self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
+        self.assertIn("PASS Codex local automation preflight complete", result.stdout)
+
+    def test_unavailable_ssh_add_diagnostic_does_not_fail_when_github_ssh_auth_succeeds(self) -> None:
+        commands = self.fake_success_commands()
+        commands["ssh-add"] = """
+            if [ "$1" = "-l" ]; then
+                printf '%s\\n' 'Could not open a connection to your authentication agent.'
+                exit 2
+            fi
+            exit 2
+        """
+
+        result = self.run_preflight(commands)
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn(
+            "INFO ssh-add -l was unavailable or inconclusive; continuing to GitHub SSH authentication",
+            result.stdout,
+        )
+        self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
 
     def test_github_ssh_failure_stops_before_gh_checks(self) -> None:
         commands = self.fake_success_commands()
@@ -109,7 +134,27 @@ class CodexPreflightTest(unittest.TestCase):
 
         self.assertEqual(result.returncode, 1)
         self.assertIn("FAIL GitHub SSH connectivity works via ssh -T git@github.com", result.stdout)
-        self.assertNotIn("gh is installed", result.stdout)
+        self.assertIn(
+            "resolve the reported GitHub SSH authentication or known_hosts issue",
+            result.stdout,
+        )
+        self.assertNotIn("gh auth status succeeds", result.stdout)
+
+    def test_gh_auth_status_failure_reports_login_remediation(self) -> None:
+        commands = self.fake_success_commands()
+        commands["gh"] = """
+            if [ "$1" = "auth" ] && [ "$2" = "status" ]; then
+                exit 1
+            fi
+            exit 1
+        """
+
+        result = self.run_preflight(commands)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
+        self.assertIn("FAIL gh auth status succeeds", result.stdout)
+        self.assertIn("gh auth login", result.stdout)
 
     def test_git_reachability_failure_reports_read_only_check(self) -> None:
         commands = self.fake_success_commands()
