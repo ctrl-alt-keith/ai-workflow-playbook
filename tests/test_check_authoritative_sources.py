@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import unittest
 
 
@@ -14,6 +17,20 @@ SPEC.loader.exec_module(scanner)
 
 
 class AuthoritativeSourceScannerTest(unittest.TestCase):
+    def run_scanner_cli(
+        self,
+        args: list[str],
+        cwd: Path | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, str(SCRIPT_PATH), *args],
+            check=False,
+            cwd=cwd,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
     def test_flags_third_party_url_in_public_api_context(self) -> None:
         findings = scanner.scan_text(
             "PR body",
@@ -161,6 +178,54 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
         self.assertIn("Non-authoritative public API source", warning)
         self.assertIn("Matched public API context: REST", warning)
         self.assertIn("Replace with official docs", warning)
+
+    def test_cli_pr_body_file_reports_advisory_warning_without_failing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            body_path = Path(tmp) / "pr-body.md"
+            body_path.write_text(
+                "\n".join(
+                    [
+                        "REST retry behavior source: https://dev.to/example/post",
+                        "API pagination source: https://dev.to/example/second",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            result = self.run_scanner_cli(["--pr-body-file", str(body_path)])
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(result.stderr, "")
+        self.assertIn("Authoritative source check: advisory warnings only", result.stdout)
+        self.assertIn("::warning title=Non-authoritative public API source::", result.stdout)
+        self.assertIn("2 URLs from this domain were detected", result.stdout)
+        self.assertIn("- dev.to: https://dev.to/example/post", result.stdout)
+        self.assertIn("location: PR body", result.stdout)
+
+    def test_cli_all_markdown_reports_file_line_warning(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            docs_dir = root / "docs"
+            docs_dir.mkdir()
+            (docs_dir / "example.md").write_text(
+                "\n".join(
+                    [
+                        "# Example",
+                        "REST retry behavior source: https://medium.com/example/post",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            result = self.run_scanner_cli(["--all-markdown"], cwd=root)
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(result.stderr, "")
+        self.assertIn(
+            "::warning file=docs/example.md,line=2,title=Non-authoritative public API source::",
+            result.stdout,
+        )
+        self.assertIn("location: docs/example.md:2", result.stdout)
 
 
 if __name__ == "__main__":
