@@ -40,5 +40,16 @@ This catches common stale Monday-morning failures, such as broken GitHub SSH
 authentication or an expired GitHub CLI session, while the task is still cheap
 to restart.
 
-Set `CODEX_PREFLIGHT_REPO_URL` only when checking a different GitHub repository
-with the same read-only pattern.
+## Overrides
+
+Use overrides only when checking a different GitHub repository or GitHub SSH
+endpoint with the same read-only pattern:
+
+- `CODEX_PREFLIGHT_REPO_URL`: repository URL used for the final
+  `git ls-remote` reachability check.
+- `CODEX_PREFLIGHT_GITHUB_SSH_TARGET`: SSH target used for the direct
+  `ssh -T` GitHub authentication check.
+
+Keep both overrides pointed at the same GitHub account or host context. If they
+describe different environments, the preflight can pass one credential surface
+while failing or misrepresenting the other.

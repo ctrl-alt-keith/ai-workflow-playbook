@@ -13,7 +13,11 @@ SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "codex-preflight
 
 
 class CodexPreflightTest(unittest.TestCase):
-    def run_preflight(self, commands: dict[str, str]) -> subprocess.CompletedProcess[str]:
+    def run_preflight(
+        self,
+        commands: dict[str, str],
+        env_overrides: dict[str, str] | None = None,
+    ) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory() as tmp:
             bin_dir = Path(tmp)
             for name, body in commands.items():
@@ -23,6 +27,8 @@ class CodexPreflightTest(unittest.TestCase):
 
             env = os.environ.copy()
             env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
+            if env_overrides:
+                env.update(env_overrides)
             return subprocess.run(
                 [str(SCRIPT_PATH)],
                 check=False,
@@ -171,6 +177,40 @@ class CodexPreflightTest(unittest.TestCase):
         self.assertIn("PASS gh auth status succeeds", result.stdout)
         self.assertIn("FAIL playbook repository is reachable with git ls-remote", result.stdout)
         self.assertIn("git ls-remote git@github.com:ctrl-alt-keith/ai-workflow-playbook.git HEAD", result.stdout)
+
+    def test_repository_and_ssh_target_overrides_are_used(self) -> None:
+        commands = self.fake_success_commands()
+        commands["ssh"] = """
+            for arg in "$@"; do
+                [ "$arg" = "git@ssh.github.example" ] && target=1
+            done
+            if [ "${target:-0}" -eq 1 ]; then
+                printf '%s\\n' "Hi test! You've successfully authenticated, but GitHub does not provide shell access." >&2
+                exit 1
+            fi
+            exit 255
+        """
+        commands["git"] = """
+            if [ "$1" = "ls-remote" ] && [ "$2" = "--exit-code" ] && [ "$3" = "git@github.example:org/repo.git" ]; then
+                exit 0
+            fi
+            exit 128
+        """
+
+        result = self.run_preflight(
+            commands,
+            {
+                "CODEX_PREFLIGHT_GITHUB_SSH_TARGET": "git@ssh.github.example",
+                "CODEX_PREFLIGHT_REPO_URL": "git@github.example:org/repo.git",
+            },
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn(
+            "PASS GitHub SSH connectivity works via ssh -T git@ssh.github.example",
+            result.stdout,
+        )
+        self.assertIn("PASS playbook repository is reachable with git ls-remote", result.stdout)
 
 
 if __name__ == "__main__":
