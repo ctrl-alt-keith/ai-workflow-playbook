@@ -1,0 +1,132 @@
+from __future__ import annotations
+
+import os
+from pathlib import Path
+import stat
+import subprocess
+import tempfile
+import textwrap
+import unittest
+
+
+SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "codex-preflight"
+
+
+class CodexPreflightTest(unittest.TestCase):
+    def run_preflight(self, commands: dict[str, str]) -> subprocess.CompletedProcess[str]:
+        with tempfile.TemporaryDirectory() as tmp:
+            bin_dir = Path(tmp)
+            for name, body in commands.items():
+                path = bin_dir / name
+                path.write_text("#!/bin/sh\n" + textwrap.dedent(body), encoding="utf-8")
+                path.chmod(path.stat().st_mode | stat.S_IXUSR)
+
+            env = os.environ.copy()
+            env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
+            return subprocess.run(
+                [str(SCRIPT_PATH)],
+                check=False,
+                env=env,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+    def fake_success_commands(self) -> dict[str, str]:
+        return {
+            "ssh-add": """
+                if [ "$1" = "-l" ]; then
+                    printf '%s\\n' '256 SHA256:test-key comment (ED25519)'
+                    exit 0
+                fi
+                exit 2
+            """,
+            "ssh": """
+                batch=0
+                strict=0
+                target=0
+                for arg in "$@"; do
+                    [ "$arg" = "BatchMode=yes" ] && batch=1
+                    [ "$arg" = "StrictHostKeyChecking=yes" ] && strict=1
+                    [ "$arg" = "git@github.com" ] && target=1
+                done
+                if [ "$batch" -eq 1 ] && [ "$strict" -eq 1 ] && [ "$target" -eq 1 ]; then
+                    printf '%s\\n' "Hi test! You've successfully authenticated, but GitHub does not provide shell access." >&2
+                    exit 1
+                fi
+                exit 255
+            """,
+            "gh": """
+                if [ "$1" = "auth" ] && [ "$2" = "status" ]; then
+                    exit 0
+                fi
+                exit 1
+            """,
+            "git": """
+                if [ "$1" = "ls-remote" ]; then
+                    case "$GIT_SSH_COMMAND" in
+                        *"BatchMode=yes"*"StrictHostKeyChecking=yes"*) exit 0 ;;
+                    esac
+                    exit 128
+                fi
+                exit 1
+            """,
+        }
+
+    def test_success_path_accepts_github_ssh_auth_exit_one(self) -> None:
+        result = self.run_preflight(self.fake_success_commands())
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
+        self.assertIn("PASS Codex local automation preflight complete", result.stdout)
+        self.assertEqual(result.stderr, "")
+
+    def test_empty_ssh_agent_fails_with_load_key_remediation(self) -> None:
+        commands = self.fake_success_commands()
+        commands["ssh-add"] = """
+            if [ "$1" = "-l" ]; then
+                printf '%s\\n' 'The agent has no identities.'
+                exit 1
+            fi
+            exit 2
+        """
+
+        result = self.run_preflight(commands)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("PASS ssh-agent is reachable via ssh-add -l", result.stdout)
+        self.assertIn("FAIL at least one SSH identity is loaded", result.stdout)
+        self.assertIn("ssh-add /path/to/private/key", result.stdout)
+
+    def test_github_ssh_failure_stops_before_gh_checks(self) -> None:
+        commands = self.fake_success_commands()
+        commands["ssh"] = """
+            printf '%s\\n' 'git@github.com: Permission denied (publickey).' >&2
+            exit 255
+        """
+
+        result = self.run_preflight(commands)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("FAIL GitHub SSH connectivity works via ssh -T git@github.com", result.stdout)
+        self.assertNotIn("gh is installed", result.stdout)
+
+    def test_git_reachability_failure_reports_read_only_check(self) -> None:
+        commands = self.fake_success_commands()
+        commands["git"] = """
+            if [ "$1" = "ls-remote" ]; then
+                exit 128
+            fi
+            exit 1
+        """
+
+        result = self.run_preflight(commands)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("PASS gh auth status succeeds", result.stdout)
+        self.assertIn("FAIL playbook repository is reachable with git ls-remote", result.stdout)
+        self.assertIn("git ls-remote git@github.com:ctrl-alt-keith/ai-workflow-playbook.git HEAD", result.stdout)
+
+
+if __name__ == "__main__":
+    unittest.main()
