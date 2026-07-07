@@ -39,6 +39,15 @@ file can be inspected directly, verify the underlying source before reviewing,
 approving, critiquing, validating, recommending merge, assessing completion, or
 making implementation judgments.
 
+When a task asks for direct review of GitHub state, pull requests, issues,
+repository files, checks, comments, or review threads, inspect the GitHub
+artifact through the available connector or source-of-truth tool before giving
+a conclusion. PR receipts, implementation summaries, validation summaries, and
+automation reports are navigation aids, not evidence, when that access is
+available. If connector or source access is unavailable, say so explicitly
+before offering any summary-based analysis. Do not imply direct inspection
+happened unless it actually did.
+
 Reasoning traces, telemetry, generated summaries, and agent self-reports are
 supplementary evidence only. They are not authoritative proof of source state,
 intent, or correctness. When they conflict with verified source state or
@@ -55,7 +64,8 @@ Mandatory source-first triggers require authoritative retrieval before
 stateful reasoning or recommendations:
 
 - GitHub pull request URLs, pull request numbers, or requests such as "review
-  this PR", "check this PR", "continue this PR", or "is this ready?"
+  this PR", "review directly", "take a look", "check this PR", "continue this
+  PR", or "is this ready?"
 - GitHub issue URLs, issue numbers, or requests such as "continue from this
   issue", "implement this issue", or "what is left on this issue?"
 - repository identifiers, repository URLs, or local repository paths
