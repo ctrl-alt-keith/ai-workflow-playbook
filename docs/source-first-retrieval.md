@@ -104,6 +104,13 @@ For repository workflows:
    current state.
 8. Treat any source that could not be checked as unknown or unverified.
 
+Before beginning work in an existing local repository or worktree, reconcile
+the local checkout with the repository's current GitHub default branch. Do not
+assume an existing clone or worktree reflects authoritative repository state;
+treat local repositories as cached working copies that may require
+synchronization. This principle intentionally does not prescribe a specific Git
+command or implementation sequence.
+
 When a mandatory trigger is present, verification blocks:
 
 - statements about current PR, issue, branch, commit, CI, mergeability, review,
