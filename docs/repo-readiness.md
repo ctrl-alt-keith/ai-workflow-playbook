@@ -102,9 +102,20 @@ competing audit engine.
 
 ### Enforcement Relationship
 
-The playbook defines the philosophy, operating model, and reusable workflow
-expectations. `ai-workflow-enforcement` defines centralized governance policy,
-read-only audit implementation, and advisory drift reporting.
+The playbook is the canonical source of workflow doctrine: workflow rules,
+engineering philosophy, reusable operating guidance, authority boundaries, and
+human and agent operating models.
+
+`ai-workflow-enforcement` is the mechanical implementation layer for selected
+portions of that doctrine. It owns mechanical verification, advisory and
+validation tooling, read-only audit implementation, drift reporting, and
+reusable automation that enforces or assists existing playbook guidance.
+Enforcement does not independently establish workflow policy.
+
+When enforcement behavior and the playbook diverge, the playbook is
+authoritative and enforcement should be updated to match. Not every playbook
+rule requires mechanical enforcement, and not every enforcement capability
+should become playbook doctrine.
 
 Repo-local governance should exist only when the repository needs local
 rationale, a documented transition, or an explicit exception from central

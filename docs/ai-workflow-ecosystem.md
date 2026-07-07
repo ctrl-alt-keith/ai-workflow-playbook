@@ -38,7 +38,7 @@ may sharpen over time, but the current conceptual split is:
 | Repository | Conceptual role |
 | --- | --- |
 | `ai-workflow-playbook` | Canonical home for reusable workflow patterns, operating philosophy, interaction modes, review expectations, and promotion guidance. It explains how to work. |
-| `ai-workflow-enforcement` | Mechanical policy and drift enforcement. It should encode checkable workflow rules without becoming the place where the philosophy is invented. |
+| `ai-workflow-enforcement` | Mechanical verification, advisory and validation tooling, drift reporting, and reusable automation for selected playbook guidance. It implements checkable doctrine without independently establishing workflow policy. |
 | `ai-workflow-incubator` | Exploration and staging for emerging patterns before they are promoted into durable playbook guidance or split into their own repository. |
 | `knowledge-vault` | Reviewed retained knowledge. The vault stores the durable notes, summaries, and retained artifacts that have passed through human review. |
 | `knowledge-adapters` | Acquisition and normalization of external sources. Adapters treat incoming material as untrusted input and prepare it for review without declaring it retained knowledge by default. |
@@ -46,8 +46,12 @@ may sharpen over time, but the current conceptual split is:
 
 In short: adapters acquire and normalize, the vault retains reviewed knowledge,
 destinations publish or render, the playbook captures reusable patterns,
-enforcement checks mechanical policy, and the incubator gives unsettled ideas a
-place to mature before promotion.
+enforcement implements selected playbook doctrine mechanically, and the
+incubator gives unsettled ideas a place to mature before promotion. If
+playbook doctrine and enforcement behavior diverge, the playbook is
+authoritative and enforcement should be updated to match. Not every playbook
+rule needs enforcement, and not every enforcement capability should be promoted
+into doctrine.
 
 ## State Boundaries
 
