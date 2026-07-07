@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import shutil
 import stat
 import subprocess
 import tempfile
@@ -17,16 +18,25 @@ class CodexPreflightTest(unittest.TestCase):
         self,
         commands: dict[str, str],
         env_overrides: dict[str, str] | None = None,
+        isolated_path: bool = False,
     ) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory() as tmp:
             bin_dir = Path(tmp)
+            if isolated_path:
+                sh_path = shutil.which("sh")
+                self.assertIsNotNone(sh_path)
+                (bin_dir / "sh").symlink_to(sh_path)
+
             for name, body in commands.items():
                 path = bin_dir / name
                 path.write_text("#!/bin/sh\n" + textwrap.dedent(body), encoding="utf-8")
                 path.chmod(path.stat().st_mode | stat.S_IXUSR)
 
             env = os.environ.copy()
-            env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
+            if isolated_path:
+                env["PATH"] = str(bin_dir)
+            else:
+                env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
             if env_overrides:
                 env.update(env_overrides)
             return subprocess.run(
@@ -89,6 +99,41 @@ class CodexPreflightTest(unittest.TestCase):
         self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
         self.assertIn("PASS Codex local automation preflight complete", result.stdout)
         self.assertEqual(result.stderr, "")
+
+    def test_missing_required_commands_fail_fast_with_install_remediation(self) -> None:
+        cases = [
+            (
+                "ssh",
+                "FAIL ssh is installed",
+                "Install OpenSSH client tools",
+                "gh is installed",
+            ),
+            (
+                "gh",
+                "FAIL gh is installed",
+                "Install GitHub CLI",
+                "git is installed",
+            ),
+            (
+                "git",
+                "FAIL git is installed",
+                "Install Git",
+                "ssh-add -l",
+            ),
+        ]
+
+        for missing_command, failure, remediation, unexpected_next_check in cases:
+            with self.subTest(missing_command=missing_command):
+                commands = self.fake_success_commands()
+                del commands[missing_command]
+
+                result = self.run_preflight(commands, isolated_path=True)
+
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(failure, result.stdout)
+                self.assertIn(remediation, result.stdout)
+                self.assertNotIn(unexpected_next_check, result.stdout)
+                self.assertEqual(result.stderr, "")
 
     def test_onepassword_style_empty_ssh_add_still_succeeds_with_github_ssh_auth(self) -> None:
         commands = self.fake_success_commands()
