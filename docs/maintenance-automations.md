@@ -12,6 +12,14 @@ referenced by those automations, remains the discovery and inspection source
 for live automation state, current prompt/config content, schedules,
 enablement, execution paths, and operator-controlled runtime fields.
 
+Workspace-level automation outputs follow the shared workspace convention:
+`scratch/` is for temporary and disposable working material, `logs/` is for
+durable operational logs and automation run records, and `history/` is for
+durable important artifacts or documents without another natural repository
+home. Keep repo-local outputs in their canonical repository locations when one
+exists, and have automations create selected output directories before writing
+so path failures are understandable.
+
 ## Automation Intent Registry
 
 The registry below records intended prompt semantics and drift-handling
@@ -56,8 +64,9 @@ uses a particular schedule, or currently contains a matching prompt.
   `python3 -m enforcement.branch_cleanup --config <branch-cleanup-config> --apply --retry-normal-cleanup --max-apply-passes 3`,
   then run stale/non-ancestor audit with
   `python3 -m enforcement.branch_cleanup --config <branch-cleanup-config> --audit-stale --audit-github-prs`.
-  Report deleted, preserved, skipped, blocked, failed, stale-candidate, and
-  human-review refs from tool output.
+  Save durable JSON stale-audit reports under workspace `logs/`. Report
+  deleted, preserved, skipped, blocked, failed, stale-candidate, and human-review
+  refs from tool output.
 - Companion config references:
   `~/.codex/automations/delete-merged-repo-branches/branch-cleanup.json`
   owns target repositories, protected branches, and stale approval evidence.
@@ -145,6 +154,7 @@ uses a particular schedule, or currently contains a matching prompt.
   ambiguous, record the tested commit SHA, verify `gh` organization access, and
   run
   `python3 -m enforcement.cli --notes-root ../ai-workflow-incubator --playbook-root ../ai-workflow-playbook/docs --workspace-root .. --organization ctrl-alt-keith --ignore 'archive/**'`.
+  Save durable local report artifacts under workspace `logs/`.
   Do not fetch, pull, switch branches, commit, open PRs, modify files, delete
   worktrees, or delete branches.
 - Companion config references: None. Repository scope comes from live GitHub
@@ -174,9 +184,10 @@ uses a particular schedule, or currently contains a matching prompt.
   `origin/main`, record the tested commit SHA, verify `gh` organization
   access, and run
   `python3 -m enforcement.repo_settings_audit --repo ctrl-alt-keith/<repo> --source-ref main --output-format json`
-  for each visible repository. Do not pass `--fail-on-drift`, mutate hosted
-  settings, commit, push, open PRs, delete branches, delete worktrees, or edit
-  automation config.
+  for each visible repository. Save durable local report artifacts under
+  workspace `logs/`. Do not pass `--fail-on-drift`, mutate hosted settings,
+  commit, push, open PRs, delete branches, delete worktrees, or edit automation
+  config.
 - Companion config references: None.
 - Reconciliation / drift handling: Freshly inspect the active `automation.toml`
   before comparison. Prompt drift includes hard-coded repository scope,
@@ -200,9 +211,10 @@ uses a particular schedule, or currently contains a matching prompt.
   checkout. Inspect git status, skip if the working tree would make results
   ambiguous, record the tested commit SHA, verify `gh` organization access,
   and run `python3 -m enforcement.org_pr_issue_scan --org ctrl-alt-keith`.
-  Do not fetch, pull, switch branches, commit, open PRs, modify files, delete
-  worktrees, delete branches, or create, edit, close, label, assign, or comment
-  on GitHub issues or pull requests.
+  Save durable local report artifacts under workspace `logs/`. Do not fetch,
+  pull, switch branches, commit, open PRs, modify files, delete worktrees,
+  delete branches, or create, edit, close, label, assign, or comment on GitHub
+  issues or pull requests.
 - Companion config references: None.
 - Reconciliation / drift handling: Freshly inspect the active `automation.toml`
   before comparison. Prompt drift includes recreating scanner behavior in
