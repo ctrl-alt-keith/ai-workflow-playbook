@@ -22,7 +22,11 @@ This repository should not contain:
 - One-off notes
 - Vendor news or trend commentary
 - Project-specific implementation docs
-- Automation code or orchestration systems that belong in a separate implementation repo
+- Project-specific automation code, orchestration systems, or control planes
+  that belong in a separate implementation repo
+
+Small reusable checks that directly validate or demonstrate playbook guidance
+may live here when they remain narrow, documented, and subordinate to the docs.
 
 If an area grows into implementation, tooling, or automation, it should eventually move to its own repository.
 
