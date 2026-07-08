@@ -377,11 +377,23 @@ transient manifests, and task-specific scratch state.
 Use repo-local temporary state when artifacts belong to one repository's
 execution workflow and that repository's instructions support the local path.
 When temporary workflow material spans repositories or should remain visible
-during execution, prefer the workspace scratch area:
-`~/src/ctrl-alt-keith/scratch/`. Suitable scratch material includes generated
-reports, orchestration helpers, prompt packs, transient automation outputs, and
-other disposable workflow artifacts that may need later inspection,
-provenance, reconciliation, or cleanup review.
+during execution, use the workspace-level location that matches the artifact's
+durability:
+
+- `~/src/ctrl-alt-keith/scratch/` is for temporary, disposable, in-progress, or
+  throwaway working material, including prompt packs, one-off helper scripts,
+  experiments, transient manifests, and other workflow artifacts that can be
+  deleted after related work is merged, closed, or abandoned.
+- `~/src/ctrl-alt-keith/logs/` is for durable operational records, including
+  useful automation run logs, review logs, audit logs, validation summaries,
+  sweep outputs, and other log-like records worth preserving after a run.
+- `~/src/ctrl-alt-keith/history/` is for durable important documents,
+  generated artifacts, decisions, reports, or outputs that do not otherwise
+  have a natural repository home.
+
+Preserve repo-local output paths when a repository already has a better
+canonical location. For automation-managed paths, create the selected directory
+before writing and report directory or write failures with the affected path.
 
 Avoid `/tmp`, `/private/tmp`, or ad hoc temporary directories for workflow
 artifacts that may need later inspection. Use disposable OS temp locations only
