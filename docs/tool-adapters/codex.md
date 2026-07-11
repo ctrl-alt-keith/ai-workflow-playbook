@@ -16,6 +16,48 @@ a second copy of those rules.
 - Small tasks stay small when they extend an existing documented seam and avoid
   new abstractions unless clearly required.
 
+## GPT-5.6 Sol Posture
+
+GPT-5.6 Sol is the flagship GPT-5.6 role for complex reasoning and coding, not
+a universal replacement for lower-cost or latency-sensitive model roles. For
+Codex work using Sol, prefer a compact, outcome-oriented task envelope that:
+
+- names the current work layer for a long task: research, design,
+  implementation, review, or coordination
+- states observable success criteria, constraints, dependencies, permissions,
+  stop conditions, and the boundary of completion
+- points to the governing playbook and repo-local sources instead of copying
+  their doctrine into the prompt
+- requires validation output or other direct evidence before completion is
+  claimed
+
+Do not add generic instructions such as "think step by step," "be thorough,"
+or "minimize tool calls." Describe the outcome and evidence that matter. A
+changed model string or a successful tool call is progress evidence, not proof
+that the task is complete.
+
+### Model And Prompt Updates
+
+A model upgrade does not by itself justify a prompt rewrite. Preserve the
+existing prompt and behavior first, establish a representative baseline, and
+make only surgical prompt changes tied to an observed failure. When the
+variables can be evaluated separately, do not change the model, prompt,
+reasoning effort, tool behavior, and workflow at the same time.
+
+Preserve the prior effective reasoning effort as the first migration baseline.
+Treat reasoning effort as execution configuration rather than prompt prose,
+then tune it against representative tasks. Do not recommend a global increase
+or compensate for a configuration mismatch by bloating the prompt.
+
+Keep Pro mode, persisted reasoning, programmatic tool calling, explicit prompt
+caching, and multi-agent execution outside the baseline migration. Evaluate
+each optional feature separately only when the workload shape and measured
+results justify it. Preserve behavior and settings before optimizing.
+
+This posture is derived from OpenAI's current
+[GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/latest-model)
+and [GPT-5.6 Sol model reference](https://developers.openai.com/api/docs/models/gpt-5.6-sol).
+
 ## Startup Deltas
 
 Before repo-scoped work:
