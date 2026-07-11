@@ -55,18 +55,20 @@ allowlisting mixed surfaces such as blogs, communities, marketplaces, marketing
 sites, support forums, or generic corporate roots when only a documentation
 subdomain or developer portal is authoritative.
 
-The scanner includes narrow Google and Atlassian documentation domains because
-they are common adoption targets:
+The scanner includes narrow Google, OpenAI, and Atlassian documentation domains
+because they are common adoption targets:
 
 - Google: `cloud.google.com`, `developers.google.com`, and
   `firebase.google.com`.
+- OpenAI: `developers.openai.com`, its developer and API documentation portal.
 - Atlassian: `developer.atlassian.com`, `docs.atlassian.com`, and
   `support.atlassian.com`.
 
-These defaults do not imply that `google.com`, `atlassian.com`, `blog.google`,
-`community.atlassian.com`, or other mixed/community domains are authoritative.
-Caller repositories can still add more narrow `official_domains` when their
-public API surface depends on another provider-controlled documentation domain.
+These defaults do not imply that `google.com`, `openai.com`, `atlassian.com`,
+`blog.google`, `community.atlassian.com`, or other corporate, marketing,
+mixed, or community domains are authoritative. Caller repositories can still
+add more narrow `official_domains` when their public API surface depends on
+another provider-controlled documentation domain.
 
 Same-organization GitHub repository links are intentionally treated as project
 references for this playbook's repositories. They are useful for local project
