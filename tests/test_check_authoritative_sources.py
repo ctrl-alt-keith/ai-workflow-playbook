@@ -98,6 +98,23 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
 
                 self.assertEqual(findings, [])
 
+    def test_openai_developer_docs_are_allowed_by_default(self) -> None:
+        findings = scanner.scan_text(
+            "docs/example.md",
+            "OpenAI API source: https://developers.openai.com/api/docs/guides/latest-model",
+        )
+
+        self.assertEqual(findings, [])
+
+    def test_broad_openai_domain_still_warns(self) -> None:
+        findings = scanner.scan_text(
+            "docs/example.md",
+            "OpenAI API source: https://openai.com/news/example",
+        )
+
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]["domain"], "openai.com")
+
     def test_google_and_atlassian_community_domains_still_warn(self) -> None:
         findings = scanner.scan_text(
             "docs/example.md",

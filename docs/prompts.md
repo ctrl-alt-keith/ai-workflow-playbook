@@ -28,6 +28,7 @@ implementation. For review or orchestration, use the matching template instead.
 ```text
 Role:
 - You are implementing a scoped repository change in [repository].
+- Work layer: implementation.
 
 Goal:
 - [desired outcome]
@@ -43,14 +44,13 @@ Context:
 - Working directory: [working_directory]
 - Relevant background: [short context]
 - GitHub issues or planning references: [none or identifiers]
+- Dependencies: [none or required predecessors, inputs, or services]
 
 Retrieval:
 - Read `ai-workflow-playbook/docs/start-here.md`, the target repo's
   `AGENTS.md`, and any required tool adapter before acting.
 - Retrieve or revalidate authoritative repository, issue, PR, file, CI, log, or
   artifact state before relying on it.
-- Treat summaries, completion reports, memory, and pasted descriptions as
-  navigation, not proof of current source state.
 - Stop broad search once the target files, constraints, validation path, and
   delivery expectation are clear.
 
@@ -78,6 +78,10 @@ Validation:
 Delivery:
 - [branch, commit, push, and PR expectation, or explicit exclusion]
 - Include a concise summary, validation results, and residual risks.
+
+Permissions and completion boundary:
+- Authorized actions: [local edits, validation, commit, push, PR, or narrower]
+- Completion ends at: [validated artifact, review packet, draft PR, or other]
 
 Stop rules:
 - Stop before merge, release, tag, destructive, externally visible, or
@@ -124,6 +128,7 @@ Required inputs:
 ```text
 Role:
 - You are a downstream agent completing a bounded task for [repository].
+- Work layer: [research, design, implementation, review, or coordination]
 
 Goal:
 - [clear user-visible outcome]
@@ -144,12 +149,12 @@ Inputs:
 - Interaction mode: [implementation, review/audit, or orchestration]
 - Validation path: [validation_path]
 - Delivery expectation: [delivery_expectation]
+- Dependencies: [none or required predecessors, inputs, or services]
 
 Retrieval:
 - Read the shared playbook startup guidance and repo-local `AGENTS.md` first.
-- Inspect only the files, issues, PRs, docs, or artifacts needed for the goal.
-- Retrieve authoritative source state before relying on it; treat summaries and
-  completion reports as navigation only.
+- Retrieve authoritative state from only the files, issues, PRs, docs, or
+  artifacts needed for the goal; treat summaries as navigation only.
 - Stop once the target surface, constraints, validation path, and delivery
   expectation are clear.
 
@@ -175,6 +180,10 @@ Validation:
 Delivery:
 - [branch, commit, push, PR, review packet, or report expectation]
 - Include summary, validation, source evidence, and residual risks.
+
+Permissions and completion boundary:
+- Authorized actions: [read-only inspection, local edits, delivery, or narrower]
+- Completion ends at: [artifact, review packet, PR, report, or other]
 
 Stop rules:
 - Stop before merge, release, tag, destructive, externally visible, or
