@@ -244,6 +244,28 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
         )
         self.assertIn("location: docs/example.md:2", result.stdout)
 
+    def test_cli_all_markdown_ignores_worktree_markdown(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            docs_dir = root / "docs"
+            worktree_docs_dir = root / ".worktrees" / "feature" / "docs"
+            docs_dir.mkdir()
+            worktree_docs_dir.mkdir(parents=True)
+            (docs_dir / "example.md").write_text(
+                "REST retry behavior source: https://medium.com/source-doc",
+                encoding="utf-8",
+            )
+            (worktree_docs_dir / "example.md").write_text(
+                "REST retry behavior source: https://medium.com/worktree-doc",
+                encoding="utf-8",
+            )
+
+            result = self.run_scanner_cli(["--all-markdown"], cwd=root)
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("https://medium.com/source-doc", result.stdout)
+        self.assertNotIn("https://medium.com/worktree-doc", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
