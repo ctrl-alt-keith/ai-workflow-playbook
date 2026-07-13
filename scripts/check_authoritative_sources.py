@@ -43,6 +43,17 @@ OFFICIAL_GITHUB_PATH_MARKERS = (
 )
 SAME_ORG_GITHUB_OWNERS = {"ctrl-alt-keith"}
 KNOWN_THIRD_PARTY_SUFFIXES = ("stackoverflow.com", "medium.com", "dev.to")
+IGNORED_MARKDOWN_PATH_PARTS = (
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    ".worktrees",
+    "node_modules",
+    "vendor",
+)
 JUSTIFICATION_RE = re.compile(
     r"\b("
     r"source justification|source exception|"
@@ -211,6 +222,14 @@ def markdown_sources(paths: list[Path]) -> list[tuple[str, str]]:
     return sources
 
 
+def is_scannable_markdown_path(path: Path) -> bool:
+    return not any(part in IGNORED_MARKDOWN_PATH_PARTS for part in path.parts)
+
+
+def all_markdown_files(root: Path = Path(".")) -> list[Path]:
+    return sorted(path for path in root.glob("**/*.md") if is_scannable_markdown_path(path))
+
+
 def dedupe(findings: list[dict[str, object]]) -> list[dict[str, object]]:
     by_domain: dict[str, dict[str, object]] = {}
     for finding in findings:
@@ -287,7 +306,7 @@ def main() -> int:
         sources.append(("PR body", body))
 
     if args.all_markdown:
-        markdown_files = sorted(Path(".").glob("**/*.md"))
+        markdown_files = all_markdown_files()
     else:
         pull_request = payload.get("pull_request", {})
         base_ref = (
