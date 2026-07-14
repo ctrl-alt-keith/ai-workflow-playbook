@@ -53,6 +53,12 @@ authoritative and enforcement should be updated to match. Not every playbook
 rule needs enforcement, and not every enforcement capability should be promoted
 into doctrine.
 
+When these or other repositories exchange artifacts, use the lightweight
+[`repo-to-repo interface contract pattern`](repo-to-repo-interface-contracts.md)
+and the qualified terms in the
+[`cross-repo architecture glossary`](cross-repo-glossary.md). Repository-local
+contracts remain authoritative for their domains.
+
 ## State Boundaries
 
 Retained knowledge should move through distinguishable states instead of

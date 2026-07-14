@@ -65,6 +65,8 @@ The first core module is delivery. Additional workflow families may be added lat
 ## Initial Map
 
 - [`docs/start-here.md`](docs/start-here.md): mandatory startup, core invariants, and adapter-routing contract
+- [`docs/repo-to-repo-interface-contracts.md`](docs/repo-to-repo-interface-contracts.md): lightweight pattern for documenting producer/consumer boundaries
+- [`docs/cross-repo-glossary.md`](docs/cross-repo-glossary.md): qualified cross-repository architecture vocabulary
 - [`docs/ai-workflow-ecosystem.md`](docs/ai-workflow-ecosystem.md): conceptual overview of the repository ecosystem, retained-knowledge boundaries, and architectural direction
 - [`docs/engineering-baseline.md`](docs/engineering-baseline.md): foundational engineering expectations, including validation, source authority, review, merge authority, and ready-for-review defaults
 - [`docs/authoritative-source-check.md`](docs/authoritative-source-check.md): advisory authoritative-source scanner adoption, domain classification, source justifications, and reusable workflow pinning
