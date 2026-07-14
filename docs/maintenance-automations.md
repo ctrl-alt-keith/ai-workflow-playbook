@@ -16,9 +16,24 @@ Workspace-level automation outputs follow the shared workspace convention:
 `scratch/` is for temporary and disposable working material, `logs/` is for
 durable operational logs and automation run records, and `history/` is for
 durable important artifacts or documents without another natural repository
-home. Keep repo-local outputs in their canonical repository locations when one
-exists, and have automations create selected output directories before writing
-so path failures are understandable.
+home. Under `logs/`, use the producer ID as the first directory:
+`logs/<producer-id>/<run-artifact>`. Here, `<producer-id>` is the stable
+automation ID for recurring automations or the canonical producer/tool ID for
+durable non-automation producers. Keep one producer's chronology together even
+when it operates across several repositories; put repository names in
+filenames, artifact metadata, or a per-run directory instead of making
+repositories the primary grouping.
+
+For an ordinary run that emits one report, prefer a deterministic readable
+name such as
+`logs/<producer-id>/<YYYY-MM-DD>-<short-description>.<ext>`. When one run
+emits separate artifacts for several repositories, prefer
+`logs/<producer-id>/<YYYY-MM-DD>/<repository-name>.<ext>`. Do not introduce
+a date directory when a run normally emits only one or a few files. Keep
+repo-local outputs in their canonical repository locations when one exists.
+Automation prompts must create the selected producer or per-run output
+directory before writing and must not create run artifacts directly in the
+root of `logs/`.
 
 ## Automation Intent Registry
 
