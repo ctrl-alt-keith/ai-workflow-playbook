@@ -53,6 +53,17 @@ authoritative and enforcement should be updated to match. Not every playbook
 rule needs enforcement, and not every enforcement capability should be promoted
 into doctrine.
 
+### Enforcement Control Ownership
+
+For reviewed operational controls such as
+[`codex-safe-rm`](https://github.com/ctrl-alt-keith/ai-workflow-enforcement/blob/main/docs/codex-safe-rm.md),
+`ai-workflow-enforcement` owns the helper implementation, threat model,
+installation and verification mechanisms, Codex rule fixtures, and tests.
+`ai-workflow-playbook` owns the behavioral guidance, workflow expectations,
+delegation boundaries, and operator guidance for using that control. Link to
+the enforcement documentation for mechanics instead of copying implementation
+details into the playbook.
+
 When these or other repositories exchange artifacts, use the lightweight
 [`repo-to-repo interface contract pattern`](repo-to-repo-interface-contracts.md)
 and the qualified terms in the

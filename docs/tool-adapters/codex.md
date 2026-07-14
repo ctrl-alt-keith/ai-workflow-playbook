@@ -174,6 +174,36 @@ Codex-specific application:
   keep the wrapped operation narrow enough for review and approval surfaces to
   see the intended action.
 
+### Enforcement-Backed Recursive Cleanup
+
+Direct `rm` and `rm -rf` remain approval-gated. When recursive cleanup is
+appropriate and every target is already known to be a disposable directory
+beneath the current repository worktree, prefer the reviewed enforcement
+control:
+
+```sh
+/Users/keith/.local/bin/codex-safe-rm -rf -- TARGET [TARGET ...]
+```
+
+The control validates the fixed invocation grammar and every operand, enforces
+containment beneath the invocation working directory, rejects `.git`, prevents
+symlink escape, rejects top-level files and symlinks, and safely ignores missing
+directories. The implementation, threat model, installation and verification
+workflow, rule fixture, and tests belong to
+[`ai-workflow-enforcement`](https://github.com/ctrl-alt-keith/ai-workflow-enforcement/blob/main/docs/codex-safe-rm.md);
+do not reproduce those mechanics in the playbook.
+
+The control establishes invocation and containment safety. It does not decide
+whether a directory is disposable. Do not use it to bypass approval when a
+target is uncertain, valuable, or part of a broader destructive operation.
+Human judgment still owns what may be deleted.
+
+Installation, verification, and activation through Codex rules are separate
+operator steps. The presence of this guidance does not make the helper a
+prerequisite for every Codex workflow. If the reviewed control is unavailable
+or not activated, keep recursive removal approval-gated rather than substituting
+an unreviewed wrapper.
+
 ## GitHub And PR Evidence
 
 - Before repo- or PR-dependent work, verify GitHub access instead of relying on
@@ -254,9 +284,12 @@ Codex should continue without pausing when the scope is clear, the repo context
 matches the task, required sources are available, validation can run, and no
 human-gated decision is next.
 
-Do not use autonomy to widen scope, reinterpret intent, or take ownership of
-merge, release, tag, destructive, security-sensitive, permissions-sensitive, or
-policy-interpretation decisions.
+Routine cleanup of known disposable repo-local directories through the reviewed
+`codex-safe-rm` control is an enforcement-backed operation within this lane; it
+is not an arbitrary destructive command. This does not delegate the decision
+that a target is disposable. Do not use autonomy to widen scope, reinterpret
+intent, or take ownership of merge, release, tag, uncertain deletion,
+security-sensitive, permissions-sensitive, or policy-interpretation decisions.
 
 ## Stop Conditions
 
