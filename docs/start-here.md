@@ -9,10 +9,6 @@ acting.
 ## Read Order
 
 - `docs/engineering-baseline.md` -> foundational engineering expectations
-- `docs/repo-to-repo-interface-contracts.md` -> lightweight producer/consumer
-  contract pattern for cross-repository interfaces
-- `docs/cross-repo-glossary.md` -> qualified meanings for overloaded
-  architecture terms across repositories
 - `docs/source-first-retrieval.md` -> retrieve and revalidate authoritative
   state before stateful repository reasoning
 - `docs/repo-readiness.md` -> interaction mode, governance operating model,
@@ -30,6 +26,16 @@ acting.
 - `docs/maintenance-automations.md` -> recurring Codex maintenance automation
   expectations
 - `docs/prompts.md` -> reusable prompt templates
+
+## Conditional Guidance
+
+Read these only when the work involves multiple repositories,
+cross-repository interfaces, or architectural terminology:
+
+- `docs/repo-to-repo-interface-contracts.md` -> lightweight producer/consumer
+  contract pattern for cross-repository interfaces
+- `docs/cross-repo-glossary.md` -> qualified meanings for overloaded
+  architecture terms across repositories
 
 ## Instruction Hierarchy
 
