@@ -174,6 +174,20 @@ class CodexPreflightTest(unittest.TestCase):
         )
         self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
 
+    def test_missing_optional_ssh_add_still_succeeds_with_github_ssh_auth(self) -> None:
+        commands = self.fake_success_commands()
+        del commands["ssh-add"]
+
+        result = self.run_preflight(commands, isolated_path=True)
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn(
+            "INFO ssh-add is unavailable; continuing to GitHub SSH authentication",
+            result.stdout,
+        )
+        self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
+        self.assertIn("PASS Codex local automation preflight complete", result.stdout)
+
     def test_github_ssh_failure_stops_before_gh_checks(self) -> None:
         commands = self.fake_success_commands()
         commands["ssh"] = """
