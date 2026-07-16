@@ -12,6 +12,13 @@ Use lint-safe placeholders such as `[repository]`, `[validation_path]`, or
 backticked tokens in Markdown templates. Angle-bracket placeholders can be
 interpreted as inline HTML by Markdown tooling.
 
+When rendering a complete Codex prompt inside a Markdown code fence, never
+nest another Markdown code fence inside it. If the prompt needs an embedded
+YAML, JSON, shell, Markdown, or other example, represent the example with
+indentation and prefer plain text over Markdown formatting. Optimize the
+finished prompt for reliable copy/paste across ChatGPT clients without changing
+its meaning or execution.
+
 ## Quick Navigation
 
 - [Codex Implementation Task](#codex-implementation-task)
