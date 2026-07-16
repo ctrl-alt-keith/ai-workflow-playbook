@@ -54,6 +54,55 @@ caching, and multi-agent execution outside the baseline migration. Evaluate
 each optional feature separately only when the workload shape and measured
 results justify it. Preserve behavior and settings before optimizing.
 
+### Reasoning-Level Recommendations
+
+When the playbook produces or recommends a complete Codex prompt, precede the
+executable prompt with this plain-text operator metadata:
+
+```text
+Recommended reasoning level: <Light | Medium | High>
+
+Reason:
+<one concise task-specific explanation>
+```
+
+Keep the metadata outside the executable prompt body, and begin that body
+immediately afterward. When rendering Markdown, separate the metadata and
+prompt body into consecutive code blocks with no intervening prose so the
+operator can copy only the executable prompt.
+
+Treat Light, Medium, and High as practical recommendation categories when the
+execution surface does not provide more specific established terminology. The
+recommendation is advisory, not a guarantee. Choose it from the bounded task
+being handed off:
+
+- High usually fits workflow or system architecture, ambiguous repository-wide
+  design, synthesis across conflicting evidence, major refactoring with broad
+  consequences, contract or recovery-point design, parallel-agent
+  coordination, and work where mistakes would propagate into many later runs.
+- Medium usually fits bounded evidence collection, integration against an
+  established contract, structured analysis, normal implementation with
+  meaningful judgment, and code review or repository changes of moderate
+  complexity.
+- Light usually fits mechanical or tightly bounded edits, formatting and
+  cleanup, applying an approved change, straightforward validation or
+  documentation updates, and work with explicit interfaces and acceptance
+  criteria.
+
+Use the task shape rather than the apparent size of the broader project. A
+tightly scoped task may justify a lower level inside a complex project, while a
+small-looking task may justify High when it establishes durable policy or
+architecture. Execution runs can often use less reasoning than the design run
+that established their contracts, while later synthesis may justify High even
+when collection runs used Medium. Reconsider the recommendation whenever the
+task changes materially.
+
+Make the reason specific, concise, operational, and honest about the expected
+benefit. Do not use promotional language or unverified claims about quality,
+speed, cost, or correctness. A reasoning-level recommendation does not replace
+a clear prompt, bounded scope, explicit contracts, validation, or safe stopping
+conditions.
+
 This posture is derived from OpenAI's current
 [GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/latest-model)
 and [GPT-5.6 Sol model reference](https://developers.openai.com/api/docs/models/gpt-5.6-sol).

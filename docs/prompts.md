@@ -24,6 +24,18 @@ interpreted as inline HTML by Markdown tooling.
 
 Use this template only when the intended interaction mode is direct
 implementation. For review or orchestration, use the matching template instead.
+Apply the reasoning-selection guidance in
+[`tool-adapters/codex.md`](tool-adapters/codex.md#reasoning-level-recommendations)
+to the bounded task. The first block below is operator metadata, not part of the
+executable prompt. Emit the two blocks consecutively without an intervening
+heading or explanation.
+
+```text
+Recommended reasoning level: [Light | Medium | High]
+
+Reason:
+[one concise task-specific explanation]
+```
 
 ```text
 Role:
