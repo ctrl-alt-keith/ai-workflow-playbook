@@ -122,6 +122,12 @@ Before repo-scoped work:
   [`source-first-retrieval.md`](../source-first-retrieval.md): retrieve or
   revalidate authoritative repository, PR, issue, file, CI, log, artifact, and
   external-state sources before relying on them.
+- Treat a first-party connector's capabilities as unknown until verified; do
+  not infer that a capability is absent because its tool has not been loaded or
+  inspected. Before falling back to a direct service API or authenticated CLI
+  for remote service state, determine whether the connector provides the
+  required capability. Direct APIs and CLIs remain appropriate for verified
+  connector gaps, repository-local workflows, or explicit repository policy.
 - For policy-sensitive changes, apply the repo-family alignment check in
   [`repo-readiness.md`](../repo-readiness.md#repo-family-policy-alignment)
   before implementation.
