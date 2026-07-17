@@ -26,6 +26,11 @@ Use the lens to reinforce the existing rules:
 - canonical validation is the health check before readiness or reconciliation
 - review, rebase, validation, and merge sequencing are the reconciliation path
 
+The worker count, lane layout, execution engine, and sequencing topology may
+change only while the approved semantics, authority boundaries, isolation,
+evidence identity, and validation contract remain intact. A topology change is
+not authority to reinterpret the task or weaken a guarantee.
+
 For comparative discovery and synthesis across multiple agents, use
 [`multi-agent-synthesis.md`](multi-agent-synthesis.md). Convergence and
 divergence can guide what deserves inspection, but source verification and
@@ -116,6 +121,10 @@ The worker's final report is the lane stop receipt. It should make the stop
 boundary easy to audit by naming changed files, validation results, overlap or
 merge-order dependencies, blockers, residual risk, and any authority it did not
 exercise.
+
+The lane stop receipt records what the lane reports at its boundary. It does
+not grant downstream authority and does not replace direct inspection of the
+repository, pull request, validation, or other controlling source.
 
 ## Orchestrator Responsibilities
 

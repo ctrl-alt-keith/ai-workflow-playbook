@@ -53,6 +53,20 @@ Record any evidence-supported reusable lesson before the next delivery arc
 starts. If the lesson is promoted into the playbook, include a notes cleanup
 follow-up or state explicitly that no notes cleanup is needed.
 
+## Stage Boundary Receipts
+
+For a material workflow stage, leave a durable receipt that makes the completed
+boundary recoverable and reviewable. Record the applicable operational
+contract, material inputs and outputs, validation performed, authority
+consumed, any authority granted by the authorized decision-maker, the result,
+and the exact next permitted action.
+
+A receipt records a transition; it does not approve the transition or grant
+authority. Stored status, successful validation, or receipt creation must not
+be treated as permission to begin a later stage. Keep the form and storage
+proportionate to the workflow: this is a semantic contract, not a required
+schema or a receipt for every routine step.
+
 ## Project Maps
 
 When a repository has multiple active or upcoming arcs, keep a lightweight
