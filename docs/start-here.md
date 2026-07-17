@@ -23,19 +23,38 @@ acting.
   matching adapter exists
 - `docs/authoritative-source-check.md` -> advisory source scanner workflow
 - `docs/repo-awareness-onboarding-refresh.md` -> repository inventory refresh
-- `docs/maintenance-automations.md` -> recurring Codex maintenance automation
-  expectations
 - `docs/prompts.md` -> reusable prompt templates
+
+The ecosystem includes an autonomous maintenance layer for recurring, bounded
+inspection, maintenance, and improvement. Its full doctrine is conditional;
+ordinary repository work does not need to hydrate it unless the task touches
+that layer.
 
 ## Conditional Guidance
 
 Read these only when the work involves multiple repositories,
 cross-repository interfaces, or architectural terminology:
 
+- `docs/ai-workflow-ecosystem.md` -> repository roles, autonomous maintenance,
+  state boundaries, and architectural direction
 - `docs/repo-to-repo-interface-contracts.md` -> lightweight producer/consumer
   contract pattern for cross-repository interfaces
 - `docs/cross-repo-glossary.md` -> qualified meanings for overloaded
   architecture terms across repositories
+
+Read `docs/maintenance-automations.md` when work involves any of these surfaces:
+
+- recurring automation design or review
+- automation prompt authoring
+- fleet-wide maintenance
+- governance or drift automation
+- scheduled inspection or correction
+- architecture analysis of the autonomous maintenance layer
+- changes to automation authority, evidence, scope, or safety contracts
+
+Ordinary repository implementation, review, issue triage, and “what changed?”
+work do not require the full maintenance doctrine unless the task also touches
+one of those surfaces.
 
 ## Instruction Hierarchy
 

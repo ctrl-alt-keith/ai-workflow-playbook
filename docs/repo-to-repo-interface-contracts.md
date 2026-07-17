@@ -127,6 +127,24 @@ needs to be negotiated or incompatible evolution must be detectable.
   its owning repository and PR. Land producer support before consumer opt-in
   when ordering matters; preserve an overlap window when practical.
 
+## Recurring Convergence Is Not Compatibility
+
+The autonomous maintenance layer can keep documentation, governance,
+conventions, and bounded implementation patterns aligned across repositories.
+That recurring convergence can reduce the maintenance cost of independent
+implementations, but it does not establish semantic compatibility.
+
+Use a formal producer/consumer contract when a repository consumes another
+repository's artifact or behavior and must detect incompatible evolution.
+Automation may inspect both sides, update fixtures, and propose coordinated
+changes, but the interface still needs explicit ownership, compatibility rules,
+and validation in the producer and consumer paths.
+
+Repeated automated repair at an integration seam is evidence that the contract
+may be missing or too weak. It is not a reason to accept permanent drift, and it
+does not by itself justify extracting similar implementations into a shared
+library.
+
 ## Review Questions
 
 - Does the contract describe the interface that exists, with links to current
