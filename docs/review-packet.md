@@ -32,6 +32,10 @@ Codex should summarize:
 
 The goal is not to restate the diff line by line. The goal is to make human review targeted and efficient.
 
+When a decision depends on integrated or synthesized evidence, use
+[`evidence-lifecycle.md`](evidence-lifecycle.md) for the accepted-evidence,
+semantic-accounting, and reporting boundaries.
+
 If the repo does not have a formal validation path yet, say that directly and summarize the lightweight validation that was used.
 
 When relevant, say explicitly whether validation was mocked, contract-level, or exercised against real behavior, and treat that gap as a risk.

@@ -73,6 +73,7 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/repo-readiness.md`](docs/repo-readiness.md): interaction-mode selection, governance operating model, repository workflow expectations, validation taxonomy, and `AGENTS.md` responsibilities
 - [`docs/repo-awareness-onboarding-refresh.md`](docs/repo-awareness-onboarding-refresh.md): repository discovery, inventory propagation, onboarding, and governance refresh procedure
 - [`docs/core-model.md`](docs/core-model.md): high-level operating model
+- [`docs/evidence-lifecycle.md`](docs/evidence-lifecycle.md): accepted evidence, integration, synthesis, semantic accounting, and reporting boundaries
 - [`docs/feature-lifecycle.md`](docs/feature-lifecycle.md): delivery lifecycle, branch behavior, and PR completion expectations
 - [`docs/alignment-checkpoints.md`](docs/alignment-checkpoints.md): pause points and branch/PR rules
 - [`docs/review-packet.md`](docs/review-packet.md): standard human review packet

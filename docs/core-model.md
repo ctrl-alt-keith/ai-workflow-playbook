@@ -66,6 +66,10 @@ request count. Crossing it requires an explicit review and authority boundary,
 and completed evidence production does not imply approval of a downstream
 decision.
 
+When a workflow accepts, integrates, or synthesizes evidence, apply the
+[`evidence lifecycle`](evidence-lifecycle.md) before crossing into decision
+production.
+
 ## Durable Continuity
 
 Durable project artifacts are the recoverable continuity substrate for a
