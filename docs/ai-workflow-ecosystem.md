@@ -70,6 +70,42 @@ and the qualified terms in the
 [`cross-repo architecture glossary`](cross-repo-glossary.md). Repository-local
 contracts remain authoritative for their domains.
 
+## Autonomous Maintenance Layer
+
+The ecosystem includes an **autonomous maintenance layer** that performs
+recurring, bounded inspection, maintenance, and improvement across independent
+repositories. It is a first-class architectural capability rather than a
+particular repository, scheduler, or automation inventory.
+
+The layer closes the feedback loop between canonical expectations and current
+repository state:
+
+```text
+Canonical doctrine and contracts
+        ↓
+Human and AI executors
+        ↓
+Autonomous repositories
+        ↓
+Autonomous maintenance layer
+        ↓
+Evidence and review-ready proposals
+        ↓
+Human approval for consequential transitions
+```
+
+This layer keeps independently owned repositories convergent without requiring
+one shared runtime implementation. It can detect drift, perform narrowly
+bounded reversible hygiene, and prepare focused changes. Repository-local
+authority, canonical validation, explicit producer/consumer contracts, and
+human approval boundaries continue to control.
+
+Exact schedules, automation identifiers, workstation paths, credentials,
+notification routes, and scheduler implementations are local operational
+configuration. The architectural responsibilities, authority classes,
+evidence contract, and self-review expectations live in
+[`maintenance-automations.md`](maintenance-automations.md).
+
 ## State Boundaries
 
 Retained knowledge should move through distinguishable states instead of
@@ -120,7 +156,8 @@ checking, rendering, and reuse without making the underlying knowledge opaque.
 ### Human-In-The-Loop Governance
 
 Automation can acquire, normalize, summarize, compare, and suggest. Humans
-still own retention decisions, promotion decisions, and governance boundaries.
+still own retention decisions, promotion decisions, governance boundaries, and
+consequential or irreversible transitions.
 
 Pull requests are the normal review surface for durable changes. That keeps
 model-assisted operations visible in diffs, validation output, review notes,
@@ -180,8 +217,9 @@ The preferred path is:
 4. promote the reusable lesson
 5. tighten mechanical enforcement only after the rule is stable enough to check
 
-Schemas and automation should follow durable patterns, not lead them before the
-workflow is understood.
+Schemas and automation implementations should follow durable patterns, not lead
+them before the workflow is understood. The autonomous maintenance layer may
+surface repeated gaps, but it does not promote its own findings into doctrine.
 
 ### Solo Operator Scaling Direction
 
@@ -210,6 +248,9 @@ Repo-local sovereignty remains the default. Discovery should be report-only
 before mutation, and cross-repo changes should be decomposed into separately
 reviewable repository PRs rather than bundled into mega-changes. Avoid standing
 centralized control planes, unbounded autonomy, and premature standardization.
+The autonomous maintenance layer supports this sovereignty by coordinating
+recurring convergence through repository-owned validation and review surfaces,
+not by taking ownership of repository implementations.
 
 Promote new workflow abstractions only after repeated evidence from real repo
 work shows that they reduce review or coordination burden without becoming

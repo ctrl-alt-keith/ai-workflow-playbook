@@ -170,6 +170,22 @@ State who declares the capability, how it is verified, and whether it is
 required, optional, or merely observed. A capability flag must not hide an
 incompatible semantic change.
 
+### Autonomous Maintenance Layer
+
+The **autonomous maintenance layer** is the ecosystem capability that performs
+recurring, bounded inspection, maintenance, and improvement across independent
+repositories.
+
+It may produce findings, review-ready proposals, or narrowly scoped reversible
+hygiene. It does not own canonical doctrine, repository-local policy,
+producer/consumer semantics, merge decisions, or consequential transitions.
+Its scheduler and enabled automation inventory are local configuration; its
+authority boundaries and evidence contract are architectural doctrine.
+
+Use this governed term for the layer. Use “automation” or “job” only for a
+specific implementation within it. Do not use “autonomous” to imply unrestricted
+mutation authority.
+
 ## Usage Guidance
 
 - Prefer qualified phrases in cross-repo docs, issues, prompts, and PRs.

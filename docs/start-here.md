@@ -23,8 +23,8 @@ acting.
   matching adapter exists
 - `docs/authoritative-source-check.md` -> advisory source scanner workflow
 - `docs/repo-awareness-onboarding-refresh.md` -> repository inventory refresh
-- `docs/maintenance-automations.md` -> recurring Codex maintenance automation
-  expectations
+- `docs/maintenance-automations.md` -> autonomous maintenance layer,
+  capability classes, authority boundaries, and evidence expectations
 - `docs/prompts.md` -> reusable prompt templates
 
 ## Conditional Guidance
@@ -32,6 +32,8 @@ acting.
 Read these only when the work involves multiple repositories,
 cross-repository interfaces, or architectural terminology:
 
+- `docs/ai-workflow-ecosystem.md` -> repository roles, autonomous maintenance,
+  state boundaries, and architectural direction
 - `docs/repo-to-repo-interface-contracts.md` -> lightweight producer/consumer
   contract pattern for cross-repository interfaces
 - `docs/cross-repo-glossary.md` -> qualified meanings for overloaded

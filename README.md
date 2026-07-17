@@ -80,7 +80,9 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/tool-adapters/`](docs/tool-adapters/): documented executor-specific adapter guidance; Codex runs must apply [`docs/tool-adapters/codex.md`](docs/tool-adapters/codex.md)
 - [`docs/playbook-integrity-check.md`](docs/playbook-integrity-check.md): lightweight anti-drift check
 - [`docs/new-repo-bootstrap.md`](docs/new-repo-bootstrap.md): reusable bootstrap pattern for brand-new repositories
-- [`docs/maintenance-automations.md`](docs/maintenance-automations.md): reusable operating rules plus reference inventory notes for recurring Codex maintenance automation
+- [`docs/maintenance-automations.md`](docs/maintenance-automations.md):
+  autonomous maintenance layer responsibilities, capability classes, authority
+  and evidence boundaries, and local-configuration separation
 - [`docs/codex-preflight.md`](docs/codex-preflight.md): read-only local prerequisite check for Codex automation startup
 - [`docs/workstation-maintenance.md`](docs/workstation-maintenance.md): manual-only local workstation maintenance procedures, including Codex log cleanup
 - [`docs/prompts.md`](docs/prompts.md): reusable prompt templates, including the standard Codex task prompt format
