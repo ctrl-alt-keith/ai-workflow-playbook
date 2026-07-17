@@ -66,6 +66,23 @@ request count. Crossing it requires an explicit review and authority boundary,
 and completed evidence production does not imply approval of a downstream
 decision.
 
+## Durable Continuity
+
+Durable project artifacts are the recoverable continuity substrate for a
+workflow. Depending on the task, those artifacts can include the current
+operational contract, authoritative repository and issue state, exact evidence
+and artifact identities, human approval records, stage and attempt receipts,
+validation results, and the next permitted action. Their authority remains
+specific to the role assigned by the owning source; durability alone does not
+make an artifact canonical or grant permission.
+
+Conversation is useful for intent, navigation, and explanation, but it is
+non-authoritative context. Recovery must be possible from durable sources by
+reconstructing the applicable contract, current authority, accepted inputs,
+completed work, and next permitted action, then revalidating any mutable source
+state. If that contract cannot be reconstructed or no longer applies, stored
+history cannot silently authorize continuation.
+
 ## Workflow
 
 The default loop is:

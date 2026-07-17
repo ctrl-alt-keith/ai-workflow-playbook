@@ -374,6 +374,19 @@ whenever practical.
 Examples include local worktree directories, generated review artifacts,
 transient manifests, and task-specific scratch state.
 
+Keep the execution surface isolated from unrelated operator state and primary
+checkouts. Unscoped local files, prior-run artifacts, implicit prompts,
+unrelated environment state, or another task's working tree must not become
+inputs or authority merely because they are available. Name and revalidate any
+operator-managed state that the operational contract intentionally requires,
+and keep mutation inside the assigned repository and worktree boundaries.
+
+Preserve completed run artifacts and receipts as historical evidence rather
+than rewriting them to appear current. Corrections, recovery, replay, and later
+attempts should leave their own reviewable record when the distinction matters.
+This does not require a particular storage system or make every temporary file
+durable.
+
 Use repo-local temporary state when artifacts belong to one repository's
 execution workflow and that repository's instructions support the local path.
 When temporary workflow material spans repositories or should remain visible
