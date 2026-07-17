@@ -43,6 +43,11 @@ Implementation, review/audit, or orchestration/prompt-authoring.
 List the repository files, issue or PR links, docs, commands, logs, or other
 authoritative sources inspected.
 
+## Coordination Links
+
+List relevant GitHub issues, planning tickets, and expected PR linkage. Keep
+planning coordination distinct from repository implementation authority.
+
 ## Validation
 
 Name the validation class under the canonical playbook taxonomy, list commands

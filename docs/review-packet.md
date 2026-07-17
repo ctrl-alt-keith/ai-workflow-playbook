@@ -1,8 +1,12 @@
 # Review Packet
 
-Before merge or release, prepare a standard review packet for the human reviewer.
+At each material human decision boundary, including before merge or release,
+prepare a standard review packet for the human reviewer.
 
-Use this packet at the release point described in [`feature-lifecycle.md`](feature-lifecycle.md), and use [`alignment-checkpoints.md`](alignment-checkpoints.md) when deciding whether a pre-merge sanity check is needed.
+Use this packet at the semantic phase and release boundaries described in
+[`feature-lifecycle.md`](feature-lifecycle.md), and use
+[`alignment-checkpoints.md`](alignment-checkpoints.md) when deciding whether a
+pre-merge sanity check is needed.
 
 ## Packet Format
 
