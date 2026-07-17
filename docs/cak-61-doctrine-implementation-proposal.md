@@ -41,10 +41,10 @@ pasted, cached, and generated copies were not used as authority.
 
 | Source | Retrieval and verified state | Use |
 | --- | --- | --- |
-| Playbook `docs/start-here.md` | GitHub `main`; direct API retrieval | Required startup and instruction hierarchy |
-| Playbook root `AGENTS.md` | GitHub `main`; direct API retrieval | Repo-local execution, placement, validation, and branch policy |
-| Playbook `docs/tool-adapters/codex.md` | GitHub `main`; direct API retrieval | Codex startup, worktree, source-first, and command deltas |
-| Full `start-here.md` read order | GitHub `main`; direct GitHub retrieval, including conditional interface and glossary docs | Engineering, retrieval, readiness, orchestration, synthesis, adapters, scanning, onboarding, automation, prompts, cross-repo contracts, and vocabulary |
+| Playbook `docs/start-here.md` | GitHub `main`; GitHub connector retrieval | Required startup and instruction hierarchy |
+| Playbook root `AGENTS.md` | GitHub `main`; GitHub connector retrieval | Repo-local execution, placement, validation, and branch policy |
+| Playbook `docs/tool-adapters/codex.md` | GitHub `main`; GitHub connector retrieval | Codex startup, worktree, source-first, and command deltas |
+| Full `start-here.md` read order | GitHub `main`; authoritative GitHub retrieval through the connector, including conditional interface and glossary docs | Engineering, retrieval, readiness, orchestration, synthesis, adapters, scanning, onboarding, automation, prompts, cross-repo contracts, and vocabulary |
 | Linear CAK-61 | Linear connector; `In Progress`; branch `keith/cak-61-playbook-codify-cak-59-validated-doctrine` | Playbook scope, assigned rows, sequence, and checkpoint contract |
 | Linear CAK-60 | Linear connector; `Backlog` | Cross-repository implementation boundaries and review rules |
 | Linear CAK-59 | Linear connector | Frozen retrospective model and evidence boundary |
