@@ -136,6 +136,20 @@ Trust context (optional):
 - Confidence: medium; behavior is stable but not yet promoted to the playbook.
 ```
 
+## Doctrine Provenance
+
+When a change promotes reusable doctrine, the review packet should link the
+reviewed evidence and decision that support the promotion. Identify the
+observation, maturity, disposition, target, and exact implementation artifact
+or commit so a reviewer can trace the rule without copying the complete
+retrospective into the doctrine file.
+
+State which material was frozen before implementation, which items remained
+open questions or were otherwise not promoted, and whether the implementation
+preserved the reviewed decision. Keep the evidence artifact and implementation
+lifecycle distinct; neither a retrospective nor its summary grants approval to
+merge the doctrine change.
+
 ## What The Human Should Focus On
 
 The human reviewer should focus on:
