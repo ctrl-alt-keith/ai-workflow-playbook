@@ -147,7 +147,16 @@ project-map-only PRs for release updates.
 
 ## Branch And PR Rules
 
-After each merged phase, start a new branch and PR for the next lifecycle phase. This keeps the review surface narrow and preserves clean checkpoints.
+Every semantic phase boundary requires an explicit review and authority
+boundary. After a phase merges, start a new branch and PR for the next lifecycle
+phase. This keeps the review surface narrow and preserves clean checkpoints.
+
+Implementation and approval may share one PR only when the approval is anchored
+to the exact reviewed commit or bytes and downstream authority remains
+fail-closed until that approval is recorded. Any semantic change after the
+reviewed identity requires a new review. This narrow same-PR allowance does not
+remove a lifecycle phase, reduce a required gate, or permit another semantic
+phase boundary to pass without explicit review and authority.
 
 Start same-repo arcs from freshly fetched `origin/main`. Do not reuse an old
 feature branch unless intentionally continuing that PR.
@@ -258,4 +267,7 @@ When concurrent PRs have no file overlap and no open review concerns, merge orde
 is flexible. Say that explicitly in the review packet instead of inventing a
 false dependency.
 
-Do not roll multiple lifecycle phases into one long-running branch unless there is a strong reason and the review surface remains clear.
+Do not roll multiple lifecycle phases into one long-running branch unless there
+is a strong reason and the review surface remains clear. The same-PR
+implementation-and-approval allowance above is not a blanket exception to this
+sequential lifecycle discipline.

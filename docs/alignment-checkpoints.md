@@ -47,6 +47,13 @@ Start a new thread when:
 
 ## New Branch And PR Required When
 
+Every semantic phase boundary retains an explicit review and authority
+boundary. Implementation and approval may share the current PR only when the
+approval is anchored to the exact reviewed commit or bytes and downstream
+authority remains fail-closed. A semantic change to the reviewed material
+requires renewed review; this allowance does not reduce lifecycle phases or
+create a general same-PR rule.
+
 A new branch and PR are required when:
 
 - the current phase has merged and the next phase begins
