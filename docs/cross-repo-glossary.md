@@ -173,14 +173,17 @@ incompatible semantic change.
 ### Autonomous Maintenance Layer
 
 The **autonomous maintenance layer** is the ecosystem capability that performs
-recurring, bounded inspection, maintenance, and improvement across independent
-repositories.
+recurring, bounded inspection, maintenance, and improvement across independently
+governed repositories.
 
-It may produce findings, review-ready proposals, or narrowly scoped reversible
-hygiene. It does not own canonical doctrine, repository-local policy,
-producer/consumer semantics, merge decisions, or consequential transitions.
-Its scheduler and enabled automation inventory are local configuration; its
-authority boundaries and evidence contract are architectural doctrine.
+It may produce findings, review-ready proposals, or bounded hygiene under
+mechanically verifiable safety predicates. Bounded hygiene may include cleanup
+that is not literally reversible and therefore needs recovery evidence or a
+documented recovery path where practical. The layer does not own canonical
+doctrine, repository-local policy, producer/consumer semantics, merge decisions,
+or consequential transitions. Its scheduler and enabled automation inventory
+are local configuration; its authority boundaries and evidence contract are
+architectural doctrine.
 
 Use this governed term for the layer. Use “automation” or “job” only for a
 specific implementation within it. Do not use “autonomous” to imply unrestricted

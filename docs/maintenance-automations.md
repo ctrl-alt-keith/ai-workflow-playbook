@@ -3,10 +3,10 @@
 ## Purpose
 
 The **autonomous maintenance layer** is the ecosystem capability that performs
-recurring, bounded inspection, maintenance, and improvement across otherwise
-independent repositories. It shortens the half-life of repository entropy by
-turning drift and maintenance needs into durable evidence, reversible hygiene,
-or review-ready proposals.
+recurring, bounded inspection, maintenance, and improvement across independently
+governed repositories. It shortens the half-life of repository entropy by
+turning drift and maintenance needs into durable evidence, bounded hygiene, or
+review-ready proposals.
 
 This layer is part of the ecosystem architecture, not merely a scheduler
 convenience. Without it, independently owned repositories tend to diverge from
@@ -26,7 +26,7 @@ Canonical doctrine and contracts
         ↓
 Human and AI executors
         ↓
-Autonomous repositories
+Independently governed repositories
         ↓
 Autonomous maintenance layer
         ↓
@@ -110,8 +110,10 @@ behavior and authority. Typical purposes include:
   examples, and documentation when deletion is demonstrably safe
 
 Maintenance may produce a review-ready change or perform narrowly bounded,
-reversible hygiene. It must stop when safety depends on interpretation,
-unverified state, or a broader product decision.
+mechanically justified hygiene. Branch deletion and safe surface removal are
+cleanup operations, not inherently reversible actions. The capability must stop
+when safety depends on interpretation, incomplete evidence, uncertain
+ownership, or a broader product decision.
 
 ### Periodic Engineering Investment
 
@@ -141,10 +143,14 @@ runs:
   Evidence includes the diff, rationale, canonical validation result, residual
   risk, and any source uncertainty. Human review remains the acceptance and
   merge boundary.
-- **Perform reversible hygiene**: execute only an explicitly documented,
-  narrowly scoped operation whose safety predicates can be verified before
-  mutation. Evidence records the predicate, action, outcome, and preserved or
-  escalated cases. Ambiguity causes a skip, not a guessed correction.
+- **Perform bounded hygiene**: execute only an explicitly documented, narrowly
+  scoped operation whose safety predicates can be mechanically verified before
+  mutation. The operation may include safe cleanup that is not literally
+  reversible. Evidence records the predicates, relevant pre-mutation state or
+  identifiers when recovery may be needed, action, outcome, and preserved or
+  escalated cases. Use a documented recovery path where one is practical. Stop
+  and escalate when safety depends on interpretation, incomplete evidence, or
+  uncertain ownership.
 
 No class silently crosses an irreversible or consequential approval boundary.
 An automation that needs broader authority must stop and return evidence for a
@@ -244,7 +250,7 @@ periodic review. Inspect for:
 - capability gaps that leave important doctrine or repository risks unchecked
 
 Preserve intentional differences between read-only inspection, proposal work,
-reversible hygiene, and repository-specific validation. The goal is coherent
+bounded hygiene, and repository-specific validation. The goal is coherent
 coverage, not identical prompts or implementations.
 
 Health review may recommend consolidating responsibilities, clarifying a

@@ -73,9 +73,9 @@ contracts remain authoritative for their domains.
 ## Autonomous Maintenance Layer
 
 The ecosystem includes an **autonomous maintenance layer** that performs
-recurring, bounded inspection, maintenance, and improvement across independent
-repositories. It is a first-class architectural capability rather than a
-particular repository, scheduler, or automation inventory.
+recurring, bounded inspection, maintenance, and improvement across independently
+governed repositories. It is a first-class architectural capability rather
+than a particular repository, scheduler, or automation inventory.
 
 The layer closes the feedback loop between canonical expectations and current
 repository state:
@@ -85,7 +85,7 @@ Canonical doctrine and contracts
         ↓
 Human and AI executors
         ↓
-Autonomous repositories
+Independently governed repositories
         ↓
 Autonomous maintenance layer
         ↓
@@ -96,9 +96,9 @@ Human approval for consequential transitions
 
 This layer keeps independently owned repositories convergent without requiring
 one shared runtime implementation. It can detect drift, perform narrowly
-bounded reversible hygiene, and prepare focused changes. Repository-local
-authority, canonical validation, explicit producer/consumer contracts, and
-human approval boundaries continue to control.
+bounded hygiene under mechanically verifiable safety predicates, and prepare
+focused changes. Repository-local authority, canonical validation, explicit
+producer/consumer contracts, and human approval boundaries continue to control.
 
 Exact schedules, automation identifiers, workstation paths, credentials,
 notification routes, and scheduler implementations are local operational
