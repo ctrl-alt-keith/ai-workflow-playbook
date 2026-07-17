@@ -28,6 +28,12 @@ repository setup, this durable proposal, validation, commit, push, and the
 Linear checkpoint. Doctrine edits, an implementation PR, merge, auto-merge,
 and downstream CAK-62 through CAK-65 work are excluded.
 
+This proposal remains on the working branch as the implementation contract
+during CAK-61. It is not intended to merge permanently into `docs/` on `main`.
+After implementation, durable provenance will live in the implementation PR,
+Linear CAK-61, and the Knowledge Vault roadmap. No new top-level planning
+directory is needed.
+
 ## 2. Retrieved Source Register
 
 All sources below were retrieved directly on 2026-07-17. Conversational,
@@ -52,8 +58,9 @@ pasted, cached, and generated copies were not used as authority.
 | Merged implementation roadmap | `knowledge-vault/main`, blob `4c513aa66c42639274bf06b5b727ef42cd00dec0` | Current B01-B13 allocation, dependencies, ledger, and exclusions |
 | Roadmap delivery PR 73 | GitHub connector; merged as `0a92c12e0c49a8e8fb587da09b5afc5daedf445c` | Delivery provenance and reviewed roadmap corrections |
 | Playbook repository metadata | GitHub connector | Public, default branch `main`, squash-only merge, no auto-merge |
-| Playbook overlap check | GitHub connector | No open PRs; remote branch search returned only `main` |
-| Local Playbook state | Direct Git inspection and refresh | `origin/main` at `8d7ed551d88ce7ad4e490d819bb3de661e59b36f`; clean dedicated worktree |
+| Remote proposal branch and file | GitHub connector | Branch `keith/cak-61-playbook-codify-cak-59-validated-doctrine` exists; proposal blob `7d97de27051842bd3ad2daba7213276c1e00bb7f` |
+| Playbook overlap check | GitHub connector | No open PR has the proposal branch as its head |
+| Local Playbook state | Direct Git inspection after refresh | `origin/main` at `8d7ed551d88ce7ad4e490d819bb3de661e59b36f`; local and remote proposal branch at `8fd80c5bb54c9fa4a72fe00c69d15ad0a778e57c`; clean dedicated worktree |
 
 Verification gate result: **verified**. No source required for this proposal is
 unknown. The completed CAK-53 run artifacts remain linked evidence through the
@@ -108,7 +115,7 @@ classification change: CAK-59 intentionally has no row 58.
 | 3 | Validated / Codify | Approval versus execution authority; `core-model.md` > new `Authority And Transitions` | Human/AI roles and stop rules exist; authority consumed or granted at transitions is implicit | **Amend** — state that execution, validation, receipts, stored state, and automation cannot mint approval authority | Exclude provider permission mechanics; consumers all later batches; risk: confusing capability with authority | Batch 1 comment |
 | 5 | Validated / Codify | Evidence-production versus decision-production; `core-model.md` > new `Protocol Phases` | Delivery phases exist, but the semantic evidence/decision boundary does not | **New** — define the semantic phase boundary independently of PR count or stage names | Exclude a mandatory stage list or PR-per-phase rule; consumers B03-B05; risk: forcing research terminology onto all delivery | Batch 1 comment |
 | 24 | Validated / Codify | Completed-stage receipts; `feature-lifecycle.md` > new `Stage Boundary Receipts` | Only worker stop receipts and optional telemetry are defined | **New** — require durable receipts for material stages with inputs, outputs, validation, authority consumed, authority granted, result, and next permitted action | Exclude a schema or storage format; consumers B05-B09; risk: receipts becoming authority or mandatory ceremony | Batch 3 comment |
-| 26 | Validated / Codify | Durable-guidance promotion; `feature-lifecycle.md` > `Capture`; cross-link `prompts.md` | Prompts already route to canonical sources and notes promotion is documented | **Adequate** — preserve current owners; add at most a cross-reference if implementation text needs one | Exclude copying prompt text into doctrine or rolling out `AGENTS.md`; consumers B02, B04, B07; risk: duplication | Batch 3 comment |
+| 26 | Validated / Codify | Durable-guidance promotion; `feature-lifecycle.md` > `Capture`; cross-link `prompts.md` | `Capture` already says: `Record any evidence-supported reusable lesson before the next delivery arc starts.` It also requires a notes-cleanup follow-up or an explicit statement that none is needed when promoting into the Playbook. | **Adequate** — these exact existing sentences codify promotion into durable guidance; preserve them and cross-link rather than restating them if B02 or B04 needs navigation | Exclude copying prompt text into doctrine or rolling out `AGENTS.md`; consumers B02, B04, B07; risk: duplication | Batch 3 comment |
 | 54 | Validated / Codify | Semantic invariants over topology; `orchestration-and-parallelism.md` > `Distributed-Systems Lens` | Lane topology is deliberately flexible, but the invariant-over-topology rule is not explicit | **Amend** — state that topology may vary only while approved semantics, authority, isolation, evidence, and validation remain unchanged | Exclude waves, lane counts, worktree names, or a universal topology; consumers B02-B03, B06; risk: topology becoming hidden policy | Completeness audit |
 
 ### B02 — Durable state, recovery, replay, isolation, prompts, and attempts
@@ -138,9 +145,9 @@ navigation links from `core-model.md`, `review-packet.md`, and `README.md`.
 | 34 | Validated / Codify | Accepted-only synthesis and semantic classes; `Synthesis` | Multi-agent synthesis separates phases but does not define accepted evidence or observation/interpretation/recommendation accounting | **New** — synthesize only accepted evidence and label observation, interpretation, and recommendation distinctly | Exclude mandatory report labels for trivial tasks; consumers B04-B05; risk: bureaucratic output taxonomies | Batch 4 comment |
 | 35 | Validated / Codify | Reasoning beyond evidence; `Synthesis` | Current doctrine says reasoning needs source inspection but not how to report evidence-extending reasoning | **New** — permit explicit inference and implications while preventing them from being restated as evidence | Exclude reasoning traces and chain-of-thought retention; consumers final reports; risk: inference laundering | Batch 4 comment |
 | 36 | Validated / Codify | Recommendation traceability; `Traceability` | Review packets cite source evidence but do not require recommendation-to-evidence lineage | **Amend** — require a reviewable link from recommendations to motivating evidence and named inference | Exclude a global traceability database; consumers B04-B05; risk: false precision or excessive bookkeeping | Batch 4 comment |
-| 37 | Validated / Codify | Dependency accounting; `Semantic Accounting` | Multi-agent convergence is not proof, but shared-source dependency accounting is absent | **New** — distinguish independent corroboration from convergence caused by shared sources or reasoning | Exclude numeric independence scores and source graphs; consumers synthesis; risk: over-formalizing qualitative review | Batch 4 comment |
+| 37 | Validated / Codify | Dependency accounting; `Semantic Accounting` | Multi-agent convergence is not proof, but shared-source dependency accounting is absent | **New** — distinguish independent corroboration from convergence caused by shared sources or reasoning, and cross-link `docs/multi-agent-synthesis.md#reading-convergence-and-divergence` as the owner of convergence interpretation | Exclude numeric independence scores and source graphs; consumers synthesis; risk: over-formalizing qualitative review | Batch 4 comment |
 | 38 | Validated / Codify | Negative evidence and unresolved questions; `Negative And Null Evidence` | Open questions appear in summaries, but durable negative evidence is not a general contract | **New** — keep unsuccessful searches, constrained findings, conflicts, and unresolved questions visible through synthesis | Exclude claims that unsuccessful search proves absence; consumers B04 and experiment planning; risk: indefinite retention | Batch 4 comment |
-| 39 | Validated / Codify | Deterministic versus semantic judgment; `Validation Boundary` | Repo readiness and ingestion docs already reserve meaning and acceptance for humans | **Amend** — state the boundary once for evidence workflows: deterministic checks prove declared structure/traceability, not meaning, significance, or approval | Exclude validator mechanics and universal human approval of every check; consumers B05/B08; risk: duplicating validation taxonomy | Batch 4 comment |
+| 39 | Validated / Codify | Deterministic versus semantic judgment; `Validation Boundary` | Repo readiness and ingestion docs already reserve meaning and acceptance for humans | **Amend** — state the boundary once for evidence workflows and cross-link `docs/repo-readiness.md#validation` as the validation-taxonomy owner: deterministic checks prove declared structure/traceability, not meaning, significance, or approval | Exclude validator mechanics and universal human approval of every check; consumers B05/B08; risk: duplicating validation taxonomy | Batch 4 comment |
 | 40 | Validated / Codify | Report output classes; `Reporting` | Review packets have objective/scope/validation/risks, not evidence output classes | **New** — separate factual findings, operational observations, recommendations, and open questions when all are present | Exclude a mandatory report template for simple work; consumers B04-B05; risk: universalizing research report structure | Batch 4 comment |
 
 ### B04 — Retrospective discipline and protocol evolution
@@ -151,23 +158,23 @@ navigation links from `core-model.md`, `review-packet.md`, and `README.md`.
 | 41 | Validated / Codify | Freeze observations before implementation; `Retrospective And Evolution` | Capture and promotion flows exist but do not freeze the reviewed evidence record | **New** — require reviewed observations to be frozen before doctrine implementation in substantial evolution work | Exclude a retrospective for every small edit; consumers doctrine changes; risk: process ceremony | Batch 5 comment |
 | 42 | Validated / Codify | Observation lifecycle; `Retrospective And Evolution` | Notes and synthesis use different promotion vocabularies; no explicit independent maturity/disposition/target sequence | **New** — preserve Observation -> Maturity -> Disposition -> Target -> Implementation as independent decisions | Exclude a universal database or fixed schema; consumers B11-B13; risk: collapsing evidence strength into action priority | Batch 5 comment |
 | 43 | Validated / Codify | Problem/solution independence; `Retrospective And Evolution` | Promotion guidance rejects speculation but does not explicitly separate validated problems from unvalidated solutions | **New** — require independent evidence for the problem and for any proposed replacement | Exclude promoting four gates, state representation, or other candidates; consumers B10/B12; risk: solution laundering | Batch 5 comment |
-| 44 | Validated / Codify | Operational validation before protocol promotion; `Retrospective And Evolution`; cross-link `trust-topology.md` | Trust topology and multi-agent promotion already require evidence-supported reuse | **Adequate** — retain current promotion doctrine; add only a contextual cross-reference from the new lifecycle section | Exclude automatic promotion and mandatory trust labels; consumers future Playbook changes; risk: duplicate promotion taxonomies | Batch 5 comment |
+| 44 | Validated / Codify | Operational validation before protocol promotion; `Retrospective And Evolution`; cross-link `trust-topology.md` | `trust-topology.md` already says: `Promote only when a pattern is reusable, evidence-supported, non-speculative, and clear enough to guide action in the destination layer.` | **Adequate** — this exact existing sentence codifies the row; retain it and add only a contextual cross-reference from the new lifecycle section | Exclude automatic promotion and mandatory trust labels; consumers future Playbook changes; risk: duplicate promotion taxonomies | Batch 5 comment |
 | 45 | Validated / Codify | Durable open questions; `Retrospective And Evolution` | Open questions are summarized or deferred, but no reviewed retirement rule exists | **Amend** — keep open questions visible until answered, superseded, rejected, archived, or intentionally retired | Exclude automatic backlog creation; consumers B12/B13; risk: permanent unresolved registries | Batch 5 comment |
 | 46 | Validated / Improve | Experiments name questions; B12 experiment planning, primarily Incubator | Playbook experiment-objective doctrine is not required by B01-B05; roadmap assigns implementation to B12 | **Defer** — preserve as a B04 secondary constraint and hand off to B12 without implementing an experiment system here | Exclude experiment specs or CAK-64 work; consumers B12; risk: silently absorbing another repository's work | Batch 5 comment |
 | 47 | Validated / Codify | Retrospective output classes; `Retrospective And Evolution` | Current capture does not separate doctrine, workflow improvements, operational improvements, and research findings | **New** — classify outputs by owner and disposition before follow-up | Exclude mandatory repository names or one ticket per output; consumers CAK-60-style programs; risk: duplicative coordination | Batch 5 comment |
 | 48 | Validated / Codify | Doctrine provenance; `Retrospective And Evolution` and `review-packet.md` > `Source Evidence` | Promotion evidence is encouraged but doctrine changes do not explicitly cite the reviewed decision | **Amend** — require evidence and retrospective decision traceability for promoted doctrine | Exclude copying full evidence into Playbook; consumers review/closeout; risk: stale copied status | Batch 5 comment |
 | 49 | Validated / Codify | Immutable retrospective, separate implementation lifecycle; `Retrospective And Evolution` | Branch separation exists, but frozen evidence versus follow-up implementation is not explicit | **New** — preserve reviewed retrospective artifacts and implement through separate issue/branch/PR lifecycles | Exclude migration of historical run artifacts; consumers all implementation tracks; risk: treating frozen evidence as current authority to execute | Batch 5 comment |
-| 50 | Validated / Codify | Incremental evolution; `Retrospective And Evolution` | Small scoped changes and evidence-supported promotion already establish the posture | **Adequate** — retain current doctrine and connect it to validated-baseline evolution | Exclude wholesale redesign without contradictory evidence; consumers future protocol revisions; risk: using incrementalism to block needed redesign | Batch 5 comment |
+| 50 | Validated / Codify | Incremental evolution; `Retrospective And Evolution` | `docs/start-here.md` already says `Prefer small, scoped changes.`, while `trust-topology.md` requires promotion to be reusable, evidence-supported, non-speculative, and actionable. | **Adequate** — these exact existing rules codify incremental, evidence-supported evolution; the new retrospective section will cross-link them when connecting evolution to the validated baseline | Exclude wholesale redesign without contradictory evidence; consumers future protocol revisions; risk: using incrementalism to block needed redesign | Batch 5 comment |
 | 51 | Validated / Codify | Preserve by default, discard intentionally; `Retrospective And Evolution` > `Preservation And Retirement` | Ingestion retention and notes cleanup are domain-specific; no general information-preservation rule | **New** — preserve useful evidence until an explicit retention/retirement decision, while stating that preservation is not permanence | Exclude indefinite retention, secrets, restricted content, and mandatory raw logs; consumers evidence and closeout; risk: uncontrolled accumulation | Batch 5 comment |
 
 ### B05 — Human decision and review contract
 
 | Row | Frozen maturity / disposition | Concept and proposed owner | Current doctrine and precise gap | Classification and proposed change | Exclusions; consumers; risk | Source |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 7 | Validated / Codify | Human contribution at decision boundaries; `core-model.md` > `Roles` | Human already owns intent, standards, decisions, completion, and capture | **Adequate** — current role doctrine already expresses the reusable rule | Exclude a claim that humans stop implementing; consumers B05/B10; risk: overstating causal generality | Batch 1 comment |
-| 9 | Validated / Codify | Decision-first review; `review-packet.md` > `Packet Format` | Packet is targeted and avoids line-by-line diff summaries | **Adequate** — preserve current decision compression; B05 amendments extend fields without restating the principle | Exclude hiding full artifacts; consumers all review surfaces; risk: compressed context concealing material facts | Batch 2 comment |
+| 7 | Validated / Codify | Human contribution at decision boundaries; `core-model.md` > `Roles` | The Human role already says `Set or approve the execution plan`, `Review meaningful deltas, risks, and tradeoffs`, and `Decide when work is complete`. | **Adequate** — these exact existing sentences codify human contribution at decision boundaries; B05 will cross-link the role owner instead of restating it | Exclude a claim that humans stop implementing; consumers B05/B10; risk: overstating causal generality | Batch 1 comment |
+| 9 | Validated / Codify | Decision-first review; `review-packet.md` > `Packet Format` | `What Codex Should Summarize` already says: `The goal is not to restate the diff line by line. The goal is to make human review targeted and efficient.` | **Adequate** — these exact existing sentences codify decision compression; B05 amendments extend decision fields without restating the principle | Exclude hiding full artifacts; consumers all review surfaces; risk: compressed context concealing material facts | Batch 2 comment |
 | 10 | Validated / Codify | Required decision fields; `review-packet.md` > `Packet Format` | Objective/scope/validation/risks exist; decision, invariants, changed bytes, authority boundary, and next action are missing | **Amend** — add decision requested, reviewed artifact/commit, invariants, exceptions, authority consumed/granted, and next permitted action | Exclude an implementation-specific schema; consumers Enforcement/KV B05 adoption; risk: template bloat | Batch 2 comment |
-| 11 | Validated / Codify | Exact reviewed-commit approval; `review-packet.md` > new `Approval Identity`; amend `feature-lifecycle.md` phase/PR rule | Current lifecycle broadly requires a new PR after each phase and has no approval commit identity | **New** — approval applies to exact reviewed bytes; same-PR implementation/approval is allowed only with an exact commit anchor and fail-closed downstream authority | Exclude a blanket same-PR rule or gate reduction; consumers B05/B10; risk: stale approval after changed bytes | Batch 2 comment |
+| 11 | Validated / Codify | Exact reviewed-commit approval; `review-packet.md` > new `Approval Identity`; amend `feature-lifecycle.md` phase/PR rule | Current lifecycle broadly requires a new PR after each phase and has no approval commit identity | **New** — approval applies to exact reviewed bytes; implementation and approval may share one PR only when approval is anchored to the exact reviewed commit or bytes, downstream authority remains fail-closed, and every semantic phase boundary retains an explicit review and authority boundary | Exclude fewer gates, fewer lifecycle phases, a blanket same-PR rule, or any general relaxation of sequential lifecycle discipline; consumers B05/B10; risk: stale approval after changed bytes | Batch 2 comment |
 | 12 | Validated / Codify | Human-owned approval artifact; `review-packet.md` > `Approval Identity` | Human/AI roles exist; artifact ownership and mutation boundary do not | **Amend** — approval records remain human-owned; execution may prepare but not author, mutate, or infer approval | Exclude provider-specific review APIs; consumers B05 enforcement/adoption; risk: ambiguous machine-generated attestations | Batch 2 comment |
 | 16 | Validated / Improve | Review effort as metric; `review-packet.md` > new `Review Effort` | Review efficiency is a goal, but effort per irreversible decision is not observable | **Amend** — recommend lightweight review-effort evidence when it informs workflow optimization; keep it optional and proportionate | Exclude a mandatory telemetry schema or gate; consumers B10/B12; risk: metric gaming and process overhead | Batch 2 comment |
 | 17 | Validated / Improve | Shrinking review surfaces; Workflow-owned ergonomics, B05 constraint | Playbook already asks for targeted packets; the operational improvement belongs to workflow adoption | **Defer** — use as a B05/B10 design constraint, not new independent Playbook doctrine | Exclude Knowledge Vault template changes in this repo; consumers B05 adoption/B10; risk: duplicating row 9 as doctrine | Batch 2 comment |
@@ -181,7 +188,7 @@ proposal after B01-B05 contracts settle.
 
 | Row | Frozen maturity / disposition | Concept and proposed owner | Current doctrine and precise gap | Classification and proposed change | Exclusions; consumers; risk | Source |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 8 | Validated / Improve | Validated baseline and optimization posture; B10; likely `repo-readiness.md` > `Solo-Operator Review Posture` | Current doctrine favors bounded improvement but does not state that validated architecture carries a presumption of stability | **Amend** — later B10 proposal, preserving contradictory-evidence escape | Exclude four gates or a minimum count; consumers B10/B11; risk: freezing architecture dogmatically | Batch 1 comment |
+| 8 | Validated / Improve | Validated baseline and optimization posture; B10; likely `repo-readiness.md` > `Single-Operator Review Posture` | Current doctrine favors bounded improvement but does not state that validated architecture carries a presumption of stability | **Amend** — later B10 proposal, preserving contradictory-evidence escape | Exclude four gates or a minimum count; consumers B10/B11; risk: freezing architecture dogmatically | Batch 1 comment |
 | 58 | N/A — intentionally unused | No independent concept; merged into row 3 | Completeness audit explicitly declined a new execution-surface row | **Defer** — never create independent doctrine; retain traceability to row 3 | Exclude renumbering or resurrecting row 58; consumers none; risk: accidental duplicate authority doctrine | Completeness audit |
 | 59 | Validated / Codify | External-capability preflight; B08; `repo-readiness.md` > future `Operational Readiness` | Current preflight covers local repo prerequisites, not every external lifecycle capability | **Amend** — later B08 proposal for early, declared capability checks | Exclude provider mechanics and credentials; consumers B08-B10; risk: preflight becoming authorization | Completeness audit |
 | 60 | Validated / Codify | Predeclared transport/fallback policy; B07; `prompts.md` operational contract | Prompt constraints exist but failure/fallback policy is not explicit | **Amend** — later B07 proposal after B02/B05/B06 contracts | Exclude choosing transport or fallback globally; consumers B07-B09; risk: prompt implementation leaking into doctrine | Completeness audit |
@@ -195,7 +202,8 @@ silently absorbed.
 
 | Rows | Frozen maturity / disposition | Use in this proposal | Explicit exclusion |
 | --- | --- | --- | --- |
-| 13-15 | Each Validated / Improve | B05/B10 context for reducing coordination and conditional same-PR approval | No gate redesign, PR topology, or workflow implementation in Playbook B01-B05 |
+| 13-14 | Each Validated / Improve | B05/B10 context for reducing coordination while preserving semantic review boundaries | No gate redesign, fewer lifecycle phases, or general relaxation of sequential lifecycle discipline in Playbook B01-B05 |
+| 15 | Validated / Improve | B05 context only: implementation and approval may share one PR when approval is anchored to the exact reviewed commit or bytes, downstream authority remains fail-closed, and every semantic phase boundary retains an explicit review and authority boundary | No fewer gates, fewer lifecycle phases, blanket same-PR rule, or general relaxation of sequential lifecycle discipline |
 | 18-19 | Each Open Question / Investigate | Negative boundary for B05 and B10 | No four-gate model or minimum safe gate count |
 | 21 | Validated / Improve | B02 continuity and later B07 hydration consumer | No startup-hydration implementation in B02 |
 | 22-23 | Each Validated / Improve | B02/B05 consumer constraints for B06 | No canonical state representation or schema |
@@ -248,9 +256,15 @@ UI, retry algorithm, or model tier.
 3. Link it from `docs/core-model.md`, `docs/review-packet.md`, and the README
    map. Do not add it to mandatory startup reading unless later review finds
    every repository task needs it.
-4. Leave `docs/knowledge-ingestion-patterns.md` as the domain-specific
-   acquisition/retention owner and `docs/multi-agent-synthesis.md` as the
-   comparative-agent owner. Use links rather than repeated rules.
+4. For row 37, explicitly cross-link
+   `docs/multi-agent-synthesis.md#reading-convergence-and-divergence` as the
+   owner of convergence and dependency interpretation. Do not restate or fork
+   that interpretation in the new document.
+5. For row 39, explicitly cross-link `docs/repo-readiness.md#validation` as the
+   owner of the deterministic validation taxonomy and its boundary with
+   semantic judgment. Do not restate or fork that taxonomy.
+6. Leave `docs/knowledge-ingestion-patterns.md` as the domain-specific
+   acquisition/retention owner. Use links rather than repeated rules.
 
 B03 does not reproduce CAK-53 artifact names, search budgets, lane logic,
 integration scripts, report schemas, or Knowledge Vault mechanics.
@@ -283,10 +297,12 @@ Vault closeout.
 3. Define human ownership of approval records and the approval-validity
    boundary for changed bytes.
 4. Amend the absolute PR-per-phase language in `docs/feature-lifecycle.md` and
-   `docs/alignment-checkpoints.md`: a semantic phase boundary always needs an
-   explicit review/authority boundary, but it does not always require a new PR.
-   Same-PR approval is permitted only when anchored to the exact reviewed
-   commit and downstream authority remains fail-closed.
+   `docs/alignment-checkpoints.md` only to encode this conditional:
+   implementation and approval may share one PR only when approval is anchored
+   to the exact reviewed commit or bytes, downstream authority remains
+   fail-closed, and every semantic phase boundary retains an explicit review
+   and authority boundary. This does not reduce gates or lifecycle phases and
+   does not relax sequential lifecycle discipline generally.
 5. Synchronize `distributions/starter/templates/review-packet-template.md` with
    the canonical packet without adding Enforcement schemas or implementation
    mechanics.
@@ -415,11 +431,12 @@ lane names or artifact labels as general vocabulary.
    mapping them here does not authorize implementation.
 8. B12 owns row 46 experiment objectives; CAK-61 records only the boundary.
 
-The recommended implementation packaging after approval is one focused
-Playbook doctrine PR for B01-B05 because the batches share core vocabulary and
-overlapping files. Preserve batch-level traceability and commit-level auditability
-inside that PR. Split only if Claude or human review finds independently
-revertible ownership seams that outweigh duplicated reconciliation.
+The default implementation packaging after approval is one focused Playbook
+doctrine PR for B01-B05, with one coherent commit per batch and row-to-commit
+traceability. B03 is the only pre-identified clean split seam. Split B03 only
+if the combined diff becomes too large for a coherent review surface. Settle
+B01 authority, phase, and receipt vocabulary first because B03, B04, and B05
+consume it. No other split is pre-authorized by this proposal.
 
 ## 12. Validation Plan
 
@@ -430,8 +447,11 @@ Proposal phase:
 3. inspect `git diff --stat` and the full diff;
 4. confirm only this proposal file changed;
 5. confirm no doctrine file, adapter, root policy, or sibling repository changed;
-6. commit and push the proposal branch;
-7. record the exact commit and validation in CAK-61.
+6. verify every cited current heading or anchor against current `origin/main`;
+7. confirm no Open Question, gate count, or workflow-state representation was
+   promoted;
+8. commit and push the proposal branch;
+9. record the exact commit and validation in CAK-61.
 
 Later doctrine implementation phase, only after Claude findings and human
 authorization:
@@ -572,39 +592,34 @@ report it as blocked and identify the needed human decision.
 
 ## 15. Unresolved Questions Or Source Contradictions
 
-No blocking contradiction was found.
+No blocking source contradiction or unresolved review question remains in this
+finding-resolution pass. The proposal-retention and implementation-packaging
+decisions are now explicit. The later bounded proposals for rows 8, 59, 60, and
+62 and the B12/Incubator ownership of row 46 remain planned scope boundaries,
+not unresolved CAK-61 B01-B05 decisions.
 
-The following points require external review or later human confirmation:
+## 16. External Claude Review Disposition
 
-1. Repository scope normally excludes project-specific implementation docs,
-   while CAK-61 explicitly requires a durable repository-local proposal. The
-   proposal is placed in `docs/`, the only tracked documentation surface, and
-   does not create a new top-level planning directory. Human review should
-   confirm whether it remains as durable provenance after implementation or is
-   later replaced by PR/Linear traceability.
-2. `feature-lifecycle.md` currently requires a new branch and PR after every
-   merged phase. Frozen row 11 validates a narrower same-PR approval contract.
-   The proposal treats this as a bounded doctrine correction, not a gate-count
-   decision.
-3. `external-ai-reviewer.md` says external review is optional and non-blocking
-   as general doctrine. CAK-61 explicitly requires Claude review before
-   doctrine editing. The proposal treats CAK-61 as a task-specific stronger
-   instruction and does not generalize it.
-4. B03's new document is justified by current ownership seams, but Claude must
-   explicitly test that conclusion.
-5. CAK-61's broad primary range includes later B07/B08/B10 rows. This proposal
-   maps rows 8, 59, 60, and 62 completely but defers their implementation
-   design to the roadmap's later batches rather than silently pulling them into
-   B01-B05.
-6. Row 46 is within the broad assigned range but has `Validated / Improve` and
-   B12/Incubator implementation ownership. It is preserved as a B04 secondary
-   constraint and explicitly deferred from Playbook implementation here.
+Claude verdict: **ready for finding resolution**. Claude reported no blocking
+finding and no source contradiction.
 
-## 16. Exact Next Permitted Action
+| Finding | Disposition | Proposal sections changed |
+| ---: | --- | --- |
+| 1 | Resolved. Adequate rows 7, 9, 26, 44, and 50 now identify the exact current doctrine sentences that codify them and name any bounded implementation cross-link. | 5 |
+| 2 | Resolved. Rows 11 and 15 and the B05 design now permit same-PR implementation/approval only for exact reviewed commit or bytes, fail-closed downstream authority, and an explicit review/authority boundary at every semantic phase boundary. Fewer gates, fewer phases, and general sequential-discipline relaxation are excluded. | 5, 6 |
+| 3 | Resolved. B03 now cross-links the existing convergence/dependency and validation-boundary owners for rows 37 and 39 and forbids restating or forking them. | 5, 6 |
+| 4 | Resolved. Row 8 now cites `Single-Operator Review Posture`; all other current heading and anchor references were verified against current Playbook `origin/main`. | 5, 12 |
+| 5 | Resolved. The proposal remains the CAK-61 working-branch implementation contract, will not merge permanently into `docs/` on `main`, and yields durable provenance to the implementation PR, CAK-61, and the Knowledge Vault roadmap. | 1, 15 |
+| 6 | Resolved. Packaging defaults to one B01-B05 PR with per-batch commits; only B03 may split, and only if review coherence requires it; B01 vocabulary settles first. | 11, 15 |
 
-Supply the Claude review packet and this proposal to the required external
-Claude reviewer. Record the returned findings and resolve them in this proposal
-without changing frozen CAK-59 decisions. After the findings are resolved,
-pause for the human authorization required to begin doctrine edits.
+No frozen CAK-59 row maturity, disposition, target, or decision changed. No
+Open Question was promoted. No gate count or workflow-state representation was
+introduced. No Playbook doctrine file, adapter, root policy, or sibling
+repository was edited; this pass changed only this proposal.
 
-No doctrine file may be edited before that review-and-resolution checkpoint.
+## 17. Exact Next Permitted Action
+
+Pause for explicit human authorization to begin the CAK-61 doctrine
+implementation phase.
+
+No doctrine file may be edited before that authorization.
