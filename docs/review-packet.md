@@ -69,6 +69,12 @@ requires renewed approval. When the semantic effect is uncertain, treat the
 prior approval as invalid rather than letting an execution system classify the
 change on the human's behalf.
 
+For versioned material prompts, apply the classification rules in
+[`prompt-contracts.md#semantic-versioning`](prompt-contracts.md#semantic-versioning).
+Any executor-visible imperative wording change is at least Minor. A parity
+check is classification evidence only; changed approved bytes remain subject
+to the owning reviewed-identity and approval-retention rules.
+
 ## What Codex Should Summarize
 
 Codex should summarize:

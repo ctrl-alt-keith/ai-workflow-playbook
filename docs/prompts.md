@@ -8,26 +8,40 @@ Prompts should remain routing and execution envelopes, not duplicated workflow
 doctrine. For the rationale, see
 [`sparse-rehydration-and-source-grounding.md`](sparse-rehydration-and-source-grounding.md).
 
-## Operational Contract Identity
+## Prompt Contract Identity
 
-For material execution that may be reviewed, recovered, or replayed, make the
-operational contract identity and version reviewable. The prompt should point
-to the durable contract and input identities it applies, state its scope and
-authority boundary, name any compatibility expectation, and distinguish fresh
-execution from replay or recovery when that distinction matters. A recovery
-cursor or checkpoint reference is valid only while its creating contract,
-authority, inputs, and artifact identities remain applicable.
+For material execution that may be reviewed, recovered, or replayed, apply the
+canonical semantics in [`prompt-contracts.md`](prompt-contracts.md). Keep the
+immutable semantic prompt contract separate from the append-only attempt
+receipt and from the exact rendered prompt bytes.
 
-The prompt carries or references the operational contract; it does not own
-canonical doctrine, durable workflow state, evidence acceptance, or approval.
-Prompt text, version labels, successful execution, and stored checkpoints cannot
-grant authority. A materially changed contract needs a new reviewable identity
-rather than silently reusing a prior version.
+The immutable semantic contract is created and hashed before hydration or
+rendering. It defines meaning, compatibility, validation, authority-reference,
+reasoning, transport, evidence, and fail-closed requirements without including
+selected or derived digests. The attempt receipt references that contract and
+records selected sources, derived identities, delivery, current safety-policy
+observation, live-authority outcome, validation, and execution evidence.
 
-No particular version syntax, prompt generator, state representation, model,
-or checkpoint schema is required. Use the smallest identity that lets an
-executor and reviewer determine which contract and durable inputs governed the
-attempt and whether they remain compatible.
+The prompt carries bounded instruction and evidence; it does not own canonical
+doctrine, durable workflow state, evidence acceptance, or approval. Prompt
+text, contract digests, validation success, receipts, checkpoints, and
+transport delivery cannot grant authority. The execution or adoption layer
+must re-read live durable authority immediately before action.
+
+Fresh attempts select compatible inputs once and keep them immutable. Replay
+resolves the recorded contract and exact inputs without reading current mutable
+sources or silently upgrading an adapter, renderer, validator, reasoning
+recommendation, or fallback policy. Replay reproduces authorized inputs, not
+deterministic model output.
+
+The Playbook-owned machine-readable anchors and canonicalization vectors are:
+
+- [`prompt-contract-semantic-anchors-v1.json`](prompt-contract-semantic-anchors-v1.json)
+- [`prompt-contract-canonicalization-vectors-v1.json`](prompt-contract-canonicalization-vectors-v1.json)
+
+They encode semantic anchors and conformance evidence only. They are not an
+operational schema, prompt generator, hydrator, renderer, receipt, or workflow
+engine.
 
 Use lint-safe placeholders such as `[repository]`, `[validation_path]`, or
 backticked tokens in Markdown templates. Angle-bracket placeholders can be

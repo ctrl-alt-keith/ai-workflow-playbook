@@ -19,6 +19,8 @@ executable workflow rules already live in the relevant playbook documents:
   [`orchestration-and-parallelism.md`](orchestration-and-parallelism.md)
 - reusable prompt envelopes:
   [`prompts.md`](prompts.md)
+- versioned prompt-contract semantics and hydration boundaries:
+  [`prompt-contracts.md`](prompt-contracts.md)
 - ecosystem repository roles:
   [`ai-workflow-ecosystem.md`](ai-workflow-ecosystem.md)
 - optional local orchestration telemetry:
@@ -119,6 +121,13 @@ Prompts should be executable routing envelopes, not policy blobs. A good prompt
 names the repository, goal, scope, source evidence, validation path, stop
 conditions, and expected deliverable. It should route the agent to canonical
 rules rather than restating those rules in a second language.
+
+For material fresh or replayable execution, sparse routing does not mean
+unidentified or moving context. The immutable semantic contract, exact
+attempt-selected source manifest, bounded hydrated context, adapter, renderer,
+and exact prompt bytes remain distinct identities under
+[`prompt-contracts.md`](prompt-contracts.md). This preserves sparse context
+while making the selected context reconstructable and reviewable.
 
 This keeps prompts small enough to review and specific enough to execute. It
 also limits drift: when a workflow rule changes, the canonical document changes

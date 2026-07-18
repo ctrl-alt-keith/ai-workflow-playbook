@@ -103,9 +103,46 @@ speed, cost, or correctness. A reasoning-level recommendation does not replace
 a clear prompt, bounded scope, explicit contracts, validation, or safe stopping
 conditions.
 
+When a material prompt uses the semantic contract in
+[`prompt-contracts.md`](../prompt-contracts.md), this operator metadata is the
+Codex representation of the product-neutral `light`, `medium`, or `high`
+reasoning class. The adapter must preserve whether that class and each required
+capability are mandatory or advisory, the allowed degradation, and every
+guarantee that may not be weakened.
+
+Concrete Codex model names, service tiers, execution settings, and reasoning
+knobs are adapter configuration and attempt-receipt metadata. They are not the
+semantic meaning of the reasoning class. If the available Codex surface cannot
+satisfy a mandatory capability or reasoning requirement without weakening a
+guarantee, the attempt fails closed rather than silently choosing a weaker
+setting.
+
 This posture is derived from OpenAI's current
 [GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/latest-model)
 and [GPT-5.6 Sol model reference](https://developers.openai.com/api/docs/models/gpt-5.6-sol).
+
+## Prompt-Contract Mapping
+
+Codex is an executor representation, not the owner of shared prompt meaning.
+For a versioned material prompt:
+
+- preserve the immutable semantic contract and exact attempt-selected inputs;
+- map product-neutral capabilities and reasoning class into supported Codex
+  instructions and operator metadata;
+- keep model, tier, tool, sandbox, and reasoning-knob selections in adapter
+  configuration and the attempt receipt;
+- preserve exact renderer-emitted prompt bytes across any allowed transport;
+- do not treat a successful Codex run, validation result, receipt, checkpoint,
+  or delivered prompt as authorization; and
+- require the execution or adoption layer to re-read live durable authority
+  and verify the acting identity immediately before action.
+
+The Playbook artifacts
+[`prompt-contract-semantic-anchors-v1.json`](../prompt-contract-semantic-anchors-v1.json)
+and
+[`prompt-contract-canonicalization-vectors-v1.json`](../prompt-contract-canonicalization-vectors-v1.json)
+define shared anchors and conformance inputs. They do not implement a Codex
+renderer, validator, receipt, or transport.
 
 ## Startup Deltas
 

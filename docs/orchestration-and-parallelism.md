@@ -178,24 +178,29 @@ re-fetch current source state before acting.
 
 ## Recovery And Replay
 
-Recovery is contract-scoped. A checkpoint is reusable only when the operational
-contract that created it, the authority available now, the recorded inputs, and
-the referenced artifact identities still apply. Revalidate mutable sources
-before acting. A stale checkpoint may explain prior work, but it cannot silently
-authorize new work or move a workflow across a boundary.
+Recovery is contract-scoped. Apply the canonical fresh, replay, receipt, and
+checkpoint semantics in [`prompt-contracts.md`](prompt-contracts.md) when a
+material prompt contract exists. A checkpoint is reusable only when the
+semantic and operational contracts that created it, the authority available
+now, the recorded inputs, and the referenced artifact identities still apply.
+A stale checkpoint may explain prior work, but it cannot silently authorize new
+work or move a workflow across a boundary.
 
 Distinguish the execution mode:
 
-- Fresh execution creates a new attempt under current authority and may adapt
-  its method or recompute choices within the current contract.
+- Fresh execution creates a new attempt under current authority, selects exact
+  compatible inputs once before hydration, and keeps them immutable for that
+  attempt.
 - Replay reproduces a previously authorized attempt from its recorded contract
-  and inputs. It must not rediscover scope, recompute input selection, widen
-  the work, reinterpret approval, or acquire new authority.
+  and exact inputs. It must not read current mutable semantic sources,
+  rediscover scope, recompute input selection, widen the work, reinterpret
+  approval, silently upgrade dependencies, or acquire new authority.
 
-If the recorded contract or inputs cannot be reconstructed faithfully, stop
-rather than presenting a new execution as replay. A later attempt should state
-whether it is fresh execution, replay, or a contract-valid continuation; this
-rule does not prescribe a checkpoint format, retry algorithm, or state store.
+Replay reproduces contract identity and authorized inputs, not deterministic
+model output. If the recorded contract, pinned validation identity, exact
+prompt bytes, or other inputs cannot be reconstructed faithfully, stop rather
+than presenting a new execution as replay. A later attempt should state whether
+it is fresh execution, replay, or a contract-valid continuation.
 
 ## Reconciliation And Merge Sequence
 

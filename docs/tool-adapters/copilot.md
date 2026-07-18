@@ -44,6 +44,28 @@ This document explains how GitHub Copilot maps onto the core playbook. It is ada
 - keep intent clear but localized to one file, function, or block
 - use ChatGPT or Codex when the work needs planning, coordination, or repo-level follow-through
 
+## Prompt-Contract Capability Mapping
+
+The shared semantics in [`prompt-contracts.md`](../prompt-contracts.md) remain
+authoritative when a material task is considered for Copilot. Copilot may map
+only requirements supported by its suggestion-based editor surface:
+
+| Semantic requirement | Copilot mapping |
+| --- | --- |
+| Localized transformation or continuation in selected editor context | Supported when the selected file, range, intent, and constraints are already explicit. |
+| Product-neutral `light` reasoning class | May be represented as a small local suggestion task; this is task-shape guidance, not a guaranteed product knob. |
+| `medium` or `high` reasoning class | No testable equivalent mapping is claimed. If mandatory, use a supported executor or fail closed. |
+| Repository-wide source hydration or exact source-manifest reconstruction | Unsupported as a mandatory Copilot capability; fail closed or route to Codex. |
+| Deterministic rendering and exact executor-visible byte identity | Unsupported as a mandatory Copilot capability; editor suggestions are not claimed to be a deterministic renderer. |
+| Append-only attempt receipts, replay-exact dependencies, or checkpoint lineage | Unsupported as a mandatory Copilot capability; an owning execution layer must provide them. |
+| Canonical validation, commit, push, PR delivery, or ordered transport fallback | Unsupported as Copilot-owned workflow behavior; route to the repository executor. |
+| Live authority re-read and acting-identity verification | Unsupported as Copilot-owned authorization behavior; the execution or adoption layer must enforce it. |
+
+An advisory unsupported requirement may be omitted only when the semantic
+contract explicitly allows that degradation and no guarantee is weakened. An
+unsupported mandatory capability fails closed. Do not claim Codex/Copilot
+parity without a testable mapping for the requirement being compared.
+
 ## Notes
 
 - Copilot complements the workflow; it does not replace ChatGPT or Codex

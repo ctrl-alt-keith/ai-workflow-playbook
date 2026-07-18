@@ -23,6 +23,8 @@ acting.
   matching adapter exists
 - `docs/authoritative-source-check.md` -> advisory source scanner workflow
 - `docs/repo-awareness-onboarding-refresh.md` -> repository inventory refresh
+- `docs/prompt-contracts.md` -> canonical semantics for versioned, hydrated,
+  rendered, delivered, fresh, and replayed material prompts
 - `docs/prompts.md` -> reusable prompt templates
 
 The ecosystem includes an autonomous maintenance layer for recurring, bounded
@@ -132,6 +134,9 @@ changed?" or "what should we do next?" requests:
 ## Required Core Invariants
 
 - `ai-workflow-playbook` is the canonical source for reusable workflow rules.
+- `docs/prompt-contracts.md` and its versioned machine-readable companions own
+  shared prompt-contract meaning; implementing repositories own operational
+  schemas, hydration, rendering, receipts, and validation code.
 - `AGENTS.md` is the repo-local execution layer. Repo-local rules override
   shared playbook defaults for repo-specific behavior.
 - Playbook changes and `AGENTS.md` edits are separate work types. Edit
