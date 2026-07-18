@@ -7,6 +7,19 @@ Repository tasks translate those role boundaries into the interaction modes in
 implementation, review/audit, and orchestration/prompt-authoring. Select the
 mode before acting so the AI role matches the human's intended delegation.
 
+## Protocol Invariants
+
+A reusable workflow protocol is defined by its reviewed semantic invariants,
+not by one implementation topology. The stable contract names the intended
+meaning, scope, authority boundaries, evidence identity, isolation guarantees,
+and validation expectations that must survive changes in tools, workers,
+prompts, branches, or orchestration shape.
+
+Topology and execution mechanics may evolve when those approved invariants are
+preserved. A successful run or convenient implementation is evidence about one
+execution; it does not silently establish a reusable invariant or authorize a
+semantic change.
+
 ## Roles
 
 ### Human role
@@ -24,6 +37,55 @@ mode before acting so the AI role matches the human's intended delegation.
 - Surface ambiguity, risk, and missing information
 - Summarize changes, evidence, and open questions
 - Help capture reusable patterns after delivery
+
+## Authority And Transitions
+
+Authority is permission to make a decision or cross a workflow boundary. It is
+distinct from capability: a person, agent, tool, or automation may be able to
+perform an action without being authorized to perform it.
+
+Material transitions should make explicit the authority they consume and any
+authority an authorized human grants for the next bounded action. Execution,
+successful completion, validation, receipts, stored state, prompts, replay,
+topology, and automation can record or exercise existing authority; none can
+create approval authority. When authority is absent, ambiguous, expired, or
+outside the current contract, the transition remains fail-closed.
+
+## Protocol Phases
+
+Separate evidence production from decision production when a workflow includes
+both:
+
+- Evidence-production phases acquire, produce, review, integrate, or validate
+  material under the current operational contract.
+- Decision-production phases interpret the accepted evidence and produce
+  recommendations, approvals, dispositions, or other consequential choices.
+
+The boundary is semantic, not a required stage list, branch topology, or pull
+request count. Crossing it requires an explicit review and authority boundary,
+and completed evidence production does not imply approval of a downstream
+decision.
+
+When a workflow accepts, integrates, or synthesizes evidence, apply the
+[`evidence lifecycle`](evidence-lifecycle.md) before crossing into decision
+production.
+
+## Durable Continuity
+
+Durable project artifacts are the recoverable continuity substrate for a
+workflow. Depending on the task, those artifacts can include the current
+operational contract, authoritative repository and issue state, exact evidence
+and artifact identities, human approval records, stage and attempt receipts,
+validation results, and the next permitted action. Their authority remains
+specific to the role assigned by the owning source; durability alone does not
+make an artifact canonical or grant permission.
+
+Conversation is useful for intent, navigation, and explanation, but it is
+non-authoritative context. Recovery must be possible from durable sources by
+reconstructing the applicable contract, current authority, accepted inputs,
+completed work, and next permitted action, then revalidating any mutable source
+state. If that contract cannot be reconstructed or no longer applies, stored
+history cannot silently authorize continuation.
 
 ## Workflow
 

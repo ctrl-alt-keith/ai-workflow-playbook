@@ -1,13 +1,19 @@
 # Review Packet
 
-Before merge or release, prepare a standard review packet for the human reviewer.
+At each material human decision boundary, including before merge or release,
+prepare a standard review packet for the human reviewer.
 
-Use this packet at the release point described in [`feature-lifecycle.md`](feature-lifecycle.md), and use [`alignment-checkpoints.md`](alignment-checkpoints.md) when deciding whether a pre-merge sanity check is needed.
+Use this packet at the semantic phase and release boundaries described in
+[`feature-lifecycle.md`](feature-lifecycle.md), and use
+[`alignment-checkpoints.md`](alignment-checkpoints.md) when deciding whether a
+pre-merge sanity check is needed.
 
 ## Packet Format
 
-The packet should include:
+Lead with the decision surface. The packet should include:
 
+- Decision requested: the exact human judgment or approval needed
+- Reviewed identity: the exact artifact, commit, or byte identity under review
 - Objective: what this phase was meant to accomplish
 - Scope: what changed and what intentionally did not
 - Interaction mode: implementation, review/audit, or
@@ -16,21 +22,71 @@ The packet should include:
   the work
 - Coordination links: GitHub issue IDs, planning ticket IDs such as Linear IDs,
   and expected PR linkage when relevant
-- Validation: what was run and what the results were
+- Invariants and guarantees: what must remain true if the decision is approved
+- Exceptions: known deviations, exclusions, or unresolved cases
+- Validation: what was run, its class under
+  [`repo-readiness.md#validation`](repo-readiness.md#validation), and the result
+- Authority consumed: the authority under which the reviewed work was prepared
+- Authority granted: the authority the human decision actually grants; keep it
+  pending until the authorized human records the decision
+- Prohibited or unauthorized next stages: actions that remain outside the
+  granted authority
+- Next permitted action: the exact bounded action that may follow the decision
 - Risks: remaining concerns, edge cases, follow-up work, or any important gap between mocked or contract-level validation and real-world validation
 - Recommendation: `ready to merge`, `needs decision`, or `blocked`
+
+The decision-first surface is an index into the complete artifacts, not a
+replacement for them. Keep the full diff, evidence, validation output, and
+review discussion accessible at the exact identities named by the packet.
+
+## Approval Identity And Ownership
+
+Approval applies to the exact reviewed artifact, commit, or bytes named in the
+human-owned approval record. Link the human decision to that identity and state
+the authority it grants and the next action it permits.
+
+Execution systems may prepare a packet and identify the approval being
+requested. They must not author, mutate, backfill, or infer the human approval
+record. Capability, successful execution, validation, status fields, receipts,
+or the absence of objections cannot be interpreted as approval. The human role
+and decision ownership remain defined in
+[`core-model.md#human-role`](core-model.md#human-role).
+
+## Approval Validity
+
+Approval may remain valid after a non-semantic correction only when all of the
+following are true:
+
+- the change is limited to presentation, spelling, formatting, or equivalent
+  correction and does not change reviewed meaning
+- authority, guarantees, inputs, outputs, and execution meaning are unchanged
+- the before-and-after identities and correction are recorded reviewably
+- the human-owned approval record or governing review contract permits that
+  bounded correction
+
+Any change to authority, guarantees, inputs, outputs, or execution meaning
+requires renewed approval. When the semantic effect is uncertain, treat the
+prior approval as invalid rather than letting an execution system classify the
+change on the human's behalf.
 
 ## What Codex Should Summarize
 
 Codex should summarize:
 
+- the decision requested and exact reviewed identity
 - the objective
 - the actual scope
+- the invariants, exceptions, and authority boundary
 - the validation evidence
 - the main risks
+- the exact next permitted action
 - an explicit recommendation: `ready to merge`, `needs decision`, or `blocked`
 
 The goal is not to restate the diff line by line. The goal is to make human review targeted and efficient.
+
+When a decision depends on integrated or synthesized evidence, use
+[`evidence-lifecycle.md`](evidence-lifecycle.md) for the accepted-evidence,
+semantic-accounting, and reporting boundaries.
 
 If the repo does not have a formal validation path yet, say that directly and summarize the lightweight validation that was used.
 
@@ -131,6 +187,31 @@ Trust context (optional):
   passed `make chaos-all`.
 - Confidence: medium; behavior is stable but not yet promoted to the playbook.
 ```
+
+## Optional Review Effort Evidence
+
+When it would help improve a repeated workflow, record lightweight evidence
+about the human effort needed to reach the decision: what had to be inspected,
+where context reconstruction was costly, or which part of the decision surface
+reduced review burden. Keep it optional, proportionate, and tied to a specific
+decision or irreversible boundary.
+
+Review-effort evidence is workflow-learning context, not a required metric,
+telemetry schema, performance score, approval substitute, or new gate.
+
+## Doctrine Provenance
+
+When a change promotes reusable doctrine, the review packet should link the
+reviewed evidence and decision that support the promotion. Identify the
+observation, maturity, disposition, target, and exact implementation artifact
+or commit so a reviewer can trace the rule without copying the complete
+retrospective into the doctrine file.
+
+State which material was frozen before implementation, which items remained
+open questions or were otherwise not promoted, and whether the implementation
+preserved the reviewed decision. Keep the evidence artifact and implementation
+lifecycle distinct; neither a retrospective nor its summary grants approval to
+merge the doctrine change.
 
 ## What The Human Should Focus On
 

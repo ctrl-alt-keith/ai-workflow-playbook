@@ -53,6 +53,70 @@ Record any evidence-supported reusable lesson before the next delivery arc
 starts. If the lesson is promoted into the playbook, include a notes cleanup
 follow-up or state explicitly that no notes cleanup is needed.
 
+## Stage Boundary Receipts
+
+For a material workflow stage, leave a durable receipt that makes the completed
+boundary recoverable and reviewable. Record the applicable operational
+contract, material inputs and outputs, validation performed, authority
+consumed, any authority granted by the authorized decision-maker, the result,
+and the exact next permitted action.
+
+A receipt records a transition; it does not approve the transition or grant
+authority. Stored status, successful validation, or receipt creation must not
+be treated as permission to begin a later stage. Keep the form and storage
+proportionate to the workflow: this is a semantic contract, not a required
+schema or a receipt for every routine step.
+
+## Retrospective And Evolution
+
+Substantial workflow runs and protocol-evolution efforts should preserve both
+the intended work product and bounded operational evidence needed to understand
+how the workflow behaved. This does not require retaining every intermediate
+thought, transcript, or temporary artifact.
+
+For substantial evolution work, review and freeze the observation set before
+implementing doctrine from it. Keep the retrospective evidence artifact
+separate from the later implementation lifecycle: implementation proceeds
+through its own issue, branch, pull request, review, and authority boundaries.
+A frozen retrospective supports traceability; it does not authorize execution.
+
+Preserve these as independent decisions:
+
+1. Observation: what was observed and the evidence supporting it.
+2. Maturity: how strongly the evidence supports the observation.
+3. Disposition: what should happen to the observation.
+4. Target: which owner or destination should act on it.
+5. Implementation: the bounded change, experiment, rejection, archive, or
+   other follow-through.
+
+Do not collapse evidence strength into priority or implementation preference.
+Keep a validated problem separate from a proposed solution; each needs the
+evidence and review appropriate to its claim. Keep open questions visible until
+a reviewed decision answers, supersedes, rejects, archives, or intentionally
+retires them.
+
+Classify retrospective outputs by owner and disposition before follow-up. Make
+clear which outputs are reusable doctrine, workflow improvements, operational
+improvements, research findings, experiments, rejections, or archives without
+requiring one repository name or ticket per item. Doctrine promotion should
+trace back to the reviewed evidence and decisions that support it; use the
+[`review packet`](review-packet.md#doctrine-provenance) for that boundary.
+
+Evolve protocols incrementally from evidence-supported changes. The existing
+promotion criteria in [`trust-topology.md`](trust-topology.md) and the staging
+and cleanup boundaries in [`notes-repositories.md`](notes-repositories.md)
+remain the owners of their respective vocabularies; do not create a competing
+promotion track here.
+
+Preserve useful information long enough for an explicit retention or retirement
+decision. Preservation is not indefinite retention and does not override
+security, privacy, licensing, legal, repository-local, or other applicable
+retention policy.
+
+Apply this discipline proportionately. Small routine changes with direct source
+evidence, a bounded diff, and ordinary validation do not require a frozen
+retrospective or heavyweight evolution ceremony.
+
 ## Project Maps
 
 When a repository has multiple active or upcoming arcs, keep a lightweight
@@ -83,7 +147,16 @@ project-map-only PRs for release updates.
 
 ## Branch And PR Rules
 
-After each merged phase, start a new branch and PR for the next lifecycle phase. This keeps the review surface narrow and preserves clean checkpoints.
+Every semantic phase boundary requires an explicit review and authority
+boundary. After a phase merges, start a new branch and PR for the next lifecycle
+phase. This keeps the review surface narrow and preserves clean checkpoints.
+
+Implementation and approval may share one PR only when the approval is anchored
+to the exact reviewed commit or bytes and downstream authority remains
+fail-closed until that approval is recorded. Any semantic change after the
+reviewed identity requires a new review. This narrow same-PR allowance does not
+remove a lifecycle phase, reduce a required gate, or permit another semantic
+phase boundary to pass without explicit review and authority.
 
 Start same-repo arcs from freshly fetched `origin/main`. Do not reuse an old
 feature branch unless intentionally continuing that PR.
@@ -194,4 +267,7 @@ When concurrent PRs have no file overlap and no open review concerns, merge orde
 is flexible. Say that explicitly in the review packet instead of inventing a
 false dependency.
 
-Do not roll multiple lifecycle phases into one long-running branch unless there is a strong reason and the review surface remains clear.
+Do not roll multiple lifecycle phases into one long-running branch unless there
+is a strong reason and the review surface remains clear. The same-PR
+implementation-and-approval allowance above is not a blanket exception to this
+sequential lifecycle discipline.

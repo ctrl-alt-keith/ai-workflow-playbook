@@ -26,6 +26,11 @@ Use the lens to reinforce the existing rules:
 - canonical validation is the health check before readiness or reconciliation
 - review, rebase, validation, and merge sequencing are the reconciliation path
 
+The worker count, lane layout, execution engine, and sequencing topology may
+change only while the approved semantics, authority boundaries, isolation,
+evidence identity, and validation contract remain intact. A topology change is
+not authority to reinterpret the task or weaken a guarantee.
+
 For comparative discovery and synthesis across multiple agents, use
 [`multi-agent-synthesis.md`](multi-agent-synthesis.md). Convergence and
 divergence can guide what deserves inspection, but source verification and
@@ -106,6 +111,13 @@ Include:
 - reporting expectations: changed files, validation, overlap, blockers,
   residual risk, and any merge-order dependency
 
+For material work that must support recovery or replay, give the execution a
+durable attempt identity separate from the worker, model, or tool that performs
+it. Preserve that identity with the applicable contract and input identities,
+produced artifacts, receipts, and outcome. Execution engines are replaceable;
+changing an engine does not create authority, erase an attempt, or make its
+inputs current.
+
 Workers should implement the assigned lane, run canonical validation, commit the
 scoped change, open or prepare the requested PR surface, report evidence, and
 stop. They should not merge, enable auto-merge, update other branches, absorb
@@ -116,6 +128,10 @@ The worker's final report is the lane stop receipt. It should make the stop
 boundary easy to audit by naming changed files, validation results, overlap or
 merge-order dependencies, blockers, residual risk, and any authority it did not
 exercise.
+
+The lane stop receipt records what the lane reports at its boundary. It does
+not grant downstream authority and does not replace direct inspection of the
+repository, pull request, validation, or other controlling source.
 
 ## Orchestrator Responsibilities
 
@@ -159,6 +175,27 @@ review decisions: append what changed in the merge order, which source was
 checked, which validation result was used, and which human gate remains. The
 log is evidence for recovery and review; workers and orchestrators must still
 re-fetch current source state before acting.
+
+## Recovery And Replay
+
+Recovery is contract-scoped. A checkpoint is reusable only when the operational
+contract that created it, the authority available now, the recorded inputs, and
+the referenced artifact identities still apply. Revalidate mutable sources
+before acting. A stale checkpoint may explain prior work, but it cannot silently
+authorize new work or move a workflow across a boundary.
+
+Distinguish the execution mode:
+
+- Fresh execution creates a new attempt under current authority and may adapt
+  its method or recompute choices within the current contract.
+- Replay reproduces a previously authorized attempt from its recorded contract
+  and inputs. It must not rediscover scope, recompute input selection, widen
+  the work, reinterpret approval, or acquire new authority.
+
+If the recorded contract or inputs cannot be reconstructed faithfully, stop
+rather than presenting a new execution as replay. A later attempt should state
+whether it is fresh execution, replay, or a contract-valid continuation; this
+rule does not prescribe a checkpoint format, retry algorithm, or state store.
 
 ## Reconciliation And Merge Sequence
 

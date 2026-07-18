@@ -8,6 +8,27 @@ Prompts should remain routing and execution envelopes, not duplicated workflow
 doctrine. For the rationale, see
 [`sparse-rehydration-and-source-grounding.md`](sparse-rehydration-and-source-grounding.md).
 
+## Operational Contract Identity
+
+For material execution that may be reviewed, recovered, or replayed, make the
+operational contract identity and version reviewable. The prompt should point
+to the durable contract and input identities it applies, state its scope and
+authority boundary, name any compatibility expectation, and distinguish fresh
+execution from replay or recovery when that distinction matters. A recovery
+cursor or checkpoint reference is valid only while its creating contract,
+authority, inputs, and artifact identities remain applicable.
+
+The prompt carries or references the operational contract; it does not own
+canonical doctrine, durable workflow state, evidence acceptance, or approval.
+Prompt text, version labels, successful execution, and stored checkpoints cannot
+grant authority. A materially changed contract needs a new reviewable identity
+rather than silently reusing a prior version.
+
+No particular version syntax, prompt generator, state representation, model,
+or checkpoint schema is required. Use the smallest identity that lets an
+executor and reviewer determine which contract and durable inputs governed the
+attempt and whether they remain compatible.
+
 Use lint-safe placeholders such as `[repository]`, `[validation_path]`, or
 backticked tokens in Markdown templates. Angle-bracket placeholders can be
 interpreted as inline HTML by Markdown tooling.
