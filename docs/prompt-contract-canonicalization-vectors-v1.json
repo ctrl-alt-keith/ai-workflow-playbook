@@ -1,0 +1,79 @@
+{
+  "artifact_type": "rfc8785_jcs_conformance_vectors",
+  "canonicalization_scheme": "RFC8785-JCS",
+  "canonicalization_version": 1,
+  "digest_algorithm": "SHA-256",
+  "invalid_vectors": [
+    {
+      "classification": "invalid_unicode_unpaired_surrogate",
+      "input_json": "{\"value\":\"\\ud800\"}",
+      "name": "unpaired-surrogate"
+    },
+    {
+      "classification": "non_finite_number",
+      "input_json": "{\"value\":NaN}",
+      "name": "nan"
+    },
+    {
+      "classification": "incompatible_numeric_value",
+      "input_json": "{\"value\":9007199254740993}",
+      "name": "unsafe-integer-precision"
+    },
+    {
+      "canonicalization_scheme": "RFC8785-JCS",
+      "canonicalization_version": 2,
+      "classification": "unknown_canonicalization_major",
+      "input_json": "{\"value\":1}",
+      "name": "unknown-canonicalization-major"
+    },
+    {
+      "classification": "non_i_json_duplicate_property",
+      "input_json": "{\"a\":1,\"a\":2}",
+      "name": "duplicate-property"
+    },
+    {
+      "classification": "malformed_json",
+      "input_json": "{\"a\":}",
+      "name": "malformed-input"
+    }
+  ],
+  "valid_vectors": [
+    {
+      "expected_canonical_hex": "7b2261223a312c2262223a327d",
+      "expected_sha256": "sha256:43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777",
+      "input_json": "{\"b\":2,\"a\":1}",
+      "name": "property-ordering"
+    },
+    {
+      "expected_canonical_hex": "7b2261223a7b2263223a7b7d2c2264223a5b5d7d2c227a223a5b332c7b2261223a6e756c6c2c2262223a66616c73657d5d7d",
+      "expected_sha256": "sha256:ac589af80b931835a02a998a93425d38810e2581c35225b5003e255239789b98",
+      "input_json": "{\"z\":[3,{\"b\":false,\"a\":null}],\"a\":{\"d\":[],\"c\":{}}}",
+      "name": "nested-objects-arrays"
+    },
+    {
+      "expected_canonical_hex": "7b2274657874223a22e282ac245c75303030665c6e4127425c225c5c5c222f227d",
+      "expected_sha256": "sha256:48ef3c76e1ba451bf80def3c316e3aad6056c531130c741c31dddb22a33fe907",
+      "input_json": "{\"text\":\"\\u20ac$\\u000f\\u000aA\\u0027B\\u0022\\u005c\\u0022\\/\"}",
+      "name": "control-and-escaped-characters"
+    },
+    {
+      "expected_canonical_hex": "7b226465636f6d706f736564223a2265cc81222c22656d6f6a69223a22f09f9880222c22707265636f6d706f736564223a22c3a9227d",
+      "expected_sha256": "sha256:b5e31a432617868fc1276fceb4f9003be05cb4161be30e40bf5fddc822b75d12",
+      "input_json": "{\"precomposed\":\"é\",\"decomposed\":\"é\",\"emoji\":\"😀\"}",
+      "name": "representative-unicode-no-normalization"
+    },
+    {
+      "expected_canonical_hex": "7b226e756d62657273223a5b3333333333333333332e333333333333332c31652b33302c342e352c302e3030322c31652d32375d2c22736166655f696e7465676572223a393030373139393235343734303939317d",
+      "expected_sha256": "sha256:8573194d331e3ae7c5339b095461d7aa4c66157f85b59f2a2e63eb8b38110e3d",
+      "input_json": "{\"safe_integer\":9007199254740991,\"numbers\":[333333333.33333329,1E30,4.50,2e-3,0.000000000000000000000000001]}",
+      "name": "accepted-integer-and-floating-point-forms"
+    },
+    {
+      "expected_canonical_hex": "7b226172726179223a5b5d2c226f626a656374223a7b7d7d",
+      "expected_sha256": "sha256:13b38aeab2e18a2c62de2945db9600720801b483e41936f5a154dbda7261be70",
+      "input_json": "{\"object\":{},\"array\":[]}",
+      "name": "empty-structures"
+    }
+  ],
+  "vector_version": "1.0.0"
+}

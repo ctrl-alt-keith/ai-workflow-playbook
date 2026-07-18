@@ -67,6 +67,12 @@ be treated as permission to begin a later stage. Keep the form and storage
 proportionate to the workflow: this is a semantic contract, not a required
 schema or a receipt for every routine step.
 
+Do not conflate a stage-boundary receipt with the append-only prompt attempt
+receipt in [`prompt-contracts.md`](prompt-contracts.md). The latter records
+selected and derived execution evidence under an immutable semantic prompt
+contract and has explicit zero authority, zero state-transition, and zero
+orchestration effects.
+
 ## Retrospective And Evolution
 
 Substantial workflow runs and protocol-evolution efforts should preserve both

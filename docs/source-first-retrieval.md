@@ -121,6 +121,13 @@ treat local repositories as cached working copies that may require
 synchronization. This principle intentionally does not prescribe a specific Git
 command or implementation sequence.
 
+When a material prompt is governed by the versioned semantics in
+[`prompt-contracts.md`](prompt-contracts.md), source-first retrieval still
+controls selection evidence. A fresh attempt selects exact compatible source
+identities once before hydration; replay resolves the recorded source manifest
+without rereading current mutable sources. Neither source selection nor a
+source-manifest digest grants authority.
+
 When a mandatory trigger is present, verification blocks:
 
 - statements about current PR, issue, branch, commit, CI, mergeability, review,
