@@ -19,6 +19,44 @@ Use [`alignment-checkpoints.md`](alignment-checkpoints.md) to decide when to pau
 
 Define the intended behavior, constraints, risks, and acceptance shape. The goal is alignment, not code volume.
 
+### Proportional proposal-first delivery
+
+Use a proposal-first path when implementation depends on material ambiguity,
+cross-repository ownership, policy or authority boundaries, irreversible or
+high-risk consequences, or a review cost that is meaningfully reduced by
+agreeing on the change before mutation. A human or repo-local workflow may also
+require this path explicitly.
+
+Keep it proportional. Small, mechanical, low-risk changes with an obvious
+owner, bounded diff, and ordinary validation can move directly from source
+inspection to implementation. They do not need a proposal artifact,
+independent review, or proposal-only pull request merely to follow a longer
+example.
+
+When the proposal-first path applies, preserve these semantic transitions:
+
+1. retrieve the authoritative sources and identify owners, scope, exclusions,
+   risks, and acceptance criteria;
+2. prepare the bounded proposal and name its exact artifact identity;
+3. obtain independent review when the human, task, or selected risk contract
+   requires it;
+4. disposition every substantive finding and decide whether the original
+   review remains applicable using
+   [`review-packet.md`](review-packet.md#independent-review-findings-and-re-review);
+5. freeze the exact proposal identity and obtain human approval that states the
+   implementation authority granted;
+6. implement only the approved scope, then run canonical validation;
+7. present the exact implementation head for final human review and separate
+   merge authorization; and
+8. after merge, retrieve the resulting integrated identity and reconcile any
+   external authority that tracks completion.
+
+These transitions do not require eight separate gates, branches, or pull
+requests. A selected independent review is evidence for a human decision, not
+approval or execution authority. A frozen proposal makes implementation more
+bounded; it does not eliminate implementation judgment, validation, or final
+review.
+
 ### Contract tests
 
 Write or update the tests, checks, or examples that define what must be true. This anchors implementation to an explicit contract.
@@ -164,6 +202,22 @@ reviewed identity requires a new review. This narrow same-PR allowance does not
 remove a lifecycle phase, reduce a required gate, or permit another semantic
 phase boundary to pass without explicit review and authority.
 
+For proposal-first work, a proposal-only draft PR can be a proportionate,
+durable collaboration surface. When repository policy permits, the exact
+proposal may be approved on that branch and bounded implementation may continue
+on the same branch and PR. Keep the proposal approval and final implementation
+review distinct: proposal approval authorizes only the stated implementation,
+and merge still requires separate authorization against the exact reviewed
+implementation head. This topology is recommended only when it improves
+traceability or review; it is not required for small changes or repositories
+whose local policy uses another review surface.
+
+Record two different identities when merge follows. The implementation head is
+the pre-merge commit reviewed for merge authorization. The resulting integrated
+identity is the commit actually present on the base branch after the repository's
+allowed merge method runs. Retrieve the latter after merge instead of assuming
+that it is a merge commit or that it equals the reviewed head.
+
 Start same-repo arcs from freshly fetched `origin/main`. Do not reuse an old
 feature branch unless intentionally continuing that PR.
 
@@ -229,6 +283,14 @@ open unless the planning system's local workflow says otherwise. Usually mark
 the planning ticket complete only after the PR has merged and the linked GitHub
 issue closure has been confirmed. During the PR-open state, planning status
 should reflect implementation in progress or in review, not merge-complete.
+
+After merge, reconcile live authority instead of replaying the pre-merge plan.
+Retrieve the actual integrated identity, current GitHub issue and PR state, and
+the current external planning state. Add the integrated identity or durable
+backlink and update external status only when the owning workflow still needs
+it, then retrieve the final state again. If an integration already performed
+an automatic transition, verify it and do not repeat it. External planning
+state remains separately owned and cannot override repository state.
 
 For multi-issue work, keep the mapping explicit: list every GitHub issue the PR
 intends to close and every planning ticket it coordinates with. If one PR

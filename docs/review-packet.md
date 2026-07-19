@@ -75,6 +75,54 @@ Any executor-visible imperative wording change is at least Minor. A parity
 check is classification evidence only; changed approved bytes remain subject
 to the owning reviewed-identity and approval-retention rules.
 
+## Independent Review Findings And Re-Review
+
+When independent review materially affects a decision, make its evidence
+boundary visible in the review packet. Record:
+
+- the exact artifact or commit the reviewer inspected;
+- reviewer identity and role;
+- material tools, access, and capability gaps;
+- the sources the reviewer actually verified;
+- any follow-up verification, attributed to the actor and source that performed
+  it; and
+- the preserved review output or durable review record.
+
+Do not attribute a source claim to a reviewer that could not inspect it. A
+capability declaration describes the evidence available to that review; it
+does not grant authority or make the reviewer an oracle.
+
+Connect every substantive finding to the exact reviewed artifact and give it an
+explicit disposition:
+
+- accepted;
+- accepted with modification;
+- reasoned decline;
+- superseded; or
+- verified externally.
+
+Record the resolution and any remaining gap. Keep the taxonomy proportionate:
+trivial nits can be handled inline, but substantive findings must not disappear
+through silent edits. Review findings, dispositions, validation, and reviewer
+verdicts remain evidence for the human decision. None grants implementation,
+merge, release, or other transition authority.
+
+After corrections, ask: **Is the original review still applicable to the
+frozen proposal or artifact?** Record one of three outcomes and the reason:
+
+- no re-review when bounded corrections preserve the reviewed scope,
+  ownership, claims, authority, acceptance criteria, omissions, and delivery
+  topology;
+- focused re-review when a material part of those surfaces changed but the
+  artifact remains recognizably the same proposal or implementation; or
+- a fresh proposal and full review when the corrected artifact is no longer
+  meaningfully the same reviewed work.
+
+Do not require another review merely because bytes changed, and do not skip one
+merely because the filename or headline stayed the same. Continued
+applicability is the governing question. The human-owned approval identity and
+validity rules above still control after the review decision.
+
 ## What Codex Should Summarize
 
 Codex should summarize:

@@ -310,6 +310,51 @@ an unreviewed wrapper.
 - Do not claim mergeability, required checks, or branch-protection state without
   current PR or repository evidence.
 
+## Independent Reviewer Invocation
+
+Apply the provider-neutral review modes in
+[`external-ai-reviewer.md`](../external-ai-reviewer.md). When governed
+independent review is selected, Codex should prefer direct invocation against
+the exact repository artifact with narrowly scoped read-only source access over
+human copy-and-paste transport when the execution surface supports it. Claude
+is one possible reviewer implementation; it is not the shared semantic
+requirement.
+
+Before invocation, bind the brief to the exact path, commit, or byte identity
+and name the decision boundary, review dimensions, authoritative sources,
+prohibited mutations, and stop conditions. Require the reviewer to report its
+identity, tools and access, sources actually inspected, material capability
+gaps, source attribution, anchored findings with severity, and explicit
+verdict. Preserve the output at a reviewable identity.
+
+After review, Codex must not turn a verdict into approval. Use the finding
+disposition and re-review applicability contract in
+[`review-packet.md`](../review-packet.md#independent-review-findings-and-re-review).
+If the reviewer declares a material source-access gap, Codex may close it only
+through an authorized connector or tool. Record the actor that verified each
+source and keep the original capability gap visible; do not rewrite the record
+as though the reviewer performed that verification.
+
+## Workflow-State Progress Rendering
+
+For material proposal-first or multi-stage work, report observable workflow
+state instead of narrating model activity. Keep updates concise and include only
+what helps the human understand or verify the current boundary:
+
+- current phase and exact artifact identities;
+- satisfied prerequisites and the evidence that satisfied them;
+- substantive findings, disposition counts, and unresolved findings;
+- material capability gaps and actor-to-source verification attribution;
+- invariants and scope exclusions that remain preserved;
+- unmet transition criteria; and
+- the exact next permitted action or stop condition.
+
+Successful tool calls, model output, validation, and progress text are evidence
+of activity, not proof of completion or authority. Re-read current sources at
+source-first and post-merge boundaries rather than rendering stale planned
+state. Do not expose or request private chain-of-thought; workflow progress is
+grounded in artifacts, source state, decisions, validation, and receipts.
+
 ## External API Claims
 
 When code, tests, docs, risks, or user-facing claims depend on external public

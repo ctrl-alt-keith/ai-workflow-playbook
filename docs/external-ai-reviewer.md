@@ -1,15 +1,45 @@
 # Using an External AI Reviewer
 
-An external AI reviewer can be useful as a second set of eyes during
-development, but it should stay lightweight.
-
-Use it as an optional reviewer, not as part of the execution loop. Its role is
-advisory only and never blocking. Treat it as an impartial observer that may
-spot edge cases, completeness gaps, or risky assumptions before merge. It is
-not an execution tool.
+An external AI reviewer can provide independent evidence at two different
+scales: a lightweight targeted sanity check during delivery, or a governed
+independent artifact review before a material transition. Keep the selected
+mode explicit and proportional to the work.
 
 This pattern is provider-agnostic. It can apply to Claude, Gemini, ChatGPT, or
 another reviewer model when a targeted review would add signal.
+
+A reviewer verdict is evidence, not execution authority. It does not grant
+implementation, approval, merge, release, or another transition. Human and
+repo-local authority boundaries continue to control.
+
+## Review Modes
+
+### Lightweight targeted review
+
+Use this optional, non-blocking mode as a second set of eyes on an implementation
+or pull request. The reviewer may spot edge cases, completeness gaps, or risky
+assumptions before merge. Keep the input and output narrow.
+
+### Governed independent artifact review
+
+Use this mode when the human or task explicitly requires independent review, or
+when a selected high-risk workflow contract makes review a proportionate
+transition prerequisite. Suitable work may involve material policy, authority,
+cross-repository ownership, irreversible consequences, or costly ambiguity
+that should be challenged before implementation.
+
+Governed review must identify the exact artifact, reviewer, declared tools and
+capabilities, read-only access boundary, sources actually retrieved, material
+gaps, and preserved output. The reviewer should independently inspect available
+authoritative sources and stop or qualify findings when required evidence is
+unavailable. Attribute every verification claim to the actor and source that
+performed it; route inaccessible sources to another authorized actor or tool
+instead of implying that the reviewer verified them.
+
+Use [`review-packet.md#independent-review-findings-and-re-review`](review-packet.md#independent-review-findings-and-re-review)
+for finding disposition and the decision between no re-review, focused
+re-review, and a fresh proposal with full review. Do not duplicate those
+semantics in a provider adapter or reviewer prompt.
 
 ## When To Use an External AI Reviewer
 
@@ -20,6 +50,8 @@ Use an external AI reviewer when:
 - the change feels slightly off or confidence is lower than usual
 - a docs or playbook change deserves a quick sanity check for clarity or
   completeness
+- a human, task, or proportional high-risk workflow contract selects governed
+  independent review before implementation
 
 ## When Not To Use an External AI Reviewer
 
@@ -28,7 +60,7 @@ Do not use an external AI reviewer when:
 - the change is small or mechanical
 - confidence is already high
 - tests and CI already cover the meaningful risk
-- it would become a habitual or automatic step
+- review would be habitual ceremony rather than useful independent evidence
 
 ## Workflow Integration
 
@@ -44,12 +76,15 @@ Use an external AI reviewer only when a targeted review would add signal:
 Codex -> PR -> external AI reviewer (targeted review) -> human skim -> merge
 ```
 
-An external AI reviewer is optional and situational. It is never required for
-merge.
+This lightweight path is optional and never required for merge. Governed review
+is a distinct pre-transition mode: when explicitly selected, completing it and
+dispositioning its findings may be a prerequisite to implementation or another
+named boundary. The review verdict itself still grants no authority.
 
 ## Input Guidelines
 
-Give the reviewer only the context needed to review well:
+For lightweight review, give the reviewer only the context needed to review
+well:
 
 - a short statement of goal or intent
 - the PR description or a brief summary
@@ -57,6 +92,19 @@ Give the reviewer only the context needed to review well:
 
 Optionally include one specific concern if you want the reviewer to look for a
 known risk.
+
+For governed review, provide or authorize read-only retrieval of:
+
+- the exact artifact identity and owning repository;
+- the goal, scope, exclusions, risks, and acceptance criteria;
+- the governing issue, proposal, contract, or authority record;
+- the relevant repository and external source graph; and
+- the requested review dimensions and stop conditions.
+
+Require the reviewer to report its identity, sources inspected, capability
+gaps, source attribution, findings with exact anchors and severity, and an
+explicit verdict. Preserve the output at a reviewable identity. Do not ask for
+broad redesign or allow review to widen the approved scope silently.
 
 ## Output Constraints
 
@@ -142,6 +190,44 @@ Stop rules:
   inventing context.
 ```
 
+## Reusable Prompt: Governed Independent Artifact Review
+
+```text
+You are acting as an independent, read-only reviewer of an exact artifact.
+
+Artifact and identity:
+<repository, path or commit, and exact identity>
+
+Decision boundary:
+<the human decision or workflow transition this review informs>
+
+Goal, scope, and exclusions:
+<bounded review context>
+
+Authoritative sources:
+<sources to inspect directly with the available read-only access>
+
+Review dimensions:
+- correctness and completeness against the stated scope;
+- ownership, authority, and phase-boundary integrity;
+- unsupported claims, hidden assumptions, or over-generalization;
+- smallest adequate change and prohibited scope expansion.
+
+Required output:
+- reviewer identity and role;
+- tools, access, sources actually inspected, and material capability gaps;
+- findings with severity and exact artifact anchors;
+- source attribution for each verification claim;
+- explicit verdict: ACCEPT, ACCEPT WITH CHANGES, or REJECT.
+
+Constraints:
+- Perform no mutation.
+- Do not infer unavailable source state or treat a capability as authority.
+- Do not redesign or widen the artifact beyond reporting a finding.
+- If required evidence is unavailable, identify the gap and limit the verdict
+  instead of guessing.
+```
+
 ## Failure Modes
 
 Watch for these failure modes:
@@ -150,8 +236,14 @@ Watch for these failure modes:
 - suggestion overload that creates churn without reducing risk
 - architectural drift from letting review comments reshape the task
 - slowing the loop with an extra step that adds little signal
+- unsupported verification claims when the reviewer lacked source access
+- treating an ACCEPT verdict as approval or transition authority
+- repeating a full review without deciding whether the original review remains
+  applicable
 
 ## Guiding Principle
 
-Use an external AI reviewer when something feels slightly off, not as a default
-step.
+Use lightweight review when targeted second-opinion signal is worth its cost.
+Use governed independent review only when explicit authority or proportional
+risk selects it. In either mode, preserve provider neutrality, evidence limits,
+and human decision ownership.
