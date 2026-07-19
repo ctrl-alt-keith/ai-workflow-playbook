@@ -45,6 +45,32 @@ ordinary chat, brainstorming, or conceptual discussion procedural.
   actual outcome instead of assuming the planned effect occurred, then
   reconcile separately owned systems only when their workflows require it.
 
+## Authority Follows The Question
+
+Do not select one universal system of record for a workflow. Classify the
+question first, then retrieve the source that owns that kind of fact:
+
+- Current human direction controls delegated intent and authority; the owning
+  task or planning surface controls recorded intent, priority, sequencing, and
+  acceptance context.
+- The owning repository and its hosted repository state control current files,
+  implementation, review, validation, and merge facts.
+- Canonical shared documentation controls reusable doctrine; repo-local
+  sources control repository-specific contracts and execution behavior.
+- The owning provider or runtime controls current external operational state.
+- Durable artifacts, receipts, reports, and logs answer historical execution
+  questions only within the claims and evidence they preserve; they do not
+  become proof of current mutable state or authority.
+
+Some questions cross these boundaries. Retrieve each applicable owner, keep
+the claims distinct, and reconcile them by owning scope and the applicable
+instruction hierarchy. Recorded planning intent does not override current
+human direction, and one source must not override facts owned by another.
+Availability, convenience, discoverability, integration quality, duplication,
+or durability does not transfer authority. For recovery, reconstruct the
+applicable contract and next action from the durable sources named by the
+owning workflow, then revalidate mutable facts.
+
 ## Protocol Invariants
 
 A reusable workflow protocol is defined by its reviewed semantic invariants,

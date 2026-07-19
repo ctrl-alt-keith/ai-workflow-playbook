@@ -253,16 +253,19 @@ branch, validation, and PR flow before calling them complete.
 
 ### Issue And Planning Coordination
 
-For repository implementation work, GitHub remains the implementation and
-closure source of truth unless repo-local guidance explicitly defines a
-different system of record. GitHub issues, pull requests, closing keywords, CI,
-review state, and merge state determine whether repo work is complete.
+For questions about repository implementation, GitHub is the authoritative
+hosted source unless repo-local guidance explicitly defines another owner.
+GitHub issues, pull requests, closing keywords, hosted CI, hosted review state,
+and merge state determine the corresponding hosted issue, pull request,
+validation, review, and merge facts. Implementation may exist in an inspected
+local worktree before it is represented on GitHub, so implementation existence
+remains a repository-state question rather than a hosted-state inference.
 
-Planning systems such as Linear are coordination layers by default. Use them to
-track planning intent, status, assignment, sequencing, or stakeholder context,
-but do not treat them as authoritative over repository implementation state
-unless the target repository explicitly says so. The same rule applies to
-similar planning mirrors or boards.
+Planning systems such as Linear own their planning facts, including intent,
+acceptance context, assignment, sequencing, and planning status. They do not
+override repository implementation state, just as GitHub merge state does not
+silently rewrite the planning intent or sequencing that produced the work. The
+same boundary applies to similar planning systems, mirrors, or boards.
 
 When both GitHub and planning identifiers exist, implementation PRs should
 reference both. Keep the GitHub closing keyword tied to the GitHub issue and

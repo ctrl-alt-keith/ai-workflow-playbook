@@ -19,6 +19,16 @@ issue, branch, commit, validation, runtime, provider, or external API state.
 This guidance describes observable workflow behavior and operational
 safeguards. It does not assume or describe platform internals.
 
+## Authority Selection
+
+Apply the question-typed authority rule in
+[`core-model.md`](core-model.md#authority-follows-the-question) before using the
+evidence hierarchy below. The hierarchy orders evidence for a claim only after
+the source that owns that kind of fact has been identified; it is not a global
+system-of-record ranking. When a question spans planning, repository, runtime,
+or historical evidence boundaries, retrieve each applicable owner and preserve
+their separate claims during reconciliation.
+
 ## Evidence Hierarchy
 
 Prefer evidence in this order when repository state is available:
