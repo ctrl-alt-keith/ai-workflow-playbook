@@ -12,7 +12,8 @@ This repository should contain:
 - Proven heuristics
 - Decision frameworks
 - Reusable prompt structures
-- Core operating-model guidance needed to apply the playbook well
+- Domain-independent operating principles and core operating-model guidance
+  needed to apply the playbook well
 
 ## Non-Scope
 
@@ -43,7 +44,9 @@ Do not add content that behaves like a working notebook. If material is explorat
 
 ## Core And Adapters
 
-Core guidance should stay tool-agnostic. The core docs should describe the operating model, lifecycle, checkpoints, and review expectations in language that survives tool changes.
+Core guidance should stay tool-agnostic. The core docs should describe the
+operating principles, operating model, lifecycle, checkpoints, and review
+expectations in language that survives tool changes.
 
 Tool-specific behavior belongs in documented adapter docs under [`docs/tool-adapters/`](docs/tool-adapters/). Adapters explain how a specific executor maps onto the core model, but they do not redefine the model itself. When no matching adapter exists, use the executor-neutral startup guidance and repo-local `AGENTS.md`; do not infer tool-specific requirements from another executor's adapter.
 
@@ -64,7 +67,8 @@ The first core module is delivery. Additional workflow families may be added lat
 
 ## Initial Map
 
-- [`docs/start-here.md`](docs/start-here.md): mandatory startup, core invariants, and adapter-routing contract
+- [`docs/start-here.md`](docs/start-here.md): task-neutral startup routing and
+  conditional repository workflow entry point
 - [`docs/repo-to-repo-interface-contracts.md`](docs/repo-to-repo-interface-contracts.md): lightweight pattern for documenting producer/consumer boundaries
 - [`docs/cross-repo-glossary.md`](docs/cross-repo-glossary.md): qualified cross-repository architecture vocabulary
 - [`docs/ai-workflow-ecosystem.md`](docs/ai-workflow-ecosystem.md): conceptual overview of the repository ecosystem, retained-knowledge boundaries, and architectural direction
@@ -72,7 +76,8 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/authoritative-source-check.md`](docs/authoritative-source-check.md): advisory authoritative-source scanner adoption, domain classification, source justifications, and reusable workflow pinning
 - [`docs/repo-readiness.md`](docs/repo-readiness.md): interaction-mode selection, governance operating model, repository workflow expectations, validation taxonomy, and `AGENTS.md` responsibilities
 - [`docs/repo-awareness-onboarding-refresh.md`](docs/repo-awareness-onboarding-refresh.md): repository discovery, inventory propagation, onboarding, and governance refresh procedure
-- [`docs/core-model.md`](docs/core-model.md): high-level operating model
+- [`docs/core-model.md`](docs/core-model.md): canonical domain-independent AI
+  operating principles, roles, authority, phases, and durable continuity
 - [`docs/evidence-lifecycle.md`](docs/evidence-lifecycle.md): accepted evidence, integration, synthesis, semantic accounting, and reporting boundaries
 - [`docs/feature-lifecycle.md`](docs/feature-lifecycle.md): delivery lifecycle, branch behavior, and PR completion expectations
 - [`docs/alignment-checkpoints.md`](docs/alignment-checkpoints.md): pause points and branch/PR rules
