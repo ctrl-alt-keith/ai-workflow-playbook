@@ -2,9 +2,9 @@
 
 ## Purpose
 
-This page is the compact routing entry point for meaningful AI collaboration
-when work depends on current sources, a consequential action, or a bounded
-workflow. It identifies the general operating model first, then routes into the
+This page is the compact routing entry point for AI-assisted work whose
+evidence, authority, review, or completion boundaries materially affect the
+outcome. It identifies the general operating model first, then routes into the
 workflow and domain guidance the task actually needs.
 
 Ordinary chat, brainstorming, and conceptual discussion do not require this
@@ -13,7 +13,8 @@ external state.
 
 ## Startup Contract
 
-Before acting on meaningful bounded work:
+Before acting on work whose evidence, authority, review, or completion
+boundaries materially affect the outcome:
 
 1. Read the domain-independent operating principles and role boundaries in
    [`core-model.md`](core-model.md).
@@ -40,9 +41,10 @@ for private reasoning or a universal phase machine.
 - [`core-model.md`](core-model.md) owns domain-independent operating principles,
   human and AI roles, authority, semantic phase boundaries, and durable
   continuity.
-- Workflow documents own reusable mechanisms. A general principle routes to a
-  mechanism; it does not copy that mechanism's triggers, taxonomies, schemas,
-  or procedures.
+- Keep mechanisms with their narrowest canonical owner. A general principle
+  should route to specialized workflow or domain guidance rather than copy its
+  trigger lists, taxonomies, schemas, or execution procedures. Do not
+  generalize domain mechanics merely because an analogy exists elsewhere.
 - Domain and provider guidance owns concrete implementation. Repository Git,
   worktree, branch, validation, pull request, and planning-system behavior is a
   repository workflow, not a universal AI requirement.
@@ -104,10 +106,11 @@ scoped analysis, review, planning, advice, prompting, or mutation.
   rendered, delivered, fresh, and replayed material prompts
 - `docs/prompts.md` -> reusable prompt templates
 
-The list identifies the complete repository source graph. Hydrate specialized
-documents when their triggers apply; do not load full maintenance,
-cross-repository, prompt-contract, or multi-agent doctrine into an ordinary
-single-repository task that does not touch those surfaces.
+The list is the baseline repository startup route. Additional documents remain
+outside this baseline and load only when conditional routing activates them.
+Do not load full maintenance, cross-repository, prompt-contract, or multi-agent
+doctrine into an ordinary single-repository task that does not touch those
+surfaces.
 
 ### Repository Instruction Hierarchy
 

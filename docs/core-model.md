@@ -9,9 +9,9 @@ mode before acting so the AI role matches the human's intended delegation.
 
 ## Operating Principles
 
-These principles apply to meaningful AI collaboration when work depends on
-current sources, a consequential action, or a bounded workflow. They do not
-make ordinary chat, brainstorming, or conceptual discussion procedural.
+These principles apply to AI-assisted work whose evidence, authority, review,
+or completion boundaries materially affect the outcome. They do not make
+ordinary chat, brainstorming, or conceptual discussion procedural.
 
 - **Establish relevant reality before acting.** Inspect the current sources
   that control the task when they are available. Treat conversation, memory,
@@ -44,10 +44,6 @@ make ordinary chat, brainstorming, or conceptual discussion procedural.
 - **Re-observe resulting reality after consequential change.** Retrieve the
   actual outcome instead of assuming the planned effect occurred, then
   reconcile separately owned systems only when their workflows require it.
-- **Keep mechanisms with their narrowest canonical owner.** A general principle
-  should route to specialized workflow or domain guidance rather than copy its
-  trigger lists, taxonomies, schemas, or execution procedures. Do not
-  generalize domain mechanics merely because an analogy exists elsewhere.
 
 ## Protocol Invariants
 
