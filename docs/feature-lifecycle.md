@@ -255,9 +255,11 @@ branch, validation, and PR flow before calling them complete.
 
 For questions about repository implementation, GitHub is the authoritative
 hosted source unless repo-local guidance explicitly defines another owner.
-GitHub issues, pull requests, closing keywords, CI, review state, and merge
-state determine whether the repository work is implemented, reviewed,
-validated, or merged.
+GitHub issues, pull requests, closing keywords, hosted CI, hosted review state,
+and merge state determine the corresponding hosted issue, pull request,
+validation, review, and merge facts. Implementation may exist in an inspected
+local worktree before it is represented on GitHub, so implementation existence
+remains a repository-state question rather than a hosted-state inference.
 
 Planning systems such as Linear own their planning facts, including intent,
 acceptance context, assignment, sequencing, and planning status. They do not
