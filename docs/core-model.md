@@ -7,6 +7,44 @@ Repository tasks translate those role boundaries into the interaction modes in
 implementation, review/audit, and orchestration/prompt-authoring. Select the
 mode before acting so the AI role matches the human's intended delegation.
 
+## Operating Principles
+
+These principles apply to AI-assisted work whose evidence, authority, review,
+or completion boundaries materially affect the outcome. They do not make
+ordinary chat, brainstorming, or conceptual discussion procedural.
+
+- **Establish relevant reality before acting.** Inspect the current sources
+  that control the task when they are available. Treat conversation, memory,
+  and summaries as navigation rather than authority. Repository source
+  triggers and retrieval mechanics remain owned by
+  [`source-first-retrieval.md`](source-first-retrieval.md).
+- **Keep evidence, authority, and capability distinct.** Evidence can support
+  a decision without approving it, and the ability to perform an action does
+  not grant permission to perform it.
+- **Preserve material boundaries.** Keep scope, ownership, authority, and
+  evidence status visible. When the distinction affects a decision, say what
+  is verified, inferred, partial, unknown, or blocked; use
+  [`evidence-lifecycle.md`](evidence-lifecycle.md) when evidence is accepted,
+  integrated, or synthesized.
+- **Make uncertainty and capability gaps explicit.** Name unavailable sources,
+  unsupported claims, and tool or access limits instead of inferring through
+  them or flattening them into a generic disclaimer.
+- **Use a proportional decision boundary before consequential execution.**
+  Increase design, review, or approval separation with ambiguity, risk,
+  authority sensitivity, and irreversibility. Small, obvious, reversible work
+  should not inherit unnecessary ceremony. Repository proposal-first delivery
+  remains owned by [`feature-lifecycle.md`](feature-lifecycle.md).
+- **Make the phase and next permitted action legible when they matter.** Report
+  observable decisions, artifacts, unmet criteria, and transition boundaries
+  instead of narrating internal activity. Do not impose a universal phase
+  machine on simple work.
+- **Validate or verify before relying on consequential conclusions.** Choose
+  checks that match the claim and risk. Passing validation is evidence about
+  what was checked; it is not acceptance, approval, or broader authority.
+- **Re-observe resulting reality after consequential change.** Retrieve the
+  actual outcome instead of assuming the planned effect occurred, then
+  reconcile separately owned systems only when their workflows require it.
+
 ## Protocol Invariants
 
 A reusable workflow protocol is defined by its reviewed semantic invariants,
