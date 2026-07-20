@@ -115,7 +115,8 @@ scoped analysis, review, planning, advice, prompting, or mutation.
 - `docs/core-model.md` -> general operating principles and roles
 - the target repository's `AGENTS.md` -> repo-local execution authority
 - `docs/tool-adapters/<executor>.md` -> executor-specific deltas when a matching
-  adapter exists; Codex runs must read `docs/tool-adapters/codex.md`
+  adapter exists; Codex runs must read `docs/tool-adapters/codex.md` and Claude
+  runs must read `docs/tool-adapters/claude.md`
 - `docs/engineering-baseline.md` -> foundational engineering expectations
 - `docs/source-first-retrieval.md` -> repository triggers, retrieval ordering,
   verification gates, and recovery
@@ -180,7 +181,8 @@ recommendations, and "what changed?" or "what next?" requests:
 1. Read this page and `docs/core-model.md`.
 2. Read the target repository's repo-local `AGENTS.md`.
 3. Apply the matching executor adapter. Codex runs must apply
-   `docs/tool-adapters/codex.md`.
+   `docs/tool-adapters/codex.md`; Claude runs must apply
+   `docs/tool-adapters/claude.md`.
 4. Identify the repository or workspace's primary purpose.
 5. Select the interaction mode from `docs/repo-readiness.md`: implementation,
    review/audit, or orchestration/prompt-authoring.

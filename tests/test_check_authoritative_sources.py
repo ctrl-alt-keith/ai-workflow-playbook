@@ -98,6 +98,21 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
 
                 self.assertEqual(findings, [])
 
+    def test_claude_docs_are_allowed_by_default(self) -> None:
+        urls = [
+            "https://docs.claude.com/en/docs/claude-code/memory",
+            "https://docs.claude.com/en/docs/claude-code/sub-agents",
+        ]
+
+        for url in urls:
+            with self.subTest(url=url):
+                findings = scanner.scan_text(
+                    "docs/example.md",
+                    f"Claude Code CLI source: {url}",
+                )
+
+                self.assertEqual(findings, [])
+
     def test_openai_developer_docs_are_allowed_by_default(self) -> None:
         findings = scanner.scan_text(
             "docs/example.md",

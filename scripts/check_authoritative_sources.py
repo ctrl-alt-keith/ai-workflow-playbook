@@ -31,6 +31,7 @@ DEFAULT_OFFICIAL_SUFFIXES = (
     "developers.google.com",
     "firebase.google.com",
     "developers.openai.com",
+    "claude.com",
     "developer.atlassian.com",
     "docs.atlassian.com",
     "support.atlassian.com",
