@@ -205,6 +205,20 @@ class CodexPreflightTest(unittest.TestCase):
         )
         self.assertNotIn("gh auth status succeeds", result.stdout)
 
+    def test_github_ssh_success_banner_with_unexpected_exit_code_fails_closed(self) -> None:
+        commands = self.fake_success_commands()
+        commands["ssh"] = """
+            printf '%s\\n' "Hi test! You've successfully authenticated, but GitHub does not provide shell access." >&2
+            exit 255
+        """
+
+        result = self.run_preflight(commands)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("FAIL GitHub SSH connectivity works via ssh -T git@github.com", result.stdout)
+        self.assertIn("Resolve SSH authentication for GitHub", result.stdout)
+        self.assertNotIn("gh auth status succeeds", result.stdout)
+
     def test_gh_auth_status_failure_reports_login_remediation(self) -> None:
         commands = self.fake_success_commands()
         commands["gh"] = """
