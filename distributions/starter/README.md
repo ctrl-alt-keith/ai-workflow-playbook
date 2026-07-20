@@ -81,6 +81,42 @@ The local work playbook may live on GitHub Enterprise, GitHub.com, or another
 host. The upstream source may live on a different host. Use the fully qualified
 upstream URL; do not infer upstream from the local repository host.
 
+For Git-backed work-local playbook repositories with upstream Git access, keep
+a remote named `upstream` with the canonical fetch URL and an invalid push URL:
+
+```text
+git remote set-url upstream https://github.com/ctrl-alt-keith/ai-workflow-playbook.git
+git remote set-url --push upstream DISABLED
+```
+
+Bootstrap should add the remote when absent or normalize it when present, then
+fetch it with pruning and tags. Inspect all existing fetch and push URLs before
+changing them. The invalid push URL makes accidental pushes fail locally; the
+name `upstream` by itself does not make a remote read-only. This setup is
+optional for non-Git destinations or environments without upstream Git access,
+which should continue to use connector, hosted-source, or URL review.
+
+Durable implementation refreshes record review progress in a small repository
+file named `upstream-review-baseline.md`. It preserves the canonical upstream
+repository, the exact last reviewed upstream commit, and review date. The
+baseline means "upstream reviewed through this commit," not "all upstream
+changes through this commit were adopted." Keep refresh reports under
+`refresh-reports/YYYY-MM-DD-upstream-refresh.md`; each report records the
+reviewed range, candidate decisions, local deviations, and resulting baseline.
+Review-report-only work remains conversational and creates neither file.
+
+Routine refreshes compare three distinct surfaces:
+
+1. upstream evolution from the recorded baseline to current upstream
+2. local divergence from the baseline to the current local default branch
+3. the candidate delta between the current local and upstream heads
+
+A direct local-versus-upstream diff is not enough because it mixes intentional
+local adaptations with upstream changes introduced since the last review. If
+there is no trustworthy baseline, use the first-refresh path in the prompt:
+inspect local history and content, establish an explicit starting point, and
+record any uncertainty without requiring an exhaustive historical review.
+
 This is not synchronization, enforcement, or automatic promotion. Local
 ownership and workplace context control the final decision.
 

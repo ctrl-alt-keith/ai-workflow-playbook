@@ -49,6 +49,13 @@ repositories should retain a reference to the upstream refresh prompt for
 periodic review. The destination itself is the playbook repository, so starter
 content belongs at repository level rather than under `.ai-workflow/`.
 
+Git-backed work-local repositories with upstream Git access should also use a
+protected `upstream` remote. After the first trustworthy review, they should
+record `upstream-review-baseline.md` when selected updates are implemented;
+implemented refreshes should leave a small report under `refresh-reports/`.
+Report-only reviews remain ephemeral. These files record review coverage and
+local decisions, not synchronization or adoption state.
+
 Expected work-local playbook skeleton:
 
 - `README.md`

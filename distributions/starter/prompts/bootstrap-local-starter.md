@@ -30,6 +30,43 @@ Before writing files, determine which adoption target is intended:
 
 If the destination is ambiguous, stop and ask which target to use.
 
+## Protected Upstream Remote
+
+For a Git-backed work-local playbook repository, when Git access to the
+canonical upstream is available, configure or normalize a remote named
+`upstream`. This remote is for provenance and review material only. It does not
+change the authority of the local playbook.
+
+Inspect before changing it:
+
+```text
+git remote -v
+git remote get-url --all upstream
+git remote get-url --push --all upstream
+```
+
+If `upstream` is absent, add it. If it exists, inspect and normalize it instead
+of blindly adding another remote. The intended end state is exactly one fetch
+URL for the canonical repository and a separate invalid push URL:
+
+```text
+git remote add upstream https://github.com/ctrl-alt-keith/ai-workflow-playbook.git
+git remote set-url upstream https://github.com/ctrl-alt-keith/ai-workflow-playbook.git
+git remote set-url --push upstream DISABLED
+git fetch upstream --prune --tags
+```
+
+Use only the applicable add-or-set command. If inspection finds extra fetch or
+push URLs, remove those explicitly with reviewed `git remote set-url --delete`
+commands and re-inspect the result. Do not replace or rename the local
+repository's `origin`. The invalid push URL is intentional: the remote name
+alone is not read-only, so accidental upstream pushes should fail locally.
+
+Do not require this remote for non-Git destinations or when Git access to the
+canonical upstream is unavailable. Preserve the connector, hosted-source, or
+fully qualified URL review path in those cases, and report the unavailable Git
+path without weakening local authority.
+
 ## Destination Outcomes
 
 For a work-local playbook repository, the destination itself becomes the
@@ -44,6 +81,8 @@ Expected playbook-repository structure should resemble:
 - `docs/repo-readiness.md`
 - `docs/review-packet.md`
 - `prompts/upstream-refresh.md`
+- `upstream-review-baseline.md` after an initial baseline is established
+- `refresh-reports/YYYY-MM-DD-upstream-refresh.md` for each implemented refresh
 - `templates/AGENTS.template.md`
 - `templates/review-packet-template.md`
 
@@ -107,9 +146,39 @@ Work-local playbook repository content should include:
 - `prompts/upstream-refresh.md`, describing upstream as source material and
   future improvements to review from
   `https://github.com/ctrl-alt-keith/ai-workflow-playbook`, not blindly sync
+- `upstream-review-baseline.md`, once a trustworthy baseline is established,
+  containing the canonical upstream repository, exact last reviewed upstream
+  commit, and review date
+- lightweight refresh reports under `refresh-reports/`, created only when
+  selected refresh recommendations are implemented
 - `templates/AGENTS.template.md`, pointing adopters to local
   `docs/start-here.md`
 - `templates/review-packet-template.md`
+
+The baseline means "upstream reviewed through this commit," not "all upstream
+changes through this commit were adopted." Use a small repository file rather
+than a Git tag so local release history remains separate. Do not create or
+advance the baseline until the corresponding review is complete.
+
+For a genuinely new work-local playbook created from the current upstream
+starter, record the exact upstream commit inspected during bootstrap after the
+generated local content has been reviewed. For an existing repository whose
+starting point is uncertain, do not invent a baseline. Leave the baseline
+unestablished and use the first-refresh path in `prompts/upstream-refresh.md`.
+
+Use this lightweight file shape when recording the baseline:
+
+```markdown
+# Upstream Review Baseline
+
+- Canonical upstream repository:
+  `https://github.com/ctrl-alt-keith/ai-workflow-playbook.git`
+- Last reviewed upstream commit: `[full commit SHA]`
+- Review date: `[YYYY-MM-DD]`
+
+This baseline means upstream was reviewed for local applicability through the
+recorded commit. It does not mean every upstream change was adopted.
+```
 
 Project repo notes should capture:
 
@@ -151,6 +220,7 @@ Hard boundaries:
 - Do not modify enforcement controls.
 - Do not create new governance requirements.
 - Do not make settings or process changes on behalf of the team.
+- Do not introduce automatic synchronization or promotion.
 
 Make every suggested workflow change advisory unless the user explicitly
 requests implementation.
@@ -175,6 +245,8 @@ When finished, report:
 - files created or updated
 - source evidence inspected
 - validation commands discovered
+- protected upstream remote status, when applicable
+- baseline status and exact recorded commit, when established
 - any unknowns or assumptions
 - confirmation that no source code, CI/CD, GitHub settings, branch protection,
   `CODEOWNERS`, release automation, enforcement controls, or root `AGENTS.md`
