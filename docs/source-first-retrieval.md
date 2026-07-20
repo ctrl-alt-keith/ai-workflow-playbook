@@ -54,7 +54,10 @@ repository files, checks, comments, or review threads, inspect the GitHub
 artifact through the available connector or source-of-truth tool before giving
 a conclusion. PR receipts, implementation summaries, validation summaries, and
 automation reports are navigation aids, not evidence, when that access is
-available. If connector or source access is unavailable, say so explicitly
+available. Before claiming connector access is unavailable, apply the runtime
+verification rule in
+[`start-here.md`](start-here.md#connector-availability-is-runtime-evidence).
+If verified connector or source access is unavailable, say so explicitly
 before offering any summary-based analysis. Do not imply direct inspection
 happened unless it actually did.
 

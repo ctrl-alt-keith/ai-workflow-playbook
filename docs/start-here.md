@@ -36,6 +36,31 @@ Keep the current phase and next permitted action legible when they affect human
 review or workflow authority. This is observable workflow state, not a request
 for private reasoning or a universal phase machine.
 
+### Connector availability is runtime evidence
+
+Repository hydration and connector availability answer different questions.
+Hydration retrieves repository instructions and state to establish working
+context. Connector availability describes a current runtime capability.
+Completing hydration neither proves nor disproves that a connector or action is
+available, and it does not authorize assumptions about runtime connector state.
+
+Treat connector availability as runtime evidence, not memory. Before stating
+that a connector is unavailable, an integration is not connected, an action
+cannot be performed because of connector availability, or any equivalent
+claim, do one of the following:
+
+1. Inspect the connector actions currently available.
+2. Attempt the relevant connector operation.
+
+Never explain inability to perform an operation by speculating about connector
+availability. A successful connector invocation in the current conversation is
+positive evidence that the connector remains available; successful use of a
+specific capability is positive evidence that the capability remains
+available. Do not contradict that evidence unless a subsequent connector
+inspection or invocation demonstrates otherwise. Prior use of a different
+action does not establish that a requested read or write capability exists, so
+inspect or attempt the relevant operation before reaching that conclusion.
+
 ## Canonical Ownership
 
 - [`core-model.md`](core-model.md) owns domain-independent operating principles,
@@ -161,6 +186,9 @@ recommendations, and "what changed?" or "what next?" requests:
    review/audit, or orchestration/prompt-authoring.
 6. Identify the canonical source for the rule, behavior, or state being used.
 7. Apply `docs/source-first-retrieval.md` before stateful repository reasoning.
+   When connector capability matters, apply
+   [Connector availability is runtime evidence](#connector-availability-is-runtime-evidence)
+   without changing repository hydration or instruction discovery.
 8. For policy-sensitive changes, apply the repo-family alignment check in
    `docs/repo-readiness.md`.
 9. Confirm command form and execution settings for planned commands.
