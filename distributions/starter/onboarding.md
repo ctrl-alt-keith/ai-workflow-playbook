@@ -87,8 +87,9 @@ URL is unavailable.
 For a Git-backed work-local repository with upstream Git access, use a
 protected `upstream` remote whose fetch URL is canonical and whose push URL is
 `DISABLED`. Record the last reviewed upstream commit and review date in
-`upstream-review-baseline.md`, and keep each completed review report under
-`refresh-reports/`. The baseline records review coverage, not adoption.
+`upstream-review-baseline.md`, and keep each implemented refresh report under
+`refresh-reports/`. Report-only reviews remain conversational and create
+neither file. The baseline records review coverage, not adoption.
 
 Classify candidate changes as adopt now, adapt with edits, not applicable, or
 human decision required. Preserve local ownership and workplace context.

@@ -82,7 +82,7 @@ Expected playbook-repository structure should resemble:
 - `docs/review-packet.md`
 - `prompts/upstream-refresh.md`
 - `upstream-review-baseline.md` after an initial baseline is established
-- `refresh-reports/YYYY-MM-DD-upstream-refresh.md` for each completed review
+- `refresh-reports/YYYY-MM-DD-upstream-refresh.md` for each implemented refresh
 - `templates/AGENTS.template.md`
 - `templates/review-packet-template.md`
 
@@ -149,8 +149,8 @@ Work-local playbook repository content should include:
 - `upstream-review-baseline.md`, once a trustworthy baseline is established,
   containing the canonical upstream repository, exact last reviewed upstream
   commit, and review date
-- lightweight refresh reports under `refresh-reports/`, created only when a
-  refresh review occurs
+- lightweight refresh reports under `refresh-reports/`, created only when
+  selected refresh recommendations are implemented
 - `templates/AGENTS.template.md`, pointing adopters to local
   `docs/start-here.md`
 - `templates/review-packet-template.md`

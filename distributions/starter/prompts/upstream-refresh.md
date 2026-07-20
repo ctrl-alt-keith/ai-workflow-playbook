@@ -24,6 +24,24 @@ when local context differs.
   `https://github.com/ctrl-alt-keith/ai-workflow-playbook.git`
 - Requested output: `[review report only | implement recommended updates]`
 
+There are exactly two outcomes:
+
+- **Review report only:** perform an ephemeral, non-mutating review and return
+  the findings to the human. Do not create repository files,
+  `refresh-reports/`, or a branch or pull request. Do not modify the local
+  playbook or update `upstream-review-baseline.md`. The baseline remains
+  unchanged because no durable review artifact has been accepted into the
+  repository.
+- **Implement recommended updates:** after the human chooses selected
+  recommendations, implement those changes, create the durable refresh report,
+  update `upstream-review-baseline.md`, commit the selected updates, report,
+  and baseline together, and open one reviewable pull request.
+
+The workflow is simply: review, human decision, then implementation of the
+selected updates in one pull request. Do not introduce another output mode,
+durable-review-only path, branch, or pull request. If implementation is not
+requested, the review remains conversational and ephemeral.
+
 The routine review range comes from `upstream-review-baseline.md`; do not ask
 for an arbitrary range when a trustworthy baseline exists. If the local
 repository or upstream source is ambiguous, stop and ask for the missing
@@ -173,11 +191,12 @@ not a synchronization cursor, release marker, adoption ledger, or approval.
 Keep it as a normal reviewable file rather than a Git tag so it does not blur
 local release history.
 
-Advance the baseline only after the refresh review and its report are complete.
-The resulting baseline normally equals the upstream head reviewed, including
-when some candidates were adapted, rejected as not applicable, or left for a
-human decision. Unresolved decisions remain visible in the report; they do not
-turn the baseline into an adoption claim.
+Advance the baseline only when the durable refresh report and selected
+implementation changes become part of the same repository change. The
+resulting baseline normally equals the upstream head reviewed, including when
+some candidates were adapted, rejected as not applicable, or left for a human
+decision. Unresolved decisions remain visible in the report; they do not turn
+the baseline into an adoption claim.
 
 ## First Refresh
 
@@ -196,10 +215,12 @@ without trustworthy provenance, or otherwise unreliable.
    current local and upstream content. Document the unknown historical starting
    point and the limits of the review. Do not imply every historical upstream
    commit was individually reviewed.
-5. After that initial review is complete, establish an explicit baseline at the
-   upstream commit actually reviewed so later refreshes can be incremental.
+5. If the human chooses implementation, establish an explicit baseline at the
+   upstream commit reviewed as part of the same repository change as the
+   durable report and selected updates. Otherwise leave the baseline unchanged.
 
-The first refresh establishes a useful forward boundary; it does not require a
+An implemented first refresh establishes a useful forward boundary; an
+ephemeral review leaves the baseline unestablished. Neither path requires a
 permanent audit of all upstream history. Never invent a commit or silently use
 the current upstream head as though a review had already happened.
 
@@ -278,7 +299,7 @@ refresh contract unless the human separately authorizes that work.
 
 ## Durable Refresh Report
 
-Create one lightweight report for each completed review at:
+For the implementation outcome, create one lightweight report at:
 
 `refresh-reports/YYYY-MM-DD-upstream-refresh.md`
 
@@ -323,14 +344,19 @@ Use this report shape:
 - Resulting baseline:
 ```
 
-The report records what was reviewed and decided in this refresh. It does not
-assert that every upstream change was adopted or require tracking every
-upstream change forever.
+The report records what was reviewed and decided in the implemented refresh. It
+does not assert that every upstream change was adopted or require tracking
+every upstream change forever. A review-report-only outcome does not create
+this file.
 
 ## Implementation And Deliverables
 
-Produce the refresh report even when no local content change is selected. If
-repository modifications are requested and tooling is available:
+For **review report only**, return the findings to the human and stop. Do not
+create files, update the baseline, create a branch or pull request, or modify
+the local playbook.
+
+For **implement recommended updates**, after the human selects recommendations
+and when tooling is available:
 
 1. Create an isolated branch or worktree as required by the local repository.
 2. Implement only candidates classified for adoption or adaptation.
@@ -341,9 +367,6 @@ repository modifications are requested and tooling is available:
 6. Commit the selected local updates, report, and baseline together.
 7. Open a reviewable pull request.
 
-For report-only work, do not modify the local playbook or advance the baseline
-unless the human requested durable report and baseline updates.
-
 When finished, report:
 
 - preflight state and fetch results
@@ -351,7 +374,7 @@ When finished, report:
 - candidate classifications and rationale
 - selected adaptations and known local deviations
 - unresolved human decisions
-- report and resulting baseline paths
+- report and resulting baseline paths when implemented
 - pull request, files changed, validation, and residual risks when implemented
 
 ## Boundaries

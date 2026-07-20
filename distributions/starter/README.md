@@ -96,13 +96,14 @@ name `upstream` by itself does not make a remote read-only. This setup is
 optional for non-Git destinations or environments without upstream Git access,
 which should continue to use connector, hosted-source, or URL review.
 
-Record completed review progress in a small repository file named
-`upstream-review-baseline.md`. It preserves the canonical upstream repository,
-the exact last reviewed upstream commit, and review date. The baseline means
-"upstream reviewed through this commit," not "all upstream changes through
-this commit were adopted." Keep refresh reports under
+Durable implementation refreshes record review progress in a small repository
+file named `upstream-review-baseline.md`. It preserves the canonical upstream
+repository, the exact last reviewed upstream commit, and review date. The
+baseline means "upstream reviewed through this commit," not "all upstream
+changes through this commit were adopted." Keep refresh reports under
 `refresh-reports/YYYY-MM-DD-upstream-refresh.md`; each report records the
 reviewed range, candidate decisions, local deviations, and resulting baseline.
+Review-report-only work remains conversational and creates neither file.
 
 Routine refreshes compare three distinct surfaces:
 
