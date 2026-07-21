@@ -75,6 +75,7 @@ Repo-local rules take precedence only for repo-specific behavior.
 - This playbook builds on the engineering baseline defined in
   `docs/engineering-baseline.md`.
 - Codex runs must apply `docs/tool-adapters/codex.md` as part of startup.
+- Claude runs must apply `docs/tool-adapters/claude.md` as part of startup.
 - For general workflow rules, refer to the playbook documents instead of
   duplicating them here. Use `docs/core-model.md`,
   `docs/feature-lifecycle.md`, `docs/alignment-checkpoints.md`, and
