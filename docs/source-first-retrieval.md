@@ -22,12 +22,16 @@ safeguards. It does not assume or describe platform internals.
 ## Authority Selection
 
 Apply the question-typed authority rule in
-[`core-model.md`](core-model.md#authority-follows-the-question) before using the
-evidence hierarchy below. The hierarchy orders evidence for a claim only after
-the source that owns that kind of fact has been identified; it is not a global
-system-of-record ranking. When a question spans planning, repository, runtime,
-or historical evidence boundaries, retrieve each applicable owner and preserve
-their separate claims during reconciliation.
+[`core-model.md`](core-model.md#authority-follows-the-question) and its
+[`Evidence Classification Invariant`](core-model.md#evidence-classification-invariant)
+before using the evidence hierarchy below. The core model owns those semantic
+requirements; this document owns repository retrieval triggers, source
+ordering, verification gates, and recovery mechanics. The hierarchy orders
+evidence for a claim only after the source that owns that kind of fact has been
+identified; it is not a global system-of-record ranking. When a question spans
+planning, repository, runtime, or historical evidence boundaries, retrieve
+each applicable owner and preserve their separate claims during
+reconciliation.
 
 ## Evidence Hierarchy
 

@@ -32,9 +32,10 @@ boundaries materially affect the outcome:
 8. After consequential change, retrieve the resulting state and reconcile any
    separately owned system only when its workflow requires it.
 
-Keep the current phase and next permitted action legible when they affect human
-review or workflow authority. This is observable workflow state, not a request
-for private reasoning or a universal phase machine.
+Apply the core model's
+[`Operator Observability`](core-model.md#operator-observability) guidance when
+an execution-state transition materially affects human review, workflow
+authority, or subsequent behavior.
 
 ### Connector availability is runtime evidence
 

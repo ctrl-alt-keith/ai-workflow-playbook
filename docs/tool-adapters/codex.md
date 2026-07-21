@@ -342,11 +342,12 @@ as though the reviewer performed that verification.
 
 ## Workflow-State Progress Rendering
 
-This is the Codex rendering of the general principle to make material phases
-and next permitted actions legible; it does not redefine that principle. For
-material proposal-first or multi-stage work, report observable workflow state
-instead of narrating model activity. Keep updates concise and include only what
-helps the human understand or verify the current boundary:
+This is the Codex rendering of the core model's
+[`Operator Observability`](../core-model.md#operator-observability) guidance; it
+does not redefine that guidance. For material proposal-first or multi-stage
+work, report observable workflow state instead of narrating model activity.
+Keep updates concise and include only what helps the human understand or verify
+the current boundary:
 
 - current phase and exact artifact identities;
 - satisfied prerequisites and the evidence that satisfied them;

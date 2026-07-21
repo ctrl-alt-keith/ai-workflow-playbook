@@ -34,16 +34,49 @@ ordinary chat, brainstorming, or conceptual discussion procedural.
   authority sensitivity, and irreversibility. Small, obvious, reversible work
   should not inherit unnecessary ceremony. Repository proposal-first delivery
   remains owned by [`feature-lifecycle.md`](feature-lifecycle.md).
-- **Make the phase and next permitted action legible when they matter.** Report
-  observable decisions, artifacts, unmet criteria, and transition boundaries
-  instead of narrating internal activity. Do not impose a universal phase
-  machine on simple work.
 - **Validate or verify before relying on consequential conclusions.** Choose
   checks that match the claim and risk. Passing validation is evidence about
   what was checked; it is not acceptance, approval, or broader authority.
 - **Re-observe resulting reality after consequential change.** Retrieve the
   actual outcome instead of assuming the planned effect occurred, then
   reconcile separately owned systems only when their workflows require it.
+
+## Evidence Classification Invariant
+
+Before drawing a material conclusion, identify the source authoritative for
+that conclusion and classify each relied-on input by its relationship to that
+source. Use the evidence classes that fit the question rather than imposing a
+fixed taxonomy.
+
+Distinguish authoritative state from artifacts derived from it. Reports,
+dashboards, receipts, summaries, caches, and other derived artifacts may be
+evidence of their own production or preserved history, but they must be
+validated against the authoritative source before supporting a conclusion
+about the state they represent. A derived artifact must never become evidence
+for the authoritative state it summarizes.
+
+This is a semantic execution invariant, not a prompt-writing convention.
+Repository retrieval triggers, source ordering, verification gates, and
+recovery mechanics remain owned by
+[`source-first-retrieval.md`](source-first-retrieval.md).
+
+## Operator Observability
+
+During consequential work, surface meaningful operational state transitions
+when they materially change subsequent execution. The update should let the
+operator understand the state entered and why that state changes what may
+happen next.
+
+Relevant transitions can include establishing an operating mode, selecting a
+work classification, identifying governing contracts, setting an evidence
+boundary or authoritative source, selecting a validation strategy, completing
+validation, becoming ready to mutate repository state, or encountering a
+blocker. These are examples, not a required phase list or reporting taxonomy.
+
+Do not require every transition to be reported, prescribe exact wording or a
+logging style, narrate hidden deliberation, or expose or request private
+chain-of-thought. Operator observability reports execution state and its
+behavioral consequence; it does not report internal reasoning.
 
 ## Authority Follows The Question
 
