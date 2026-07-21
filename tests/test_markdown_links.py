@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from collections import Counter
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 import unittest
 from urllib.parse import unquote
 
@@ -47,20 +47,31 @@ def markdown_lines_outside_fences(path: Path) -> list[tuple[int, str]]:
 
 def github_heading_anchors(path: Path) -> set[str]:
     anchors: set[str] = set()
-    occurrences: Counter[str] = Counter()
     for _, line in markdown_lines_outside_fences(path):
         match = HEADING_RE.match(line)
         if not match:
             continue
         heading = HTML_TAG_RE.sub("", match.group(1)).lower()
         base = PUNCTUATION_RE.sub("", heading).replace(" ", "-")
-        suffix = occurrences[base]
-        anchors.add(base if suffix == 0 else f"{base}-{suffix}")
-        occurrences[base] += 1
+        anchor = base
+        suffix = 0
+        while anchor in anchors:
+            suffix += 1
+            anchor = f"{base}-{suffix}"
+        anchors.add(anchor)
     return anchors
 
 
 class MarkdownLinkTests(unittest.TestCase):
+    def test_heading_anchors_remain_unique_when_generated_suffix_is_occupied(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            document = Path(temp_dir) / "headings.md"
+            document.write_text("# Foo\n# Foo-1\n# Foo\n", encoding="utf-8")
+
+            anchors = github_heading_anchors(document)
+
+        self.assertEqual(anchors, {"foo", "foo-1", "foo-2"})
+
     def test_local_links_and_heading_fragments_resolve(self) -> None:
         failures: list[str] = []
         anchors_by_path: dict[Path, set[str]] = {}
