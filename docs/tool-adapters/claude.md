@@ -58,15 +58,18 @@ visible actions; those remain human-gated (see
 
 ## Command Execution
 
-Claude runs shell commands through the `Bash` tool in a persistent shell
-session, so it cannot select the argv / `shell=false` execution some executors
-offer. Still follow the
+Claude executes Bash commands as separate processes. In the main session,
+working-directory changes may carry over within the project or explicitly added
+directories, but shell environment changes such as `export`, `source`, aliases,
+and virtual-environment activation do not persist between calls; subagent
+working-directory changes do not persist. Keep commands self-contained and
+follow the
 [command-form rule](../repo-readiness.md#command-form-and-intent-visibility):
 run ordinary repository operations in direct, single-purpose form (`git status`,
-`gh pr view <n>`, `make check`), and do not wrap them in extra `bash -lc`,
-aliases, or compound-shell layers that hide intent. Claude 4.x issues `Bash`
-calls in parallel; keep parallel calls to independent read-only inspection and
-never parallelize mutating Git or overlapping worktree operations.
+`gh pr view <n>`, `make check`) rather than wrapping them in extra `bash -lc`,
+aliases, or compound-shell layers that hide intent. Claude may issue independent
+tool calls in parallel; keep parallel calls to independent read-only inspection
+and never parallelize mutating Git or overlapping worktree operations.
 
 Isolation comes from the permission model and the working directory or Git
 worktree, not from a writable-root sandbox. Keep durable artifacts in the
@@ -82,12 +85,13 @@ Apply the one-repository, one-branch, one-worktree, one-PR rule and
 repo-changing worktrees with direct `git worktree add` naming the full
 `.worktrees/<task-name>` path.
 
-Claude subagents (`Task` tool) run in a separate context window and do not
-inherit the parent conversation, so give each one a complete, self-contained
-envelope: repository and working directory, interaction mode and deliverable,
-goal, scope and exclusions, source evidence or retrieval instructions,
-validation path, and stop conditions (this is the standalone-worker requirement
-in
+Non-fork Claude subagents (`Task` tool) start with a separate context and do not
+receive the parent conversation history or files the parent previously read, so
+give each one a complete, self-contained envelope rather than relying on implicit
+conversational context: repository and working directory, interaction mode and
+deliverable, goal, scope and exclusions, source evidence or retrieval
+instructions, validation path, and stop conditions (this is the standalone-worker
+requirement in
 [`orchestration-and-parallelism.md`](../orchestration-and-parallelism.md)).
 Worker authority stops at the envelope; a worker must not merge, enable
 auto-merge, update other branches, or continue into downstream reconciliation
@@ -157,5 +161,6 @@ permissions-sensitive.
 Behavioral claims above are grounded in official Anthropic documentation,
 including [memory](https://docs.claude.com/en/docs/claude-code/memory),
 [permissions](https://code.claude.com/docs/en/permissions),
+[the tools reference](https://code.claude.com/docs/en/tools-reference),
 [subagents](https://docs.claude.com/en/docs/claude-code/sub-agents), and
 [worktrees](https://code.claude.com/docs/en/worktrees).
