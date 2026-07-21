@@ -201,6 +201,18 @@ recommendations, and "what changed?" or "what next?" requests:
 ### Required Repository Invariants
 
 - `ai-workflow-playbook` is the canonical source for reusable workflow rules.
+- Successful repository hydration is a mode transition, not only an
+  information-retrieval event. After the required repository startup contract
+  succeeds, repository operating mode remains active for the rest of the
+  repository work. Plans, reviews, implementation prompts, validation
+  summaries, completion reports, and other artifacts must continue to use the
+  repository-native conventions established by the governing repository
+  sources without requiring the human to restate them. This invariant does not
+  freeze a specific template or layout; the canonical artifact conventions may
+  evolve. Repository operating mode ends only when the interaction clearly
+  leaves repository work or the human explicitly requests a different artifact
+  style. Moving to another repository requires applying that repository's
+  startup contract before assuming its native conventions.
 - `docs/prompt-contracts.md` and its versioned machine-readable companions own
   shared prompt-contract meaning; implementing repositories own operational
   schemas, hydration, rendering, receipts, and validation code.

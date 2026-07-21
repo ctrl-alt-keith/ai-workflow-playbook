@@ -98,6 +98,12 @@ results in a pull request. When delegated work will modify a repository, the
 default expected deliverable is a reviewable pull request unless another
 artifact is explicitly requested.
 
+Every delegated repository implementation prompt must explicitly identify the
+target repository, even when the repository appears obvious from the working
+directory or conversational context. Repository identity is part of the task's
+scope and authority boundary; do not leave it implicit or rely on inherited
+context to supply it.
+
 Include:
 
 - repository and working directory
