@@ -131,12 +131,72 @@ For repository workflows:
    current state.
 8. Treat any source that could not be checked as unknown or unverified.
 
+### Existing Checkout Freshness And Bounded Recovery
+
 Before beginning work in an existing local repository or worktree, reconcile
-the local checkout with the repository's current GitHub default branch. Do not
-assume an existing clone or worktree reflects authoritative repository state;
-treat local repositories as cached working copies that may require
-synchronization. This principle intentionally does not prescribe a specific Git
-command or implementation sequence.
+the local checkout with the repository's current GitHub default branch. Treat
+stale local repository state as a recoverable cached-state condition, not by
+itself as a reason to abandon local inspection. A clean working tree or a
+cached remote-tracking ref does not prove that the checkout reflects current
+hosted GitHub state.
+
+Use this bounded recovery sequence before falling back to hosted-only
+inspection:
+
+1. Before using local Git or `gh` to contact GitHub, verify the active
+   authentication state with `gh auth status`. The authentication check does
+   not make any local or remote ref fresh. If active authentication cannot be
+   verified, report that limitation and use another permitted source or leave
+   the affected claims blocked.
+2. Identify the current hosted default branch, then inspect the checked-out
+   working tree, current branch, configured remotes, upstream configuration,
+   and divergence. Keep observations about the working tree and cached
+   remote-tracking refs separate from claims about GitHub.
+3. When repo-local policy permits synchronization, select the smallest
+   non-destructive action that can restore a useful inspection surface. A
+   bounded safe synchronization attempt may fetch current remote refs, prune
+   stale remote-tracking refs, fast-forward an eligible clean local branch, or
+   use another repository-documented non-destructive synchronization command.
+   Reinspect the worktree, branch, upstream, and divergence after the attempt.
+4. If repository shell or zsh wrappers interfere with sandbox permissions or
+   command execution, direct `git` and `gh` commands without repository shell
+   wrappers are permitted for this recovery path. Follow the command-form and
+   execution-layer guidance in
+   [`repo-readiness.md`](repo-readiness.md#command-form-and-intent-visibility)
+   and the matching tool adapter.
+
+This recovery path does not authorize destructive or unrelated mutation merely
+to obtain freshness. Unless the explicit task or repo-local policy separately
+authorizes the operation, do not:
+
+- discard uncommitted changes or local commits;
+- reset a branch or rewrite history;
+- switch branches;
+- overwrite files to force synchronization; or
+- alter remote configuration.
+
+If safe synchronization cannot be completed, preserve the checkout and report
+the blocker. Fall back to a freshly fetched remote ref or current hosted GitHub
+state only for claims that source can support. A cached remote-tracking ref may
+still describe last-known local state, but it must not be presented as current
+without a successful fetch in the current recovery attempt.
+
+Keep these evidence surfaces explicit when the distinction matters:
+
+- **Checked-out working tree:** the files and `HEAD` inspected in the local
+  worktree.
+- **Cached remote-tracking ref:** the last locally recorded remote state before
+  a successful fetch in the current recovery attempt.
+- **Freshly fetched remote ref:** the remote state and commit identity recorded
+  by a successful fetch in the current recovery attempt.
+- **Current hosted GitHub state:** state inspected directly from GitHub, which
+  may change after a fetch and owns hosted metadata such as the current default
+  branch, pull requests, issues, checks, and reviews.
+
+Successfully refreshing a checkout restores an inspection surface only. It
+does not independently authorize implementation, file edits, history changes,
+branch changes, or broader repository mutation. Repo-local `AGENTS.md` and
+other repo-local policy may narrow or replace these shared recovery defaults.
 
 When a material prompt is governed by the versioned semantics in
 [`prompt-contracts.md`](prompt-contracts.md), source-first retrieval still
