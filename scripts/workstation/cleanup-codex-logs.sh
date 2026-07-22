@@ -94,6 +94,9 @@ list_codex_processes() {
       if (lower !~ /codex/) {
         next
       }
+      if (lower ~ /\/codexbar[.]app\//) {
+        next
+      }
       if (lower ~ /cleanup-codex-logs[.]sh/) {
         next
       }
