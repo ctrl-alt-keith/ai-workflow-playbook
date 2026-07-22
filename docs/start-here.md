@@ -240,10 +240,10 @@ recommendations, and "what changed?" or "what next?" requests:
 ### Conditional Repository Guidance
 
 Read `docs/maintenance-automations.md` only when repository work touches
-recurring automation design or review, automation prompt authoring, fleet-wide
-maintenance, governance or drift automation, scheduled inspection or
-correction, autonomous-maintenance architecture, or automation authority,
-evidence, scope, and safety contracts.
+recurring automation design or review, execution-locality classification,
+automation prompt authoring, fleet-wide maintenance, governance or drift
+automation, scheduled inspection or correction, autonomous-maintenance
+architecture, or automation authority, evidence, scope, and safety contracts.
 
 Read `docs/ai-workflow-ecosystem.md`,
 `docs/repo-to-repo-interface-contracts.md`, and

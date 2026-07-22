@@ -161,6 +161,65 @@ repository change is proposed. Report-only or cross-repository runs should use
 the workspace's designated durable operational-record location. Runtime output
 paths and notification routing remain local configuration.
 
+## Execution Locality
+
+Execution locality answers where a recurring capability can execute correctly.
+Classify it by asking:
+
+> Which environment owns the facts, resources, and mutation surfaces required
+> for correct execution?
+
+Use one of three locality classes:
+
+- **Local**: use local execution when correctness depends on workstation-owned
+  state or resources, such as local branches or worktrees, scheduler
+  configuration or runtime history, automation memory, machine-specific files,
+  paths, credentials, or caches, or state that cannot be reconstructed safely
+  in a clean hosted runtime.
+- **Hosted**: prefer hosted execution when authoritative inputs are repository
+  or provider state; execution can begin from a clean checkout or clean hosted
+  environment; identity and secrets can be provisioned explicitly; outputs can
+  use normal hosted evidence and review surfaces; and correct conclusions do
+  not depend on unobserved workstation state. GitHub Actions is one example of
+  a hosted executor, not the abstraction itself.
+- **Hybrid**: use hybrid as a decomposition signal when a capability spans
+  local and hosted authority domains. Split it into separately authoritative
+  local and hosted components rather than creating one job that ambiguously
+  mixes domains. Each component makes claims only about state its environment
+  owns, does not infer the other environment's live state, and produces
+  independently attributable evidence. Reconciliation must preserve unknowns,
+  unequal freshness, and disagreements.
+
+Locality and authority class are independent axes. Locality answers where the
+capability can execute correctly; the authority class above answers what the
+capability may do. For example:
+
+| Capability | Locality | Authority class |
+| --- | --- | --- |
+| Memory review | Local | Observe and report |
+| Local branch cleanup | Local | Perform bounded hygiene |
+| Repository validation | Hosted | Observe and report |
+| Documentation correction | Hosted | Propose review-ready changes |
+| Governance review spanning hosted and workstation state | Hybrid | Observe and report |
+
+Evidence must support the selected locality as well as the capability result:
+
+- **Local evidence** identifies the local configuration identity and scope, the
+  actual scheduler evidence available, workstation resources relied upon, and
+  skipped or unknown state. It also records mutation and recovery evidence
+  where applicable.
+- **Hosted evidence** identifies the repository and tested revision, run and
+  trigger, executing identity, permissions used, result, logs or artifacts and
+  their retention, and skipped or inaccessible hosted scope.
+- **Hybrid evidence** keeps separate local and hosted evidence packages. It may
+  use a correlation identity, but it must not infer across domains and must
+  reconcile disagreements or unequal freshness explicitly.
+
+Reports, receipts, dashboards, and other derived artifacts do not become
+authority for the mutable state they summarize; apply the evidence
+classification invariant in
+[`core-model.md`](core-model.md#evidence-classification-invariant).
+
 ## Repository Autonomy
 
 The layer preserves repository autonomy by applying shared expectations through
@@ -215,6 +274,7 @@ Canonical playbook doctrine owns:
 - the existence and purpose of the autonomous maintenance layer
 - its responsibility and non-responsibility boundaries
 - its authority classes, stop conditions, and evidence contract
+- its execution-locality classes and classification invariants
 - its relationship to doctrine, executors, repositories, contracts, and human
   approval
 - its self-review and drift expectations
