@@ -122,6 +122,73 @@ When a setting cannot be represented in repo files or changed from the current
 execution context, record it as a manual or org-admin follow-up. Do not pretend a
 docs PR enforced a hosted setting.
 
+## Manual Hosted Settings Change Gate
+
+An authorized manual or org-admin change to a setting-sensitive hosted control
+is incomplete until the operator retrieves the resulting hosted state and runs
+a scoped governance audit against the affected repository. This is a mandatory
+post-change gate, not automatic remediation and not authorization to make the
+change. A successful audit verifies the resulting state; it does not supply the
+approval that the mutation required.
+
+Apply this gate when changing repository visibility, the default branch, branch
+protection or rulesets, required pull requests or status checks, strict
+up-to-date requirements, review counts or administrator bypass, force-push or
+deletion controls, merge methods, auto-merge, delete-branch-on-merge, Actions
+enablement where governed, or Dependabot settings where governed. Unrelated
+repository changes do not trigger this procedure.
+
+Use this order:
+
+1. Before mutation, declare the target repository, intended setting change,
+   operator or authorizing context when available, authoritative central-policy
+   ref, target repository governance ref, and planned evidence names. Confirm
+   that the operator is authorized to make the hosted change.
+2. Perform only the authorized mutation, then retrieve the affected settings
+   from the hosting provider again. Preserve that raw resulting-state response;
+   do not treat the mutation request or its success response as proof of the
+   resulting state.
+3. Check out the `ai-workflow-enforcement` ref containing the authoritative
+   central repository-settings policy and scanner, and resolve that ref to its
+   commit SHA. Use an explicit, freshly resolved ref such as `origin/main`, not
+   an unidentified working tree.
+4. From that exact enforcement checkout, run the existing read-only scanner
+   against the affected repository and its explicit governance source ref:
+
+   ```console
+   python3 -m enforcement.repo_settings_audit --repo <owner/repo> --source-ref main --output-format json --fail-on-drift --fail-on-error
+   ```
+
+   Add `--repo-root <path>` only when local-source comparison is also intended.
+   Preserve the complete JSON stdout without filtering it and record the
+   scanner's exit status. The scanner resolves the target governance ref before
+   fetching its source files; use the `source_sha` reported by that run in the
+   receipt rather than resolving a mutable ref again afterward.
+5. Fail the completion gate if resulting-state retrieval is incomplete, the
+   scanner exits nonzero, the hosted summary contains any drift or unknown
+   result, or the report contains any error or incomplete coverage. Resolve the
+   problem and repeat hosted-state retrieval and the scoped audit; do not waive
+   or hide a finding in the completion receipt.
+
+Append evidence by creating a new uniquely timestamped set under the existing
+workspace `logs/repo-governance-audit/` directory. Do not replace or edit prior
+evidence. Use names that keep the repository and run together, for example:
+
+- `<UTC timestamp>-<repo>-post-change-hosted-state.json` for the raw resulting
+  hosted-state retrieval
+- `<UTC timestamp>-<repo>-post-change-audit.json` for the scanner's complete
+  JSON output
+- `<UTC timestamp>-<repo>-post-change-receipt.md` for the completion receipt
+
+The receipt must identify the repository and mutation, operator or authority
+context when supported, central-policy ref and resolved enforcement SHA, target
+governance source ref and resolved source SHA, audit start and finish times,
+hosted summary, scanner exit status, and the identities or paths of the raw
+hosted-state and audit artifacts. Keep the full findings and errors in the raw
+audit artifact and link it from the receipt. Link any earlier evidence that the
+change supersedes or follows so the new receipt extends the history instead of
+obscuring it.
+
 ## Propagation Targets
 
 A repo-awareness refresh should inspect these target families and update only
