@@ -69,6 +69,9 @@ The first core module is delivery. Additional workflow families may be added lat
 
 - [`docs/start-here.md`](docs/start-here.md): task-neutral startup routing and
   conditional repository workflow entry point
+- [`docs/architecture-foundation-candidate.md`](docs/architecture-foundation-candidate.md):
+  non-authoritative candidate under adversarial review; not current Playbook
+  doctrine
 - [`docs/repo-to-repo-interface-contracts.md`](docs/repo-to-repo-interface-contracts.md): lightweight pattern for documenting producer/consumer boundaries
 - [`docs/cross-repo-glossary.md`](docs/cross-repo-glossary.md): qualified cross-repository architecture vocabulary
 - [`docs/ai-workflow-ecosystem.md`](docs/ai-workflow-ecosystem.md): conceptual overview of the repository ecosystem, retained-knowledge boundaries, and architectural direction
