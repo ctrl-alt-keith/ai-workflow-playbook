@@ -175,8 +175,9 @@ accountable for a decision without being responsible for implementation.
 
 **Authoritative question.** A bounded question whose controlling answer is
 assigned to a defined authority within a stated scope and time. It is narrower
-than a universal source of truth. A source repository may answer what code is
-present while a planning owner answers why the work is prioritized.
+than a universal source of truth. A source-control governance process may
+determine what code is accepted while a planning owner decides why the work is
+prioritized.
 
 **Execution.** Performance of an action. Execution may exercise capability
 under authorization, but successful execution does not establish authority,
@@ -198,12 +199,11 @@ Operating a product does not automatically make the operator its customer,
 consumer, authority, or beneficiary. Those roles must be assigned separately
 when the distinction matters.
 
-**Product identity.** An architectural hypothesis organized around a customer
-outcome, one or more bounded authoritative questions, owned evidence or
-contracts, stable non-goals, and a meaningful lifecycle. It is the neutral
-genus for proposed, candidate, enduring, rejected, and superseded identities.
-A repository, service, team, interface, or brainstorm does not establish that
-the hypothesis has passed the conceptual test.
+**Product identity.** An architectural identity proposed for evaluation. It is
+the neutral genus for proposed, candidate, enduring, rejected, and superseded
+identities; qualification belongs to the conceptual and operational tests
+below. A repository or service label may suggest a product identity without
+showing that it qualifies as a product candidate.
 
 **Product.** A product identity that has passed the conceptual test: either a
 product candidate or an enduring product. The bare term does not state whether
@@ -582,8 +582,10 @@ deferred:
   minimum for product promotion;
 - whether the operational-evidence threshold should vary by product or risk
   class;
-- when interdiction authority establishes an independent product outcome and
-  lifecycle rather than a privileged subsystem;
+- whether execution locality, interdiction authority, or related execution
+  boundaries constitute an architectural identity axis supporting an
+  independent product identity, or instead remain properties of privileged
+  subsystems;
 - whether horizontal read-only conformance evidence is a product or a
   capability owned elsewhere;
 - whether credential or trust ceilings become products or remain governance
