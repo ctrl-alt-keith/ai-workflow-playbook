@@ -132,11 +132,11 @@ multiple authoritative files.
 
 ## Product Identity Taxonomy
 
-The bare term **product** names the general architectural identity being
-evaluated. Qualification and promotion establish its current status:
+**Product identity** is the neutral genus for the architectural hypothesis
+being evaluated. Qualification and promotion establish its current status:
 
 ```text
-proposed identity
+proposed product identity
   -> passes the conceptual test
 product candidate
   -> passes the accepted operational-evidence standard
@@ -144,17 +144,19 @@ product candidate
 enduring product
 ```
 
-A rejected identity or superseded identity is a historical disposition. It is
-not necessarily a current product. The prior evidence and decision remain part
-of the record even when the identity no longer qualifies.
+The bare term **product** applies to a product candidate or enduring product;
+it does not turn an unqualified brainstorm into a product. A rejected identity
+or superseded identity is a historical disposition, not necessarily a current
+product. The prior evidence and decision remain part of the record even when
+the identity no longer qualifies.
 
 ## Shared Definitions
 
 **Authority.** Legitimate power for an answer or decision to control within a
 defined scope. Authority is distinct from authorization, capability, technical
-access, responsibility, accountability, and execution. A repository may
-control what source is accepted without authorizing a particular actor to
-merge a change.
+access, responsibility, accountability, and execution. A
+repository-governance authority may control what source is accepted without
+authorizing a particular actor to merge a change.
 
 **Authorization.** Permission for an actor to perform a particular action under
 stated conditions. Authorization is narrower than authority and does not
@@ -196,24 +198,30 @@ Operating a product does not automatically make the operator its customer,
 consumer, authority, or beneficiary. Those roles must be assigned separately
 when the distinction matters.
 
-**Product.** The general architectural identity organized around a customer
+**Product identity.** An architectural hypothesis organized around a customer
 outcome, one or more bounded authoritative questions, owned evidence or
-contracts, stable non-goals, and a meaningful lifecycle. The bare term does
-not imply that the identity has passed the conceptual test or been promoted as
-enduring; state the identity status when it matters. A repository, service,
-team, or interface does not become a product merely by being separately named.
+contracts, stable non-goals, and a meaningful lifecycle. It is the neutral
+genus for proposed, candidate, enduring, rejected, and superseded identities.
+A repository, service, team, interface, or brainstorm does not establish that
+the hypothesis has passed the conceptual test.
 
-**Product candidate.** A proposed product identity that passes the conceptual
-test but has not received product promotion to enduring status. It has an
-independently recognizable customer and outcome, distinct authoritative
-question or questions, owned evidence, stable non-goals, and a
-replacement-resistant identity. A memorable name or proposed control plane
-without independent demand is not a product candidate.
+**Product.** A product identity that has passed the conceptual test: either a
+product candidate or an enduring product. The bare term does not state whether
+product promotion has occurred. A proposed product identity that has not
+passed the test is not yet a product.
 
-**Enduring product.** A product whose outcome and authority boundary survive
-implementation replacement and have been shown by real operation to remain
-load-bearing under the accepted promotion standard. The definition does not
-select the disputed one-use or two-use evidence threshold.
+**Product candidate.** A product identity that passes the conceptual test but
+has not received product promotion to enduring status. It has an independently
+recognizable customer and outcome, distinct authoritative question or
+questions, owned evidence, stable non-goals, and a replacement-resistant
+identity. A memorable name or proposed control plane without independent
+demand is not a product candidate.
+
+**Enduring product.** A product candidate whose outcome and authority boundary
+survive implementation replacement, have been shown by real operation to
+remain load-bearing under the accepted promotion standard, and receive
+explicit human product promotion. The definition does not select the disputed
+one-use or two-use evidence threshold.
 
 **Subsystem.** A cohesive internal component that contributes to a product
 outcome without owning an independent customer outcome or final authoritative
@@ -338,14 +346,16 @@ the threshold and identity-axis disagreements as explicit human decisions.
 
 ### Candidate test: conceptual irreducibility
 
-A proposed identity must satisfy all of the following to become a product
-candidate:
+A proposed product identity must satisfy all of the following to become a
+product candidate:
 
 1. **Independent customer and outcome:** name a customer who would still
    request the outcome if adjacent products and current implementations were
    removed.
-2. **Exclusive authoritative question or questions:** an adjacent product must
-   not answer the bounded controlling question on the candidate's behalf.
+2. **Owned authoritative question or questions:** the candidate owns the
+   controlling answer within the defined scope. An adjacent product may
+   exercise explicitly delegated authority, but must not absorb, override, or
+   become the default owner of that question within the same scope.
 3. **Owned durable evidence:** artifacts or contracts would be semantically
    misplaced under an adjacent product.
 4. **Stable non-goal:** the identity includes a consequential boundary it must
@@ -357,6 +367,9 @@ The candidate cannot pass by inventing an internal customer, declaring a
 self-defined consumer, treating its own contract as proof of demand, or
 staging cosmetically varied demonstrations. A contract may support semantic
 ownership; it does not prove that an independent customer values the outcome.
+Delegation permits bounded exercise without transferring authority ownership;
+it does not grant unrelated authorization, make execution authoritative, or
+replace consumer acceptance.
 
 Passing this test establishes product-candidate status. It does not establish
 an enduring product.
@@ -372,9 +385,10 @@ First distinguish:
   policy, or identity-axis question requiring an explicit human ruling.
 
 **Deferred** is an adjudication status, not a product identity or maturity
-status. An identity may remain proposed or candidate while its adjudication is
-deferred. More ordinary operation does not resolve a deferred question unless
-the human ruling first identifies a specific observation that would matter.
+status. An identity may remain a proposed product identity or product candidate
+while its adjudication is deferred. More ordinary operation does not resolve a
+deferred question unless the human ruling first identifies a specific
+observation that would matter.
 
 ### Evidence test: load-bearing operation
 
@@ -419,12 +433,14 @@ varied use supplies the minimum evidence of repetition. Whether one
 transaction is sufficient, whether two uses are sufficient, and whether the
 threshold varies by risk class remain explicit human doctrine decisions.
 
-### Identity dispositions
+### Product identity dispositions
 
-- **Product candidate:** passes the conceptual test but has not received
-  product promotion.
-- **Enduring product:** passes the accepted operational-evidence standard and
-  receives explicit human product promotion.
+- **Proposed product identity:** an architectural hypothesis that has not yet
+  passed the conceptual test.
+- **Product candidate:** a product identity that passes the conceptual test but
+  has not received product promotion.
+- **Enduring product:** a product candidate that passes the accepted
+  operational-evidence standard and receives explicit human product promotion.
 - **Rejected identity:** fails the conceptual test, or real operation shows
   that its outcome and lifecycle belong naturally to another product.
 - **Superseded identity:** a later identity or materially different boundary
@@ -507,15 +523,15 @@ Each transition changes what is authoritative now. It must preserve the prior
 evidence and decision record, state why current authority changed, and avoid
 rewriting the guidance's historical status.
 
-## Bare Product Entry
+## Bare Product Identity Entry
 
-A future product entry should contain only the identity and authority needed to
-evaluate it before implementation:
+A future product-identity entry should contain only the identity and authority
+needed to evaluate it before implementation:
 
 ```markdown
-# [Product name]
+# [Product identity name]
 
-Identity status: [proposed | candidate | enduring | rejected | superseded]
+Product identity status: [proposed | candidate | enduring | rejected | superseded]
 Adjudication status: [active | deferred | resolved]
 
 ## Enduring Outcome
@@ -523,7 +539,7 @@ Adjudication status: [active | deferred | resolved]
 
 ## Authoritative Questions
 [The primary bounded controlling question and any supporting questions this
-product answers.]
+identity would answer.]
 
 ## Authority Owned
 [Decisions or transitions it may make, plus authority that remains elsewhere.]
