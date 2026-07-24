@@ -153,8 +153,8 @@ Architecture Foundation into doctrine.
 
 - **Product Candidate**: a Product identity that has passed the conceptual test
   but has not received explicit human promotion to Enduring Product. The
-  required first-reference status distinction remains subject to the
-  ratification boundary recorded in the Constitutional Vocabulary Guide.
+  required first-reference status distinction is ratified in the
+  [`Human Constitutional Terminology Ratification Decision`](constitutional-terminology-ratification-decision.md).
 - **Enduring Product**: a Product Candidate whose outcome and authority
   boundary have satisfied the accepted operational standard and received
   explicit human Product promotion.
@@ -171,15 +171,15 @@ Architecture Foundation into doctrine.
 Infrastructure used during a workflow is not automatically the product or
 repository-owned state.
 
-### Semantic Producer
+### Semantic Contract Producer
 
-A Semantic Producer is the Product or other typed identity responsible for
-shared contract meaning, emission semantics, and compatible evolution.
+A Semantic Contract Producer is the Product or other typed identity responsible
+for shared contract meaning, emission semantics, and compatible evolution.
 
 The normative contract may currently live in the producer implementation
 repository, but that location does not make the repository the constitutional
-owner of the contract's meaning. This distinction remains subject to the
-ratification boundary recorded in the Constitutional Vocabulary Guide.
+owner of the contract's meaning. This distinction is ratified in the
+[`Human Constitutional Terminology Ratification Decision`](constitutional-terminology-ratification-decision.md).
 
 ### Runtime Producer
 
@@ -197,8 +197,8 @@ Repository Authority is always question-typed. A repository and its hosted
 state control current files, implementation, review, validation, and merge
 facts. That authority does not become general Product or domain authority.
 
-The formal question-typed terminology remains subject to the ratification
-boundary recorded in the Constitutional Vocabulary Guide.
+The formal question-typed terminology is ratified in the
+[`Human Constitutional Terminology Ratification Decision`](constitutional-terminology-ratification-decision.md).
 
 ### Capability
 

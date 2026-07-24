@@ -6,6 +6,10 @@
 >
 > Authority: subordinate to current Playbook doctrine
 >
+> Ratification: the accepted
+> [Human Constitutional Terminology Ratification Decision](constitutional-terminology-ratification-decision.md)
+> records which terminology is ratified and which remains deferred
+>
 > Adoption boundary: inclusion in a reviewed Playbook change records adoption
 > as implementation guidance only. It is not doctrine promotion, Product
 > promotion, a new Product Model, an authority-boundary change, or automatic
@@ -397,7 +401,7 @@ Use operational verbs for operational actors:
 
 Execution does not create authority or approval.
 
-### 5. Separate Semantic Producer From Runtime Producer
+### 5. Separate Semantic Contract Producer From Runtime Producer
 
 A Product owns shared contract meaning. A component emits a conforming
 instance. A Repository hosts the contract and implementation.
@@ -614,7 +618,7 @@ This definition still requires human ratification. Until then, prefer a
 specific authority name such as "authorized human reviewer," "Repository merge
 authority," or "Product-promotion authority."
 
-### Semantic Producer Term
+### Semantic Contract Producer Term
 
 The Product identity responsible for shared contract meaning, emission
 semantics, and compatible evolution.
@@ -667,19 +671,24 @@ Link to it from:
 
 Repository-local documents should apply this guide, not fork or redefine it.
 
-## Completion And Ratification Boundary
+## Ratification Status
 
-The guide is complete enough to drive a focused documentation-alignment pass
-using consistent, mechanical language rules.
+The explicit human
+[Constitutional Terminology Ratification Decision](constitutional-terminology-ratification-decision.md)
+ratified:
 
-Before Repository-wide updates begin, explicit human ratification remains
-required for:
-
-1. the formal definition of **Governance Function**;
-2. the required first-reference distinction between **Product Candidate** and
+1. the required first-reference distinction between **Product Candidate** and
    **Enduring Product**;
-3. the formal **Semantic Producer** versus **Runtime Producer** distinction;
-4. the question-typed meaning of **Repository Authority**; and
-5. adoption and any future status of this guide itself.
+2. the formal **Semantic Contract Producer** versus **Runtime Producer**
+   distinction; and
+3. the question-typed meaning of **Repository Authority**.
 
-No Product promotion or architectural redesign follows from this guide.
+The decision deferred **Governance Function**. Until a later explicit human
+ratification decision, prefer a specific authority name such as "authorized
+human reviewer," "Repository merge authority," or "Product-promotion
+authority."
+
+The decision records accepted terminology as implementation guidance. It does
+not promote this guide into doctrine, make a Product Promotion Decision, or
+promote or modify the candidate Architecture Foundation. Repository-wide
+documentation alignment remains a separate implementation phase.
