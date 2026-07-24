@@ -9,8 +9,10 @@ central schema repository, shared library, or new approval gate.
 
 Apply the subject and authority rules in the
 [`Constitutional Vocabulary Guide`](constitutional-vocabulary-guide.md) when
-naming semantic producers, runtime producers, contract hosts, consumers,
-human authority, and repository implementation.
+naming Semantic Contract Producers, Runtime Producers, contract hosts,
+consumers, human authority, and repository implementation. The
+[`Human Constitutional Terminology Ratification Decision`](constitutional-terminology-ratification-decision.md)
+records the accepted terminology status.
 
 This is a documentation pattern, not a required file format. Use only the
 sections that clarify the real interface. A short section in an existing design
@@ -54,8 +56,8 @@ justify a shared library or centrally managed schema.
 - Put accepted versions, consumer-specific policy, and integration validation
   with each contract consumer, normally in its current implementation
   repository.
-- Link both sides explicitly and name the semantic producer that governs shared
-  semantics.
+- Link both sides explicitly and name the Semantic Contract Producer that
+  governs shared semantics.
 - Keep transport or orchestration responsibility separate when an operator or
   a third repository moves the artifact between producer and consumer.
 - Name the human authority when consequential approval, acceptance, retention,
@@ -174,8 +176,8 @@ library.
 
 - Does the contract describe the interface that exists, with links to current
   evidence, rather than a hoped-for abstraction?
-- Are the semantic producer, runtime producer, normative contract host,
-  consumer, transport, and any consequential human authority distinct?
+- Are the Semantic Contract Producer, Runtime Producer, normative contract
+  host, consumer, transport, and any consequential human authority distinct?
 - Can the consumer detect unsupported or stale input before unsafe use?
 - Are security, durability, and failure claims no stronger than implementation
   and validation evidence?

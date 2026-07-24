@@ -75,6 +75,9 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/constitutional-vocabulary-guide.md`](docs/constitutional-vocabulary-guide.md):
   implementation guidance for distinguishing Product authority, human
   governance authority, repository implementation, and runtime execution
+- [`docs/constitutional-terminology-ratification-decision.md`](docs/constitutional-terminology-ratification-decision.md):
+  accepted human governance decision recording ratified and deferred
+  constitutional terminology
 - [`docs/repo-to-repo-interface-contracts.md`](docs/repo-to-repo-interface-contracts.md): lightweight pattern for documenting producer/consumer boundaries
 - [`docs/cross-repo-glossary.md`](docs/cross-repo-glossary.md): qualified cross-repository architecture vocabulary
 - [`docs/ai-workflow-ecosystem.md`](docs/ai-workflow-ecosystem.md): conceptual overview of the repository ecosystem, retained-knowledge boundaries, and architectural direction
