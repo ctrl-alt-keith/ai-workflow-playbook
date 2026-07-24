@@ -7,6 +7,11 @@ behavior that another repository consumes. The contract should make ownership,
 compatibility, validation, and failure behavior reviewable without creating a
 central schema repository, shared library, or new approval gate.
 
+Apply the subject and authority rules in the
+[`Constitutional Vocabulary Guide`](constitutional-vocabulary-guide.md) when
+naming semantic producers, runtime producers, contract hosts, consumers,
+human authority, and repository implementation.
+
 This is a documentation pattern, not a required file format. Use only the
 sections that clarify the real interface. A short section in an existing design
 document is enough for a simple integration; a dedicated contract document is
@@ -19,9 +24,12 @@ The strongest current example is the
 [Trusted Network Registry schema contract](https://github.com/ctrl-alt-keith/trusted-network-registry/blob/main/docs/registry-schema.md)
 and its
 [`linode-image-lab` consumer contract](https://github.com/ctrl-alt-keith/linode-image-lab/blob/main/docs/trusted-registry-firewall-sync.md).
-The producer owns a versioned schema and public-safe fixture. The consumer
-declares the accepted version, carries a compatibility fixture through its real
-validation and planning path, and fails closed on invalid or stale input.
+The registry's semantic contract producer defines the versioned schema. The
+producer repository currently hosts the normative contract, implementation,
+and public-safe fixture. Its runtime producer emits a contract instance. The
+consumer declares the accepted version, carries a compatibility fixture through
+its real validation and planning path, and fails closed on invalid or stale
+input.
 
 The
 [`knowledge-adapters` Source Package Contract](https://github.com/ctrl-alt-keith/knowledge-adapters/blob/main/docs/source-package-contract.md)
@@ -29,28 +37,36 @@ adds proven patterns for semantic compatibility, required capabilities,
 integrity verification, immutable handoffs, and distinct producer and consumer
 responsibilities. Its
 [`knowledge-vault` consumer contract](https://github.com/ctrl-alt-keith/knowledge-vault/blob/main/docs/source-package-consumer-contract.md)
-keeps consumer policy local while linking back to the producer-owned normative
-contract. The bundle-to-destination and image-lab-to-LKE boundaries are lighter:
-they rely primarily on documented file or container/CLI behavior and local
-consumer validation. They do not yet justify a shared library or centrally
-managed schema.
+keeps consumer policy local while linking back to the normative contract
+currently hosted with the producer implementation. The bundle-to-destination
+and image-lab-to-LKE boundaries are lighter: they rely primarily on documented
+file or container/CLI behavior and local consumer validation. They do not yet
+justify a shared library or centrally managed schema.
 
-## Placement And Ownership
+## Semantic Ownership And Placement
 
-- Put the normative artifact shape and producer guarantees in the producer
-  repository, near the implementation, schema, fixture, or command that emits
-  them.
+- Name the semantic contract producer that owns shared meaning, emission
+  semantics, and compatible evolution.
+- Name the runtime producer that emits the artifact or performs the behavior.
+- Put the normative artifact shape and producer guarantees in an explicit
+  normative contract host, normally the producer repository near the
+  implementation, schema, fixture, or command that emits them.
 - Put accepted versions, consumer-specific policy, and integration validation
-  in each consumer repository.
-- Link both sides explicitly and name which side governs shared semantics.
-- Keep transport or orchestration ownership separate when an operator or a
-  third repository moves the artifact between producer and consumer.
+  with each contract consumer, normally in its current implementation
+  repository.
+- Link both sides explicitly and name the semantic producer that governs shared
+  semantics.
+- Keep transport or orchestration responsibility separate when an operator or
+  a third repository moves the artifact between producer and consumer.
+- Name the human authority when consequential approval, acceptance, retention,
+  publication, or another decision boundary is involved.
 - Put reusable guidance here in the playbook; do not move domain contracts into
   the playbook.
 
-Ownership of a contract means responsibility for its documented semantics. It
-does not transfer ownership of the consumer's policy, infrastructure, runtime,
-or downstream lifecycle.
+Semantic ownership of a contract means authority over its documented shared
+meaning. It does not transfer the consumer's policy, infrastructure, runtime,
+or downstream lifecycle. Hosting the normative contract or implementing either
+side does not create Product authority or consequential human approval.
 
 ## Lightweight Contract Template
 
@@ -65,11 +81,18 @@ Status: <draft, experimental, or stable>; version: <identifier if versioned>
 What crosses the boundary, why it exists, and where the interface begins and
 ends.
 
-## Participants And Ownership
-- Producer: <repository/component> owns <emission semantics>.
-- Consumer: <repository/component> owns <acceptance and use>.
-- Operator/orchestrator/transport: <only when applicable>.
-- Normative contract home: <producer-owned link or other explicit authority>.
+## Participants And Authority
+- Semantic contract producer: <Product or other typed identity> owns <shared
+  meaning, emission semantics, and compatible evolution>.
+- Runtime producer: <component or process> emits <artifact or behavior>.
+- Normative contract host: <repository-relative link or other explicit
+  location>.
+- Contract consumer: <Product or other typed identity> accepts <versions and
+  use> under <consumer-local policy>.
+- Consumer implementation: <repository, component, or process>.
+- Operator/orchestrator/transport: <responsibility only when applicable>.
+- Human authority: <consequential decision and authorized role, when
+  applicable>.
 
 ## Inputs And Outputs
 Required and optional inputs; emitted artifacts, API behavior, commands, or
@@ -100,10 +123,11 @@ authenticity guarantees, retention, immutability, and cleanup expectations.
 Responsibilities this interface deliberately does not acquire.
 ```
 
-For a simple file handoff, purpose, owners, input/output shape, validation,
-failure behavior, and non-goals may be the entire contract. Do not add a
-version field merely to complete the template; version only when compatibility
-needs to be negotiated or incompatible evolution must be detectable.
+For a simple file handoff, purpose, typed authority roles, input/output shape,
+validation, failure behavior, and non-goals may be the entire contract. Do not
+add a version field merely to complete the template; version only when
+compatibility needs to be negotiated or incompatible evolution must be
+detectable.
 
 ## Compatibility And Change Guidance
 
@@ -123,9 +147,10 @@ needs to be negotiated or incompatible evolution must be detectable.
 - Treat integrity, provenance, and authenticity as separate claims. A checksum
   can establish byte integrity without authenticating the producer or approving
   the content.
-- Coordinate incompatible changes across repositories, but keep each change in
-  its owning repository and PR. Land producer support before consumer opt-in
-  when ordering matters; preserve an overlap window when practical.
+- Coordinate incompatible changes across repositories, but keep each
+  implementation change in its current repository and PR. Land producer
+  support before consumer opt-in when ordering matters; preserve an overlap
+  window when practical.
 
 ## Recurring Convergence Is Not Compatibility
 
@@ -149,7 +174,8 @@ library.
 
 - Does the contract describe the interface that exists, with links to current
   evidence, rather than a hoped-for abstraction?
-- Are producer, consumer, and transport responsibilities distinct?
+- Are the semantic producer, runtime producer, normative contract host,
+  consumer, transport, and any consequential human authority distinct?
 - Can the consumer detect unsupported or stale input before unsafe use?
 - Are security, durability, and failure claims no stronger than implementation
   and validation evidence?

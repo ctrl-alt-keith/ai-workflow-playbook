@@ -6,8 +6,11 @@ Use these qualifiers when reasoning across repositories. The goal is not one
 universal definition for every domain. It is to prevent humans and AI agents
 from silently treating similar words as identical concepts.
 
-Repository-local contracts remain authoritative. When local usage is narrower
-or intentionally different, name the qualified meaning and link its source.
+Apply the subject, verb, and question-typed authority rules in the
+[`Constitutional Vocabulary Guide`](constitutional-vocabulary-guide.md).
+Repository-local sources control current repository-specific contract text and
+execution behavior. When local usage is narrower or intentionally different,
+name the qualified meaning and link its source.
 
 ## Terms
 
@@ -125,7 +128,8 @@ automatically the whole contract.
 
 ### Adapter
 
-An adapter translates one interface while preserving an owning boundary.
+An adapter translates one interface while preserving the governing semantic
+boundary.
 
 - **Source adapter**: acquires and normalizes external source material into
   provider-neutral candidate artifacts.
@@ -139,18 +143,62 @@ generic plugin system or ownership of both sides of the interface.
 
 ### Product
 
-A product is the bounded outcome a repository exists to provide, not every
-resource it touches.
+A Product is an architectural identity with a bounded customer outcome and
+authoritative question. Repository topology does not establish Product
+identity.
 
-- **Repository product boundary**: owned responsibilities, primary product
-  object, decision filter, and non-goals.
+The status terms below are implementation vocabulary. They do not classify a
+current identity, promote a Product Candidate, or promote the candidate
+Architecture Foundation into doctrine.
+
+- **Product Candidate**: a Product identity that has passed the conceptual test
+  but has not received explicit human promotion to Enduring Product. The
+  required first-reference status distinction remains subject to the
+  ratification boundary recorded in the Constitutional Vocabulary Guide.
+- **Enduring Product**: a Product Candidate whose outcome and authority
+  boundary have satisfied the accepted operational standard and received
+  explicit human Product promotion.
+- **Repository implementation**: the replaceable code, configuration,
+  operations, process, contracts, or evidence currently hosted by a
+  repository. A repository may host several Products, part of one Product, or
+  non-Product evidence.
 - **Product object**: the durable or reviewable outcome, such as an operational
   receipt or publication event.
 - **External provider product**: a third-party service or API; qualify it as a
-  provider product to avoid assigning its lifecycle to the repository.
+  provider product to avoid assigning its lifecycle to an implementing
+  repository.
 
 Infrastructure used during a workflow is not automatically the product or
 repository-owned state.
+
+### Semantic Producer
+
+A Semantic Producer is the Product or other typed identity responsible for
+shared contract meaning, emission semantics, and compatible evolution.
+
+The normative contract may currently live in the producer implementation
+repository, but that location does not make the repository the constitutional
+owner of the contract's meaning. This distinction remains subject to the
+ratification boundary recorded in the Constitutional Vocabulary Guide.
+
+### Runtime Producer
+
+A Runtime Producer is the component, command, adapter, service, or process that
+emits a contract instance. It performs producer-side behavior under the
+contract; successful emission does not create approval, retention, publication,
+or downstream decision authority.
+
+Do not infer semantic ownership merely because the runtime producer is the
+first or only implementation.
+
+### Repository Authority
+
+Repository Authority is always question-typed. A repository and its hosted
+state control current files, implementation, review, validation, and merge
+facts. That authority does not become general Product or domain authority.
+
+The formal question-typed terminology remains subject to the ratification
+boundary recorded in the Constitutional Vocabulary Guide.
 
 ### Capability
 

@@ -9,6 +9,12 @@ policy, a vendor commitment, or a finalized architecture specification. It
 describes the intended shape of the system so repository work can stay aligned
 while the details continue to evolve.
 
+Use the
+[`Constitutional Vocabulary Guide`](constitutional-vocabulary-guide.md) when
+distinguishing Product authority, human governance authority, repository
+implementation, and runtime execution in this overview or repository-local
+documentation.
+
 ## Purpose
 
 The ecosystem exists to make model-assisted operations inspectable,
@@ -30,45 +36,50 @@ The system should make it possible to ask where knowledge came from, how it was
 processed, who reviewed it, where the retained version lives, and which
 workflow rule governs the next action.
 
-## Repository Roles
+## Current Repository Implementation Roles
 
-The repositories are intentionally small and role-specific. Their boundaries
-may sharpen over time, but the current conceptual split is:
+The repositories are intentionally small and their current implementation
+roles are focused. Repository topology does not establish Product identity or
+authority. A repository may host one Product, multiple Products, part of a
+Product, Capabilities, Subsystems, Surfaces, or governance evidence.
 
-| Repository | Conceptual role |
+| Repository | Current implementation and content role |
 | --- | --- |
 | `ai-workflow-playbook` | Canonical home for reusable workflow patterns, operating philosophy, interaction modes, review expectations, and promotion guidance. It explains how to work. |
 | `ai-workflow-enforcement` | Mechanical verification, advisory and validation tooling, drift reporting, and reusable automation for selected playbook guidance. It implements checkable doctrine without independently establishing workflow policy. |
 | `ai-workflow-incubator` | Exploration and staging for emerging patterns before they are promoted into durable playbook guidance or split into their own repository. |
-| `knowledge-vault` | Reviewed retained knowledge. The vault stores the durable notes, summaries, and retained artifacts that have passed through human review. |
-| `knowledge-adapters` | Acquisition and normalization of external sources. Adapters treat incoming material as untrusted input and prepare it for review without declaring it retained knowledge by default. |
-| `ka-destinations` | Publishing, export, and rendering paths for reviewed knowledge. Destinations adapt retained material for use elsewhere without becoming the source of truth. |
+| `knowledge-vault` | Currently hosts reviewed retained knowledge, its supporting implementation, research workflows, and governance evidence. |
+| `knowledge-adapters` | Currently implements acquisition and normalization of external sources. Adapters treat incoming material as untrusted input and prepare it for review without declaring it retained knowledge by default. |
+| `ka-destinations` | Currently implements publishing, export, and rendering paths for caller-supplied knowledge artifacts. Destinations adapt material for use elsewhere without becoming the source of truth. |
 
-In short: adapters acquire and normalize, the vault retains reviewed knowledge,
-destinations publish or render, the playbook captures reusable patterns,
-enforcement implements selected playbook doctrine mechanically, and the
-incubator gives unsettled ideas a place to mature before promotion. If
-playbook doctrine and enforcement behavior diverge, the playbook is
-authoritative and enforcement should be updated to match. Not every playbook
-rule needs enforcement, and not every enforcement capability should be promoted
-into doctrine.
+In short: adapters perform acquisition and normalization; the current vault
+implementation records reviewed retained knowledge and hosts additional
+workflow evidence; destinations perform publication or rendering; the Playbook
+contains reusable patterns; Enforcement implements selected Playbook doctrine
+mechanically; and the Incubator gives unsettled ideas a place to mature before
+promotion. If Playbook doctrine and Enforcement behavior diverge, the Playbook
+is authoritative for reusable workflow guidance and Enforcement should be
+updated to match. Not every Playbook rule needs enforcement, and not every
+Enforcement Capability should be promoted into doctrine.
 
 ### Enforcement Control Ownership
 
 For reviewed operational controls such as
 [`codex-safe-rm`](https://github.com/ctrl-alt-keith/ai-workflow-enforcement/blob/main/docs/codex-safe-rm.md),
-`ai-workflow-enforcement` owns the helper implementation, threat model,
-installation and verification mechanisms, Codex rule fixtures, and tests.
-`ai-workflow-playbook` owns the behavioral guidance, workflow expectations,
-delegation boundaries, and operator guidance for using that control. Link to
-the enforcement documentation for mechanics instead of copying implementation
-details into the playbook.
+`ai-workflow-enforcement` currently hosts the helper implementation, threat
+model, installation and verification mechanisms, Codex rule fixtures, and
+tests. The Playbook is authoritative for the reusable behavioral guidance,
+workflow expectations, delegation boundaries, and operator guidance for using
+that control. Link to the Enforcement documentation for mechanics instead of
+copying implementation details into the Playbook.
 
 When these or other repositories exchange artifacts, use the lightweight
 [`repo-to-repo interface contract pattern`](repo-to-repo-interface-contracts.md)
 and the qualified terms in the
 [`cross-repo architecture glossary`](cross-repo-glossary.md). Repository-local
-contracts remain authoritative for their domains.
+sources control current repository-specific contract text and execution
+behavior; semantic contract meaning and consequential human authority remain
+separately typed.
 
 ## Autonomous Maintenance Layer
 
@@ -94,11 +105,13 @@ Evidence and review-ready proposals
 Human approval for consequential transitions
 ```
 
-This layer keeps independently owned repositories convergent without requiring
-one shared runtime implementation. It can detect drift, perform narrowly
-bounded hygiene under mechanically verifiable safety predicates, and prepare
-focused changes. Repository-local authority, canonical validation, explicit
-producer/consumer contracts, and human approval boundaries continue to control.
+This layer keeps independently governed repositories convergent without
+requiring one shared runtime implementation. It can detect drift, perform
+narrowly bounded hygiene under mechanically verifiable safety predicates, and
+prepare focused changes. Repository-local authority over current source,
+implementation, validation, review, and merge facts; explicit
+producer/consumer contracts; and human approval boundaries continue to
+control.
 
 Exact schedules, automation identifiers, workstation paths, credentials,
 notification routes, and scheduler implementations are local operational
@@ -116,8 +129,8 @@ Useful states include:
 - `raw`: source material as acquired or referenced
 - `extracted`: selected or normalized material prepared for inspection
 - `reviewed`: human-inspected notes, summaries, or decisions
-- `retained`: durable knowledge accepted into the vault or another owning
-  repository
+- `retained`: durable knowledge accepted into the vault or another
+  repository's governed retained state
 
 The exact file layout and metadata may evolve. The architectural requirement is
 that the workflow keeps those states conceptually separate so later reviewers
@@ -165,18 +178,24 @@ and repository history.
 
 ### Small, Composable Repositories
 
-Each repository should own one major responsibility. Small repositories make it
-easier to reason about authority:
+Small repositories can make implementation, review, validation, release, and
+history boundaries easier to reason about. They do not define Product identity
+or imply that each repository owns one Product authority. A repository may
+host one Product, multiple Products, part of a Product, Capabilities,
+Subsystems, Surfaces, or governance evidence.
 
-- guidance belongs in the playbook
-- mechanical checking belongs in enforcement
-- provisional discovery belongs in incubation
-- reviewed retained knowledge belongs in the vault
-- source acquisition belongs in adapters
-- publication and rendering belong in destinations
+The current implementation placement is:
+
+- reusable guidance is hosted in the Playbook;
+- mechanical checking is implemented in Enforcement;
+- provisional discovery is staged in the Incubator;
+- reviewed retained knowledge is recorded in the vault;
+- source-acquisition behavior is implemented in adapters; and
+- publication and rendering behavior is implemented in destinations.
 
 This separation reduces accidental coupling and makes it easier to change one
 part of the system without silently changing the meaning of retained knowledge.
+Changing that topology does not by itself change Product authority.
 
 ### Reviewable Automation Over Opaque Memory
 
@@ -230,9 +249,10 @@ validation and stop rules.
 
 A preferred scaling model is one top-level orchestration prompt for the run,
 with safe parallel work delegated to self-contained subagents or workers. The
-top-level prompt owns decomposition, lane boundaries, reconciliation, and
-reporting. Workers own only their assigned task envelope and should not depend
-on full conversation history, implicit role inheritance, or shared hidden state.
+orchestrator or authorized human defines decomposition, lane boundaries,
+reconciliation, and reporting. Workers are responsible only for their assigned
+task envelope and should not depend on full conversation history, implicit role
+inheritance, or shared hidden state.
 The canonical operating guidance for deciding when to stay single-threaded,
 when to fan out, and how to reconcile worker outputs lives in
 [`orchestration-and-parallelism.md`](orchestration-and-parallelism.md).
