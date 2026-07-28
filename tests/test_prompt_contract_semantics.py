@@ -11,6 +11,18 @@ ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v1.json"
 VECTOR_PATH = DOCS / "prompt-contract-canonicalization-vectors-v1.json"
 
 
+def load_json_without_duplicate_keys(text):
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"duplicate JSON key: {key}")
+            result[key] = value
+        return result
+
+    return json.loads(text, object_pairs_hook=unique_object)
+
+
 class PromptContractSemanticAnchorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -62,6 +74,17 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             "runtime_safety_policy_observation",
         }
         self.assertEqual(set(self.anchor["required_identity_names"]), required_identities)
+
+    def test_prompt_contract_artifacts_have_no_duplicate_object_keys(self):
+        for path in (ANCHOR_PATH, VECTOR_PATH):
+            with self.subTest(path=path.name):
+                load_json_without_duplicate_keys(path.read_text(encoding="utf-8"))
+
+    def test_strict_loader_rejects_nested_duplicate_object_keys(self):
+        with self.assertRaisesRegex(ValueError, "duplicate JSON key: invariant"):
+            load_json_without_duplicate_keys(
+                '{"contract":{"invariant":true,"invariant":false}}'
+            )
 
     def test_contract_receipt_boundary(self):
         boundary = self.anchor["contract_receipt_boundary"]
