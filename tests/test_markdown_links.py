@@ -62,6 +62,13 @@ def github_heading_anchors(path: Path) -> set[str]:
     return anchors
 
 
+def resolve_local_target(document: Path, path_text: str) -> Path:
+    resolved = (document.parent / path_text).resolve() if path_text else document
+    if not resolved.is_relative_to(REPO_ROOT):
+        raise ValueError("local target escapes the repository")
+    return resolved
+
+
 class MarkdownLinkTests(unittest.TestCase):
     def test_heading_anchors_remain_unique_when_generated_suffix_is_occupied(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -71,6 +78,12 @@ class MarkdownLinkTests(unittest.TestCase):
             anchors = github_heading_anchors(document)
 
         self.assertEqual(anchors, {"foo", "foo-1", "foo-2"})
+
+    def test_local_target_cannot_escape_repository(self) -> None:
+        document = REPO_ROOT / "docs" / "example.md"
+
+        with self.assertRaisesRegex(ValueError, "escapes the repository"):
+            resolve_local_target(document, "../../outside.md")
 
     def test_local_links_and_heading_fragments_resolve(self) -> None:
         failures: list[str] = []
@@ -85,12 +98,14 @@ class MarkdownLinkTests(unittest.TestCase):
 
                     path_text, _, fragment = target.partition("#")
                     path_text = unquote(path_text.split("?", 1)[0])
-                    resolved = (
-                        (document.parent / path_text).resolve()
-                        if path_text
-                        else document
-                    )
                     location = f"{document.relative_to(REPO_ROOT)}:{line_number}"
+                    try:
+                        resolved = resolve_local_target(document, path_text)
+                    except ValueError:
+                        failures.append(
+                            f"{location}: local target escapes repository {target}"
+                        )
+                        continue
                     if not resolved.exists():
                         failures.append(f"{location}: missing local target {target}")
                         continue
