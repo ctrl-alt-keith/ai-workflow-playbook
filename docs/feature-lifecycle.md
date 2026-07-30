@@ -228,7 +228,10 @@ provenance vocabulary:
    scope, exclusions, proposed normative effect, and materiality
    classification.
 3. For a material promotion, obtain governed independent review of that exact
-   artifact. For a non-material promotion, select review proportionately.
+   artifact. Record the selected reviewer identity and provider, and handle a
+   named reviewer failure or proposed substitution under
+   [`external-ai-reviewer.md`](external-ai-reviewer.md#reviewer-selection-and-failure).
+   For a non-material promotion, select review proportionately.
 4. Disposition every substantive independent-review finding and determine
    whether the original review remains applicable using
    [`review-packet.md`](review-packet.md#independent-review-findings-and-re-review).
