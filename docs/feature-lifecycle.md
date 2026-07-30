@@ -146,11 +146,13 @@ requiring one repository name or ticket per item. Doctrine promotion should
 trace back to the reviewed evidence and decisions that support it; use the
 [`review packet`](review-packet.md#doctrine-provenance) for that boundary.
 
-Evolve protocols incrementally from evidence-supported changes. The existing
+Evolve protocols incrementally from evidence-supported changes. The trust-level
 promotion criteria in [`trust-topology.md`](trust-topology.md) and the staging
 and cleanup boundaries in [`notes-repositories.md`](notes-repositories.md)
-remain the owners of their respective vocabularies; do not create a competing
-promotion track here.
+remain the owners of their respective vocabularies; do not create competing
+trust-level or notes-staging vocabulary here. This document owns the
+human-authorized transition from candidate or revised guidance to accepted
+doctrine and its materiality trigger.
 
 Preserve useful information long enough for an explicit retention or retirement
 decision. Preservation is not indefinite retention and does not override
@@ -237,10 +239,11 @@ provenance vocabulary:
    [`review-packet.md`](review-packet.md#independent-review-findings-and-re-review).
    Use focused re-review when that contract selects it; do not require or skip
    re-review merely because bytes changed.
-5. Prepare the doctrine-provenance review packet. Link the evidence, candidate
-   identity, review record, finding dispositions, validation, open questions,
-   and exact implementation artifact without copying the full evidence history
-   into doctrine.
+5. Prepare the
+   [`doctrine-provenance`](review-packet.md#doctrine-provenance) review packet.
+   Link the evidence, candidate identity, review record, finding dispositions,
+   validation, open questions, and exact implementation artifact without
+   copying the full evidence history into doctrine.
 6. Obtain an explicit human promotion decision against the exact reviewed
    artifact. A reviewer verdict, finding resolution, validation result,
    approval capability, execution capability, or merge result does not grant
