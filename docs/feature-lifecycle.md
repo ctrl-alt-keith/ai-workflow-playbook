@@ -188,12 +188,13 @@ least one of these observable effects:
    prerequisite, review, validation, approval, fail-closed, promotion,
    release, completion, or other lifecycle transition condition.
 3. **Cross-boundary contract:** add, remove, or change a required semantic
-   contract, canonical owner, or normative obligation at a boundary between
-   repositories or executor implementations.
-4. **Architecture boundary:** promote or change an accepted architecture
-   foundation, Product identity or status, or cross-repository repository or
-   runtime boundary.
-5. **Reverse doctrine transition:** demote, withdraw, or supersede accepted
+   contract, canonical owner, or normative obligation at a boundary among
+   Playbook canonical owners, repositories, or executor implementations.
+4. **Architecture boundary:** promote an architecture foundation as doctrine,
+   or add, remove, or change an accepted Product identity or status,
+   cross-repository Repository boundary, or runtime boundary.
+5. **Reverse doctrine transition:** demote accepted doctrine to candidate
+   guidance, withdraw it, or explicitly replace it with named superseding
    doctrine.
 
 The proposer must name the affected boundary and matching trigger in the
@@ -264,14 +265,16 @@ is not doctrine promotion.
 | Change a shared validation or completion requirement | Material; mandatory lifecycle gate | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
 | Change a human or AI authority boundary | Material; authority boundary | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
 | Create or change a required obligation between repositories | Material; cross-boundary contract | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
+| Transfer a semantic contract between Playbook canonical owners | Material; cross-boundary contract | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
 | Add a lifecycle or approval gate | Material; mandatory lifecycle gate | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
-| Promote or revise architecture-foundation doctrine | Material; architecture boundary | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
-| Demote, withdraw, or supersede accepted doctrine | Material; reverse doctrine transition | Governed independent review, finding disposition, applicable re-review, and explicit human decision |
+| Promote an architecture foundation, or change an accepted Product or cross-repository architecture boundary | Material; architecture boundary | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
+| Demote accepted doctrine to candidate guidance, withdraw it, or explicitly replace it with named superseding doctrine | Material; reverse doctrine transition | Governed independent review, finding disposition, applicable re-review, and explicit human decision |
 
 An executor-adapter change becomes material if its actual effect crosses one of
 the listed triggers. Likewise, merely mentioning several repositories is not a
 cross-boundary contract change; the trigger applies only when the proposal
-changes a required contract, owner, or obligation between them.
+changes a required contract, canonical owner, or obligation among the listed
+owners or implementation boundaries.
 
 ## Project Maps
 
