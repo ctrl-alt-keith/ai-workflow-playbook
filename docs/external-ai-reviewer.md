@@ -36,6 +36,22 @@ unavailable. Attribute every verification claim to the actor and source that
 performed it; route inaccessible sources to another authorized actor or tool
 instead of implying that the reviewer verified them.
 
+### Reviewer selection and failure
+
+The selected reviewer identity and provider are part of the governed-review
+contract. When a human, task, or review plan names a specific reviewer or
+provider, only a review performed by that selection satisfies the prerequisite.
+For example, a task that names Claude requires a Claude review; output from
+Codex, Gemini, ChatGPT, or another substitute may be preserved as supplemental
+evidence, but it does not complete the named review.
+
+If the selected reviewer cannot authenticate, retrieve required evidence, or
+complete the review, preserve that failed attempt and its capability gap in the
+review record. Stop at the selected review boundary until the named reviewer
+can complete the review or the human authority explicitly approves a revised
+review plan. Do not silently substitute another provider, relabel substitute
+output as the selected review, or omit the failure from provenance.
+
 Use [`review-packet.md#independent-review-findings-and-re-review`](review-packet.md#independent-review-findings-and-re-review)
 for finding disposition and the decision between no re-review, focused
 re-review, and a fresh proposal with full review. Do not duplicate those
@@ -237,6 +253,7 @@ Watch for these failure modes:
 - architectural drift from letting review comments reshape the task
 - slowing the loop with an extra step that adds little signal
 - unsupported verification claims when the reviewer lacked source access
+- silent reviewer substitution after a named reviewer fails or is unavailable
 - treating an ACCEPT verdict as approval or transition authority
 - repeating a full review without deciding whether the original review remains
   applicable

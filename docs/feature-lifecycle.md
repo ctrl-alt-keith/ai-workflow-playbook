@@ -146,11 +146,13 @@ requiring one repository name or ticket per item. Doctrine promotion should
 trace back to the reviewed evidence and decisions that support it; use the
 [`review packet`](review-packet.md#doctrine-provenance) for that boundary.
 
-Evolve protocols incrementally from evidence-supported changes. The existing
+Evolve protocols incrementally from evidence-supported changes. The trust-level
 promotion criteria in [`trust-topology.md`](trust-topology.md) and the staging
 and cleanup boundaries in [`notes-repositories.md`](notes-repositories.md)
-remain the owners of their respective vocabularies; do not create a competing
-promotion track here.
+remain the owners of their respective vocabularies; do not create competing
+trust-level or notes-staging vocabulary here. This document owns the
+human-authorized transition from candidate or revised guidance to accepted
+doctrine and its materiality trigger.
 
 Preserve useful information long enough for an explicit retention or retirement
 decision. Preservation is not indefinite retention and does not override
@@ -160,6 +162,125 @@ retention policy.
 Apply this discipline proportionately. Small routine changes with direct source
 evidence, a bounded diff, and ordinary validation do not require a frozen
 retrospective or heavyweight evolution ceremony.
+
+## Doctrine Promotion
+
+Doctrine promotion is the explicit human-authorized transition by which
+candidate or revised reusable guidance becomes accepted Playbook doctrine.
+Research, synthesis, review, validation, a pull request, and merge provide
+evidence or implementation state; none supplies promotion authority.
+
+Use the staging and cleanup vocabulary in
+[`notes-repositories.md`](notes-repositories.md), the governed-review mode in
+[`external-ai-reviewer.md`](external-ai-reviewer.md), and the finding
+disposition, re-review, and doctrine-provenance contracts in
+[`review-packet.md`](review-packet.md). This section owns only the
+doctrine-promotion lifecycle and the trigger that makes governed independent
+review mandatory.
+
+### Material doctrine trigger
+
+A proposed doctrine promotion is **material** when accepting it would have at
+least one of these observable effects:
+
+1. **Authority boundary:** assign, remove, or change who controls or may
+   authorize a consequential human, AI, automation, source, approval,
+   acceptance, merge, release, or promotion decision.
+2. **Mandatory lifecycle gate:** add, remove, or change a required
+   prerequisite, review, validation, approval, fail-closed, promotion,
+   release, completion, or other lifecycle transition condition.
+3. **Cross-boundary contract:** add, remove, or change a required semantic
+   contract, canonical owner, or normative obligation at a boundary among
+   Playbook canonical owners, repositories, or executor implementations.
+4. **Architecture boundary:** promote an architecture foundation as doctrine,
+   or add, remove, or change an accepted Product identity or status,
+   cross-repository Repository boundary, or runtime boundary.
+5. **Reverse doctrine transition:** demote accepted doctrine to candidate
+   guidance, withdraw it, or explicitly replace it with named superseding
+   doctrine.
+
+The proposer must name the affected boundary and matching trigger in the
+proposal or review packet. If none applies, the promotion is non-material and
+uses proportional review. Scope, novelty, line count, file count, document
+length, subjective importance, low confidence, and a request for extra
+confidence are indicators that may justify closer inspection; they are not
+materiality triggers.
+
+A material promotion requires governed independent artifact review before the
+human promotion decision. A non-material promotion remains eligible for
+ordinary proportional review. Both paths still require explicit human
+promotion of the exact reviewed artifact.
+
+When classification is challenged, the challenge must identify a concrete
+affected boundary and one of the triggers above. The human promotion authority
+decides any unresolved classification before promotion. Until that decision is
+recorded, the guidance remains candidate or revised guidance rather than
+accepted doctrine. Uncertainty therefore fails closed at a concrete disputed
+boundary without making an ungrounded request for more confidence an automatic
+review gate.
+
+### Promotion lifecycle
+
+Use this lifecycle without creating a second staging, finding-disposition, or
+provenance vocabulary:
+
+1. Preserve the research, operational evidence, negative evidence, and
+   competing hypotheses in their existing evidence or staging owner.
+2. Prepare one bounded candidate synthesis with an exact artifact identity,
+   scope, exclusions, proposed normative effect, and materiality
+   classification.
+3. For a material promotion, obtain governed independent review of that exact
+   artifact. Record the selected reviewer identity and provider, and handle a
+   named reviewer failure or proposed substitution under
+   [`external-ai-reviewer.md`](external-ai-reviewer.md#reviewer-selection-and-failure).
+   For a non-material promotion, select review proportionately.
+4. Disposition every substantive independent-review finding and determine
+   whether the original review remains applicable using
+   [`review-packet.md`](review-packet.md#independent-review-findings-and-re-review).
+   Use focused re-review when that contract selects it; do not require or skip
+   re-review merely because bytes changed.
+5. Prepare the
+   [`doctrine-provenance`](review-packet.md#doctrine-provenance) review packet.
+   Link the evidence, candidate identity, review record, finding dispositions,
+   validation, open questions, and exact implementation artifact without
+   copying the full evidence history into doctrine.
+6. Obtain an explicit human promotion decision against the exact reviewed
+   artifact. A reviewer verdict, finding resolution, validation result,
+   approval capability, execution capability, or merge result does not grant
+   that authority.
+7. After the repository transition, retrieve the integrated identity and
+   preserve the promotion decision and provenance. Rejected, demoted,
+   withdrawn, and superseded material retains its historical status under the
+   existing staging and preservation guidance.
+
+The human promotion decision may share a pull request with implementation when
+the approval-identity rules in
+[`review-packet.md`](review-packet.md#approval-identity-and-ownership) are
+satisfied. It must state that the exact artifact is promoted and what reusable
+guidance becomes authoritative; ordinary approval or merge without that record
+is not doctrine promotion.
+
+### Classification examples
+
+| Proposed effect | Classification and trigger | Required path |
+| --- | --- | --- |
+| Correct spelling, links, or formatting without changing meaning | Non-material; no trigger | Proportional review, validation, and explicit human promotion when accepted doctrine changes |
+| Clarify wording without changing required behavior, authority, ownership, or a lifecycle condition | Non-material; no trigger | Proportional review and explicit human promotion |
+| Revise a reusable prompt template while preserving its semantic contract | Non-material; no trigger; prompt-contract approval and versioning rules still apply | Proportional review, applicable prompt-contract evidence, and explicit human promotion |
+| Change executor-specific adapter behavior without changing an authority boundary, mandatory gate, or cross-executor contract | Non-material; no trigger | Proportional review and explicit human promotion |
+| Change a shared validation or completion requirement | Material; mandatory lifecycle gate | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
+| Change a human or AI authority boundary | Material; authority boundary | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
+| Create or change a required obligation between repositories | Material; cross-boundary contract | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
+| Transfer a semantic contract between Playbook canonical owners | Material; cross-boundary contract | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
+| Add a lifecycle or approval gate | Material; mandatory lifecycle gate | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
+| Promote an architecture foundation, or change an accepted Product or cross-repository architecture boundary | Material; architecture boundary | Governed independent review, finding disposition, applicable re-review, and explicit human promotion |
+| Demote accepted doctrine to candidate guidance, withdraw it, or explicitly replace it with named superseding doctrine | Material; reverse doctrine transition | Governed independent review, finding disposition, applicable re-review, and explicit human decision |
+
+An executor-adapter change becomes material if its actual effect crosses one of
+the listed triggers. Likewise, merely mentioning several repositories is not a
+cross-boundary contract change; the trigger applies only when the proposal
+changes a required contract, canonical owner, or obligation among the listed
+owners or implementation boundaries.
 
 ## Project Maps
 
