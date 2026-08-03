@@ -281,6 +281,35 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
         self.assertIn("https://medium.com/source-doc", result.stdout)
         self.assertNotIn("https://medium.com/worktree-doc", result.stdout)
 
+    def test_markdown_sources_skip_symbolic_links_without_reading_targets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            target = root / "machine-local-source"
+            target.write_text(
+                "REST retry behavior source: https://medium.com/private-source",
+                encoding="utf-8",
+            )
+            link = root / "linked.md"
+            link.symlink_to(target)
+
+            sources = scanner.markdown_sources([link])
+
+        self.assertEqual(sources, [])
+
+    def test_all_markdown_files_excludes_symbolic_links(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            target = root / "machine-local-source"
+            target.write_text("private local content", encoding="utf-8")
+            link = root / "linked.md"
+            link.symlink_to(target)
+            regular = root / "regular.md"
+            regular.write_text("# Regular\n", encoding="utf-8")
+
+            paths = scanner.all_markdown_files(root)
+
+        self.assertEqual(paths, [regular])
+
 
 if __name__ == "__main__":
     unittest.main()
