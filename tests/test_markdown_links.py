@@ -10,6 +10,9 @@ from urllib.parse import unquote
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LINK_RE = re.compile(r"(?<!!)\[[^]]*]\(([^)]+)\)")
+LINK_DEFINITION_RE = re.compile(
+    r'^ {0,3}\[[^]]+]\s*:\s*(?:<([^>]+)>|([^\s]+))'
+)
 HEADING_RE = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$")
 HTML_TAG_RE = re.compile(r"<[^>]+>")
 PUNCTUATION_RE = re.compile(r"[^\w\- ]", re.UNICODE)
@@ -45,6 +48,13 @@ def markdown_lines_outside_fences(path: Path) -> list[tuple[int, str]]:
     return lines
 
 
+def local_link_targets(line: str) -> list[str]:
+    targets = LINK_RE.findall(line)
+    if definition := LINK_DEFINITION_RE.match(line):
+        targets.append(definition.group(1) or definition.group(2))
+    return targets
+
+
 def github_heading_anchors(path: Path) -> set[str]:
     anchors: set[str] = set()
     for _, line in markdown_lines_outside_fences(path):
@@ -70,6 +80,12 @@ def resolve_local_target(document: Path, path_text: str) -> Path:
 
 
 class MarkdownLinkTests(unittest.TestCase):
+    def test_reference_style_link_definitions_are_collected(self) -> None:
+        self.assertEqual(
+            local_link_targets("[guide]: <docs/guide.md#setup> 'Setup guide'"),
+            ["docs/guide.md#setup"],
+        )
+
     def test_heading_anchors_remain_unique_when_generated_suffix_is_occupied(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             document = Path(temp_dir) / "headings.md"
@@ -91,7 +107,7 @@ class MarkdownLinkTests(unittest.TestCase):
 
         for document in tracked_markdown_files():
             for line_number, line in markdown_lines_outside_fences(document):
-                for raw_target in LINK_RE.findall(line):
+                for raw_target in local_link_targets(line):
                     target = raw_target.strip().strip("<>")
                     if target.startswith(("http://", "https://", "mailto:")):
                         continue
