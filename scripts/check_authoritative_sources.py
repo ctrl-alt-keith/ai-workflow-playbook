@@ -214,6 +214,9 @@ def changed_markdown_files(base_ref: str | None, head_ref: str | None) -> list[P
 def markdown_sources(paths: list[Path]) -> list[tuple[str, str]]:
     sources: list[tuple[str, str]] = []
     for path in paths:
+        if path.is_symlink():
+            print(f"authoritative-source-check: skipped symbolic link {path}")
+            continue
         if not path.is_file():
             continue
         try:
@@ -228,7 +231,11 @@ def is_scannable_markdown_path(path: Path) -> bool:
 
 
 def all_markdown_files(root: Path = Path(".")) -> list[Path]:
-    return sorted(path for path in root.glob("**/*.md") if is_scannable_markdown_path(path))
+    return sorted(
+        path
+        for path in root.glob("**/*.md")
+        if not path.is_symlink() and is_scannable_markdown_path(path)
+    )
 
 
 def dedupe(findings: list[dict[str, object]]) -> list[dict[str, object]]:
