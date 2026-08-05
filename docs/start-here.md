@@ -265,6 +265,11 @@ automation prompt authoring, fleet-wide maintenance, governance or drift
 automation, scheduled inspection or correction, autonomous-maintenance
 architecture, or automation authority, evidence, scope, and safety contracts.
 
+Read `docs/feature-lifecycle.md` when the current authorized action first enters
+feature-delivery planning or execution; use its activation boundary to
+distinguish intent, prerequisite workflow ownership, and implementation
+eligibility.
+
 Read `docs/ai-workflow-ecosystem.md`,
 `docs/repo-to-repo-interface-contracts.md`, and
 `docs/cross-repo-glossary.md` only when the work involves multiple
