@@ -13,6 +13,27 @@ Each phase should have a clear goal, a clear review surface, and a natural stopp
 
 Use [`alignment-checkpoints.md`](alignment-checkpoints.md) to decide when to pause or split work, and use [`review-packet.md`](review-packet.md) to prepare the review surface before merge or release.
 
+## Activation
+
+Feature-lifecycle guidance becomes required when the current authorized action
+first enters feature-delivery planning or execution. Establish the current
+delegated action and interaction mode, then the governing workflow and current
+authorized action, before deciding whether lifecycle planning or execution is
+current.
+
+Related nouns, recorded future intent, explicit implementation intent, and
+implementation eligibility do not activate this guidance by themselves. When a
+prerequisite workflow owns the current completion boundary, it remains the
+governing workflow until the current authorized action transitions into
+feature-delivery planning or execution.
+
+Lifecycle planning includes defining intended behavior, constraints, risks, or
+acceptance shape; preparing a proposal-first change; and defining contract
+tests. Proposal-first planning therefore activates this guidance before
+mutation. Activation does not grant implementation authority, and an
+implementation blocker does not deactivate lifecycle planning that is already
+the current authorized action.
+
 ## Phase Guidance
 
 ### Design
