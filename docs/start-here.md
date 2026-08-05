@@ -133,11 +133,24 @@ scoped analysis, review, planning, advice, prompting, or mutation.
   rendered, delivered, fresh, and replayed material prompts
 - `docs/prompts.md` -> reusable prompt templates
 
-The list is the baseline repository startup route. Additional documents remain
-outside this baseline and load only when conditional routing activates them.
-Do not load full maintenance, cross-repository, prompt-contract, or multi-agent
-doctrine into an ordinary single-repository task that does not touch those
-surfaces.
+The Repository Read Order defines the ordered universe of potentially relevant
+startup documents for the baseline route, not a requirement to consume every
+listed document. Actual retrieval is governed by activation rules. A
+document's activation class determines how it enters the required set: the
+[Required Repository Startup Contract](#required-repository-startup-contract)
+defines the repository floor; the matching executor adapter is required for
+that executor; workflow-specific and conditional documents become required
+only when their activation rules apply; and advisory documents apply only to
+the specialized action they govern. Resolve those activations from
+[Task Routing](#task-routing),
+[Conditional Repository Guidance](#conditional-repository-guidance), and any
+narrower trigger in the owning document. Read each required or activated
+document in the listed order before the planning or action it governs.
+
+Additional documents remain outside this baseline and load only when
+conditional routing activates them. Do not load full maintenance,
+cross-repository, prompt-contract, or multi-agent doctrine into an ordinary
+single-repository task that does not touch those surfaces.
 
 ### Repository Instruction Hierarchy
 
@@ -179,7 +192,8 @@ Before repository-scoped code, documentation, research, planning, leadership,
 read-only review, audit, advice, architecture/workflow analysis, PR or issue
 recommendations, and "what changed?" or "what next?" requests:
 
-1. Read this page and `docs/core-model.md`.
+1. Read this page, `docs/core-model.md`, and
+   `docs/engineering-baseline.md`.
 2. Read the target repository's repo-local `AGENTS.md`.
 3. Apply the matching executor adapter. Codex runs must apply
    `docs/tool-adapters/codex.md`; Claude runs must apply
@@ -198,6 +212,12 @@ recommendations, and "what changed?" or "what next?" requests:
 10. Identify the canonical validation, review, or inspection path.
 11. Act only after these checks are clear, or report the blocker, uncertainty,
     capability gap, or missing context.
+
+Controller-owned context sufficiency is determined from canonical routing for
+the current task. The controller or other workflow owner must establish that
+the repository floor and every activated document are present; a child or
+delegated worker's own selection or belief that it has enough context cannot
+establish sufficiency.
 
 ### Required Repository Invariants
 
