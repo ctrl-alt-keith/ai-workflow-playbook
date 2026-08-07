@@ -67,6 +67,11 @@ inspect or attempt the relevant operation before reaching that conclusion.
 - [`core-model.md`](core-model.md) owns domain-independent operating principles,
   human and AI roles, authority, semantic phase boundaries, and durable
   continuity.
+- [`product-status.md`](product-status.md) owns the current accepted Product
+  status for each identity it lists. Records under
+  [`product-promotion-decisions/`](product-promotion-decisions/) own durable
+  provenance for the distinct human governance events that established those
+  states.
 - Keep mechanisms with their narrowest canonical owner. A general principle
   should route to specialized workflow or domain guidance rather than copy its
   trigger lists, taxonomies, schemas, or execution procedures. Do not

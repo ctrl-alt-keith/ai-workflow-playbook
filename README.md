@@ -78,6 +78,11 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/constitutional-terminology-ratification-decision.md`](docs/constitutional-terminology-ratification-decision.md):
   accepted human governance decision recording ratified and deferred
   constitutional terminology
+- [`docs/product-status.md`](docs/product-status.md): canonical current accepted
+  Product status for the identities it lists
+- [`docs/product-promotion-decisions/`](docs/product-promotion-decisions/):
+  immutable provenance records for the human Product governance decisions that
+  established current or prior status
 - [`docs/repo-to-repo-interface-contracts.md`](docs/repo-to-repo-interface-contracts.md): lightweight pattern for documenting producer/consumer boundaries
 - [`docs/cross-repo-glossary.md`](docs/cross-repo-glossary.md): qualified cross-repository architecture vocabulary
 - [`docs/ai-workflow-ecosystem.md`](docs/ai-workflow-ecosystem.md): conceptual overview of the repository ecosystem, retained-knowledge boundaries, and architectural direction
