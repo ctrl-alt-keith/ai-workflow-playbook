@@ -90,6 +90,10 @@ Use only the routes activated by the task:
 
 - **Repository or software work:** continue with
   [Repository Workflow](#repository-workflow) below.
+- **Current accepted Product status:** use
+  [`product-status.md`](product-status.md); use records under
+  [`product-promotion-decisions/`](product-promotion-decisions/) for the
+  distinct human governance events that established those states.
 - **Evidence acceptance, integration, synthesis, or reporting:** use
   [`evidence-lifecycle.md`](evidence-lifecycle.md).
 - **Material prompt review, recovery, or replay:** use

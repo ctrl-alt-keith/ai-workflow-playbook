@@ -164,6 +164,24 @@ resolved the source-addressable blob as the 40-character identity ending in
 `c3d` shown above. This record preserves that correction explicitly rather
 than altering the original artifact.
 
+### Freshness evidence and explicit exclusions
+
+The decision found no genuinely new operational evidence after either
+Promotion Packet. It inspected these later repository identities and excluded
+them from promotion evidence:
+
+- [`knowledge-vault@6108e694b789bebeab2bb6182b043eccf30ceeba`](https://github.com/ctrl-alt-keith/knowledge-vault/commit/6108e694b789bebeab2bb6182b043eccf30ceeba)
+  contained constitutional-terminology documentation alignment. Its
+  pre-decision description established that Knowledge Record was still a
+  Product Candidate and no human promotion had occurred; it did not control or
+  supply the later decision.
+- [`knowledge-adapters@360084213d8bec27a4c3c569212c449ffb96fffa`](https://github.com/ctrl-alt-keith/knowledge-adapters/commit/360084213d8bec27a4c3c569212c449ffb96fffa)
+  likewise contained constitutional-terminology documentation alignment, not
+  new operational evidence.
+
+Merged pull requests established accepted repository state for their contents.
+They were not Product promotion and were not counted as promotion evidence.
+
 The completed Promotion Packet recommended promotion. The decision found that
 two materially different, non-synthetic editorial-retention transactions
 exercised consequential refusal or narrowing boundaries and satisfied both the
@@ -211,6 +229,32 @@ In particular, it did not promote the
 or adopt that candidate's Product lifecycle, registry, or promotion-threshold
 rules.
 
+## Future Review Triggers
+
+Review is trigger-based rather than automatic. A later explicit human
+governance review should reconsider the status if material evidence shows that:
+
+1. the customer-recognized outcome or editorial-retention authority no longer
+   survives replacement of current repositories, tools, providers, or
+   runtimes;
+2. retention, rejection, retained form, provenance, licensing, content
+   boundary, catalog meaning, and refresh judgment naturally collapse into an
+   adjacent Product;
+3. real operation repeatedly lets acquisition success, structural validity,
+   automation, or prior review substitute for a current consequential
+   editorial decision;
+4. the stable non-goals cease to be load-bearing or are routinely crossed
+   without a separate authority transition;
+5. material primary evidence shows that the two counted operational families
+   were misclassified, synthetic, or not meaningfully distinct for the
+   editorial-retention question;
+6. a later accepted promotion standard or constitutional decision exposes a
+   material incompatibility with Decision #1's basis; or
+7. Decision #1's authority or reviewed identity is shown to be invalid or
+   materially incomplete.
+
+These triggers authorize review, not an automatic status change.
+
 ## Future Decision Lineage
 
 This record is append-only historical provenance. A later decision may affirm,
@@ -223,7 +267,9 @@ demote, reject, or supersede the Knowledge Record identity only if it:
 4. updates the canonical [Product Status](../product-status.md) entry with a
    reciprocal link in the same reviewed Playbook change.
 
-If the current-state entry and this provenance record ever disagree, the
-current-state entry answers the current-status question and this record answers
-the historical-event question. The disagreement must be repaired through
-review; it cannot be treated as authority for a status transition.
+As between Playbook surfaces, the current-state entry answers the
+current-status question and this record answers the historical-event question.
+A new human decision takes effect on its stated effective date whether or not
+the current-state surface has been updated. Any resulting discrepancy must be
+repaired through review; it cannot be treated as authority for an additional
+status transition.

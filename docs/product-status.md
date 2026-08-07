@@ -47,11 +47,12 @@ A future status transition must:
 4. make the new state and decision link to each other in the same reviewed
    Playbook change.
 
-The current-state entry controls the answer to the current-status question.
-The linked decision controls the historical claim about the governance event.
-A discrepancy between them is a documentation defect; it does not authorize an
-agent, repository, implementation, validator, or runtime to infer or perform a
-transition.
+As between Playbook surfaces, the current-state entry controls the answer to
+the current-status question. The linked decision controls the historical claim
+about the governance event. A new human decision takes effect on its stated
+effective date whether or not this surface has been updated. A discrepancy is
+a documentation defect; it does not authorize an agent, repository,
+implementation, validator, or runtime to infer or perform another transition.
 
 Only a new explicit human Product governance decision can change accepted
 Product status. Implementation, operation, evidence, a recommendation,
