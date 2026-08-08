@@ -79,6 +79,10 @@ The resulting state was:
 The Product identity and its existing editorial-retention authority boundary
 did not change. The decision changed only accepted Product status.
 
+Decision #1 took effect on its stated effective date. It required no separate
+implementation, merge, documentation update, contract revision, or repository
+action, and stale Product Candidate text did not reverse or suspend it.
+
 ## Evidence Basis
 
 Decision #1 recorded the following exact governing and evidence identities.
@@ -166,6 +170,8 @@ than altering the original artifact.
 
 ### Freshness evidence and explicit exclusions
 
+The original decision reported fresh fetches of the hosted default branches
+for the Playbook, Incubator, Knowledge Vault, and Knowledge Adapters.
 The decision found no genuinely new operational evidence after either
 Promotion Packet. It inspected these later repository identities and excluded
 them from promotion evidence:
@@ -231,8 +237,9 @@ rules.
 
 ## Future Review Triggers
 
-Review is trigger-based rather than automatic. A later explicit human
-governance review should reconsider the status if material evidence shows that:
+Decision #1 made future review trigger-based rather than automatic. It
+recorded that a later explicit human governance review should reconsider the
+status if material evidence shows that:
 
 1. the customer-recognized outcome or editorial-retention authority no longer
    survives replacement of current repositories, tools, providers, or
@@ -253,7 +260,8 @@ governance review should reconsider the status if material evidence shows that:
 7. Decision #1's authority or reviewed identity is shown to be invalid or
    materially incomplete.
 
-These triggers authorize review, not an automatic status change.
+Decision #1 recorded these triggers as reasons to review, not as authority for
+an automatic status change.
 
 ## Future Decision Lineage
 
@@ -271,5 +279,5 @@ As between Playbook surfaces, the current-state entry answers the
 current-status question and this record answers the historical-event question.
 A new human decision takes effect on its stated effective date whether or not
 the current-state surface has been updated. Any resulting discrepancy must be
-repaired through review; it cannot be treated as authority for an additional
-status transition.
+repaired through review; it cannot be treated as authority for any status
+transition.

@@ -52,7 +52,7 @@ the current-status question. The linked decision controls the historical claim
 about the governance event. A new human decision takes effect on its stated
 effective date whether or not this surface has been updated. A discrepancy is
 a documentation defect; it does not authorize an agent, repository,
-implementation, validator, or runtime to infer or perform another transition.
+implementation, validator, or runtime to infer or perform any transition.
 
 Only a new explicit human Product governance decision can change accepted
 Product status. Implementation, operation, evidence, a recommendation,
