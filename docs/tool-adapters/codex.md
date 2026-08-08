@@ -261,14 +261,24 @@ Follow the command-form guidance in
 
 Codex-specific application:
 
+- Use the narrowest Codex execution primitive that directly represents the
+  intended operation. Prefer a native filesystem or tool operation when one is
+  available; otherwise prefer direct argv-style executable invocation where
+  the execution surface supports it.
 - Prefer direct `git`, `gh`, `make`, `python`, repo-local script, and tool
-  invocations for ordinary repository work.
-- Where the execution surface supports native argv-style execution, use it for
-  `git` and `gh`.
+  invocations for ordinary repository work. Apply the same directness to simple
+  filesystem operations such as directory creation or file inspection.
+- Do not introduce `zsh`, `bash`, `sh`, login-shell wrappers, `-c` wrappers, or
+  equivalent general-purpose shell execution merely for convenience when the
+  operation can be represented directly. This keeps approvals and audit
+  records scoped to the specific operation instead of widening them to a
+  general-purpose shell.
 - If the execution surface defaults to a shell or login shell, disable that
-  wrapper where supported for ordinary `git` and `gh` commands.
-- Use shell wrapping only when the command genuinely needs shell semantics, and
-  keep the wrapped operation narrow enough for review and approval surfaces to
+  wrapper where supported for direct executable commands.
+- Use shell wrapping only when the operation genuinely needs shell semantics,
+  such as pipelines, redirection, command substitution, conditionals, or
+  necessary shell expansion that cannot reasonably be represented directly.
+  Keep the wrapped operation narrow enough for review and approval surfaces to
   see the intended action.
 
 ### Enforcement-Backed Recursive Cleanup
