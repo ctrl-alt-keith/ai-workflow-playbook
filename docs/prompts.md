@@ -8,6 +8,30 @@ Prompts should remain routing and execution envelopes, not duplicated workflow
 doctrine. For the rationale, see
 [`sparse-rehydration-and-source-grounding.md`](sparse-rehydration-and-source-grounding.md).
 
+For a fresh repository-scoped thread, explicitly route through the current
+[`start-here.md`](start-here.md) startup contract and point to the authoritative
+Repository or History artifacts that preserve established state. Do not
+reconstruct frozen identities, methodology, lineage, completed history, or
+other durable packages in the prompt when the downstream agent can retrieve
+and verify the authoritative artifact. The prompt should carry the current
+delta: goal, governing issue, authoritative artifact locations, exact
+authorization, constraints, completion boundary, and stop rules.
+Self-contained means complete routing and authorization, not embedding every
+referenced artifact.
+
+In the same thread, after repository startup and the relevant source state have
+already been established, a short incremental authorization is sufficient. It
+does not need to repeat the startup route or durable state package. Reapply the
+startup contract when the work moves to another repository, and re-retrieve
+mutable sources when freshness matters.
+
+Keep this compression proportional. Repeat an exact value in the prompt when
+the value itself must be frozen at the prompt boundary, an artifact reference
+cannot bind it unambiguously, the downstream executor cannot retrieve the
+artifact, or omission would weaken a required identity, authority, safety, or
+validation constraint. Reducing redundant prompt context is execution
+engineering; it is not evidence about methodology, architecture, or validity.
+
 ## Prompt Contract Identity
 
 For material execution that may be reviewed, recovered, or replayed, apply the
@@ -170,6 +194,36 @@ Parallel execution:
 
 Use this prompt when the deliverable is a complete downstream task envelope, not
 direct mutation by the current agent.
+
+A compact fresh-thread handoff can use this proportional shape when the named
+artifacts already carry the established state:
+
+```text
+Startup:
+- Retrieve current `docs/start-here.md` through GitHub source access when
+  available and follow its repository startup route.
+
+Governing issue:
+- [issue identifier or durable authority source]
+
+Authoritative state:
+- [Repository or History artifact locations and exact identities when needed]
+
+Authorized action:
+- [the new bounded action]
+
+Constraints:
+- [only task-specific constraints not already owned by the referenced sources]
+
+Completion and stop boundary:
+- [required result, validation, delivery, and conditions that require stopping]
+```
+
+For a same-thread continuation whose startup and authoritative state are still
+current, send only the changed authorization, constraints, completion boundary,
+or stop condition. Do not replay the durable package merely to make the prompt
+self-contained; source retrieval, not conversational repetition, provides that
+continuity.
 
 Required inputs:
 
