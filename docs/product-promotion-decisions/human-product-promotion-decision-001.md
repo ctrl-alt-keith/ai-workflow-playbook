@@ -170,8 +170,9 @@ than altering the original artifact.
 
 ### Freshness evidence and explicit exclusions
 
-The original decision reported fresh fetches of the hosted default branches
-for the Playbook, Incubator, Knowledge Vault, and Knowledge Adapters.
+The original decision reported that fresh fetches verified the current hosted
+default-branch identities for the Playbook, Incubator, Knowledge Vault, and
+Knowledge Adapters.
 The decision found no genuinely new operational evidence after either
 Promotion Packet. It inspected these later repository identities and excluded
 them from promotion evidence:
