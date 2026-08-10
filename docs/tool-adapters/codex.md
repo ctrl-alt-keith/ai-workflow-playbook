@@ -75,8 +75,9 @@ downward when supported: Sol architecture to Terra implementation; Sol or Terra
 to Luna for lint, hashes, inventories, fixture execution, and evidence
 packaging. Preserve each child's selected model, reasoning effort, bounded
 inputs, execution identity, durable result, and authority boundary in the
-attempt evidence when the workflow requires it. A lower-cost child is not an
-independent external reviewer.
+attempt evidence when the workflow requires it. A child spawned by the reviewed
+party is not an independent external reviewer; this does not invalidate child
+work for other purposes.
 
 ### Thread Routing And Configuration Continuity
 
@@ -216,7 +217,7 @@ setting.
 
 This posture is derived from OpenAI's current
 [GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/latest-model)
-and [model selection reference](https://developers.openai.com/api/docs/models),
+and [OpenAI models reference](https://developers.openai.com/api/docs/models),
 checked 2026-08-10.
 
 ## Prompt-Contract Mapping

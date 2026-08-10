@@ -143,7 +143,7 @@ qualification requirements.
 | Deterministic external verification; hashes, inventories, evidence citations; simple source inspection; mechanical fallback verification | `haiku` | Use executor default; Claude Code does not document effort control for Haiku | a result is ambiguous, changes a decision, or source access is insufficient | substantive review has converged and a qualified deterministic check remains |
 | Implementation review; evidence-package review; reviewer follow-up after substantive convergence; bounded long-context evidence synthesis | `sonnet` | Use the documented default `high`; use `medium` or `low` only as an explicit cost/latency trade-off where bounded evidence supports it | residual findings repeat, evidence conflicts, or semantics remain unresolved | split inventories, hashes, and other externally checkable claims to Haiku or another qualified mechanism |
 | Substantive adversarial code review; protocol/design review; architecture review; authority or security-boundary review | `opus` | Use the model's documented default; do not assume `xhigh` applies to every Opus runtime | a new trust boundary, unresolved architecture/security implication, conflicting authority, or a finding that changes qualification disposition appears | after substantive convergence, delegate only the remaining mechanical claim; do not relabel it as substantive review |
-| Especially hard long-running investigation, outage/root-cause work, or architecture decision that exceeds a normal Opus review | `fable`, where available | Adaptive thinking is always on; use the documented default `high`, and reserve `xhigh`/`max` for a bounded demonstrated need | a safety fallback, unavailable Fable runtime, or remaining decision risk defeats the qualification requirement | keep Fable out of routine review and delegate only bounded deterministic follow-up |
+| Especially hard long-running investigation, outage/root-cause work, or architecture decision that exceeds a normal Opus review | `fable`, where available | Adaptive thinking is always on; use the documented default `high`, and reserve `xhigh`/`max` for a bounded demonstrated need | a safety fallback, unavailable Fable runtime, or remaining decision risk defeats the qualification requirement; stop, seek an explicit human decision, or use another independently qualified mechanism | keep Fable out of routine review and delegate only bounded deterministic follow-up |
 
 The table is a conservative routing hypothesis, not a quality-parity claim. A
 large evidence package does not automatically require Opus, and a small
@@ -184,12 +184,14 @@ in execution, and can use configured fallback chains for unavailable or
 overloaded models; Fable/Opus safety-classifier fallback is also documented.
 For governed work, record the requested model/effort and the effective values
 when the runtime exposes them, plus any substitution event. `/status` exposes
-the current Claude Code model; API fallback responses expose the serving model,
-fallback blocks, and attempt iterations. If effective identity is unavailable,
-record that limitation rather than treating the request as proof. Requalify,
-escalate, or stop only when the effective result violates a required capability
-or exact-model reviewer qualification; a runtime event is not automatically
-fatal.
+the current Claude Code model, and Claude Code shows a transcript notice when a
+documented switch occurs. On the Claude API, server-side fallback responses
+identify the serving model and expose fallback blocks and attempt iterations.
+Other providers and error paths need not expose the same evidence or perform a
+server-side fallback. If effective identity is unavailable, record that
+limitation rather than treating the request as proof. Requalify, escalate, or
+stop only when the effective result violates a required capability or exact-model
+reviewer qualification; a runtime event is not automatically fatal.
 
 If a lower-capability SAME THREAD reaches unresolved ambiguity, an architecture
 or authority decision, conflicting authoritative evidence, repeated residual
@@ -236,8 +238,9 @@ support.
 When a material prompt uses the product-neutral reasoning class in
 [`prompt-contracts.md`](../prompt-contracts.md) (`light`, `medium`, `high`), the
 Claude representation is a supported thinking/effort setting plus model
-selection chosen for the bounded task. Concrete model names and thinking budgets are adapter
-configuration and attempt-receipt metadata, not the meaning of the class.
+selection chosen for the bounded task. Concrete model names and thinking/effort
+settings are adapter configuration and attempt-receipt metadata, not the meaning
+of the class.
 Preserve whether the class and each capability are mandatory or advisory; if the
 available Claude surface cannot meet a mandatory requirement without weakening a
 guarantee, fail closed rather than silently downgrade. A model change alone does
