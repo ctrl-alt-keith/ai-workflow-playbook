@@ -43,7 +43,7 @@ remain on Luna.
 | Deterministic file edits or docs cleanup with explicit acceptance criteria; routine PR publication | Luna | Medium | semantics, scope, or validation expectations are unclear | Terra/Sol parent delegates the bounded edit or delivery plumbing |
 | Localized bug fix; routine implementation; normal PR work; CI debugging with a legible failure; frozen-controller test changes; evidence interpretation | Terra | Medium | repeated attempts fail, an invariant cannot be explained, or cross-system scope appears | delegate lint, hashes, fixture runs, and evidence packaging to Luna |
 | Substantial but bounded analysis; moderate synthesis; difficult localized debugging | Terra | High | architecture or authority decisions, conflicting evidence, or unresolved ambiguity remain after bounded investigation | move deterministic execution and verification to Luna |
-| Protocol/design work; architecture synthesis; ambiguous root-cause debugging; high-consequence authority or controller semantics; difficult adversarial review | Sol | High | use `xhigh` or `max` only when representative evidence shows a material reliability gain | delegate established-contract implementation to Terra and mechanical verification to Luna |
+| Protocol/design work; architecture synthesis; ambiguous root-cause debugging; high-consequence authority or controller semantics; difficult adversarial review | Sol | High; consider `xhigh` or `max` only with a measured need | use a bounded supported Pro-mode execution, independent review, or explicit human decision when the unresolved risk remains material | delegate established-contract implementation to Terra and mechanical verification to Luna |
 
 Defaults are routing hypotheses, not a guarantee that the lower-cost choice is
 sufficient. Do not downgrade when consequences are high, ambiguity is
@@ -51,6 +51,14 @@ material, validation is weak, work is hard to reverse, or a failure could
 silently corrupt authority or evidence. `xhigh` and `max` are exceptional:
 use them only for a bounded demanding task with an observed quality need; do
 not promote them to a routine default.
+
+OpenAI documents Pro mode as a distinct Responses API execution mode: it keeps
+the selected GPT-5.6 model, chooses effort independently, and applies more
+model work for difficult quality-first tasks. Use it only where the runtime
+exposes it and a bounded quality/reliability need justifies the added cost and
+latency; it is not a routine Sol default. The `gpt-5.6` alias resolves to Sol,
+so use an explicit Terra or Luna identifier whenever that lower-cost routing is
+intended.
 
 ### Escalation And Delegation
 
@@ -75,8 +83,10 @@ independent external reviewer.
 Apply the shared `FRESH THREAD`, `SAME THREAD`, and `CHILD TASK` vocabulary in
 [`prompts.md`](../prompts.md#thread-routing-and-configuration-continuity). For
 a FRESH THREAD, select the matrix's task-appropriate GPT-5.6 model and effort.
-For a SAME THREAD, preserve the parent model and effort by default: task-class
-sufficiency alone does not justify mutating an already-running configuration.
+For a SAME THREAD, preserve the requested parent model and effort by default:
+task-class sufficiency alone does not justify intentionally mutating an
+already-running configuration. Record the effective model and effort separately
+when the runtime exposes them, along with any fallback or substitution event.
 For a CHILD TASK, independently select the lowest-cost sufficient model and
 effort for that bounded child and retain the child evidence required by the
 governing workflow.
@@ -144,8 +154,9 @@ When the playbook produces or recommends a complete Codex prompt, precede the
 executable prompt with this plain-text operator metadata:
 
 ```text
-Recommended model: <GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol>
-Recommended reasoning level: <Light | Medium | High>
+Thread routing: <FRESH THREAD | SAME THREAD | CHILD TASK>
+Recommended model: <FRESH THREAD/CHILD TASK: GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol; SAME THREAD: Preserve requested thread model and observe effective runtime model>
+Recommended reasoning level: <FRESH THREAD/CHILD TASK: Light | Medium | High; SAME THREAD: Preserve requested thread setting and observe effective runtime setting>
 
 Reason:
 <one concise task-specific explanation>

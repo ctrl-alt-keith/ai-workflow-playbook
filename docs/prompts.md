@@ -31,8 +31,10 @@ separate decisions. Declare one of these routing values in operator metadata:
 - `FRESH THREAD`: select the task-appropriate model and separately select a
   supported reasoning or thinking configuration through the executor adapter.
 - `SAME THREAD`: preserve the current thread's model and configuration by
-  default. A lower-cost setting being sufficient for the next sub-phase does
-  not itself authorize or justify changing an already-running task.
+  default. Preserve the requested parent configuration; observe and account for
+  any effective runtime substitution. A lower-cost setting being sufficient for
+  the next sub-phase does not itself authorize or justify changing an
+  already-running task.
 - `CHILD TASK`: select the lowest-cost sufficient configuration for the bounded
   child, and preserve its model/configuration, inputs, execution identity,
   durable result, and authority boundary where the workflow requires it.
@@ -44,6 +46,15 @@ existing stronger task's deterministic follow-up, prefer a bounded cheaper
 child where worthwhile rather than downgrading the parent in place. Continuity
 preserves context, decision provenance, reproducibility, and qualification
 boundaries; it does not prevent justified escalation.
+
+Requested configuration is the operator's selected model and supported
+reasoning/thinking setting. Effective configuration is what the runtime reports
+as serving the work. Record requested and effective values separately where the
+runtime exposes them, along with a fallback or substitution event. If the
+effective value is not observable, say so; requested configuration alone does
+not prove execution identity. A runtime change is not automatically fatal, but
+requalify, escalate, or stop when it fails a minimum-capability or exact-model
+requirement.
 
 ## Prompt Contract Identity
 
@@ -113,8 +124,8 @@ blocks consecutively with no intervening heading or explanation.
 ```text
 Operator metadata (do not include in prompt)
 Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
-Recommended model: [FRESH THREAD/CHILD TASK: GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol; SAME THREAD: Preserve current thread model]
-Recommended reasoning level: [FRESH THREAD/CHILD TASK: Light | Medium | High; SAME THREAD: Preserve current thread setting]
+Recommended model: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread model and observe effective runtime model]
+Recommended reasoning/thinking: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread setting and observe effective runtime setting]
 
 Reason:
 [one concise task-specific explanation]
@@ -249,8 +260,8 @@ blocks consecutively with no intervening heading or explanation.
 ```text
 Operator metadata (do not include in prompt)
 Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
-Recommended model: [FRESH THREAD/CHILD TASK: GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol; SAME THREAD: Preserve current thread model]
-Recommended reasoning level: [FRESH THREAD/CHILD TASK: Light | Medium | High; SAME THREAD: Preserve current thread setting]
+Recommended model: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread model and observe effective runtime model]
+Recommended reasoning/thinking: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread setting and observe effective runtime setting]
 
 Reason:
 [one concise task-specific explanation]
@@ -362,8 +373,8 @@ blocks consecutively with no intervening heading or explanation.
 ```text
 Operator metadata (do not include in prompt)
 Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
-Recommended model: [FRESH THREAD/CHILD TASK: GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol; SAME THREAD: Preserve current thread model]
-Recommended reasoning level: [FRESH THREAD/CHILD TASK: Light | Medium | High; SAME THREAD: Preserve current thread setting]
+Recommended model: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread model and observe effective runtime model]
+Recommended reasoning/thinking: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread setting and observe effective runtime setting]
 
 Reason:
 [one concise task-specific explanation]

@@ -244,15 +244,19 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         claude = (DOCS / "tool-adapters/claude.md").read_text(encoding="utf-8")
 
         self.assertIn("Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]", prompts)
-        self.assertIn("Preserve current thread model", prompts)
-        self.assertIn("Preserve current thread setting", prompts)
-        self.assertIn("GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol", prompts)
-        self.assertIn("For a SAME THREAD, preserve the parent model and effort", codex)
-        self.assertIn("`haiku`, `sonnet`, and `opus` aliases", claude)
+        self.assertIn("Preserve requested thread model", prompts)
+        self.assertIn("observe effective runtime model", prompts)
+        self.assertNotIn("GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol", prompts)
+        self.assertIn("Thread routing: <FRESH THREAD | SAME THREAD | CHILD TASK>", codex)
+        self.assertIn("effective model and effort separately", codex)
+        self.assertIn("`haiku`, `sonnet`, `opus`, and `fable` aliases", claude)
         self.assertIn("Thinking And Effort", claude)
+        self.assertIn("Requested configuration and effective runtime configuration", claude)
         self.assertIn("Reviewer independence is separate", claude)
-        for forbidden_equivalence in ("Haiku = Luna", "Sonnet = Terra", "Opus = Sol"):
-            self.assertNotIn(forbidden_equivalence, claude)
+        self.assertIn("Do not infer a mapping from OpenAI", claude)
+        reviewer = (DOCS / "external-ai-reviewer.md").read_text(encoding="utf-8")
+        self.assertIn("A child task spawned by the reviewed party", reviewer)
+        self.assertIn("the external-review role", reviewer)
 
 
 class PromptContractCanonicalizationVectorTests(unittest.TestCase):
