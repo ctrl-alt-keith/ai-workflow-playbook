@@ -37,11 +37,10 @@ DEFAULT_OFFICIAL_SUFFIXES = (
     "support.atlassian.com",
 )
 OFFICIAL_GITHUB_DOMAINS = {"api.github.com", "docs.github.com"}
-OFFICIAL_GITHUB_PATH_MARKERS = (
-    "/github/docs",
-    "/github/rest-api-description",
-    "openapi",
-)
+OFFICIAL_GITHUB_REPOSITORIES = {
+    ("github", "docs"),
+    ("github", "rest-api-description"),
+}
 SAME_ORG_GITHUB_OWNERS = {"ctrl-alt-keith"}
 KNOWN_THIRD_PARTY_SUFFIXES = ("stackoverflow.com", "medium.com", "dev.to")
 IGNORED_MARKDOWN_PATH_PARTS = (
@@ -85,6 +84,13 @@ def is_same_org_github_repo(path: str) -> bool:
     return len(parts) >= 2 and parts[0] in SAME_ORG_GITHUB_OWNERS
 
 
+def github_repository(path: str) -> tuple[str, str] | None:
+    parts = [part for part in path.lower().split("/") if part]
+    if len(parts) < 2:
+        return None
+    return parts[0], parts[1]
+
+
 def configured_domains(raw_values: list[str]) -> tuple[str, ...]:
     domains: list[str] = []
     for raw_value in raw_values:
@@ -111,9 +117,7 @@ def is_official(
     if domain in OFFICIAL_GITHUB_DOMAINS:
         return True
     if domain == "github.com":
-        return is_same_org_github_repo(path) or any(
-            marker in path for marker in OFFICIAL_GITHUB_PATH_MARKERS
-        )
+        return is_same_org_github_repo(path) or github_repository(path) in OFFICIAL_GITHUB_REPOSITORIES
     return False
 
 

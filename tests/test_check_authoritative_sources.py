@@ -163,6 +163,38 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0]["domain"], "github.com")
 
+    def test_official_github_source_repositories_are_allowed(self) -> None:
+        urls = [
+            "https://github.com/github/docs/blob/main/content/rest/about-the-rest-api.md",
+            "https://github.com/github/rest-api-description/tree/main/descriptions",
+        ]
+
+        for url in urls:
+            with self.subTest(url=url):
+                findings = scanner.scan_text(
+                    "docs/example.md",
+                    f"GitHub API source: {url}",
+                )
+
+                self.assertEqual(findings, [])
+
+    def test_github_path_keywords_do_not_allow_unrelated_repositories(self) -> None:
+        urls = [
+            "https://github.com/example/openapi-guide",
+            "https://github.com/example/github/docs",
+            "https://github.com/example/github-rest-api-description",
+        ]
+
+        for url in urls:
+            with self.subTest(url=url):
+                findings = scanner.scan_text(
+                    "docs/example.md",
+                    f"GitHub API source: {url}",
+                )
+
+                self.assertEqual(len(findings), 1)
+                self.assertEqual(findings[0]["domain"], "github.com")
+
     def test_configured_domains_accept_comma_and_space_separated_values(self) -> None:
         domains = scanner.configured_domains(
             ["https://docs.aws.amazon.com, cloud.google.com learn.microsoft.com"]
