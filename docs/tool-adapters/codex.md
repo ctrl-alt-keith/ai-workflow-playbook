@@ -70,6 +70,27 @@ inputs, execution identity, durable result, and authority boundary in the
 attempt evidence when the workflow requires it. A lower-cost child is not an
 independent external reviewer.
 
+### Thread Routing And Configuration Continuity
+
+Apply the shared `FRESH THREAD`, `SAME THREAD`, and `CHILD TASK` vocabulary in
+[`prompts.md`](../prompts.md#thread-routing-and-configuration-continuity). For
+a FRESH THREAD, select the matrix's task-appropriate GPT-5.6 model and effort.
+For a SAME THREAD, preserve the parent model and effort by default: task-class
+sufficiency alone does not justify mutating an already-running configuration.
+For a CHILD TASK, independently select the lowest-cost sufficient model and
+effort for that bounded child and retain the child evidence required by the
+governing workflow.
+
+If a lower-capability SAME THREAD encounters an escalation trigger, delegate
+the unresolved question to a bounded stronger child or make an explicit
+fresh-thread transition where supported; do not silently mutate the parent. If
+a stronger SAME THREAD reaches mechanical follow-up, it may delegate lint,
+hashes, inventories, fixture execution, or evidence packaging to a cheaper
+child without changing the parent. This default preserves context and decision
+continuity, reproducibility, execution provenance, and qualification
+boundaries; it does not claim that an in-thread configuration change necessarily
+harms quality.
+
 For reviews, preserve reviewer independence separately from model capability.
 Keep the selected substantive external reviewer (for example, qualified Claude)
 when the review contract requires it. Internal or mechanical review follows

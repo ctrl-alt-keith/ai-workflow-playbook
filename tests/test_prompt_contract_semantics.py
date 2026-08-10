@@ -201,6 +201,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             "review-packet.md": "prompt-contracts.md",
             "feature-lifecycle.md": "prompt-contracts.md",
             "tool-adapters/codex.md": "prompt-contracts.md",
+            "tool-adapters/claude.md": "prompt-contracts.md",
             "tool-adapters/copilot.md": "prompt-contracts.md",
         }
         for relative_path, link in required_references.items():
@@ -222,6 +223,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             "review-packet.md",
             "feature-lifecycle.md",
             "tool-adapters/codex.md",
+            "tool-adapters/claude.md",
             "tool-adapters/copilot.md",
         )
         link_pattern = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
@@ -235,6 +237,22 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
                     continue
                 resolved = (document.parent / path_text).resolve()
                 self.assertTrue(resolved.exists(), f"{relative_path}: {target}")
+
+    def test_model_routing_metadata_and_vendor_boundaries(self):
+        prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
+        codex = (DOCS / "tool-adapters/codex.md").read_text(encoding="utf-8")
+        claude = (DOCS / "tool-adapters/claude.md").read_text(encoding="utf-8")
+
+        self.assertIn("Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]", prompts)
+        self.assertIn("Preserve current thread model", prompts)
+        self.assertIn("Preserve current thread setting", prompts)
+        self.assertIn("GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol", prompts)
+        self.assertIn("For a SAME THREAD, preserve the parent model and effort", codex)
+        self.assertIn("`haiku`, `sonnet`, and `opus` aliases", claude)
+        self.assertIn("Thinking And Effort", claude)
+        self.assertIn("Reviewer independence is separate", claude)
+        for forbidden_equivalence in ("Haiku = Luna", "Sonnet = Terra", "Opus = Sol"):
+            self.assertNotIn(forbidden_equivalence, claude)
 
 
 class PromptContractCanonicalizationVectorTests(unittest.TestCase):

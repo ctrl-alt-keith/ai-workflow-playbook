@@ -118,12 +118,103 @@ available. For GitHub PR and issue work, prefer connector-first inspection per
 `gh` supplement it and remain appropriate for verified connector gaps or
 repo-local workflows.
 
+## Claude Model, Thinking, And Thread Routing
+
+Choose the lowest-cost Claude Code model/configuration expected to preserve the
+confidence required by the bounded task. Do not infer a mapping from OpenAI
+model names or tiers. Current Claude Code documentation, checked 2026-08-10,
+establishes the executor-native `haiku`, `sonnet`, and `opus` aliases: Haiku for
+simple fast tasks, Sonnet for daily coding, and Opus for complex reasoning.
+Anthropic's current platform model guidance independently positions Haiku 4.5
+for fast, high-volume, cost-sensitive work; Sonnet 5 for coding, agents, and
+enterprise workflows; and Opus 5 for complex agentic coding and enterprise
+work. Exact model IDs, aliases, model availability, context variants, and
+administrator allowlists are runtime evidence, not this adapter's assumption.
+The broader platform catalog also lists Claude Fable 5; it is outside this
+Claude Code routing matrix because the current Claude Code model configuration
+documents `haiku`, `sonnet`, and `opus` as its selectable task-routing aliases.
+
+| Claude task class | Default Claude Code model | Thinking/effort guidance | Escalate when | Downgrade/follow up when |
+| --- | --- | --- | --- | --- |
+| Deterministic external verification; hashes, inventories, evidence citations; simple source inspection; mechanical fallback verification | `haiku` | Use executor default; Claude Code does not document effort control for Haiku | a result is ambiguous, changes a decision, or source access is insufficient | substantive review has converged and a qualified deterministic check remains |
+| Implementation review; evidence-package review; reviewer follow-up after substantive convergence; bounded long-context evidence synthesis | `sonnet` | Use `high` for intelligence-sensitive review where the active runtime supports effort; otherwise preserve the executor default | residual findings repeat, evidence conflicts, or semantics remain unresolved | split inventories, hashes, and other externally checkable claims to Haiku or another qualified mechanism |
+| Substantive adversarial code review; protocol/design review; architecture review; authority or security-boundary review | `opus` | Use `xhigh` where the active runtime supports it; otherwise use the highest supported setting justified by the bounded review | a new trust boundary, unresolved architecture/security implication, conflicting authority, or a finding that changes qualification disposition appears | after substantive convergence, delegate only the remaining mechanical claim; do not relabel it as substantive review |
+
+The table is a conservative routing hypothesis, not a quality-parity claim. A
+large evidence package does not automatically require Opus, and a small
+authority-boundary change may. Do not downgrade when error consequences are
+high, ambiguity is material, independent verification is weak, work is hard to
+reverse, or failure could silently corrupt authority or evidence.
+
+### Thinking And Effort
+
+Claude's thinking and effort controls are distinct from model choice where the
+active Claude surface supports them. Anthropic documents adaptive thinking and
+an `effort` parameter on current supported models; its Claude Code documentation
+lists the actual model/effort combinations and says the effort scale is
+calibrated per model. Use the executor's canonical terminology and supported
+values rather than treating `light`, `medium`, and `high` as portable numeric
+equivalents. For current Claude Code, `low`, `medium`, `high`, `xhigh`, and
+`max` availability depends on the selected model; verify the effective choice
+at runtime. Do not invent a Haiku effort setting where the executor does not
+offer one.
+
+### Thread Routing And Review Boundaries
+
+Apply the shared `FRESH THREAD`, `SAME THREAD`, and `CHILD TASK` vocabulary in
+[`prompts.md`](../prompts.md#thread-routing-and-configuration-continuity). For
+a FRESH THREAD, choose this matrix's task-appropriate model and supported
+thinking/effort setting. For a SAME THREAD, preserve the existing parent model
+and thinking/effort configuration by default: a cheaper setting being sufficient
+for the current sub-phase does not itself justify changing the running task.
+For a CHILD TASK, select the lowest-cost sufficient Claude configuration for the
+bounded child and preserve its inputs, configuration, execution identity,
+durable result, and authority boundary where the workflow requires it.
+
+If a lower-capability SAME THREAD reaches unresolved ambiguity, an architecture
+or authority decision, conflicting authoritative evidence, repeated residual
+correctness findings, an unexplained invariant, a new trust boundary, or a
+decision-relevant uncertainty, prefer a bounded stronger child or explicit
+fresh-thread transition over mutating the parent silently. If a stronger parent
+reaches deterministic follow-up, delegate the bounded check to Haiku or another
+qualified mechanism where worthwhile instead of downgrading the parent solely
+for cost.
+
+Reviewer independence is separate from model, thinking/effort, and thread
+routing. A qualified separate Claude invocation can supply the selected external
+review only when it meets the reviewer contract; an internally spawned Codex
+review remains Codex review. Mechanical external verification and Codex
+mechanical fallback must be labeled as their actual mechanism and never
+retroactively stand in for substantive external review. CAK-106 is observational
+workflow evidence only: substantive authority/process findings justified deeper
+review, while later evidence-precision, environment-limited verification, and
+mechanical follow-up were candidates for a bounded qualified mechanism. It does
+not establish savings, quality parity, or cross-vendor equivalence.
+
+### Prompt Operator Metadata
+
+When an operator prepares a Claude prompt, use one complete metadata block:
+
+```text
+Operator metadata (do not include in prompt)
+Thread routing: <FRESH THREAD | SAME THREAD | CHILD TASK>
+Recommended model: <FRESH THREAD/CHILD TASK: haiku | sonnet | opus; SAME THREAD: Preserve current thread model>
+Recommended thinking/effort: <FRESH THREAD/CHILD TASK: supported executor setting; SAME THREAD: Preserve current thread setting>
+
+Reason:
+<one concise task-specific selection or continuity justification>
+```
+
+This metadata is operator guidance, not task authority. Do not recommend a
+model, effort, or child configuration that the current Claude surface cannot
+support.
+
 ## Reasoning And Model Configuration
 
 When a material prompt uses the product-neutral reasoning class in
 [`prompt-contracts.md`](../prompt-contracts.md) (`light`, `medium`, `high`), the
-Claude representation is an extended-thinking budget plus model selection chosen
-for the bounded task. Concrete model names and thinking budgets are adapter
+Claude representation is a supported thinking/effort setting plus model
+selection chosen for the bounded task. Concrete model names and thinking budgets are adapter
 configuration and attempt-receipt metadata, not the meaning of the class.
 Preserve whether the class and each capability are mandatory or advisory; if the
 available Claude surface cannot meet a mandatory requirement without weakening a
@@ -163,4 +254,10 @@ including [memory](https://docs.claude.com/en/docs/claude-code/memory),
 [permissions](https://code.claude.com/docs/en/permissions),
 [the tools reference](https://code.claude.com/docs/en/tools-reference),
 [subagents](https://docs.claude.com/en/docs/claude-code/sub-agents), and
-[worktrees](https://code.claude.com/docs/en/worktrees).
+[worktrees](https://code.claude.com/docs/en/worktrees). Model-routing claims
+above are additionally derived from Anthropic's official [Claude Code model
+configuration](https://code.claude.com/docs/en/model-config), [model-selection
+guide](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model),
+[models overview](https://platform.claude.com/docs/en/about-claude/models/overview),
+and [thinking guide](https://platform.claude.com/docs/en/about-claude/models/extended-thinking-models),
+checked 2026-08-10.
