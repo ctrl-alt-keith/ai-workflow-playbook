@@ -169,10 +169,16 @@ prompt body into consecutive code blocks with no intervening prose so the
 operator can copy only the executable prompt.
 
 This metadata is operator guidance, not task authority. The recommendation is
-advisory, not a guarantee. Choose the model and effort from the bounded task
-being handed off, using the routing matrix above. Light, Medium, and High are
-practical recommendation categories when the execution surface does not
-provide more specific established terminology:
+advisory, not a guarantee. Interpret FRESH/SAME routing before prompt delivery:
+do not tell downstream Codex to change or preserve its parent model or
+reasoning level when it lacks that control. The executable task body remains
+complete without metadata and includes child-dispatch instructions only when
+the active Codex surface can perform that bounded delegation. Runtime-model
+facts may remain in the task body when the task must record or validate them.
+Choose the model and effort from the bounded task being handed off, using the
+routing matrix above. Light, Medium, and High are practical recommendation
+categories when the execution surface does not provide more specific
+established terminology:
 
 - High usually fits workflow or system architecture, ambiguous repository-wide
   design, synthesis across conflicting evidence, major refactoring with broad

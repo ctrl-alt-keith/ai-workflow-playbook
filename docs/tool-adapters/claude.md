@@ -231,7 +231,12 @@ Reason:
 
 This metadata is operator guidance, not task authority. Do not recommend a
 model, effort, or child configuration that the current Claude surface cannot
-support.
+support. Interpret FRESH/SAME routing before prompt delivery: do not tell the
+downstream Claude task to change or preserve parent configuration when that
+surface does not expose the control. The executable task body must be complete
+without metadata and may authorize child dispatch only where that Claude
+surface supports it. Keep task-required requested/effective runtime evidence in
+the executable body when it is a validation or qualification requirement.
 
 ## Reasoning And Model Configuration
 
