@@ -16,11 +16,74 @@ a second copy of those rules.
 - Small tasks stay small when they extend an existing documented seam and avoid
   new abstractions unless clearly required.
 
-## GPT-5.6 Sol Posture
+## GPT-5.6 Model And Reasoning Routing
 
-GPT-5.6 Sol is the flagship GPT-5.6 role for complex reasoning and coding, not
-a universal replacement for lower-cost or latency-sensitive model roles. For
-Codex work using Sol, prefer a compact, outcome-oriented task envelope that:
+Choose the lowest-cost GPT-5.6 model and reasoning effort that preserves the
+confidence required by the bounded task. Model selection and reasoning effort
+are separate configuration decisions: select both deliberately, and do not
+default substantial work to Sol merely because it is long-running.
+
+The current official positioning, checked 2026-08-10, is: Sol for frontier
+capability, Terra for an intelligence/cost balance, and Luna for efficient,
+high-volume, cost-sensitive workloads. GPT-5.6 supports `none`, `low`,
+`medium`, `high`, `xhigh`, and `max` reasoning effort; availability of a
+specific combination remains executor/runtime evidence. This adapter uses
+Light, Medium, and High as portable recommendation classes, mapped to the
+available runtime setting by the operator.
+
+Use task characteristics, not duration, to route: ambiguity, consequence of
+error, repository-context breadth, novelty, architectural judgment,
+reversibility, reviewer role, repetition/volume, and strength of independent
+validation. A short task can still require Sol; a long deterministic task can
+remain on Luna.
+
+| Task class | Default model | Default reasoning | Escalate when | Downgrade/delegate when |
+| --- | --- | --- | --- | --- |
+| Status hydration; Git/Linear checks; inventories/hashes; test or lint invocation; formatting; bounded mechanical verification; evidence-only packaging | Luna | Light | the result is ambiguous, fails unexpectedly, or changes a decision | split data collection and repeatable checks from interpretation |
+| Deterministic file edits or docs cleanup with explicit acceptance criteria; routine PR publication | Luna | Medium | semantics, scope, or validation expectations are unclear | Terra/Sol parent delegates the bounded edit or delivery plumbing |
+| Localized bug fix; routine implementation; normal PR work; CI debugging with a legible failure; frozen-controller test changes; evidence interpretation | Terra | Medium | repeated attempts fail, an invariant cannot be explained, or cross-system scope appears | delegate lint, hashes, fixture runs, and evidence packaging to Luna |
+| Substantial but bounded analysis; moderate synthesis; difficult localized debugging | Terra | High | architecture or authority decisions, conflicting evidence, or unresolved ambiguity remain after bounded investigation | move deterministic execution and verification to Luna |
+| Protocol/design work; architecture synthesis; ambiguous root-cause debugging; high-consequence authority or controller semantics; difficult adversarial review | Sol | High | use `xhigh` or `max` only when representative evidence shows a material reliability gain | delegate established-contract implementation to Terra and mechanical verification to Luna |
+
+Defaults are routing hypotheses, not a guarantee that the lower-cost choice is
+sufficient. Do not downgrade when consequences are high, ambiguity is
+material, validation is weak, work is hard to reverse, or a failure could
+silently corrupt authority or evidence. `xhigh` and `max` are exceptional:
+use them only for a bounded demanding task with an observed quality need; do
+not promote them to a routine default.
+
+### Escalation And Delegation
+
+Escalate a lower-cost task only on evidence: unresolved ambiguity after a
+bounded investigation, an architecture decision, conflicting authorities,
+a high-consequence security/authority decision, repeated failed attempts, an
+unexplained invariant, or a reviewer finding that changes the methodology
+rather than the implementation. Prefer a bounded Sol subtask for that question
+over restarting the entire workflow on Sol when the execution topology allows
+it.
+
+A stronger parent should delegate deterministic, independently checkable work
+downward when supported: Sol architecture to Terra implementation; Sol or Terra
+to Luna for lint, hashes, inventories, fixture execution, and evidence
+packaging. Preserve each child's selected model, reasoning effort, bounded
+inputs, execution identity, durable result, and authority boundary in the
+attempt evidence when the workflow requires it. A lower-cost child is not an
+independent external reviewer.
+
+For reviews, preserve reviewer independence separately from model capability.
+Keep the selected substantive external reviewer (for example, qualified Claude)
+when the review contract requires it. Internal or mechanical review follows
+this matrix; Sol is not automatic for a narrow, deterministic fallback.
+
+The CAK-106 experience supports this split as observed workflow evidence, not
+a benchmark: protocol ambiguity, authority architecture, controller semantics,
+and architecture synthesis justified stronger reasoning, while repeated focused
+validation, hashes/inventories, Git checks, fixture execution, evidence
+packaging, and review-follow-up plumbing were plausible Terra or Luna work. Do
+not infer quantitative savings without measured usage evidence.
+
+For a Codex task using any selected model, prefer a compact, outcome-oriented
+task envelope that:
 
 - names the current work layer for a long task: research, design,
   implementation, review, or coordination
@@ -54,12 +117,13 @@ caching, and multi-agent execution outside the baseline migration. Evaluate
 each optional feature separately only when the workload shape and measured
 results justify it. Preserve behavior and settings before optimizing.
 
-### Reasoning-Level Recommendations
+### Operator Metadata And Reasoning Recommendations
 
 When the playbook produces or recommends a complete Codex prompt, precede the
 executable prompt with this plain-text operator metadata:
 
 ```text
+Recommended model: <GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol>
 Recommended reasoning level: <Light | Medium | High>
 
 Reason:
@@ -71,10 +135,11 @@ immediately afterward. When rendering Markdown, separate the metadata and
 prompt body into consecutive code blocks with no intervening prose so the
 operator can copy only the executable prompt.
 
-Treat Light, Medium, and High as practical recommendation categories when the
-execution surface does not provide more specific established terminology. The
-recommendation is advisory, not a guarantee. Choose it from the bounded task
-being handed off:
+This metadata is operator guidance, not task authority. The recommendation is
+advisory, not a guarantee. Choose the model and effort from the bounded task
+being handed off, using the routing matrix above. Light, Medium, and High are
+practical recommendation categories when the execution surface does not
+provide more specific established terminology:
 
 - High usually fits workflow or system architecture, ambiguous repository-wide
   design, synthesis across conflicting evidence, major refactoring with broad
@@ -119,7 +184,8 @@ setting.
 
 This posture is derived from OpenAI's current
 [GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/latest-model)
-and [GPT-5.6 Sol model reference](https://developers.openai.com/api/docs/models/gpt-5.6-sol).
+and [model selection reference](https://developers.openai.com/api/docs/models),
+checked 2026-08-10.
 
 ## Prompt-Contract Mapping
 

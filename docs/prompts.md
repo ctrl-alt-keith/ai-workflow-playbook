@@ -81,8 +81,8 @@ its meaning or execution.
 
 Use this template only when the intended interaction mode is direct
 implementation. For review or orchestration, use the matching template instead.
-Apply the reasoning-selection guidance in
-[`tool-adapters/codex.md`](tool-adapters/codex.md#reasoning-level-recommendations)
+Apply the model-and-reasoning routing guidance in
+[`tool-adapters/codex.md`](tool-adapters/codex.md#gpt-56-model-and-reasoning-routing)
 to the bounded task. The first block below is operator metadata for the human
 or operator. It is not part of the executable prompt and should not be copied
 into the downstream agent. Copy or deliver only the second block. Emit the two
@@ -90,6 +90,7 @@ blocks consecutively with no intervening heading or explanation.
 
 ```text
 Operator metadata (do not include in prompt)
+Recommended model: [GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol]
 Recommended reasoning level: [Light | Medium | High]
 
 Reason:
@@ -215,8 +216,8 @@ Required inputs:
 - `validation_path`
 - `delivery_expectation`
 
-Apply the reasoning-selection guidance in
-[`tool-adapters/codex.md`](tool-adapters/codex.md#reasoning-level-recommendations)
+Apply the model-and-reasoning routing guidance in
+[`tool-adapters/codex.md`](tool-adapters/codex.md#gpt-56-model-and-reasoning-routing)
 to the bounded task. The first block below is operator metadata for the human
 or operator. It is not part of the executable prompt and should not be copied
 into the downstream agent. Copy or deliver only the second block. Emit the two
@@ -224,6 +225,7 @@ blocks consecutively with no intervening heading or explanation.
 
 ```text
 Operator metadata (do not include in prompt)
+Recommended model: [GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol]
 Recommended reasoning level: [Light | Medium | High]
 
 Reason:
@@ -326,8 +328,8 @@ Required inputs:
 - `task_or_issue_context` (`none` when unavailable)
 - `summary_only` (`yes` or `no`)
 
-Apply the reasoning-selection guidance in
-[`tool-adapters/codex.md`](tool-adapters/codex.md#reasoning-level-recommendations)
+Apply the model-and-reasoning routing guidance in
+[`tool-adapters/codex.md`](tool-adapters/codex.md#gpt-56-model-and-reasoning-routing)
 to the bounded task. The first block below is operator metadata for the human
 or operator. It is not part of the executable prompt and should not be copied
 into the downstream agent. Copy or deliver only the second block. Emit the two
@@ -335,6 +337,7 @@ blocks consecutively with no intervening heading or explanation.
 
 ```text
 Operator metadata (do not include in prompt)
+Recommended model: [GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol]
 Recommended reasoning level: [Light | Medium | High]
 
 Reason:
