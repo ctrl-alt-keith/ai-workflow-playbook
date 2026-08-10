@@ -201,6 +201,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             "review-packet.md": "prompt-contracts.md",
             "feature-lifecycle.md": "prompt-contracts.md",
             "tool-adapters/codex.md": "prompt-contracts.md",
+            "tool-adapters/claude.md": "prompt-contracts.md",
             "tool-adapters/copilot.md": "prompt-contracts.md",
         }
         for relative_path, link in required_references.items():
@@ -222,6 +223,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             "review-packet.md",
             "feature-lifecycle.md",
             "tool-adapters/codex.md",
+            "tool-adapters/claude.md",
             "tool-adapters/copilot.md",
         )
         link_pattern = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
@@ -235,6 +237,26 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
                     continue
                 resolved = (document.parent / path_text).resolve()
                 self.assertTrue(resolved.exists(), f"{relative_path}: {target}")
+
+    def test_model_routing_metadata_and_vendor_boundaries(self):
+        prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
+        codex = (DOCS / "tool-adapters/codex.md").read_text(encoding="utf-8")
+        claude = (DOCS / "tool-adapters/claude.md").read_text(encoding="utf-8")
+
+        self.assertIn("Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]", prompts)
+        self.assertIn("Preserve requested thread model", prompts)
+        self.assertIn("observe effective runtime model", prompts)
+        self.assertNotIn("GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol", prompts)
+        self.assertIn("Thread routing: <FRESH THREAD | SAME THREAD | CHILD TASK>", codex)
+        self.assertIn("effective model and effort separately", codex)
+        self.assertIn("`haiku`, `sonnet`, `opus`, and `fable` aliases", claude)
+        self.assertIn("Thinking And Effort", claude)
+        self.assertIn("Requested configuration and effective runtime configuration", claude)
+        self.assertIn("Reviewer independence is separate", claude)
+        self.assertIn("Do not infer a mapping from OpenAI", claude)
+        reviewer = (DOCS / "external-ai-reviewer.md").read_text(encoding="utf-8")
+        self.assertIn("A child task spawned by the reviewed party", reviewer)
+        self.assertIn("the external-review role", reviewer)
 
 
 class PromptContractCanonicalizationVectorTests(unittest.TestCase):

@@ -23,6 +23,39 @@ identity, authority, safety, validation, or unambiguous retrieval. Reducing
 redundant context is execution engineering, not methodology or architecture
 evidence.
 
+## Thread Routing And Configuration Continuity
+
+Model selection, reasoning or thinking configuration, and thread routing are
+separate decisions. Declare one of these routing values in operator metadata:
+
+- `FRESH THREAD`: select the task-appropriate model and separately select a
+  supported reasoning or thinking configuration through the executor adapter.
+- `SAME THREAD`: preserve the current thread's model and configuration by
+  default. Preserve the requested parent configuration; observe and account for
+  any effective runtime substitution. A lower-cost setting being sufficient for
+  the next sub-phase does not itself authorize or justify changing an
+  already-running task.
+- `CHILD TASK`: select the lowest-cost sufficient configuration for the bounded
+  child, and preserve its model/configuration, inputs, execution identity,
+  durable result, and authority boundary where the workflow requires it.
+
+Use the executor adapter for vendor-specific routing. For an existing task that
+exceeds its assigned capability, prefer a bounded stronger child or an explicit
+fresh-thread transition over an untracked parent configuration change. For an
+existing stronger task's deterministic follow-up, prefer a bounded cheaper
+child where worthwhile rather than downgrading the parent in place. Continuity
+preserves context, decision provenance, reproducibility, and qualification
+boundaries; it does not prevent justified escalation.
+
+Requested configuration is the operator's selected model and supported
+reasoning/thinking setting. Effective configuration is what the runtime reports
+as serving the work. Record requested and effective values separately where the
+runtime exposes them, along with a fallback or substitution event. If the
+effective value is not observable, say so; requested configuration alone does
+not prove execution identity. A runtime change is not automatically fatal, but
+requalify, escalate, or stop when it fails a minimum-capability or exact-model
+requirement.
+
 ## Prompt Contract Identity
 
 For material execution that may be reviewed, recovered, or replayed, apply the
@@ -81,8 +114,8 @@ its meaning or execution.
 
 Use this template only when the intended interaction mode is direct
 implementation. For review or orchestration, use the matching template instead.
-Apply the reasoning-selection guidance in
-[`tool-adapters/codex.md`](tool-adapters/codex.md#reasoning-level-recommendations)
+Apply the model-and-reasoning routing guidance in
+[`tool-adapters/codex.md`](tool-adapters/codex.md#gpt-56-model-and-reasoning-routing)
 to the bounded task. The first block below is operator metadata for the human
 or operator. It is not part of the executable prompt and should not be copied
 into the downstream agent. Copy or deliver only the second block. Emit the two
@@ -90,7 +123,9 @@ blocks consecutively with no intervening heading or explanation.
 
 ```text
 Operator metadata (do not include in prompt)
-Recommended reasoning level: [Light | Medium | High]
+Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
+Recommended model: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread model and observe effective runtime model]
+Recommended reasoning/thinking: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread setting and observe effective runtime setting]
 
 Reason:
 [one concise task-specific explanation]
@@ -215,8 +250,8 @@ Required inputs:
 - `validation_path`
 - `delivery_expectation`
 
-Apply the reasoning-selection guidance in
-[`tool-adapters/codex.md`](tool-adapters/codex.md#reasoning-level-recommendations)
+Apply the model-and-reasoning routing guidance in
+[`tool-adapters/codex.md`](tool-adapters/codex.md#gpt-56-model-and-reasoning-routing)
 to the bounded task. The first block below is operator metadata for the human
 or operator. It is not part of the executable prompt and should not be copied
 into the downstream agent. Copy or deliver only the second block. Emit the two
@@ -224,7 +259,9 @@ blocks consecutively with no intervening heading or explanation.
 
 ```text
 Operator metadata (do not include in prompt)
-Recommended reasoning level: [Light | Medium | High]
+Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
+Recommended model: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread model and observe effective runtime model]
+Recommended reasoning/thinking: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread setting and observe effective runtime setting]
 
 Reason:
 [one concise task-specific explanation]
@@ -326,8 +363,8 @@ Required inputs:
 - `task_or_issue_context` (`none` when unavailable)
 - `summary_only` (`yes` or `no`)
 
-Apply the reasoning-selection guidance in
-[`tool-adapters/codex.md`](tool-adapters/codex.md#reasoning-level-recommendations)
+Apply the model-and-reasoning routing guidance in
+[`tool-adapters/codex.md`](tool-adapters/codex.md#gpt-56-model-and-reasoning-routing)
 to the bounded task. The first block below is operator metadata for the human
 or operator. It is not part of the executable prompt and should not be copied
 into the downstream agent. Copy or deliver only the second block. Emit the two
@@ -335,7 +372,9 @@ blocks consecutively with no intervening heading or explanation.
 
 ```text
 Operator metadata (do not include in prompt)
-Recommended reasoning level: [Light | Medium | High]
+Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
+Recommended model: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread model and observe effective runtime model]
+Recommended reasoning/thinking: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread setting and observe effective runtime setting]
 
 Reason:
 [one concise task-specific explanation]

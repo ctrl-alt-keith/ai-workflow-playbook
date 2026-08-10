@@ -12,6 +12,14 @@ A reviewer verdict is evidence, not execution authority. It does not grant
 implementation, approval, merge, release, or another transition. Human and
 repo-local authority boundaries continue to control.
 
+External-review independence is a role boundary, not a model, vendor, effort,
+or thread property. A child task spawned by the reviewed party does not satisfy
+the external-review role, even when it uses a different provider or isolated
+context. A qualifying external reviewer is separately invoked under the review
+contract and does not inherit the reviewed party's execution context or
+authority. This rule does not make child work generally invalid; it only limits
+what can satisfy the external-review prerequisite.
+
 ## Review Modes
 
 ### Lightweight targeted review

@@ -118,13 +118,129 @@ available. For GitHub PR and issue work, prefer connector-first inspection per
 `gh` supplement it and remain appropriate for verified connector gaps or
 repo-local workflows.
 
+## Claude Model, Thinking, And Thread Routing
+
+Choose the lowest-cost Claude Code model/configuration expected to preserve the
+confidence required by the bounded task. Do not infer a mapping from OpenAI
+model names or tiers. Current Claude Code documentation, checked 2026-08-10,
+establishes the executor-native `haiku`, `sonnet`, `opus`, and `fable` aliases:
+Haiku for simple fast tasks, Sonnet for daily coding, Opus for complex reasoning,
+and Fable for the hardest and longest-running tasks.
+Anthropic's current platform model guidance independently positions Haiku 4.5
+for fast, high-volume, cost-sensitive work; Sonnet 5 for coding, agents, and
+enterprise workflows; and Opus 5 for complex agentic coding and enterprise
+work. Exact model IDs, aliases, model availability, context variants, and
+administrator allowlists are runtime evidence, not this adapter's assumption.
+Claude Code documents `best` as Fable where available and otherwise the latest
+Opus; it is not a durable qualification guarantee. Fable requires a current
+Claude Code version and is unavailable under zero-data-retention. Its safety
+classifiers can trigger documented fallback, so use an explicit Fable request
+only when its effective runtime identity can be observed and meets the task's
+qualification requirements.
+
+| Claude task class | Default Claude Code model | Thinking/effort guidance | Escalate when | Downgrade/follow up when |
+| --- | --- | --- | --- | --- |
+| Deterministic external verification; hashes, inventories, evidence citations; simple source inspection; mechanical fallback verification | `haiku` | Use executor default; Claude Code does not document effort control for Haiku | a result is ambiguous, changes a decision, or source access is insufficient | substantive review has converged and a qualified deterministic check remains |
+| Implementation review; evidence-package review; reviewer follow-up after substantive convergence; bounded long-context evidence synthesis | `sonnet` | Use the documented default `high`; use `medium` or `low` only as an explicit cost/latency trade-off where bounded evidence supports it | residual findings repeat, evidence conflicts, or semantics remain unresolved | split inventories, hashes, and other externally checkable claims to Haiku or another qualified mechanism |
+| Substantive adversarial code review; protocol/design review; architecture review; authority or security-boundary review | `opus` | Use the model's documented default; do not assume `xhigh` applies to every Opus runtime | a new trust boundary, unresolved architecture/security implication, conflicting authority, or a finding that changes qualification disposition appears | after substantive convergence, delegate only the remaining mechanical claim; do not relabel it as substantive review |
+| Especially hard long-running investigation, outage/root-cause work, or architecture decision that exceeds a normal Opus review | `fable`, where available | Adaptive thinking is always on; use the documented default `high`, and reserve `xhigh`/`max` for a bounded demonstrated need | a safety fallback, unavailable Fable runtime, or remaining decision risk defeats the qualification requirement; stop, seek an explicit human decision, or use another independently qualified mechanism | keep Fable out of routine review and delegate only bounded deterministic follow-up |
+
+The table is a conservative routing hypothesis, not a quality-parity claim. A
+large evidence package does not automatically require Opus, and a small
+authority-boundary change may. Do not downgrade when error consequences are
+high, ambiguity is material, independent verification is weak, work is hard to
+reverse, or failure could silently corrupt authority or evidence.
+
+### Thinking And Effort
+
+Claude's thinking and effort controls are distinct from model choice where the
+active Claude surface supports them. Anthropic documents adaptive thinking and
+an `effort` parameter on current supported models; its Claude Code documentation
+lists the actual model/effort combinations and says the effort scale is
+calibrated per model. Use the executor's canonical terminology and supported
+values rather than treating `light`, `medium`, and `high` as portable numeric
+equivalents. For current Claude Code, `low`, `medium`, `high`, `xhigh`, and
+`max` availability depends on the selected model; verify the effective choice
+at runtime. Claude Code documents `high` as the default for every
+effort-capable model except Opus 4.7, which defaults to `xhigh`; lowering effort
+is the primary cost/latency lever for a bounded task. Do not invent a Haiku
+effort setting where the executor does not offer one.
+
+### Thread Routing And Review Boundaries
+
+Apply the shared `FRESH THREAD`, `SAME THREAD`, and `CHILD TASK` vocabulary in
+[`prompts.md`](../prompts.md#thread-routing-and-configuration-continuity). For
+a FRESH THREAD, choose this matrix's task-appropriate model and supported
+thinking/effort setting. For a SAME THREAD, preserve the existing parent model
+and thinking/effort configuration by default: a cheaper setting being sufficient
+for the current sub-phase does not itself justify changing the running task.
+For a CHILD TASK, select the lowest-cost sufficient Claude configuration for the
+bounded child and preserve its inputs, configuration, execution identity,
+durable result, and authority boundary where the workflow requires it.
+
+Requested configuration and effective runtime configuration are distinct.
+Claude Code can intentionally switch `opusplan` from Opus in plan mode to Sonnet
+in execution, and can use configured fallback chains for unavailable or
+overloaded models; Fable/Opus safety-classifier fallback is also documented.
+For governed work, record the requested model/effort and the effective values
+when the runtime exposes them, plus any substitution event. `/status` exposes
+the current Claude Code model, and Claude Code shows a transcript notice when a
+documented switch occurs. On the Claude API, server-side fallback responses
+identify the serving model and expose fallback blocks and attempt iterations.
+Other providers and error paths need not expose the same evidence or perform a
+server-side fallback. If effective identity is unavailable, record that
+limitation rather than treating the request as proof. Requalify, escalate, or
+stop only when the effective result violates a required capability or exact-model
+reviewer qualification; a runtime event is not automatically fatal.
+
+If a lower-capability SAME THREAD reaches unresolved ambiguity, an architecture
+or authority decision, conflicting authoritative evidence, repeated residual
+correctness findings, an unexplained invariant, a new trust boundary, or a
+decision-relevant uncertainty, prefer a bounded stronger child or explicit
+fresh-thread transition over mutating the parent silently. If a stronger parent
+reaches deterministic follow-up, delegate the bounded check to Haiku or another
+qualified mechanism where worthwhile instead of downgrading the parent solely
+for cost.
+
+Reviewer independence is separate from model, thinking/effort, and thread
+routing. A qualified separate Claude invocation can supply the selected external
+review only when it meets the reviewer contract. A child spawned by the party
+under review is not externally independent, regardless of its model, vendor,
+effort, or isolated context; an internally spawned Codex review remains Codex
+review. Mechanical external verification and Codex
+mechanical fallback must be labeled as their actual mechanism and never
+retroactively stand in for substantive external review. CAK-106 is observational
+workflow evidence only: substantive authority/process findings justified deeper
+review, while later evidence-precision, environment-limited verification, and
+mechanical follow-up were candidates for a bounded qualified mechanism. It does
+not establish savings, quality parity, or cross-vendor equivalence.
+
+### Prompt Operator Metadata
+
+When an operator prepares a Claude prompt, use one complete metadata block:
+
+```text
+Operator metadata (do not include in prompt)
+Thread routing: <FRESH THREAD | SAME THREAD | CHILD TASK>
+Recommended model: <FRESH THREAD/CHILD TASK: haiku | sonnet | opus | fable; SAME THREAD: Preserve requested thread model and observe effective runtime model>
+Recommended thinking/effort: <FRESH THREAD/CHILD TASK: supported executor setting; SAME THREAD: Preserve requested thread setting and observe effective runtime setting>
+
+Reason:
+<one concise task-specific selection or continuity justification>
+```
+
+This metadata is operator guidance, not task authority. Do not recommend a
+model, effort, or child configuration that the current Claude surface cannot
+support.
+
 ## Reasoning And Model Configuration
 
 When a material prompt uses the product-neutral reasoning class in
 [`prompt-contracts.md`](../prompt-contracts.md) (`light`, `medium`, `high`), the
-Claude representation is an extended-thinking budget plus model selection chosen
-for the bounded task. Concrete model names and thinking budgets are adapter
-configuration and attempt-receipt metadata, not the meaning of the class.
+Claude representation is a supported thinking/effort setting plus model
+selection chosen for the bounded task. Concrete model names and thinking/effort
+settings are adapter configuration and attempt-receipt metadata, not the meaning
+of the class.
 Preserve whether the class and each capability are mandatory or advisory; if the
 available Claude surface cannot meet a mandatory requirement without weakening a
 guarantee, fail closed rather than silently downgrade. A model change alone does
@@ -163,4 +279,11 @@ including [memory](https://docs.claude.com/en/docs/claude-code/memory),
 [permissions](https://code.claude.com/docs/en/permissions),
 [the tools reference](https://code.claude.com/docs/en/tools-reference),
 [subagents](https://docs.claude.com/en/docs/claude-code/sub-agents), and
-[worktrees](https://code.claude.com/docs/en/worktrees).
+[worktrees](https://code.claude.com/docs/en/worktrees). Model-routing claims
+above are additionally derived from Anthropic's official [Claude Code model
+configuration](https://code.claude.com/docs/en/model-config), [model-selection
+guide](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model),
+[models overview](https://platform.claude.com/docs/en/about-claude/models/overview),
+[thinking guide](https://platform.claude.com/docs/en/build-with-claude/thinking),
+and [fallback guide](https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback),
+checked 2026-08-10.

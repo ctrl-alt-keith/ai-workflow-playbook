@@ -121,6 +121,10 @@ includes, as applicable:
 - rendered-prompt digest and byte length;
 - selected hydrator, representation adapter, renderer, validation profile,
   and validator;
+- requested executor model and reasoning/thinking configuration, plus the
+  effective values when the runtime exposes them;
+- any observed runtime fallback or substitution event, including any available
+  reason and the qualification consequence;
 - deterministic transport selection and delivery evidence;
 - acting identity and live-authority re-verification result;
 - current runtime safety-policy observation;
