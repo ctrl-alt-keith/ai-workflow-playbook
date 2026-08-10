@@ -56,6 +56,54 @@ not prove execution identity. A runtime change is not automatically fatal, but
 requalify, escalate, or stop when it fails a minimum-capability or exact-model
 requirement.
 
+## Operator Metadata And Executable Prompts
+
+Generated task prompts serve two audiences:
+
+- **Operator metadata** is for the human/operator or an orchestration layer
+  that instantiates the task. It may state thread routing, a recommended model
+  and reasoning/thinking setting, a selection reason, and other runtime
+  guidance the downstream agent cannot control.
+- **Executable prompt** is for the downstream execution agent. It contains
+  only task authority, repository and workflow instructions, scope,
+  constraints, decision rules, validation, stop boundaries, and information
+  the agent can observe, control, or must use to make a task decision.
+
+Copy or deliver only the executable prompt to the downstream agent unless its
+execution surface separately consumes metadata. Operator metadata must never
+be semantically required by the task body: removing it must leave one complete,
+actionable prompt.
+
+Use this drafting test for every executable instruction: include it only when
+the downstream agent can observe it, control it, or must use it to make a task
+decision. Thread creation, parent-model selection, reasoning configuration,
+subscription or usage-budget considerations, and instructions to preserve an
+already-created parent's configuration normally belong only in operator
+metadata. They are immutable runtime facts, not task authority.
+
+Apply the rule to routing as follows:
+
+- For a `FRESH THREAD`, the operator selects the thread, model, and
+  reasoning/thinking setting before prompt delivery. The executable body does
+  not repeat those selections.
+- For a `SAME THREAD`, operator metadata may preserve current configuration;
+  the executable body states only task-relevant continuity, such as preserving
+  repository authority, durable state, or the current branch/PR.
+- For a `CHILD TASK`, the executable body may authorize bounded delegation
+  only where the active executor can perform it. Keep vendor model matrices,
+  effort mapping, and selection rationale in the adapter or orchestration
+  configuration rather than copying them into every child prompt.
+
+This boundary does not remove runtime evidence that the task itself requires.
+An executable prompt may require recording or verifying requested/effective
+runtime model evidence, detecting a disallowed substitution, or writing an
+execution receipt when that information is part of the task's validation or
+qualification boundary.
+
+When a complete prompt materially changes, emit a complete replacement
+operator-metadata block and executable prompt. Do not emit a partial prompt
+patch that requires the operator to splice text into an older prompt.
+
 ## Prompt Contract Identity
 
 For material execution that may be reviewed, recovered, or replayed, apply the
@@ -118,8 +166,9 @@ Apply the model-and-reasoning routing guidance in
 [`tool-adapters/codex.md`](tool-adapters/codex.md#gpt-56-model-and-reasoning-routing)
 to the bounded task. The first block below is operator metadata for the human
 or operator. It is not part of the executable prompt and should not be copied
-into the downstream agent. Copy or deliver only the second block. Emit the two
-blocks consecutively with no intervening heading or explanation.
+into the downstream agent. Copy or deliver only the second block. The second
+block is complete without the metadata. Emit the two blocks consecutively with
+no intervening heading or explanation.
 
 ```text
 Operator metadata (do not include in prompt)

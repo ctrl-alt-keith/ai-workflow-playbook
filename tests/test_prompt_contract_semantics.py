@@ -258,6 +258,25 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertIn("A child task spawned by the reviewed party", reviewer)
         self.assertIn("the external-review role", reviewer)
 
+    def test_operator_metadata_stays_outside_complete_executable_prompts(self):
+        prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
+        codex = (DOCS / "tool-adapters/codex.md").read_text(encoding="utf-8")
+        claude = (DOCS / "tool-adapters/claude.md").read_text(encoding="utf-8")
+        normalized_prompts = " ".join(prompts.split())
+        normalized_codex = " ".join(codex.split())
+        normalized_claude = " ".join(claude.split())
+
+        self.assertIn("Generated task prompts serve two audiences", prompts)
+        self.assertIn("Copy or deliver only the executable prompt", prompts)
+        self.assertIn("can observe it, control it, or must use it", normalized_prompts)
+        self.assertIn("must never be semantically required", normalized_prompts)
+        self.assertIn("complete replacement", prompts)
+        self.assertIn("runtime evidence that the task itself requires", prompts)
+        self.assertIn("do not tell downstream Codex", normalized_codex)
+        self.assertIn("child-dispatch instructions only when", normalized_codex)
+        self.assertIn("does not expose the control", normalized_claude)
+        self.assertIn("requested/effective runtime evidence", normalized_claude)
+
 
 class PromptContractCanonicalizationVectorTests(unittest.TestCase):
     @classmethod
