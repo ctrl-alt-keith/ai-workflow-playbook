@@ -558,11 +558,13 @@ Direct Claude Code execution from Codex under `workspace-write` has a narrower
 qualified runtime contract in addition to the general child-process guidance:
 
 - Keep `USER` and `LOGNAME` consistent with the effective user for the Claude
-  child. An inconsistent login identity can prevent Claude from using an
-  otherwise available authenticated session.
+  child. On the qualification host, normalizing those variables restored
+  Claude authentication; the precise authentication mechanism was not
+  isolated and remains unverified.
 - Ensure the effective writable-root set includes `~/.claude/session-env` for
-  Claude session state. Resolve `~` from the effective user's home when Codex
-  configuration requires an absolute path.
+  the session-environment path exercised by the qualification. Resolve `~`
+  from the effective user's home when Codex configuration requires an absolute
+  path.
 - When Claude will use its Bash tool, ensure the effective writable-root set
   includes `/tmp` for Claude's temporary runtime state. On macOS, verify the
   effective policy and path mapping rather than assuming the displayed
@@ -579,13 +581,16 @@ The concrete qualification was workstation-specific evidence, not portable
 configuration doctrine. On the qualification host, Codex ran as a non-root
 user with that user's `HOME`, while `USER` was absent and `LOGNAME` named a
 different user. Normalizing both login-identity variables restored a minimal
-Claude prompt. Direct write probes isolated the session-state failure to the
-Codex writable-root boundary; after the two Claude-required paths were
-available and Codex was restarted, a Claude Bash probe completed with `hello`,
-and a later focused read-only review did not reproduce the authentication,
-session-state, or Bash temporary-state failures. These results qualify this
-Claude Code path; they do not establish the same paths as requirements for
-other child CLIs.
+Claude prompt. Direct write probes isolated the session-environment write
+failure to the Codex writable-root boundary; after the tested writable paths
+were available and Codex was restarted, a Claude Bash probe completed with
+`hello`, and a later focused read-only review did not reproduce the observed
+authentication, session-environment, or Bash temporary-state failures. These
+results qualify only the tested Claude Code version, host, and invocation
+contexts under that Codex `workspace-write` environment. They do not establish
+a version-independent Claude Code runtime contract, that the tested writable
+roots are sufficient for every Claude workflow, or the same paths as
+requirements for other child CLIs.
 
 ## Autonomous Lane
 
