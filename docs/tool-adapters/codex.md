@@ -386,6 +386,20 @@ Codex-specific application:
   Keep the wrapped operation narrow enough for review and approval surfaces to
   see the intended action.
 
+### Child-Process Login Identity
+
+When Codex launches a child CLI whose authentication or runtime behavior
+depends on login identity, give the child an environment consistent with the
+effective operating-system user. Inspect the effective identity and the
+inherited environment separately; a matching `HOME` does not make an unset or
+conflicting `USER` and `LOGNAME` safe to propagate.
+
+Normalize identity-sensitive variables to the effective user for the bounded
+child invocation or through the applicable Codex environment policy. Do not
+hard-code a workstation username into reusable commands or configuration, and
+do not force this normalization on child CLIs without evidence that their
+behavior depends on login identity.
+
 ### Enforcement-Backed Recursive Cleanup
 
 Direct `rm` and `rm -rf` remain approval-gated. When recursive cleanup is
@@ -537,6 +551,46 @@ caches, and other temp-file users.
 Use repo-local scratch paths for workflow artifacts that need review later. Use
 temporary OS paths only for short-lived process-local files whose path and
 contents do not matter after the command finishes.
+
+### Qualified Direct Claude Code Path
+
+Direct Claude Code execution from Codex under `workspace-write` has a narrower
+qualified runtime contract in addition to the general child-process guidance:
+
+- Keep `USER` and `LOGNAME` consistent with the effective user for the Claude
+  child. On the qualification host, normalizing those variables restored
+  Claude authentication; the precise authentication mechanism was not
+  isolated and remains unverified.
+- Ensure the effective writable-root set includes `~/.claude/session-env` for
+  the session-environment path exercised by the qualification. Resolve `~`
+  from the effective user's home when Codex configuration requires an absolute
+  path.
+- When Claude will use its Bash tool, ensure the effective writable-root set
+  includes `/tmp` for Claude's temporary runtime state. On macOS, verify the
+  effective policy and path mapping rather than assuming the displayed
+  `/tmp` and `/private/tmp` forms represent different requirements.
+
+Codex supports additional roots for `workspace-write` through
+[`sandbox_workspace_write.writable_roots`](https://learn.chatgpt.com/docs/config-file/config-reference#sandbox_workspace_writewritable_roots).
+Prefer only the roots required by the qualified child path. Do not prescribe
+`danger-full-access`, global unsandboxing, or a blanket sandbox bypass when
+these scoped roots are sufficient. A workspace-local `TMPDIR` is not a
+qualified substitute for either Claude path above.
+
+The concrete qualification was workstation-specific evidence, not portable
+configuration doctrine. On the qualification host, Codex ran as a non-root
+user with that user's `HOME`, while `USER` was absent and `LOGNAME` named a
+different user. Normalizing both login-identity variables restored a minimal
+Claude prompt. Direct write probes isolated the session-environment write
+failure to the Codex writable-root boundary; after the tested writable paths
+were available and Codex was restarted, a Claude Bash probe completed with
+`hello`, and a later focused read-only review did not reproduce the observed
+authentication, session-environment, or Bash temporary-state failures. These
+results qualify only the tested Claude Code version, host, and invocation
+contexts under that Codex `workspace-write` environment. They do not establish
+a version-independent Claude Code runtime contract, that the tested writable
+roots are sufficient for every Claude workflow, or the same paths as
+requirements for other child CLIs.
 
 ## Autonomous Lane
 
