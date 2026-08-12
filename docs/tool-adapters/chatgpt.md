@@ -58,6 +58,55 @@ authority, decision-boundary, and re-observation rules remain in
 [`core-model.md`](../core-model.md), while connector availability is governed
 by [`start-here.md`](../start-here.md#connector-availability-is-runtime-evidence).
 
+## Workspace Agents
+
+Workspace Agents are a ChatGPT/Work execution surface, not a second adapter.
+
+### Trigger initiation and durable run authority
+
+API/event and scheduled Workspace Agent runs may begin without an interactive
+user turn. A published agent or channel, API token, trigger payload, schedule
+instructions, prior conversation or memory, and run status are capability,
+input, continuity, or execution evidence; they do not create approval or widen
+task authority. Trigger data is event/run input and evidence, not automatically
+authoritative source state for another system. Each run must resolve its
+durable bounded authority envelope and current required sources. If a required
+source, identity, connection, or authority is missing, stale, conflicting, or
+mismatched, fail closed or return an explicit non-authorizing partial or
+blocked result. Use [`core-model.md`](../core-model.md),
+[`source-first-retrieval.md`](../source-first-retrieval.md), and
+[`maintenance-automations.md`](../maintenance-automations.md) for the shared
+authority, retrieval, and recurring-execution rules. Workspace Agents are
+hosted execution when the required facts, connections, identities, and outputs
+are actually provisioned there.
+
+### Acting connection identity
+
+Workspace Agents can use end-user connections or agent-owned/shared
+connections. Keep the invoker/end user, API caller/token principal, Workspace
+Agent/configuration, and downstream connected-system acting account distinct.
+Tie reads, writes, source scope, attribution, and re-observation to the actual
+connection identity; do not attribute an agent-owned connection action to its
+invoker. Connection permissions expose or constrain capability, but do not
+widen human task authority. Stop when the expected acting identity does not
+match the available connection rather than silently substituting one.
+
+### Draft, publication, and channels
+
+Draft/Preview is candidate or test state, not proof of a published operational
+agent. Publication, sharing/channel enablement, or equivalent activation is a
+material operational transition requiring applicable explicit authority and
+re-observation of the resulting provider state. It can make a selected
+configuration callable, but does not make sources current, grant arbitrary
+downstream authority, convert capability into approval, or make generated
+outputs canonical. If a schedule, trigger, or channel change materially alters
+future initiation, audience, source scope, identity, instructions, or possible
+effects, preserve that material-transition boundary without assuming universal
+republish or version mechanics. Run logs/status, memory, conversation keys,
+generated artifacts, and prior results remain continuity, history, or evidence
+surfaces; a completed run does not replace post-write re-observation of the
+connected-system object.
+
 ## Prompt and downstream-context projection
 
 When the task becomes prompt authoring, activate the current prompt and
