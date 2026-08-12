@@ -295,6 +295,16 @@ Before repo-scoped work:
   provides the required capability. Direct APIs and CLIs remain appropriate
   for verified connector gaps, repository-local workflows, or explicit
   repository policy.
+- For GitHub hydration and ordinary source-first retrieval, treat `gh api` as
+  a direct-service-API fallback rather than the default retrieval primitive.
+  Do not select it only because the REST endpoint is flexible or familiar. Use
+  an available GitHub connector when it provides the required source, or the
+  narrowest high-level `gh` command when that is the appropriate direct
+  repository CLI. If neither provides the required capability, keep `gh api`
+  read-only and scoped to the required state unless the current task separately
+  authorizes mutation. This avoids unnecessary approval friction; it does not
+  create a human approval gate or prohibit `gh api` when it is the narrowest
+  available way to retrieve authoritative state.
 - For policy-sensitive changes, apply the repo-family alignment check in
   [`repo-readiness.md`](../repo-readiness.md#repo-family-policy-alignment)
   before implementation.
@@ -430,6 +440,22 @@ Codex-specific application:
   necessary shell expansion that cannot reasonably be represented directly.
   Keep the wrapped operation narrow enough for review and approval surfaces to
   see the intended action.
+
+### Shell-Only Execution Surfaces
+
+Some Codex execution surfaces expose a shell command string even when Codex
+selected a simple direct operation. A fixed non-login runner such as `zsh -c`
+may therefore appear in executor logs. This transport detail does not authorize
+agent-authored shell wrappers, weaken command-form preflight, or grant an
+approval exemption.
+
+Continue to select the narrowest direct operation and disable login-shell
+semantics where the surface exposes that setting. If a static, contained
+filesystem operation still prompts because the surface exposes no native or
+argv-style primitive, treat that as a runtime approval limitation. Do not
+compensate by adding a broad `mkdir` or `mkdir -p` prefix allow rule: prefix
+matching cannot establish containment for every operand or resolved path.
+Preserve approval or fail closed, and report the runtime limitation.
 
 ### Child-Process Login Identity
 
