@@ -285,6 +285,42 @@ class CodexPreflightTest(unittest.TestCase):
         )
         self.assertIn("PASS playbook repository is reachable with git ls-remote", result.stdout)
 
+    def test_repository_and_ssh_target_overrides_are_passed_as_literal_arguments(self) -> None:
+        commands = self.fake_success_commands()
+        ssh_target = "git@ssh.github.example;not-a-command"
+        repo_url = "git@github.example:org/repo.git;not-a-command"
+        commands["ssh"] = f"""
+            for arg in "$@"; do
+                [ "$arg" = "{ssh_target}" ] && target=1
+            done
+            if [ "${{target:-0}}" -eq 1 ]; then
+                printf '%s\\n' "Hi test! You've successfully authenticated, but GitHub does not provide shell access." >&2
+                exit 1
+            fi
+            exit 255
+        """
+        commands["git"] = f"""
+            if [ "$1" = "ls-remote" ] && [ "$2" = "--exit-code" ] && [ "$3" = "{repo_url}" ]; then
+                exit 0
+            fi
+            exit 128
+        """
+
+        result = self.run_preflight(
+            commands,
+            {
+                "CODEX_PREFLIGHT_GITHUB_SSH_TARGET": ssh_target,
+                "CODEX_PREFLIGHT_REPO_URL": repo_url,
+            },
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn(
+            f"PASS GitHub SSH connectivity works via ssh -T {ssh_target}",
+            result.stdout,
+        )
+        self.assertIn("PASS playbook repository is reachable with git ls-remote", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
