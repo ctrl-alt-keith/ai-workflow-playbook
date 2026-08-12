@@ -431,6 +431,22 @@ Codex-specific application:
   Keep the wrapped operation narrow enough for review and approval surfaces to
   see the intended action.
 
+### Shell-Only Execution Surfaces
+
+Some Codex execution surfaces expose a shell command string even when Codex
+selected a simple direct operation. A fixed non-login runner such as `zsh -c`
+may therefore appear in executor logs. This transport detail does not authorize
+agent-authored shell wrappers, weaken command-form preflight, or grant an
+approval exemption.
+
+Continue to select the narrowest direct operation and disable login-shell
+semantics where the surface exposes that setting. If a static, contained
+filesystem operation still prompts because the surface exposes no native or
+argv-style primitive, treat that as a runtime approval limitation. Do not
+compensate by adding a broad `mkdir` or `mkdir -p` prefix allow rule: prefix
+matching cannot establish containment for every operand or resolved path.
+Preserve approval or fail closed, and report the runtime limitation.
+
 ### Child-Process Login Identity
 
 When Codex launches a child CLI whose authentication or runtime behavior

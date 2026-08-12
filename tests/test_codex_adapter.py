@@ -54,3 +54,14 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertIn("Reconciliation remains controller-owned", self.contents)
         self.assertIn("orchestration-and-parallelism.md", self.contents)
         self.assertNotIn("Reconciliation And Merge Sequence", self.contents)
+
+    def test_shell_only_transport_preserves_runtime_approval_boundary(self):
+        for phrase in (
+            "Shell-Only Execution Surfaces",
+            "fixed non-login runner such as `zsh -c`",
+            "does not authorize agent-authored shell wrappers",
+            "runtime approval limitation",
+            "broad `mkdir` or `mkdir -p` prefix allow rule",
+            "containment for every operand or resolved path",
+        ):
+            self.assertIn(phrase, self.contents)
