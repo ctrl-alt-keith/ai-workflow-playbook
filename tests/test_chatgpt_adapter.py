@@ -25,6 +25,7 @@ class ChatGPTAdapterTests(unittest.TestCase):
             "Persistent-context activation",
             "Chat, Work, and execution locality",
             "Connected apps, approvals, and consequential actions",
+            "Workspace Agents",
             "Prompt and downstream-context projection",
             "Generated artifacts",
             "Scheduled and unattended execution",
@@ -50,3 +51,32 @@ class ChatGPTAdapterTests(unittest.TestCase):
             "does not expand the human-authorized task", " ".join(contents.split())
         )
         self.assertIn("not symptom-by-symptom repair", contents)
+
+    def test_workspace_agents_projection_preserves_existing_owners(self):
+        contents = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")
+        normalized = " ".join(contents.split())
+
+        self.assertEqual(contents.count("## Workspace Agents"), 1)
+        self.assertFalse((DOCS / "tool-adapters" / "workspace-agents.md").exists())
+
+        for anchor in (
+            "API/event and scheduled Workspace Agent runs may begin without an interactive",
+            "durable bounded authority envelope",
+            "not automatically authoritative source state for another system",
+            "fail closed or return an explicit non-authorizing partial or",
+            "invoker/end user, API caller/token principal, Workspace",
+            "end-user connections or agent-owned/shared",
+            "do not widen human task authority",
+            "Draft/Preview is candidate or test state, not proof of a published operational",
+            "material operational transition requiring applicable explicit authority",
+            "does not make sources current, grant arbitrary downstream authority",
+            "completed run does not replace post-write re-observation",
+        ):
+            self.assertIn(anchor, normalized)
+
+        for owner in (
+            "core-model.md",
+            "source-first-retrieval.md",
+            "maintenance-automations.md",
+        ):
+            self.assertIn(owner, contents)
