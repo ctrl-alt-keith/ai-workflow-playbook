@@ -131,6 +131,26 @@ or "minimize tool calls." Describe the outcome and evidence that matter. A
 changed model string or a successful tool call is progress evidence, not proof
 that the task is complete.
 
+## Goal Mode
+
+Goal mode is Codex persistence and execution control for one bounded,
+verifiable outcome. Construct it from the existing outcome-oriented task
+envelope and route its task, authority, source-refresh, and (when activated)
+material-prompt requirements to [`core-model.md`](../core-model.md),
+[`start-here.md`](../start-here.md),
+[`source-first-retrieval.md`](../source-first-retrieval.md),
+[`prompts.md`](../prompts.md), and
+[`prompt-contracts.md`](../prompt-contracts.md); it does not create a second
+contract.
+
+Goal state, completion, or successful validation is execution evidence, not
+human acceptance, approval, merge, release, publish, adoption, or downstream
+continuation authority. When scope, workflow, authoritative-source
+requirements, execution locality, completion boundary, or authority changes
+materially, re-evaluate the current activation, source-refresh, and authority
+requirements. Edit, replace, pause, or clear stale Goal state as appropriate;
+do not let it silently drive continuation under an obsolete task contract.
+
 ### Model And Prompt Updates
 
 A model upgrade does not by itself justify a prompt rewrite. Preserve the
@@ -338,6 +358,13 @@ history, parent-agent role, implicit project state, or hidden constraints. Do
 not rely on phrases such as "fork this conversation" or "use the same role and
 context as above" as the source of authority for worker behavior.
 
+Before child dispatch, the controller resolves current startup activation for
+the bounded child task, establishes the repository floor, resolves every
+child-activated canonical owner or source, and identifies exact source or
+evidence identities when required. The controller places the selected
+references or bounded retrieval instructions in the child envelope and retains
+ownership of the judgment that the context and source set is sufficient.
+
 Prefer standalone worker prompts that include:
 
 - repository and working directory
@@ -349,11 +376,29 @@ Prefer standalone worker prompts that include:
 - branch, worktree, file-surface, or non-overlap expectations
 - reporting expectations for summary, validation, blockers, and residual risks
 
+The child may retrieve exact controller-selected sources, inspect its bounded
+assigned repository, issue, PR, or file surface, and report unavailable,
+stale, conflicting, or insufficient named sources or a newly encountered
+workflow or source activation trigger. It may not turn "read whatever you
+need" into self-authorized broad hydration; certify sufficiency from
+confidence, task success, inherited full, partial, or no conversation history,
+visible files, filesystem access, tool access, or successful retrieval; or
+silently widen the source set, workflow, scope, or authority.
+
+When a child encounters a newly activated owner or source, it reports the
+trigger under its stop/report contract. The controller re-runs activation
+routing and sends a bounded follow-up, reissues the task, handles the work
+directly, or stops the lane; the child does not independently widen itself and
+declare the new set sufficient.
+
 Worker authority stops at the assigned task envelope. A worker may implement,
 validate, commit, and open or prepare the requested PR surface. It should not
 merge, enable auto-merge, update other workers' branches, absorb unassigned
 issues, or continue into downstream reconciliation unless the human explicitly
-authorizes that specific step.
+authorizes that specific step. Context transfer, sandbox or permission
+inheritance, filesystem visibility, and execution capability do not widen this
+authority. Reconciliation remains controller-owned under
+[`orchestration-and-parallelism.md`](../orchestration-and-parallelism.md).
 
 This is a Codex execution quirk, not a universal playbook rule. Other adapters
 may describe different context-passing mechanisms when their execution surfaces
