@@ -628,6 +628,50 @@ contents do not matter after the command finishes.
 Direct Claude Code execution from Codex under `workspace-write` has a narrower
 qualified runtime contract in addition to the general child-process guidance:
 
+For an automated, non-interactive Claude review, use the repository's
+[`claude-review`](../../scripts/claude-review) launcher rather than a hand-built
+environment assignment. It derives the effective operating-system account,
+normalizes `USER`, `LOGNAME`, and `HOME` for the Claude child, reads the review
+prompt from standard input rather than argv, and emits a bounded, redacted
+diagnostic record. Pass the existing review flags unchanged after `--`; the
+launcher does not select a model, tools, permissions, or reviewer role.
+
+Before an expensive independent review, run the same launcher with
+`--auth-preflight`. It reuses the effective-user environment and executable
+resolution, sends only the fixed `CLAUDE_AUTH_OK` prompt on standard input,
+disables all Claude tools, passes `--no-session-persistence`, and runs from a
+fresh temporary directory. It may retain the selected model and effort, but it
+is not substantive review and does not read repository, candidate, or held-out
+content.
+For example:
+
+```text
+scripts/claude-review --auth-preflight -- --model opus --effort high
+```
+
+`AUTH_PREFLIGHT_OK` means authentication worked for that process context only;
+it does not guarantee that a later review cannot expire. Do not start the
+review after a preflight failure.
+
+The launcher preserves distinct documented failure classes when provider output
+supports them: `AUTH_OAUTH_TOKEN_EXPIRED_401`,
+`AUTH_SAVED_LOGIN_REFRESH_REJECTED`, `AUTH_OAUTH_TOKEN_REVOKED`, and
+`AUTH_INVALID_CREDENTIALS`. An auth-shaped but unsupported variant is
+`AUTH_UNKNOWN_FAIL_CLOSED`; do not invent a provider cause. All auth failures
+preserve candidate bytes and review state, retain only non-secret diagnostics,
+stop automated retries, do not mutate auth/session files, and never emit
+`REJECT`. `AUTH_OAUTH_TOKEN_EXPIRED_401` and
+`AUTH_SAVED_LOGIN_REFRESH_REJECTED` require interactive operator
+reauthentication before rerunning the unchanged preflight and review. The
+remaining documented classes require the matching supported operator diagnosis
+in the same environment; do not substitute another reviewer.
+
+Anthropic's [authentication documentation](https://code.claude.com/docs/en/authentication)
+describes `claude setup-token` as a separate long-lived automation credential
+option. This reviewer path neither provisions nor adopts it. Any
+future use requires separate credential-management authority, a supported
+secret store, rotation/revocation ownership, and redacted receipts.
+
 - Keep `USER` and `LOGNAME` consistent with the effective user for the Claude
   child. On the qualification host, normalizing those variables restored
   Claude authentication; the precise authentication mechanism was not

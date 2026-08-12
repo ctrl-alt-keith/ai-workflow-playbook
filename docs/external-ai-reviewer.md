@@ -60,6 +60,22 @@ can complete the review or the human authority explicitly approves a revised
 review plan. Do not silently substitute another provider, relabel substitute
 output as the selected review, or omit the failure from provenance.
 
+Before an expensive Claude review, run its bounded effective-user auth
+preflight. A successful preflight only establishes authentication for that
+process context; it is not evidence about candidate quality or a guarantee for
+the later review. On a preflight or review failure, preserve candidate and
+review state unchanged, record only non-secret diagnostics, stop automated
+retries, and do not infer `REJECT`, alter auth/session files, or try another
+identity-context guess after the validated context is in effect.
+
+When provider output reliably identifies `AUTH_OAUTH_TOKEN_EXPIRED_401` or
+`AUTH_SAVED_LOGIN_REFRESH_REJECTED`, stop at `REVIEWER INFRASTRUCTURE FAILURE
+— OPERATOR REAUTHENTICATION REQUIRED` and require interactive reauthentication
+before rerunning the unchanged preflight and review. Preserve documented
+revoked/invalid-credential classes separately; unknown auth-shaped output must
+fail closed without a conjectured provider cause. Neither kind of failure is
+candidate evidence or grounds to substitute another reviewer.
+
 Use [`review-packet.md#independent-review-findings-and-re-review`](review-packet.md#independent-review-findings-and-re-review)
 for finding disposition and the decision between no re-review, focused
 re-review, and a fresh proposal with full review. Do not duplicate those
