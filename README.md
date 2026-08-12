@@ -97,7 +97,7 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/alignment-checkpoints.md`](docs/alignment-checkpoints.md): pause points and branch/PR rules
 - [`docs/review-packet.md`](docs/review-packet.md): standard human review packet
 - [`docs/knowledge-ingestion-patterns.md`](docs/knowledge-ingestion-patterns.md): reusable patterns for provenance-aware ingestion and retained-knowledge governance boundaries
-- [`docs/tool-adapters/`](docs/tool-adapters/): documented executor-specific adapter guidance; Codex runs must apply [`docs/tool-adapters/codex.md`](docs/tool-adapters/codex.md) and Claude runs must apply [`docs/tool-adapters/claude.md`](docs/tool-adapters/claude.md)
+- [`docs/tool-adapters/`](docs/tool-adapters/): documented executor-specific adapter guidance; Codex runs must apply [`docs/tool-adapters/codex.md`](docs/tool-adapters/codex.md), Claude runs must apply [`docs/tool-adapters/claude.md`](docs/tool-adapters/claude.md), and repository-scoped ChatGPT/Work runs must apply [`docs/tool-adapters/chatgpt.md`](docs/tool-adapters/chatgpt.md)
 - [`docs/playbook-integrity-check.md`](docs/playbook-integrity-check.md): lightweight anti-drift check
 - [`docs/new-repo-bootstrap.md`](docs/new-repo-bootstrap.md): reusable bootstrap pattern for brand-new repositories
 - [`docs/maintenance-automations.md`](docs/maintenance-automations.md):
