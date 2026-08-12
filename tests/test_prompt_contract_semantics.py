@@ -203,6 +203,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             "tool-adapters/codex.md": "prompt-contracts.md",
             "tool-adapters/claude.md": "prompt-contracts.md",
             "tool-adapters/copilot.md": "prompt-contracts.md",
+            "tool-adapters/chatgpt.md": "prompt-contracts.md",
         }
         for relative_path, link in required_references.items():
             contents = (DOCS / relative_path).read_text(encoding="utf-8")
@@ -225,6 +226,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             "tool-adapters/codex.md",
             "tool-adapters/claude.md",
             "tool-adapters/copilot.md",
+            "tool-adapters/chatgpt.md",
         )
         link_pattern = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
         for relative_path in affected_documents:
