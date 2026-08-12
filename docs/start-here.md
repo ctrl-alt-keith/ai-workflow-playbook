@@ -125,8 +125,9 @@ scoped analysis, review, planning, advice, prompting, or mutation.
 - `docs/core-model.md` -> general operating principles and roles
 - the target repository's `AGENTS.md` -> repo-local execution authority
 - `docs/tool-adapters/<executor>.md` -> executor-specific deltas when a matching
-  adapter exists; Codex runs must read `docs/tool-adapters/codex.md` and Claude
-  runs must read `docs/tool-adapters/claude.md`
+  adapter exists; Codex runs must read `docs/tool-adapters/codex.md`, Claude
+  runs must read `docs/tool-adapters/claude.md`, and repository-scoped
+  ChatGPT/Work runs must read `docs/tool-adapters/chatgpt.md`
 - `docs/engineering-baseline.md` -> foundational engineering expectations
 - `docs/source-first-retrieval.md` -> repository triggers, retrieval ordering,
   verification gates, and recovery
@@ -170,7 +171,8 @@ Apply overlapping repository instructions in this order:
 2. The target repository's repo-local `AGENTS.md` and other repo-local policy
    for repository-specific execution details.
 3. The matching executor adapter, such as `docs/tool-adapters/codex.md` for
-   Codex-specific behavior.
+   Codex-specific behavior or `docs/tool-adapters/chatgpt.md` for
+   ChatGPT/Work-specific behavior.
 4. Shared Playbook docs as reusable workflow defaults.
 
 Repo-local instructions are authoritative for allowed tools, Git usage,
@@ -206,7 +208,8 @@ recommendations, and "what changed?" or "what next?" requests:
 2. Read the target repository's repo-local `AGENTS.md`.
 3. Apply the matching executor adapter. Codex runs must apply
    `docs/tool-adapters/codex.md`; Claude runs must apply
-   `docs/tool-adapters/claude.md`.
+   `docs/tool-adapters/claude.md`; repository-scoped ChatGPT/Work runs must
+   apply `docs/tool-adapters/chatgpt.md`.
 4. Identify the repository or workspace's primary purpose.
 5. Select the interaction mode from `docs/repo-readiness.md`: implementation,
    review/audit, or orchestration/prompt-authoring.
@@ -243,6 +246,13 @@ establish sufficiency.
   leaves repository work or the human explicitly requests a different artifact
   style. Moving to another repository requires applying that repository's
   startup contract before assuming its native conventions.
+- Repository operating-mode persistence does not freeze the required source
+  set. When a task materially changes interaction mode, artifact type,
+  workflow, authoritative-source requirements, execution locality, or
+  authority boundary, re-evaluate activation routing for the current task and
+  retrieve newly required sources before answering, planning, drafting, or
+  acting. Reuse still-current verified sources; do not replay unchanged
+  doctrine or hydrate unrelated documents.
 - `docs/prompt-contracts.md` and its versioned machine-readable companions own
   shared prompt-contract meaning; implementing repositories own operational
   schemas, hydration, rendering, receipts, and validation code.
