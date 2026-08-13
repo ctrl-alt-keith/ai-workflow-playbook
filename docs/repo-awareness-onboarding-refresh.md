@@ -26,9 +26,10 @@ lists.
 Repository awareness is layered. Do not collapse these sources into one
 document or artifact.
 
-- GitHub organization state owns whether a repository exists, its visibility,
-  archived state, default branch, topics, description, settings, branch
-  protection, security features, installed apps, and other hosted metadata.
+- GitHub organization state owns current organization membership and hosted
+  repository state, including visibility, archived state, default branch,
+  topics, description, settings, branch protection, security features,
+  installed apps, and other hosted metadata.
 - Workflow-owned inventories, such as enforcement scanner configs, automation
   allowlists, or caller-supplied manifests, own explicit scoped overrides,
   narrowed scan inputs, or reconciliation lists for workspace-scope checks.
@@ -47,6 +48,31 @@ document or artifact.
 - `ai-workflow-incubator` may stage operational checklists, examples, prompt
   drafts, and evidence. Incubator material is noncanonical until a separate
   promotion task moves a durable rule into the playbook.
+
+### Organization membership and enumeration
+
+For current membership in `ctrl-alt-keith`, GitHub organization state is the
+authoritative provider source; the Playbook owns the reusable contract for
+interpreting and consuming that state. A repository is a current member when
+its current GitHub owner is the `ctrl-alt-keith` organization.
+
+- A **member** includes every current organization repository, whether public,
+  private, or archived. An **active member** is a member with `archived =
+  false`.
+- **Visibility** is hosted metadata, not a membership condition. Changing it
+  does not add or remove a member.
+- Use GitHub's stable numeric repository ID when correlation across a rename
+  or transfer matters. `owner/name` is the current locator and can change.
+- An organization enumeration is **complete** only when the caller can see all
+  organization repositories and follows every result page. A result without
+  that access or pagination evidence is partial or unknown: its absence cannot
+  establish that a repository is not a member.
+
+Policy overlays, workflow allowlists, role-oriented documentation, generated
+dashboards, local checkout sets, and historical snapshots retain their own
+narrow purposes. They may select, describe, or preserve information about
+repositories, but do not define current organization membership or replace the
+provider state that does.
 
 ## Discovery And Inventory Refresh
 
