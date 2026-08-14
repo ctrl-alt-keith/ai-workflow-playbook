@@ -409,6 +409,49 @@ override repository implementation state, just as GitHub merge state does not
 silently rewrite the planning intent or sequencing that produced the work. The
 same boundary applies to similar planning systems, mirrors, or boards.
 
+Before work discovered during or after completion of a planning item begins,
+classify it against the item's existing acceptance context and completion
+boundary. This rule applies to research, design, audit, and other planning
+work, whether or not the work uses a branch, pull request, or merge. Work still
+required to satisfy that boundary remains in the current item, which stays
+open. If the item was completed on a factually invalid or incomplete basis,
+reopen it to correct that planning state; do not create a successor merely to
+rename unfinished original work.
+
+When the existing boundary was legitimately completed, preserve that
+completion. New human direction after that completion, or a newly selected
+outcome with a materially new completion boundary, requires an explicit
+successor disposition in the live planning or authority surface appropriate to
+the work before execution begins. Do not reopen or extend the completed item
+merely because related work was discovered later.
+
+A successor disposition is one of: tracked now, deferred, declined, or
+intentionally untracked. A tracked-now disposition identifies a bounded
+outcome, owner, completion boundary, and relationship to the completed item in
+a live planning or authority record. Deferred retains an outcome for possible
+later selection; declined rejects it from the current follow-through; and
+intentionally untracked records that neither execution nor durable successor
+tracking is selected. These are non-execution dispositions, none requires a
+ticket solely for bookkeeping, and later execution requires a new live
+tracked-now disposition. The authority and durable-continuity rules in
+`core-model.md` still control: recommendation text or conversational
+continuity does not create this disposition, and the mere existence or state
+of repository implementation, an issue, a pull request, review, or merge does
+not supply it. An explicitly selected and bounded repository issue may serve
+as the live record where the repository workflow assigns it that role.
+
+Use one tracked successor when one record can preserve a coherent outcome,
+owner, completion boundary, acceptance, sequencing, validation, risk, and
+timing without obscuring an independent decision or completion claim. Split
+successors when divergence in any of those factors would obscure an
+independent decision or completion claim. Do not create one ticket per finding
+or microstep when one bounded successor or a non-execution disposition
+preserves the necessary boundary.
+
+Immediately before starting a tracked successor, re-read its live disposition
+and current human authority. Unless both the live bounded record and current
+human authority support the work, stop.
+
 When both GitHub and planning identifiers exist, implementation PRs should
 reference both. Keep the GitHub closing keyword tied to the GitHub issue and
 include the planning identifier as coordination context, for example:
@@ -442,10 +485,9 @@ intends to close and every planning ticket it coordinates with. If one PR
 resolves only part of a larger planning ticket, say that directly and leave the
 remaining planning item or follow-up open.
 
-Residual risks and follow-ups belong in the review packet and PR notes. Create
-or keep separate follow-up issues or planning tickets only when work remains
-after merge; do not hide unfinished required work behind a completed planning
-status.
+Residual risks and follow-ups belong in the review packet and PR notes. Apply
+the discovered-work disposition rule above when work remains after merge; do
+not hide unfinished required work behind a completed planning status.
 
 Use purpose-based branch prefixes that describe the change, not the tool that
 made it. AI-agent branches should use concise, non-tool-branded names such as
