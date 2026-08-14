@@ -1,10 +1,10 @@
 # Codex Adapter
 
 This adapter records Codex-specific deltas on top of the core playbook. Apply
-it to Codex runs wherever Codex is the selected executor, including the Codex
-area of a unified client and other supported Codex interfaces. Codex identifies
-a distinct run/executor boundary with specialized repository mechanics, not a
-separate desktop application. Use it with `docs/start-here.md`,
+it to Codex runs wherever Codex is the selected executor. The adapter boundary
+follows the selected Codex run or executor and does not depend on how a
+particular client packages that surface. It records the specialized repository
+mechanics for that distinct run/executor boundary. Use it with `docs/start-here.md`,
 `docs/core-model.md`, `docs/source-first-retrieval.md`,
 `docs/repo-readiness.md`, and the target repo's `AGENTS.md`; do not treat it as
 a second copy of those rules.

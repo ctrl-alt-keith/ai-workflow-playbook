@@ -7,9 +7,12 @@ repository work has been activated; ordinary conceptual Chat remains outside
 repository startup. Shared operating rules remain owned by
 [`start-here.md`](../start-here.md) and [`core-model.md`](../core-model.md).
 
-The durable ChatGPT-versus-Codex routing reflects operator-observed client
-behavior checked 2026-08-14. It is Playbook classification rather than a
-provider guarantee about client layout, history, or mode behavior.
+Current [OpenAI Help Center guidance](https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex)
+places Chat and Work under ChatGPT and identifies Codex as a distinct view with
+history separate from ChatGPT history. [ChatGPT Work guidance](https://learn.chatgpt.com/docs/get-started-with-work)
+describes Work as delegated work to ChatGPT and an alternative to Codex for
+non-coding tasks. The Playbook uses that documented persistence boundary for
+adapter selection.
 
 ## Repository-bootstrap boundary
 
@@ -164,6 +167,7 @@ conversation memory.
 ## Evidence and provider-reference boundary
 
 This adapter defines Playbook behavior, not a provider guarantee about how
-ChatGPT context, memory, permissions, or Work execution operates. Re-check
-provider behavior through authoritative current evidence when a task depends
-on it; keep observed runtime behavior separate from that evidence.
+ChatGPT context, memory, permissions, or Work execution operates. The current
+sources above establish only their documented selector, mode, and history
+behavior; other client details remain runtime evidence. Re-check provider
+behavior through authoritative current evidence when a task depends on it.

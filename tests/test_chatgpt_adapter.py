@@ -9,8 +9,11 @@ DOCS = ROOT / "docs"
 class ChatGPTAdapterTests(unittest.TestCase):
     def test_start_here_activates_chatgpt_and_rechecks_sources(self):
         contents = (DOCS / "start-here.md").read_text(encoding="utf-8")
+        normalized_start_here = " ".join(contents.split())
 
-        self.assertIn("repository-scoped\n  ChatGPT runs must read", contents)
+        self.assertIn(
+            "repository-scoped ChatGPT runs must read", normalized_start_here
+        )
         self.assertIn("docs/tool-adapters/chatgpt.md", contents)
         self.assertNotIn("ChatGPT/Work runs must read", contents)
         self.assertIn("Repository operating-mode persistence does not freeze", contents)
@@ -67,8 +70,10 @@ class ChatGPTAdapterTests(unittest.TestCase):
             "not separate durable executor identities or adapters", normalized_chatgpt
         )
         self.assertIn("not separate authority contracts", normalized_chatgpt)
-        self.assertIn("not a separate desktop application", normalized_codex)
-        self.assertNotIn("Codex is a separate application", codex)
+        self.assertIn(
+            "does not depend on how a particular client packages that surface",
+            normalized_codex,
+        )
 
     def test_workspace_agents_projection_preserves_existing_owners(self):
         contents = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")
