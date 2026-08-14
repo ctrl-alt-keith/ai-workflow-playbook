@@ -279,6 +279,33 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertIn("does not expose the control", normalized_claude)
         self.assertIn("requested/effective runtime evidence", normalized_claude)
 
+    def test_executor_applied_planning_first_thread_names(self):
+        prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
+        codex = (DOCS / "tool-adapters/codex.md").read_text(encoding="utf-8")
+        normalized_prompts = " ".join(prompts.split())
+        normalized_codex = " ".join(codex.split())
+
+        self.assertIn("Executor-Applied Visible Thread Names", prompts)
+        self.assertIn("`[planning-id] — [short bounded task]`", prompts)
+        self.assertIn("use only the concise bounded task name", normalized_prompts)
+        self.assertIn("only the identifier governing the current intent", normalized_prompts)
+        self.assertIn("planning-system-neutral", prompts)
+        self.assertIn("not task authority, durable continuity, execution identity", normalized_prompts)
+        self.assertIn("`Thread name` instruction", prompts)
+        self.assertNotIn("Recommended thread name:", prompts)
+        self.assertIn("Include this section for a FRESH THREAD", prompts)
+        self.assertIn(
+            "only when the child is separately visible and nameable",
+            normalized_prompts,
+        )
+        self.assertIn("Omit this section for a SAME THREAD", prompts)
+        self.assertIn("continue and report the limitation", normalized_prompts)
+        self.assertIn("do not ask the operator to set it manually", prompts)
+        self.assertGreaterEqual(prompts.count("Thread name:"), 3)
+        self.assertIn("Codex applies that exact name itself", codex)
+        self.assertIn("Codex must not ask the operator", codex)
+        self.assertIn("naming remains non-blocking and navigation only", normalized_codex)
+
 
 class PromptContractCanonicalizationVectorTests(unittest.TestCase):
     @classmethod

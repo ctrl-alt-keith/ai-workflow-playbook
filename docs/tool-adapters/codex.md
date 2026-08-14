@@ -107,6 +107,17 @@ Keep the selected substantive external reviewer (for example, qualified Claude)
 when the review contract requires it. Internal or mechanical review follows
 this matrix; Sol is not automatic for a narrow, deterministic fallback.
 
+### Visible Thread Names
+
+Apply the shared visible-thread-name semantics in
+[`prompts.md`](../prompts.md#executor-applied-visible-thread-names). When an
+applicable executable prompt supplies a `Thread name` and the active Codex
+surface exposes a visible-name control, Codex applies that exact name itself
+before substantive work. Codex must not ask the operator to set or copy the
+name manually. If the control is unavailable, Codex continues the substantive
+task and reports the limitation; naming remains non-blocking and navigation
+only.
+
 The CAK-106 experience supports this split as observed workflow evidence, not
 a benchmark: protocol ambiguity, authority architecture, controller semantics,
 and architecture synthesis justified stronger reasoning, while repeated focused

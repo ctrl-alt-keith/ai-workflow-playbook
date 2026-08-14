@@ -100,6 +100,47 @@ runtime model evidence, detecting a disallowed substitution, or writing an
 execution receipt when that information is part of the task's validation or
 qualification boundary.
 
+### Executor-Applied Visible Thread Names
+
+Use a visible thread name only as human navigation. It is not task authority,
+durable continuity, execution identity, or evidence of current planning,
+repository, branch, pull-request, validation, or review state. Retrieve each
+of those facts from its owning current source.
+
+The name is an executor action, not an operator configuration. Put an exact
+`Thread name` instruction in an applicable executable prompt; do not put a
+`Recommended thread name` field in operator metadata. The operator is not
+expected to set or copy the name manually, while the active executor can apply
+it when its surface exposes that control.
+
+When one planning item governs the current intent and completion boundary, use
+`[planning-id] — [short bounded task]`. Preserve the planning identifier exactly
+as represented by its owning planning system. When there is no governing
+planning identifier, use only the concise bounded task name. When several
+identifiers are related, use only the identifier governing the current intent
+and completion boundary; keep predecessors, related items, implementation
+references, and secondary identifiers in normal prompt context. If no single
+governing identifier can be selected without inventing precedence, omit the
+identifier. This convention is planning-system-neutral and does not require
+Linear.
+
+Apply the instruction by route:
+
+- `FRESH THREAD`: include the executable `Thread name` instruction and have
+  the capable executor apply the exact name before substantive work.
+- `CHILD TASK`: include it only when the child has its own separately visible,
+  nameable thread or task and its execution surface can apply the name.
+- `SAME THREAD`: preserve the established visible name unless an explicit
+  rename is part of the task; do not inject a routine rename instruction.
+
+If the execution surface cannot apply the name, continue the substantive task
+and report that limitation. Naming failure is non-blocking because the name is
+navigation only.
+
+When rendering an applicable prompt, replace the thread-name placeholder with
+the exact computed visible name. Do not ask the downstream executor to infer
+or recover it from planning or repository context.
+
 When a complete prompt materially changes, emit a complete replacement
 operator-metadata block and executable prompt. Do not emit a partial prompt
 patch that requires the operator to splice text into an older prompt.
@@ -200,6 +241,17 @@ Context:
 - Relevant background: [short context]
 - GitHub issues or planning references: [none or identifiers]
 - Dependencies: [none or required predecessors, inputs, or services]
+
+Thread name:
+- Include this section for a FRESH THREAD; before substantive work, set this
+  execution thread's visible name to: `[exact visible name]`.
+- Include it for a CHILD TASK only when the child is separately visible and
+  nameable; set that child's visible name to: `[exact child visible name]`
+  before its substantive work.
+- Omit this section for a SAME THREAD unless this task explicitly authorizes a
+  rename; otherwise preserve the established visible name.
+- If this surface cannot apply the name, continue and report the limitation;
+  do not ask the operator to set it manually.
 
 Retrieval:
 - Read `ai-workflow-playbook/docs/start-here.md`, the target repo's
@@ -342,6 +394,17 @@ Inputs:
 - Delivery expectation: [delivery_expectation]
 - Dependencies: [none or required predecessors, inputs, or services]
 
+Thread name:
+- Include this section for a FRESH THREAD; before substantive work, set this
+  execution thread's visible name to: `[exact visible name]`.
+- Include it for a CHILD TASK only when the child is separately visible and
+  nameable; set that child's visible name to: `[exact child visible name]`
+  before its substantive work.
+- Omit this section for a SAME THREAD unless this task explicitly authorizes a
+  rename; otherwise preserve the established visible name.
+- If this surface cannot apply the name, continue and report the limitation;
+  do not ask the operator to set it manually.
+
 Retrieval:
 - Read the shared playbook startup guidance and repo-local `AGENTS.md` first.
 - Retrieve authoritative state from only the files, issues, PRs, docs, or
@@ -438,6 +501,17 @@ Inputs:
 - Pull request: [pull_request]
 - Task or issue context: [task_or_issue_context]
 - Summary-only requested: [summary_only]
+
+Thread name:
+- Include this section for a FRESH THREAD; before substantive work, set this
+  execution thread's visible name to: `[exact visible name]`.
+- Include it for a CHILD TASK only when the child is separately visible and
+  nameable; set that child's visible name to: `[exact child visible name]`
+  before its substantive work.
+- Omit this section for a SAME THREAD unless this task explicitly authorizes a
+  rename; otherwise preserve the established visible name.
+- If this surface cannot apply the name, continue and report the limitation;
+  do not ask the operator to set it manually.
 
 Success criteria:
 - Review feedback is grounded in direct PR evidence.
