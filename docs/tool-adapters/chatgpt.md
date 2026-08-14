@@ -127,13 +127,33 @@ the applicable prompt and downstream-context contract.
 
 ### Prompt presentation
 
-For a complete prompt prepared in ChatGPT, present the shared
-operator-metadata block followed immediately by the complete executable block
-as consecutive copyable code blocks. Keep the executable block complete without
-metadata so the operator can copy only that block. Do not nest Markdown code
-fences inside the executable block; represent any embedded example with
-indentation or plain text. Optimize this client rendering for reliable
-copy/paste without changing the shared prompt meaning in
+For a complete, copy-ready prompt or downstream handoff prepared in ChatGPT,
+present the shared operator-metadata block followed immediately by the complete
+executable block as consecutive copyable code blocks, with no intervening
+prose. Immediately after the executable block, outside both code blocks, emit
+this separate line exactly:
+
+`ChatGPT thread: [exact canonical title]`
+
+Keep the executable block complete without metadata or the breadcrumb so the
+operator can copy only that block. The breadcrumb is human navigation only: it
+is not task authority, execution identity, durable continuity, source
+evidence, or part of the downstream executable prompt. Do not add it to quoted
+prompts, source excerpts, incomplete fragments, or conceptual discussion that
+does not deliver a copy-ready prompt.
+
+When no canonical title exists for the current ChatGPT workstream, establish a
+concise one; reuse that exact title in later complete prompts from the same
+conversation. The emitted value is a canonical navigation title, not verified
+ChatGPT UI state when the UI title is not observable. For an applicable `FRESH
+THREAD` handoff, reuse the exact title in the existing executable `Thread
+name` instruction unless a task-specific naming requirement makes that
+inappropriate. This does not change the normal `SAME THREAD` or `CHILD TASK`
+routing behavior in [`prompts.md`](../prompts.md#executor-applied-visible-thread-names).
+
+Do not nest Markdown code fences inside the executable block; represent any
+embedded example with indentation or plain text. Optimize this client rendering
+for reliable copy/paste without changing the shared prompt meaning in
 [`prompts.md`](../prompts.md).
 
 ## Generated artifacts
