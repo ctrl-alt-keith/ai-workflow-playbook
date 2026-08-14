@@ -127,7 +127,7 @@ scoped analysis, review, planning, advice, prompting, or mutation.
 - `docs/tool-adapters/<executor>.md` -> executor-specific deltas when a matching
   adapter exists; Codex runs must read `docs/tool-adapters/codex.md`, Claude
   runs must read `docs/tool-adapters/claude.md`, and repository-scoped
-  ChatGPT/Work runs must read `docs/tool-adapters/chatgpt.md`
+  ChatGPT runs must read `docs/tool-adapters/chatgpt.md`
 - `docs/engineering-baseline.md` -> foundational engineering expectations
 - `docs/source-first-retrieval.md` -> repository triggers, retrieval ordering,
   verification gates, and recovery
@@ -172,7 +172,7 @@ Apply overlapping repository instructions in this order:
    for repository-specific execution details.
 3. The matching executor adapter, such as `docs/tool-adapters/codex.md` for
    Codex-specific behavior or `docs/tool-adapters/chatgpt.md` for
-   ChatGPT/Work-specific behavior.
+   ChatGPT-specific behavior.
 4. Shared Playbook docs as reusable workflow defaults.
 
 Repo-local instructions are authoritative for allowed tools, Git usage,
@@ -208,8 +208,8 @@ recommendations, and "what changed?" or "what next?" requests:
 2. Read the target repository's repo-local `AGENTS.md`.
 3. Apply the matching executor adapter. Codex runs must apply
    `docs/tool-adapters/codex.md`; Claude runs must apply
-   `docs/tool-adapters/claude.md`; repository-scoped ChatGPT/Work runs must
-   apply `docs/tool-adapters/chatgpt.md`.
+   `docs/tool-adapters/claude.md`; repository-scoped ChatGPT runs must apply
+   `docs/tool-adapters/chatgpt.md`.
 4. Identify the repository or workspace's primary purpose.
 5. Select the interaction mode from `docs/repo-readiness.md`: implementation,
    review/audit, or orchestration/prompt-authoring.

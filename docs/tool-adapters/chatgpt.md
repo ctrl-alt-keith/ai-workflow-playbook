@@ -1,10 +1,15 @@
-# ChatGPT/Work Adapter
+# ChatGPT Adapter
 
-This adapter projects the Playbook onto repository-scoped ChatGPT and Work
-use. It begins after repository work has been activated; ordinary conceptual
-Chat remains outside repository startup. Shared operating rules remain owned
-by [`start-here.md`](../start-here.md) and
-[`core-model.md`](../core-model.md).
+This adapter projects the Playbook onto repository-scoped ChatGPT use. Chat
+and Work are nested task-shape or capability modes under that one ChatGPT
+adapter, not separate durable executor identities or adapters. It begins after
+repository work has been activated; ordinary conceptual Chat remains outside
+repository startup. Shared operating rules remain owned by
+[`start-here.md`](../start-here.md) and [`core-model.md`](../core-model.md).
+
+The durable ChatGPT-versus-Codex routing reflects operator-observed client
+behavior checked 2026-08-14. It is Playbook classification rather than a
+provider guarantee about client layout, history, or mode behavior.
 
 ## Repository-bootstrap boundary
 
@@ -60,7 +65,7 @@ by [`start-here.md`](../start-here.md#connector-availability-is-runtime-evidence
 
 ## Workspace Agents
 
-Workspace Agents are a ChatGPT/Work execution surface, not a second adapter.
+Workspace Agents are a ChatGPT execution surface, not a second adapter.
 
 ### Trigger initiation and durable run authority
 
@@ -119,7 +124,7 @@ the applicable prompt and downstream-context contract.
 
 ### Prompt presentation
 
-For a complete prompt prepared in ChatGPT/Work, present the shared
+For a complete prompt prepared in ChatGPT, present the shared
 operator-metadata block followed immediately by the complete executable block
 as consecutive copyable code blocks. Keep the executable block complete without
 metadata so the operator can copy only that block. Do not nest Markdown code
@@ -130,15 +135,15 @@ copy/paste without changing the shared prompt meaning in
 
 ## Generated artifacts
 
-Creating a ChatGPT or Work artifact does not make it current authoritative
-state or grant publication, sharing, overwrite, or adoption authority. Apply
-the derived-artifact and consequential-action boundaries in
+Creating a ChatGPT artifact in Chat or Work does not make it current
+authoritative state or grant publication, sharing, overwrite, or adoption
+authority. Apply the derived-artifact and consequential-action boundaries in
 [`core-model.md`](../core-model.md) and the material-artifact contract in
 [`prompt-contracts.md`](../prompt-contracts.md) when activated.
 
 ## Scheduled and unattended execution
 
-Scheduled or unattended ChatGPT/Work must project the current automation,
+Scheduled or unattended ChatGPT execution must project the current automation,
 source, and locality rules for each run. A standalone run cannot assume an
 originating conversation; an in-chat run may use conversation as context but
 not as proof of current canonical or provider state. Do not depend on an
@@ -151,7 +156,7 @@ retrieval in [`source-first-retrieval.md`](../source-first-retrieval.md).
 If persistent context proves under-hydrated, stop continuity-based drafting or
 action and re-enter current canonical routing. Retrieve the missing activated
 owners, revalidate mutable sources, and replace or correct the affected
-artifact as a whole before resuming. This is a ChatGPT/Work projection of
+artifact as a whole before resuming. This is a ChatGPT projection of
 [`source-first-retrieval.md`](../source-first-retrieval.md) and, for prompts,
 [`prompts.md`](../prompts.md); it is not symptom-by-symptom repair from
 conversation memory.

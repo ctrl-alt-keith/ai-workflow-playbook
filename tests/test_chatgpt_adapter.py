@@ -7,11 +7,12 @@ DOCS = ROOT / "docs"
 
 
 class ChatGPTAdapterTests(unittest.TestCase):
-    def test_start_here_activates_chatgpt_work_and_rechecks_sources(self):
+    def test_start_here_activates_chatgpt_and_rechecks_sources(self):
         contents = (DOCS / "start-here.md").read_text(encoding="utf-8")
 
-        self.assertIn("ChatGPT/Work runs must read", contents)
+        self.assertIn("repository-scoped\n  ChatGPT runs must read", contents)
         self.assertIn("docs/tool-adapters/chatgpt.md", contents)
+        self.assertNotIn("ChatGPT/Work runs must read", contents)
         self.assertIn("Repository operating-mode persistence does not freeze", contents)
         self.assertIn("re-evaluate activation routing", contents)
         self.assertIn("Reuse still-current verified sources", contents)
@@ -51,6 +52,23 @@ class ChatGPTAdapterTests(unittest.TestCase):
             "does not expand the human-authorized task", " ".join(contents.split())
         )
         self.assertIn("not symptom-by-symptom repair", contents)
+
+    def test_adapter_keeps_chat_and_work_under_chatgpt(self):
+        chatgpt = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")
+        codex = (DOCS / "tool-adapters/codex.md").read_text(encoding="utf-8")
+        normalized_chatgpt = " ".join(chatgpt.split())
+        normalized_codex = " ".join(codex.split())
+
+        self.assertTrue(chatgpt.startswith("# ChatGPT Adapter\n"))
+        self.assertNotIn("# ChatGPT/Work Adapter", chatgpt)
+        self.assertIn("nested task-shape or capability modes", normalized_chatgpt)
+        self.assertIn("under that one ChatGPT adapter", normalized_chatgpt)
+        self.assertIn(
+            "not separate durable executor identities or adapters", normalized_chatgpt
+        )
+        self.assertIn("not separate authority contracts", normalized_chatgpt)
+        self.assertIn("not a separate desktop application", normalized_codex)
+        self.assertNotIn("Codex is a separate application", codex)
 
     def test_workspace_agents_projection_preserves_existing_owners(self):
         contents = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")
