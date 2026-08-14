@@ -1,8 +1,8 @@
 # Reusable Workflow Prompt Templates
 
-This file holds reusable prompt shapes. Keep workflow rules in the core
-playbook docs, Codex-specific execution guidance in `docs/tool-adapters/codex.md`,
-and repo-local execution rules in `AGENTS.md`.
+This file holds reusable, executor-neutral prompt shapes. Keep workflow rules
+in the core playbook docs, executor-specific execution guidance in the matching
+tool adapter, and repo-local execution rules in `AGENTS.md`.
 
 Prompts should remain routing and execution envelopes, not duplicated workflow
 doctrine. For the rationale, see
@@ -137,9 +137,22 @@ If the execution surface cannot apply the name, continue the substantive task
 and report that limitation. Naming failure is non-blocking because the name is
 navigation only.
 
-When rendering an applicable prompt, replace the thread-name placeholder with
-the exact computed visible name. Do not ask the downstream executor to infer
-or recover it from planning or repository context.
+Use this canonical executable fragment exactly once in an applicable generated
+prompt:
+
+```text
+Thread name:
+- Before substantive work, set this thread's visible name to: `[exact visible name]`.
+- If this surface cannot apply the name, continue and report the limitation;
+  do not ask the operator to set it manually.
+```
+
+During prompt construction, replace `[resolved thread-name section when
+applicable]` with the complete canonical fragment and the exact computed name
+for a `FRESH THREAD` or a separately visible, nameable `CHILD TASK` whose
+surface supports naming. Replace it with nothing for an ordinary `SAME THREAD`.
+Do not leave the placeholder in a final generated prompt or ask the downstream
+executor to infer or recover the name from planning or repository context.
 
 When a complete prompt materially changes, emit a complete replacement
 operator-metadata block and executable prompt. Do not emit a partial prompt
@@ -184,42 +197,39 @@ Use lint-safe placeholders such as `[repository]`, `[validation_path]`, or
 backticked tokens in Markdown templates. Angle-bracket placeholders can be
 interpreted as inline HTML by Markdown tooling.
 
-When rendering a complete Codex prompt inside a Markdown code fence, never
-nest another Markdown code fence inside it. If the prompt needs an embedded
-YAML, JSON, shell, Markdown, or other example, represent the example with
-indentation and prefer plain text over Markdown formatting. Optimize the
-finished prompt for reliable copy/paste across ChatGPT clients without changing
-its meaning or execution.
+## Complete Prompt Shape
+
+For a complete generated prompt, emit one shared operator-metadata block and
+one complete executable block consecutively. The executable block must remain
+complete and actionable without the metadata, so the operator can copy only
+that block. Matching executor adapters own concrete metadata fields and client
+presentation mechanics.
+
+```text
+Operator metadata (do not include in prompt)
+Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
+Recommended model: [matching executor adapter selection]
+Recommended reasoning/thinking: [matching executor adapter selection]
+
+Reason:
+[one concise task-specific explanation]
+```
 
 ## Quick Navigation
 
-- [Codex Implementation Task](#codex-implementation-task)
+- [Repository Implementation Task](#repository-implementation-task)
 - [Parallel Batch Add-On](#parallel-batch-add-on)
 - [Orchestration Handoff](#orchestration-handoff)
 - [Implementation Delivery Add-On](#implementation-delivery-add-on)
 - [PR Review](#pr-review)
 
-## Codex Implementation Task
+## Repository Implementation Task
 
 Use this template only when the intended interaction mode is direct
 implementation. For review or orchestration, use the matching template instead.
-Apply the model-and-reasoning routing guidance in
-[`tool-adapters/codex.md`](tool-adapters/codex.md#gpt-56-model-and-reasoning-routing)
-to the bounded task. The first block below is operator metadata for the human
-or operator. It is not part of the executable prompt and should not be copied
-into the downstream agent. Copy or deliver only the second block. The second
-block is complete without the metadata. Emit the two blocks consecutively with
-no intervening heading or explanation.
-
-```text
-Operator metadata (do not include in prompt)
-Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
-Recommended model: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread model and observe effective runtime model]
-Recommended reasoning/thinking: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread setting and observe effective runtime setting]
-
-Reason:
-[one concise task-specific explanation]
-```
+Use the matching executor adapter to select model and reasoning/thinking
+configuration. For a complete generated prompt, precede this executable body
+with the shared operator-metadata block in [Complete Prompt Shape](#complete-prompt-shape).
 
 ```text
 Role:
@@ -242,16 +252,7 @@ Context:
 - GitHub issues or planning references: [none or identifiers]
 - Dependencies: [none or required predecessors, inputs, or services]
 
-Thread name:
-- Include this section for a FRESH THREAD; before substantive work, set this
-  execution thread's visible name to: `[exact visible name]`.
-- Include it for a CHILD TASK only when the child is separately visible and
-  nameable; set that child's visible name to: `[exact child visible name]`
-  before its substantive work.
-- Omit this section for a SAME THREAD unless this task explicitly authorizes a
-  rename; otherwise preserve the established visible name.
-- If this surface cannot apply the name, continue and report the limitation;
-  do not ask the operator to set it manually.
+[resolved thread-name section when applicable]
 
 Retrieval:
 - Read `ai-workflow-playbook/docs/start-here.md`, the target repo's
@@ -268,7 +269,7 @@ Scope:
 Constraints:
 - Keep the change minimal, scoped, and structurally local.
 - Follow existing repo patterns and canonical validation.
-- Follow `docs/repo-readiness.md`, `docs/tool-adapters/codex.md`, and
+- Follow `docs/repo-readiness.md`, the matching executor adapter, and
   repo-local `AGENTS.md` for interaction mode, command form, worktree,
   validation, and delivery.
 - Report blockers, validation failures, residual risks, and uncertainty.
@@ -331,6 +332,7 @@ Startup:
   available and follow its repository startup route.
 Governing issue:
 - [issue identifier or durable authority source]
+[resolved thread-name section when applicable]
 Authoritative state:
 - [Repository or History artifact locations and exact identities when needed]
 Authorized action:
@@ -351,22 +353,9 @@ Required inputs:
 - `validation_path`
 - `delivery_expectation`
 
-Apply the model-and-reasoning routing guidance in
-[`tool-adapters/codex.md`](tool-adapters/codex.md#gpt-56-model-and-reasoning-routing)
-to the bounded task. The first block below is operator metadata for the human
-or operator. It is not part of the executable prompt and should not be copied
-into the downstream agent. Copy or deliver only the second block. Emit the two
-blocks consecutively with no intervening heading or explanation.
-
-```text
-Operator metadata (do not include in prompt)
-Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
-Recommended model: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread model and observe effective runtime model]
-Recommended reasoning/thinking: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread setting and observe effective runtime setting]
-
-Reason:
-[one concise task-specific explanation]
-```
+Use the matching executor adapter to select model and reasoning/thinking
+configuration. For a complete generated prompt, precede this executable body
+with the shared operator-metadata block in [Complete Prompt Shape](#complete-prompt-shape).
 
 ```text
 Role:
@@ -394,16 +383,7 @@ Inputs:
 - Delivery expectation: [delivery_expectation]
 - Dependencies: [none or required predecessors, inputs, or services]
 
-Thread name:
-- Include this section for a FRESH THREAD; before substantive work, set this
-  execution thread's visible name to: `[exact visible name]`.
-- Include it for a CHILD TASK only when the child is separately visible and
-  nameable; set that child's visible name to: `[exact child visible name]`
-  before its substantive work.
-- Omit this section for a SAME THREAD unless this task explicitly authorizes a
-  rename; otherwise preserve the established visible name.
-- If this surface cannot apply the name, continue and report the limitation;
-  do not ask the operator to set it manually.
+[resolved thread-name section when applicable]
 
 Retrieval:
 - Read the shared playbook startup guidance and repo-local `AGENTS.md` first.
@@ -454,7 +434,7 @@ expected.
 ```text
 Delivery:
 - Follow the branch, worktree, validation, and PR delivery rules in
-  `docs/repo-readiness.md`, `docs/tool-adapters/codex.md`, and repo-local
+  `docs/repo-readiness.md`, the matching executor adapter, and repo-local
   `AGENTS.md`.
 - Stage, commit, push, and open or update the intended PR only with relevant
   changes.
@@ -475,22 +455,9 @@ Required inputs:
 - `task_or_issue_context` (`none` when unavailable)
 - `summary_only` (`yes` or `no`)
 
-Apply the model-and-reasoning routing guidance in
-[`tool-adapters/codex.md`](tool-adapters/codex.md#gpt-56-model-and-reasoning-routing)
-to the bounded task. The first block below is operator metadata for the human
-or operator. It is not part of the executable prompt and should not be copied
-into the downstream agent. Copy or deliver only the second block. Emit the two
-blocks consecutively with no intervening heading or explanation.
-
-```text
-Operator metadata (do not include in prompt)
-Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
-Recommended model: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread model and observe effective runtime model]
-Recommended reasoning/thinking: [FRESH THREAD/CHILD TASK: executor adapter selection; SAME THREAD: Preserve requested thread setting and observe effective runtime setting]
-
-Reason:
-[one concise task-specific explanation]
-```
+Use the matching executor adapter to select model and reasoning/thinking
+configuration. For a complete generated prompt, precede this executable body
+with the shared operator-metadata block in [Complete Prompt Shape](#complete-prompt-shape).
 
 ```text
 Task:
@@ -502,16 +469,7 @@ Inputs:
 - Task or issue context: [task_or_issue_context]
 - Summary-only requested: [summary_only]
 
-Thread name:
-- Include this section for a FRESH THREAD; before substantive work, set this
-  execution thread's visible name to: `[exact visible name]`.
-- Include it for a CHILD TASK only when the child is separately visible and
-  nameable; set that child's visible name to: `[exact child visible name]`
-  before its substantive work.
-- Omit this section for a SAME THREAD unless this task explicitly authorizes a
-  rename; otherwise preserve the established visible name.
-- If this surface cannot apply the name, continue and report the limitation;
-  do not ask the operator to set it manually.
+[resolved thread-name section when applicable]
 
 Success criteria:
 - Review feedback is grounded in direct PR evidence.

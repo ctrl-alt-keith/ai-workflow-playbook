@@ -246,8 +246,8 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         claude = (DOCS / "tool-adapters/claude.md").read_text(encoding="utf-8")
 
         self.assertIn("Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]", prompts)
-        self.assertIn("Preserve requested thread model", prompts)
-        self.assertIn("observe effective runtime model", prompts)
+        self.assertIn("Preserve the requested parent configuration", prompts)
+        self.assertIn("matching executor adapter selection", prompts)
         self.assertNotIn("GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol", prompts)
         self.assertIn("Thread routing: <FRESH THREAD | SAME THREAD | CHILD TASK>", codex)
         self.assertIn("effective model and effort separately", codex)
@@ -282,6 +282,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
     def test_executor_applied_planning_first_thread_names(self):
         prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
         codex = (DOCS / "tool-adapters/codex.md").read_text(encoding="utf-8")
+        chatgpt = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")
         normalized_prompts = " ".join(prompts.split())
         normalized_codex = " ".join(codex.split())
 
@@ -293,18 +294,44 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertIn("not task authority, durable continuity, execution identity", normalized_prompts)
         self.assertIn("`Thread name` instruction", prompts)
         self.assertNotIn("Recommended thread name:", prompts)
-        self.assertIn("Include this section for a FRESH THREAD", prompts)
+        self.assertEqual(prompts.count("Thread name:"), 1)
+        self.assertIn("Before substantive work, set this thread's visible name", prompts)
+        self.assertIn("[resolved thread-name section when applicable]", prompts)
+        self.assertIn("Replace it with nothing for an ordinary `SAME THREAD`", prompts)
         self.assertIn(
-            "only when the child is separately visible and nameable",
+            "separately visible, nameable `CHILD TASK`",
             normalized_prompts,
         )
-        self.assertIn("Omit this section for a SAME THREAD", prompts)
+        self.assertIn("exact computed name", normalized_prompts)
+        self.assertNotIn("Include this section for a FRESH THREAD", prompts)
+        self.assertNotIn("Omit this section for a SAME THREAD", prompts)
         self.assertIn("continue and report the limitation", normalized_prompts)
         self.assertIn("do not ask the operator to set it manually", prompts)
-        self.assertGreaterEqual(prompts.count("Thread name:"), 3)
+        self.assertIn(
+            "Governing issue:\n- [issue identifier or durable authority source]\n"
+            "[resolved thread-name section when applicable]",
+            prompts,
+        )
+        self.assertIn(
+            "Dependencies: [none or required predecessors, inputs, or services]\n\n"
+            "[resolved thread-name section when applicable]\n\nRetrieval:",
+            prompts,
+        )
+        self.assertIn(
+            "Summary-only requested: [summary_only]\n\n"
+            "[resolved thread-name section when applicable]\n\nSuccess criteria:",
+            prompts,
+        )
+        self.assertIn("Repository Implementation Task", prompts)
+        self.assertNotIn("Codex", prompts)
+        self.assertNotIn("ChatGPT", prompts)
+        self.assertIn("matching executor adapter", prompts)
         self.assertIn("Codex applies that exact name itself", codex)
         self.assertIn("Codex must not ask the operator", codex)
         self.assertIn("naming remains non-blocking and navigation only", normalized_codex)
+        self.assertIn("### Prompt presentation", chatgpt)
+        self.assertIn("consecutive copyable code blocks", chatgpt)
+        self.assertIn("Do not nest Markdown code fences", " ".join(chatgpt.split()))
 
 
 class PromptContractCanonicalizationVectorTests(unittest.TestCase):

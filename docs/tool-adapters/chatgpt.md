@@ -117,6 +117,17 @@ evidence. Use [`prompts.md`](../prompts.md),
 [`orchestration-and-parallelism.md`](../orchestration-and-parallelism.md) for
 the applicable prompt and downstream-context contract.
 
+### Prompt presentation
+
+For a complete prompt prepared in ChatGPT/Work, present the shared
+operator-metadata block followed immediately by the complete executable block
+as consecutive copyable code blocks. Keep the executable block complete without
+metadata so the operator can copy only that block. Do not nest Markdown code
+fences inside the executable block; represent any embedded example with
+indentation or plain text. Optimize this client rendering for reliable
+copy/paste without changing the shared prompt meaning in
+[`prompts.md`](../prompts.md).
+
 ## Generated artifacts
 
 Creating a ChatGPT or Work artifact does not make it current authoritative
