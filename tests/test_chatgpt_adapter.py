@@ -103,3 +103,29 @@ class ChatGPTAdapterTests(unittest.TestCase):
             "maintenance-automations.md",
         ):
             self.assertIn(owner, contents)
+
+    def test_copy_ready_prompt_breadcrumb_stays_outside_both_code_blocks(self):
+        contents = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")
+        normalized = " ".join(contents.split())
+
+        self.assertIn("complete, copy-ready prompt or downstream handoff", contents)
+        self.assertIn("with no intervening prose", normalized)
+        self.assertIn(
+            "`ChatGPT thread: [exact canonical title]`",
+            contents,
+        )
+        self.assertIn("outside both code blocks", contents)
+        self.assertIn(
+            "not task authority, execution identity, durable continuity, source evidence",
+            normalized,
+        )
+        self.assertIn("or part of the downstream executable prompt", normalized)
+        self.assertIn(
+            "quoted prompts, source excerpts, incomplete fragments, or conceptual discussion",
+            normalized,
+        )
+        self.assertIn("reuse that exact title in later complete prompts", normalized)
+        self.assertIn("not verified ChatGPT UI state", normalized)
+        self.assertIn("applicable `FRESH THREAD` handoff", normalized)
+        self.assertIn("existing executable `Thread name` instruction", normalized)
+        self.assertIn("normal `SAME THREAD` or `CHILD TASK`", normalized)
