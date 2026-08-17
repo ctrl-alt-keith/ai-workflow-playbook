@@ -27,6 +27,7 @@ jobs:
   authoritative-source-check:
     name: authoritative-source-check
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     continue-on-error: true
 
     steps:
