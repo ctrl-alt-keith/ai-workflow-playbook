@@ -30,6 +30,126 @@ A freeze protects the reviewed input boundary. It does not freeze later
 interpretation, imply permanent retention, require a particular manifest or
 storage system, or prevent a documented correction.
 
+## Governed Artifact Capture
+
+Use governed-artifact capture only when all three parts of this candidate floor
+hold:
+
+1. the output is substantial rather than ordinary chat;
+2. its exact identity is required for review, citation, disposition, decision,
+   recovery, or another authorized downstream dependency; and
+3. regeneration or conversation-only retention would weaken that downstream
+   dependency.
+
+Meeting the floor identifies a governed-artifact candidate only. It does not
+authorize capture, retention, or a destination. Ordinary answers,
+brainstorming, transient explanations, routine status, and outputs without an
+exact downstream identity dependency remain ordinary chat. Routine work does
+not inherit governed-artifact ceremony.
+
+### Storage Admission
+
+After candidate recognition and before retaining any bytes, apply the owning
+storage contract. All applicable privacy, visibility, licensing, retention,
+destination, and verification conditions must be affirmative. Prohibited or
+uncertain retention fails closed; importance, materiality, or a
+dependency-bearing role never permits retaining prohibited bytes.
+
+A downstream workflow or storage owner may narrow permission for its boundary
+without redefining the shared candidate floor. The owning storage contract,
+not this lifecycle, selects concrete destinations and handles prohibited
+content.
+
+### Direct Durable Capture
+
+After the candidate floor and all storage-admission conditions pass, capture
+the complete artifact durably during the producing task. Use one writer, a
+unique semantic dated or versioned target, and exclusive no-overwrite
+creation. Read the completed artifact back immediately and verify exact bytes,
+size, SHA-256, the declared text format, final-newline state, and containment
+where applicable. Freeze the successful path immediately.
+
+Corrections use a new identity with explicit lineage; never edit the frozen
+artifact in place. Artifact preservation does not by itself require Git, a
+branch, a worktree, a commit, or a pull request.
+
+Ordinary repo-local scratch may remain temporary. Once an artifact is
+admitted, the owning durable destination controls, and scratch is not a
+substitute for required durable capture.
+
+### Producing Receipt And Compact Delivery
+
+Every admitted production that writes an artifact leaves exactly one
+producing-receipt record. The producing receipt is distinct from the artifact,
+prompt or review attempt evidence, reviewer output, finding disposition, human
+decision, and stage-boundary receipt.
+
+Select the smallest permitted append-only surface sufficient for recovery. An
+adequate append-only planning record may satisfy the role. Use a separate
+immutable producing-receipt artifact when the planning surface is unavailable,
+offline recovery is required, the receipt becomes dependency-bearing, the
+receipt is too substantial for the planning surface, or the governing contract
+requires it. When that separate receipt coexists with an available and
+permitted planning surface, the planning record references the separate
+receipt's exact identity.
+
+The artifact body defines the receipt-selection policy. The producing receipt
+records the surface actually used. A later receipt-surface change creates a
+new receipt identity and never rewrites the artifact or an earlier receipt.
+
+Record, as applicable:
+
+- artifact role and semantic status;
+- a safe durable locator;
+- exact size and SHA-256;
+- encoding, line endings, and final-newline state;
+- exact-byte read-back and containment result;
+- predecessor, review, disposition, supersession, or other lineage;
+- retention and visibility classification when the owning storage contract
+  requires them;
+- material capability gaps;
+- the zero-authority boundary; and
+- the exact next permitted action or fail-closed stop.
+
+Containment is a fail-closed operational projection of the named destination,
+no-overwrite creation, immutable path, and no-escape guarantees. It does not
+create a separate semantic owner. Retention and visibility are applicable
+storage-contract evidence, not universal producing-receipt fields.
+
+Reserve *producing receipt* for the selected durable append-only receipt
+surface. Conversation is a compact summary or compact delivery surface, not a
+durable producing-receipt surface. Do not reproduce the complete durable
+artifact in chat merely for transport.
+
+When evidence has a distinct identity, describe the operation as `evidenced
+separately`; do not imply an independent actor merely because the evidence is
+separate.
+
+### Mandatory governed-artifact capture failure boundary
+
+Apply the general failure semantics in
+[`prompt-contracts.md#mandatory-failure-boundary`](prompt-contracts.md#mandatory-failure-boundary).
+Fail before retaining bytes or claiming capture-dependent completion when:
+
+- a required source or parent identity is missing, stale, ambiguous, or
+  mismatched;
+- retention is prohibited or uncertain;
+- the owning workflow supplies no permitted durable destination;
+- exact retention or immediate read-back is unavailable;
+- the target exists, collides, escapes containment, or creates overwrite risk;
+- encoding, line endings, final-newline state, size, or digest mismatches; or
+- available transport or storage weakens ownership, authority, evidence,
+  privacy, retention, or identity guarantees.
+
+A bounded failure receipt is allowed only when its contents and surface are
+permitted. It must not contain prohibited bytes or claim capture, acceptance,
+transition, completion, or authority.
+
+Successful capture, hashes, timestamps, synchronization, validation, reviews,
+receipts, and storage transfer zero authority. Capture success does not
+authorize doctrine promotion, repository implementation, merge, release,
+planning mutation, or downstream work.
+
 ## Independent Evaluation Dimensions
 
 Evaluate protocol conformance separately from substantive value. A conforming

@@ -220,6 +220,7 @@ Reason:
 - [Repository Implementation Task](#repository-implementation-task)
 - [Parallel Batch Add-On](#parallel-batch-add-on)
 - [Orchestration Handoff](#orchestration-handoff)
+- [Governed Artifact Capture Add-On](#governed-artifact-capture-add-on)
 - [Implementation Delivery Add-On](#implementation-delivery-add-on)
 - [PR Review](#pr-review)
 
@@ -425,6 +426,15 @@ Stop rules:
 - Ask for human input when required evidence is unavailable or the next step
   depends on a human judgment call.
 ```
+
+## Governed Artifact Capture Add-On
+
+Append this only when the producing task's owning workflow activates
+[`evidence-lifecycle.md#governed-artifact-capture`](evidence-lifecycle.md#governed-artifact-capture).
+Name that workflow and any narrower storage constraints. After storage
+admission, capture the complete artifact directly, verify its exact identity,
+leave the proportionate permitted producing receipt, and return only a compact
+conversation summary. The add-on grants no acceptance or downstream authority.
 
 ## Implementation Delivery Add-On
 

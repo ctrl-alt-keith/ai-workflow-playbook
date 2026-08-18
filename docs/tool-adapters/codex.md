@@ -578,6 +578,29 @@ source-first and post-merge boundaries rather than rendering stale planned
 state. Do not expose or request private chain-of-thought; workflow progress is
 grounded in artifacts, source state, decisions, validation, and receipts.
 
+## Governed Artifact Capture
+
+Apply the shared contract in
+[`evidence-lifecycle.md#governed-artifact-capture`](../evidence-lifecycle.md#governed-artifact-capture);
+this adapter only projects it onto Codex execution. Before retaining bytes,
+use source-first retrieval to verify the candidate and the owning workflow's
+storage admission, destination, and narrower constraints.
+
+After admission, use one writer and exclusive no-overwrite creation. Read the
+result back immediately and verify exact bytes, size, SHA-256, declared text
+format, final-newline state, and containment where applicable. Report exact
+capability gaps. Describe distinct evidence as `evidenced separately` without
+implying an independent actor.
+
+Select the smallest permitted durable append-only producing-receipt surface
+that remains sufficient for recovery. Return a compact conversation summary;
+chat is not the producing receipt. Do not substitute chat, scratch, unverified
+transport, or a Git commit for required durable retention.
+
+This adapter owns no artifact taxonomy, storage destination, planning state,
+provider state, or human decision. Capture and receipt evidence transfer zero
+authority.
+
 ## External API Claims
 
 When code, tests, docs, risks, or user-facing claims depend on external public
