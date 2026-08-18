@@ -78,3 +78,16 @@ class CodexAdapterTests(unittest.TestCase):
             "narrowest available way to retrieve authoritative state",
         ):
             self.assertIn(phrase, self.contents)
+
+    def test_pr_evidence_requires_current_connector_backed_state(self):
+        for phrase in (
+            "## GitHub And PR Evidence",
+            "verify GitHub access instead of relying on cached context, summaries, or local branch state",
+            "follow the connector-first rule",
+            "Local checkout state, `git diff`, and `gh` output may supplement PR review",
+            "but they do not replace it",
+            "stop and report the access blocker instead of inferring remote state",
+            "Do not claim mergeability, required checks, or branch-protection state without",
+            "current PR or repository evidence",
+        ):
+            self.assertIn(phrase, self.contents)
