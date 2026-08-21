@@ -124,7 +124,7 @@ THREAD` unless an explicit rename is part of the task.
 
 ```text
 Thread name:
-- Before substantive work, set this thread's visible name to: [exact visible name].
+- Before substantive work, set this thread's visible name to: `[exact visible name]`.
 - If this surface cannot apply the name, continue and report the limitation;
   do not ask the operator to set it manually.
 ```

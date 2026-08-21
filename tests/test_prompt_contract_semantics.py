@@ -284,10 +284,21 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         codex = (DOCS / "tool-adapters/codex.md").read_text(encoding="utf-8")
         chatgpt = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")
         claude = (DOCS / "tool-adapters/claude.md").read_text(encoding="utf-8")
+        adapter_paths = sorted((DOCS / "tool-adapters").glob("*.md"))
         normalized_prompts = " ".join(prompts.split())
         normalized_codex = " ".join(codex.split())
         normalized_chatgpt = " ".join(chatgpt.split())
         normalized_claude = " ".join(claude.split())
+        canonical_fragment = (
+            "Thread name:\n"
+            "- Before substantive work, set this thread's visible name to: `[exact visible name]`.\n"
+            "- If this surface cannot apply the name, continue and report the limitation;\n"
+            "  do not ask the operator to set it manually."
+        )
+        executor_section_signature = re.compile(
+            r"^Thread name:\n- Before substantive work, set this thread's visible name to:",
+            re.MULTILINE,
+        )
 
         self.assertIn("Executor-Applied Visible Thread Names", prompts)
         self.assertIn("`[planning-id] — [short bounded task]`", prompts)
@@ -297,13 +308,13 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertIn("not task authority, durable continuity, execution identity", normalized_prompts)
         self.assertIn("executor action, not an operator configuration", prompts)
         self.assertNotIn("Recommended thread name:", prompts)
-        self.assertNotIn("Thread name:", prompts)
-        self.assertNotIn("Before substantive work, set this thread's visible name", prompts)
+        self.assertNotIn(canonical_fragment, prompts)
         self.assertIn("[resolved thread-name section when applicable]", prompts)
         self.assertIn("matching downstream target executor adapter", normalized_prompts)
         self.assertIn("Route eligibility does not establish executor capability", prompts)
         self.assertIn("Resolve it to nothing when the target adapter does not", normalized_prompts)
         self.assertIn("ordinary `SAME THREAD`", normalized_prompts)
+        self.assertIn("Do not leave the placeholder in a final generated prompt", normalized_prompts)
         self.assertIn(
             "eligible separately visible `CHILD TASK`",
             normalized_prompts,
@@ -329,14 +340,23 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertNotIn("ChatGPT", prompts)
         self.assertIn("matching executor adapter", prompts)
         self.assertIn("Codex is currently the Playbook adapter", normalized_codex)
-        self.assertEqual(codex.count("Thread name:"), 1)
-        self.assertIn(
-            "Thread name:\n"
-            "- Before substantive work, set this thread's visible name to: [exact visible name].\n"
-            "- If this surface cannot apply the name, continue and report the limitation;\n"
-            "  do not ask the operator to set it manually.",
-            codex,
-        )
+        self.assertEqual(codex.count(canonical_fragment), 1)
+        for adapter_path in adapter_paths:
+            contents = adapter_path.read_text(encoding="utf-8")
+            if adapter_path.name == "codex.md":
+                continue
+            self.assertNotIn(canonical_fragment, contents, adapter_path.name)
+        scanned_surfaces = [("prompts.md", prompts)] + [
+            (path.name, path.read_text(encoding="utf-8")) for path in adapter_paths
+        ]
+        signature_matches = [
+            (name, len(executor_section_signature.findall(contents)))
+            for name, contents in scanned_surfaces
+        ]
+        self.assertEqual(signature_matches, [
+            ("prompts.md", 0),
+            *[(path.name, 1 if path.name == "codex.md" else 0) for path in adapter_paths],
+        ])
         self.assertIn("Codex applies that exact name itself", codex)
         self.assertIn("naming remains non-blocking and navigation only", normalized_codex)
         self.assertIn("Resolve it to nothing for an ordinary `SAME THREAD`", normalized_codex)
@@ -345,12 +365,11 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertIn("Do not nest Markdown code fences", " ".join(chatgpt.split()))
         self.assertIn("ChatGPT-targeted prompts resolve the shared naming placeholder to nothing", normalized_chatgpt)
         self.assertIn("does not ask ChatGPT to rename itself", normalized_chatgpt)
-        self.assertIn("Codex-targeted handoff", chatgpt)
-        self.assertNotIn("Thread name:", chatgpt)
+        self.assertIn("adapter explicitly supports executor-applied naming", normalized_chatgpt)
+        self.assertNotIn("currently, that means an applicable Codex-targeted handoff", chatgpt)
         self.assertIn("does not currently establish an executor-applied visible-thread", normalized_claude)
         self.assertIn("Claude-targeted `FRESH THREAD`, `SAME THREAD`, and `CHILD TASK`", normalized_claude)
         self.assertIn("Do not ask Claude to rename itself or report a naming limitation", normalized_claude)
-        self.assertNotIn("Thread name:", claude)
 
 
 class PromptContractCanonicalizationVectorTests(unittest.TestCase):
