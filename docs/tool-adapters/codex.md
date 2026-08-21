@@ -113,14 +113,26 @@ this matrix; Sol is not automatic for a narrow, deterministic fallback.
 
 ### Visible Thread Names
 
-Apply the shared visible-thread-name semantics in
-[`prompts.md`](../prompts.md#executor-applied-visible-thread-names). When an
-applicable executable prompt supplies a `Thread name` and the active Codex
-surface exposes a visible-name control, Codex applies that exact name itself
-before substantive work. Codex must not ask the operator to set or copy the
-name manually. If the control is unavailable, Codex continues the substantive
-task and reports the limitation; naming remains non-blocking and navigation
-only.
+Apply the shared visible-thread-name meaning and naming syntax in
+[`prompts.md`](../prompts.md#executor-applied-visible-thread-names). Codex is
+currently the Playbook adapter that establishes executor-applied visible-thread
+naming capability. For a Codex-targeted `FRESH THREAD`, or an eligible
+separately visible Codex `CHILD TASK`, resolve the shared
+`[resolved thread-name section when applicable]` placeholder to this exact
+section with the computed name. Resolve it to nothing for an ordinary `SAME
+THREAD` unless an explicit rename is part of the task.
+
+```text
+Thread name:
+- Before substantive work, set this thread's visible name to: `[exact visible name]`.
+- If this surface cannot apply the name, continue and report the limitation;
+  do not ask the operator to set it manually.
+```
+
+When this section is present and the active Codex surface exposes a visible-name
+control, Codex applies that exact name itself before substantive work. If the
+control is unavailable, Codex continues the substantive task and reports the
+limitation; naming remains non-blocking and navigation only.
 
 The CAK-106 experience supports this split as observed workflow evidence, not
 a benchmark: protocol ambiguity, authority architecture, controller semantics,
