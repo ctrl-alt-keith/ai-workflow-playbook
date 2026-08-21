@@ -125,7 +125,9 @@ class ChatGPTAdapterTests(unittest.TestCase):
             normalized,
         )
         self.assertIn("reuse that exact title in later complete prompts", normalized)
-        self.assertIn("not verified ChatGPT UI state", normalized)
-        self.assertIn("applicable `FRESH THREAD` handoff", normalized)
-        self.assertIn("existing executable `Thread name` instruction", normalized)
+        self.assertIn("not verified or changed ChatGPT UI state", normalized)
+        self.assertIn("downstream target executor adapter supports", normalized)
+        self.assertIn("currently, that means an applicable Codex-targeted handoff", normalized)
+        self.assertIn("ChatGPT-targeted prompts resolve the shared naming placeholder to nothing", normalized)
+        self.assertIn("does not ask ChatGPT to rename itself or report a naming limitation", normalized)
         self.assertIn("normal `SAME THREAD` or `CHILD TASK`", normalized)

@@ -107,11 +107,11 @@ durable continuity, execution identity, or evidence of current planning,
 repository, branch, pull-request, validation, or review state. Retrieve each
 of those facts from its owning current source.
 
-The name is an executor action, not an operator configuration. Put an exact
-`Thread name` instruction in an applicable executable prompt; do not put a
-`Recommended thread name` field in operator metadata. The operator is not
-expected to set or copy the name manually, while the active executor can apply
-it when its surface exposes that control.
+The name is an executor action, not an operator configuration. Do not put a
+`Recommended thread name` field in operator metadata. Whether an executable
+prompt can contain an executor-applied naming section is established only by
+the matching downstream target executor adapter, not by the client or executor
+that authors or presents the prompt.
 
 When one planning item governs the current intent and completion boundary, use
 `[planning-id] — [short bounded task]`. Preserve the planning identifier exactly
@@ -124,35 +124,25 @@ governing identifier can be selected without inventing precedence, omit the
 identifier. This convention is planning-system-neutral and does not require
 Linear.
 
-Apply the instruction by route:
+Route eligibility does not establish executor capability:
 
-- `FRESH THREAD`: include the executable `Thread name` instruction and have
-  the capable executor apply the exact name before substantive work.
-- `CHILD TASK`: include it only when the child has its own separately visible,
-  nameable thread or task and its execution surface can apply the name.
+- `FRESH THREAD` may receive the adapter-owned naming section when its
+  downstream target executor explicitly supports executor-applied naming.
+- `CHILD TASK` may receive it only when the child has its own separately
+  visible, nameable thread or task and its downstream target executor
+  explicitly supports executor-applied naming.
 - `SAME THREAD`: preserve the established visible name unless an explicit
-  rename is part of the task; do not inject a routine rename instruction.
-
-If the execution surface cannot apply the name, continue the substantive task
-and report that limitation. Naming failure is non-blocking because the name is
-navigation only.
-
-Use this canonical executable fragment exactly once in an applicable generated
-prompt:
-
-```text
-Thread name:
-- Before substantive work, set this thread's visible name to: `[exact visible name]`.
-- If this surface cannot apply the name, continue and report the limitation;
-  do not ask the operator to set it manually.
-```
+  rename is part of the task; do not inject a routine naming section.
 
 During prompt construction, replace `[resolved thread-name section when
-applicable]` with the complete canonical fragment and the exact computed name
-for a `FRESH THREAD` or a separately visible, nameable `CHILD TASK` whose
-surface supports naming. Replace it with nothing for an ordinary `SAME THREAD`.
-Do not leave the placeholder in a final generated prompt or ask the downstream
-executor to infer or recover the name from planning or repository context.
+applicable]` through the matching downstream target executor adapter. The
+adapter resolves it to its complete naming section and exact computed name only
+for a supported `FRESH THREAD` or eligible separately visible `CHILD TASK`.
+Resolve it to nothing when the target adapter does not explicitly establish an
+executor-applied visible-thread naming capability, and for an ordinary `SAME
+THREAD`. Do not leave the placeholder in a final generated prompt or ask the
+downstream executor to infer or recover the name from planning or repository
+context.
 
 When a complete prompt materially changes, emit a complete replacement
 operator-metadata block and executable prompt. Do not emit a partial prompt

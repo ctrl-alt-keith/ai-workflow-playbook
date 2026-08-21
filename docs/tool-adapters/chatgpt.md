@@ -145,11 +145,14 @@ does not deliver a copy-ready prompt.
 When no canonical title exists for the current ChatGPT workstream, establish a
 concise one; reuse that exact title in later complete prompts from the same
 conversation. The emitted value is a canonical navigation title, not verified
-ChatGPT UI state when the UI title is not observable. For an applicable `FRESH
-THREAD` handoff, reuse the exact title in the existing executable `Thread
-name` instruction unless a task-specific naming requirement makes that
-inappropriate. This does not change the normal `SAME THREAD` or `CHILD TASK`
-routing behavior in [`prompts.md`](../prompts.md#executor-applied-visible-thread-names).
+or changed ChatGPT UI state when the UI title is not observable. The breadcrumb
+title may also be selected as a downstream visible name only when the
+downstream target executor adapter supports executor-applied naming; currently,
+that means an applicable Codex-targeted handoff. ChatGPT-targeted prompts
+resolve the shared naming placeholder to nothing. This adapter does not ask
+ChatGPT to rename itself or report a naming limitation, and it does not change
+the normal `SAME THREAD` or `CHILD TASK` routing behavior in
+[`prompts.md`](../prompts.md#executor-applied-visible-thread-names).
 
 Do not nest Markdown code fences inside the executable block; represent any
 embedded example with indentation or plain text. Optimize this client rendering

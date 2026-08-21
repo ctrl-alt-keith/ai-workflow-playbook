@@ -178,6 +178,16 @@ For a CHILD TASK, select the lowest-cost sufficient Claude configuration for the
 bounded child and preserve its inputs, configuration, execution identity,
 durable result, and authority boundary where the workflow requires it.
 
+### Visible Thread Names
+
+This adapter does not currently establish an executor-applied visible-thread
+naming capability. Therefore Claude-targeted `FRESH THREAD`, `SAME THREAD`,
+and `CHILD TASK` prompts resolve the shared
+`[resolved thread-name section when applicable]` placeholder to nothing. Do
+not ask Claude to rename itself or report a naming limitation. This is the
+Playbook's current adapter mapping, not a claim about every present or future
+Anthropic product surface.
+
 Requested configuration and effective runtime configuration are distinct.
 Claude Code can intentionally switch `opusplan` from Opus in plan mode to Sonnet
 in execution, and can use configured fallback chains for unavailable or
