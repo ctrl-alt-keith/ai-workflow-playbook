@@ -25,27 +25,20 @@ evidence.
 
 ## Task-Shape Surface Selection And Thin Handoffs
 
-When Chat is the current interactive surface, use it as the normal control
-plane for human-led clarification, scoping, authority decisions, decomposition,
-steering, review, and disposition. Keep hard reasoning in Chat while that
-semantic role remains interactive. Move work only after a bounded outcome and
-execution contract have emerged:
+Select a target surface or execution role by semantic role, execution locality,
+required tools, and deliverable. Keep work with an interactive controller while
+the next useful result is discussion, judgment, clarification, steering, or
+review. Move to a general-purpose bounded executor when a bounded multi-step
+outcome or non-repository deliverable has emerged. Move to a repository
+executor when completion materially depends on repository locality, terminal
+commands, tests, version control, worktrees, commits, pull requests, or code
+review.
 
-- choose Work for a bounded general-purpose multi-step outcome or
-  non-repository deliverable;
-- choose Codex when completion materially depends on repository locality,
-  terminal commands, tests, Git, worktrees, commits, pull requests, or code
-  review; and
-- keep work in Chat when the next useful result is discussion, judgment,
-  clarification, steering, or review rather than delegated execution.
-
-Select by semantic role, execution locality, required tools, and deliverable.
-Difficulty, model tier, and reasoning setting do not select a surface. Chat is
-the normal interactive controller, not a mandatory mediator for every
-automated or independently initiated workflow, a universal authority, a
-canonical record, or a project system of record. Ordinary chat, brainstorming,
-and conceptual discussion remain lightweight and do not inherit repository
-ceremony.
+Difficulty, model tier, and reasoning setting do not select a surface. A task
+changes surface only after a bounded outcome and execution contract have
+emerged. Ordinary discussion, brainstorming, and conceptual work remain
+lightweight and do not inherit repository ceremony. The matching target adapter
+owns each concrete product or executor projection.
 
 Keep these dimensions distinct:
 
@@ -59,22 +52,22 @@ Keep these dimensions distinct:
 | Durable package pointer | The exact external manifest or sealed-package identity used to hydrate recoverable state. |
 | Durable continuity | The owning authoritative sources and records from which the work can be recovered. |
 
-Moving between Chat and Work does not create a new durable executor identity or
-authority contract merely because the interface changed. Moving to Codex is a
-distinct repository-execution handoff and must make repository, locality,
-tools, validation, delivery, and stop boundaries explicit. Shared application
-chrome, project membership, conversation history, product branding, or a
-folder name does not prove that context or authority transferred.
+An interface change does not create a new durable executor identity or
+authority contract when the underlying executor identity and authority remain
+the same. A transition to a distinct repository executor is a repository-
+execution handoff and must make repository, locality, tools, validation,
+delivery, and stop boundaries explicit. Shared application chrome, project
+membership, conversation history, product branding, or a folder name does not
+prove that context or authority transferred.
 
 ### Surface-transition check
 
 At a surface transition, re-evaluate context sufficiency and any materially
 changed source, authority, locality, acting identity, tool, validation, output,
 or completion boundary. Retrieve newly activated owners and refresh mutable
-repository, GitHub, planning-system, and provider facts from the systems that
-own them before relying on those facts. Reuse still-current verified context;
-a surface change does not require blanket rehydration or replay of unchanged
-doctrine.
+repository, planning-system, and provider facts from the systems that own them
+before relying on those facts. Reuse still-current verified context; a surface
+change does not require blanket rehydration or replay of unchanged doctrine.
 
 ### Thin semantic handoff envelope
 
@@ -115,67 +108,12 @@ or evidence from conversation memory.
 
 ### Target-shaped projections
 
-Shape the thin envelope for the selected target rather than sending a generic
-prompt.
-
-For Work, emphasize the delegated outcome, permitted connected sources and
-tools, source refresh, output form, quality checks, and return boundary:
-
-```text
-Target: Work — bounded general-purpose outcome
-Outcome: [source-backed non-repository deliverable]
-Governed payload: [exact manifest or sealed-package identity]
-Human direction and authority: [bounded declaration, owning reference, prohibitions]
-Refresh: [mutable sources to retrieve from their owners]
-Tools and locality: [permitted connected sources and execution location]
-Validation and output: [quality checks and deliverable form]
-Return boundary: [return to Chat for review or stop condition]
-```
-
-For Codex, emphasize repository execution, exact locality, terminal and Git
-tools, canonical validation, delivery, and the stop-before-merge boundary:
-
-```text
-Target: Codex — repository execution
-Outcome: [bounded repository change or review]
-Repository and locality: [repository, worktree, branch, relevant surface]
-Governed payload: [exact manifest or sealed-package identity]
-Human direction and authority: [bounded declaration, owning reference, prohibitions]
-Refresh: [repository, GitHub, planning, and provider facts to re-read]
-Tools: [terminal, tests, Git, worktrees, commits, PR, or code review as applicable]
-Validation and delivery: [canonical command, outputs, commit/push/PR expectation]
-Stop boundary: [including no merge or other prohibited transition]
-```
-
-### Examples
-
-1. **Difficult architecture discussion remains in Chat.** The human and Chat
-   are still comparing authority boundaries and tradeoffs. No bounded
-   deliverable or execution contract exists, so difficulty does not trigger a
-   move to Work or Codex.
-2. **Source-backed report moves from Chat to Work.** Chat establishes the
-   question and authority boundary, then sends a Work-shaped envelope for a
-   cited report with `Governed payload: [immutable manifest path plus exact
-   digest or file identity]`, current source-refresh instructions, output
-   checks, and return-to-Chat boundary. It does not paste the recoverable
-   package into the conversation.
-3. **Repository implementation moves from Chat to Codex.** Chat establishes a
-   bounded repository outcome, then sends a Codex-shaped envelope naming the
-   repository and worktree expectations, terminal and Git tools, canonical
-   validation, PR delivery, stop-before-merge boundary, and `Governed payload:
-   [exact sealed-package identity]`.
-4. **Discussion becomes delegated execution.** A task begins in Chat as an
-   open-ended product discussion. It stays there until the human selects a
-   bounded comparison report with accepted sources and review criteria; only
-   then does it move to Work.
-5. **Worker result returns to Chat.** Work returns the report identity,
-   validation evidence, limitations, and output—not new authority. Chat is
-   again the interactive surface for human review, interpretation,
-   disposition, or next-step selection.
-6. **Package reference fails closed.** A target receives only a mutable folder,
-   or the named manifest is inaccessible, stale, digest-mismatched, or
-   ambiguous. It stops the affected work or reports a non-authorizing partial
-   result without rebuilding the missing payload from conversation memory.
+Shape the thin envelope through the matching target adapter rather than sending
+one generic prompt. A general-purpose bounded-executor projection emphasizes
+the delegated outcome, permitted sources and tools, source refresh, output
+form, quality checks, and return boundary. A repository-executor projection
+also makes repository identity and locality, repository tools, canonical
+validation, delivery, and the stop-before-merge boundary explicit.
 
 ## Thread Routing And Configuration Continuity
 

@@ -14,6 +14,7 @@ class SurfaceHandoffSemanticTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.core = normalized(DOCS / "core-model.md")
+        cls.prompts_raw = (DOCS / "prompts.md").read_text(encoding="utf-8")
         cls.prompts = normalized(DOCS / "prompts.md")
         cls.chatgpt = normalized(DOCS / "tool-adapters" / "chatgpt.md")
 
@@ -36,19 +37,32 @@ class SurfaceHandoffSemanticTests(unittest.TestCase):
             "Handoff contract",
             "Durable package pointer",
             "Durable continuity",
-            "choose Work for a bounded general-purpose multi-step outcome",
-            "choose Codex when completion materially depends on repository locality",
+            "general-purpose bounded executor",
+            "repository executor when completion materially depends on repository locality",
             "Difficulty, model tier, and reasoning setting do not select a surface",
-            "Ordinary chat, brainstorming, and conceptual discussion remain lightweight",
+            "matching target adapter owns each concrete product or executor projection",
         ):
             self.assertIn(phrase, self.prompts)
+
+    def test_prompts_remains_executor_neutral(self):
+        for product_name in ("ChatGPT", "Codex"):
+            self.assertNotIn(product_name, self.prompts_raw)
+        for concrete_projection in (
+            "When Chat is the current interactive surface",
+            "choose Work for",
+            "Target: Work",
+            "Target: Codex",
+            "return to Chat",
+            "moves from Chat",
+        ):
+            self.assertNotIn(concrete_projection, self.prompts_raw)
 
     def test_transition_is_proportional_and_refreshes_mutable_owners(self):
         for phrase in (
             "Surface-transition check",
             "re-evaluate context sufficiency",
             "acting identity",
-            "refresh mutable repository, GitHub, planning-system, and provider facts",
+            "refresh mutable repository, planning-system, and provider facts",
             "Reuse still-current verified context",
             "does not require blanket rehydration",
         ):
@@ -76,7 +90,7 @@ class SurfaceHandoffSemanticTests(unittest.TestCase):
             "Repository and locality: [repository, worktree, branch, relevant surface]",
             "Validation and delivery: [canonical command, outputs, commit/push/PR expectation]",
         ):
-            self.assertIn(phrase, self.prompts)
+            self.assertIn(phrase, self.chatgpt)
 
     def test_all_required_examples_are_present(self):
         for phrase in (
@@ -87,11 +101,12 @@ class SurfaceHandoffSemanticTests(unittest.TestCase):
             "Worker result returns to Chat",
             "Package reference fails closed",
         ):
-            self.assertIn(phrase, self.prompts)
+            self.assertIn(phrase, self.chatgpt)
 
     def test_chatgpt_projection_keeps_one_adapter_and_verifies_package_access(self):
         self.assertIn("Chat is the normal interactive control plane", self.chatgpt)
         self.assertIn("Work is the preferred ChatGPT surface", self.chatgpt)
+        self.assertIn("Codex is the preferred distinct repository-oriented executor", self.chatgpt)
         self.assertIn("nested surfaces under one ChatGPT adapter", self.chatgpt)
         self.assertIn("Inspect or attempt retrieval", self.chatgpt)
         self.assertIn("Listing a folder or reaching a mutable package root", self.chatgpt)

@@ -61,9 +61,12 @@ unattended-work guidance is activated.
 Chat is the normal interactive control plane for human-led clarification,
 scoping, authority decisions, decomposition, steering, review, and disposition.
 Work is the preferred ChatGPT surface for a bounded general-purpose multi-step
-outcome or non-repository deliverable. Hard reasoning may remain in Chat while
-the task is still interactive; difficulty, model tier, or reasoning setting
-does not select Work or Codex.
+outcome or non-repository deliverable. Codex is the preferred distinct
+repository-oriented executor when completion materially depends on repository
+locality, terminal commands, tests, Git, worktrees, commits, pull requests, or
+code review. Hard reasoning may remain in Chat while the task is still
+interactive; difficulty, model tier, or reasoning setting does not select Work
+or Codex.
 
 This is a default task-shape projection, not a claim that Chat is canonical,
 universally authoritative, or required to mediate every workflow. Chat and
@@ -79,6 +82,75 @@ package root proves neither exact-package access nor current authority. If the
 identity cannot be accessed, resolved, or verified, fail closed or return an
 explicit non-authorizing partial result without reconstructing it from Chat or
 Work memory.
+
+#### Work-shaped handoff
+
+Project the shared thin-envelope semantics for a delegated general-purpose
+outcome by emphasizing permitted connected sources and tools, output form,
+quality checks, and the return-to-Chat boundary:
+
+```text
+Target: Work — bounded general-purpose outcome
+Outcome: [source-backed non-repository deliverable]
+Governed payload: [exact manifest or sealed-package identity]
+Human direction and authority: [bounded declaration, owning reference, prohibitions]
+Refresh: [mutable sources to retrieve from their owners]
+Tools and locality: [permitted connected sources and execution location]
+Validation and output: [quality checks and deliverable form]
+Return boundary: [return to Chat for review or stop condition]
+```
+
+#### Codex-shaped handoff
+
+Project the shared thin-envelope semantics for repository execution by adding
+exact repository locality, terminal and Git tools, canonical validation,
+delivery, and the stop-before-merge boundary:
+
+```text
+Target: Codex — repository execution
+Outcome: [bounded repository change or review]
+Repository and locality: [repository, worktree, branch, relevant surface]
+Governed payload: [exact manifest or sealed-package identity]
+Human direction and authority: [bounded declaration, owning reference, prohibitions]
+Refresh: [repository, GitHub, planning, and provider facts to re-read]
+Tools: [terminal, tests, Git, worktrees, commits, PR, or code review as applicable]
+Validation and delivery: [canonical command, outputs, commit/push/PR expectation]
+Stop boundary: [including no merge or other prohibited transition]
+```
+
+These shapes project the shared owner in
+[`prompts.md`](../prompts.md#task-shape-surface-selection-and-thin-handoffs);
+they do not redefine its package, authority, source-refresh, or failure
+semantics.
+
+#### Examples
+
+1. **Difficult architecture discussion remains in Chat.** The human and Chat
+   are still comparing authority boundaries and tradeoffs. No bounded
+   deliverable or execution contract exists, so difficulty does not trigger a
+   move to Work or Codex.
+2. **Source-backed report moves from Chat to Work.** Chat establishes the
+   question and authority boundary, then sends the Work-shaped envelope with
+   an exact manifest identity, current source-refresh instructions, output
+   checks, and return-to-Chat boundary. The complete recoverable package is not
+   pasted into conversation.
+3. **Repository implementation moves from Chat to Codex.** Chat establishes a
+   bounded repository outcome, then sends the Codex-shaped envelope with the
+   exact sealed-package identity, repository and worktree expectations,
+   terminal and Git tools, canonical validation, PR delivery, and a
+   stop-before-merge boundary.
+4. **Discussion becomes delegated execution.** A task begins in Chat as an
+   open-ended product discussion. It stays there until the human selects a
+   bounded comparison report with accepted sources and review criteria; only
+   then does it move to Work.
+5. **Worker result returns to Chat.** Work returns the report identity,
+   validation evidence, limitations, and output—not new authority. Chat is
+   again the interactive surface for human review, interpretation,
+   disposition, or next-step selection.
+6. **Package reference fails closed.** A target receives only a mutable folder,
+   or the named manifest is inaccessible, stale, digest-mismatched, or
+   ambiguous. It stops the affected work or reports a non-authorizing partial
+   result without rebuilding the missing payload from conversation memory.
 
 ## Connected apps, approvals, and consequential actions
 
