@@ -23,6 +23,98 @@ identity, authority, safety, validation, or unambiguous retrieval. Reducing
 redundant context is execution engineering, not methodology or architecture
 evidence.
 
+## Task-Shape Surface Selection And Thin Handoffs
+
+Select a target surface or execution role by semantic role, execution locality,
+required tools, and deliverable. Keep work with an interactive controller while
+the next useful result is discussion, judgment, clarification, steering, or
+review. Move to a general-purpose bounded executor when a bounded multi-step
+outcome or non-repository deliverable has emerged. Move to a repository
+executor when completion materially depends on repository locality, terminal
+commands, tests, version control, worktrees, commits, pull requests, or code
+review.
+
+Difficulty, model tier, and reasoning setting do not select a surface. A task
+changes surface only after a bounded outcome and execution contract have
+emerged. Ordinary discussion, brainstorming, and conceptual work remain
+lightweight and do not inherit repository ceremony. The matching target adapter
+owns each concrete product or executor projection.
+
+Keep these dimensions distinct:
+
+| Dimension | Meaning |
+| --- | --- |
+| Interaction surface | Where a human discusses, steers, reviews, or delegates. |
+| Executor identity | The runtime or agent that performs the bounded work. |
+| Task shape | Interactive reasoning, a general delegated outcome, or repository execution. |
+| Model or reasoning choice | An execution setting that does not by itself change semantic role. |
+| Handoff contract | Current sources, authority declaration and owning reference, constraints, locality, validation, outputs, and stop boundary. |
+| Durable package pointer | The exact external manifest or sealed-package identity used to hydrate recoverable state. |
+| Durable continuity | The owning authoritative sources and records from which the work can be recovered. |
+
+An interface change does not create a new durable executor identity or
+authority contract when the underlying executor identity and authority remain
+the same. A transition to a distinct repository executor is a repository-
+execution handoff and must make repository, locality, tools, validation,
+delivery, and stop boundaries explicit. Shared application chrome, project
+membership, conversation history, product branding, or a folder name does not
+prove that context or authority transferred.
+
+### Surface-transition check
+
+At a surface transition, re-evaluate context sufficiency and any materially
+changed source, authority, locality, acting identity, tool, validation, output,
+or completion boundary. Retrieve newly activated owners and refresh mutable
+repository, planning-system, and provider facts from the systems that own them
+before relying on those facts. Reuse still-current verified context; a surface
+change does not require blanket rehydration or replay of unchanged doctrine.
+
+### Thin semantic handoff envelope
+
+When complete recoverable state is held outside the conversation, a thin
+role-specific envelope carries only the current routing delta. Include, as
+applicable:
+
+- target surface or executor role;
+- bounded requested outcome;
+- exact self-describing governed manifest or sealed-package identity;
+- current human direction and bounded authority declaration, its owning
+  authority reference, and prohibited actions;
+- mutable sources that the target must refresh from their owners;
+- required locality and tools;
+- validation, outputs, and completion or stop boundary.
+
+These are semantic fields, not an operational package schema. The pointed
+package may preserve the complete contract, accepted inputs, source and
+artifact identities, prior decisions, receipts, validation evidence, and a
+recorded next permitted action. The target must retrieve and verify the exact
+manifest or sealed-package identity before relying on that payload. For
+material execution, use the exact identity evidence required by the owning
+package contract, such as an immutable path plus digest, file identity, attempt
+identity, or version. A mutable issue directory, package root, or bare folder
+path is navigation only; it is not the governing package identity.
+
+The envelope declares human direction, bounded authority, and the owning
+authority reference but creates zero authority itself. Stored contracts,
+next-action statements, paths, digests, packages, prompts, receipts,
+validation, and successful retrieval also create or transfer zero authority. A
+recorded next action remains historical or asserted instruction until the
+current acting identity and live authority are verified from their owner.
+
+If the exact package identity is inaccessible, unresolved, stale, mismatched,
+or ambiguous, stop before affected execution or return an explicit
+non-authorizing partial result. Do not reconstruct missing contract, authority,
+or evidence from conversation memory.
+
+### Target-shaped projections
+
+Shape the thin envelope through the matching target adapter rather than sending
+one generic prompt. A general-purpose bounded-executor projection emphasizes
+the delegated outcome, permitted sources and tools, source refresh, output
+form, quality checks, and return boundary. A repository-executor projection
+also makes repository identity and locality, repository tools, canonical
+validation, delivery, and the stop-before-merge boundary explicit.
+
 ## Thread Routing And Configuration Continuity
 
 Model selection, reasoning or thinking configuration, and thread routing are
@@ -207,6 +299,7 @@ Reason:
 
 ## Quick Navigation
 
+- [Task-Shape Surface Selection And Thin Handoffs](#task-shape-surface-selection-and-thin-handoffs)
 - [Repository Implementation Task](#repository-implementation-task)
 - [Parallel Batch Add-On](#parallel-batch-add-on)
 - [Orchestration Handoff](#orchestration-handoff)
