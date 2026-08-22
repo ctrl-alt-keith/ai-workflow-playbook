@@ -23,6 +23,160 @@ identity, authority, safety, validation, or unambiguous retrieval. Reducing
 redundant context is execution engineering, not methodology or architecture
 evidence.
 
+## Task-Shape Surface Selection And Thin Handoffs
+
+When Chat is the current interactive surface, use it as the normal control
+plane for human-led clarification, scoping, authority decisions, decomposition,
+steering, review, and disposition. Keep hard reasoning in Chat while that
+semantic role remains interactive. Move work only after a bounded outcome and
+execution contract have emerged:
+
+- choose Work for a bounded general-purpose multi-step outcome or
+  non-repository deliverable;
+- choose Codex when completion materially depends on repository locality,
+  terminal commands, tests, Git, worktrees, commits, pull requests, or code
+  review; and
+- keep work in Chat when the next useful result is discussion, judgment,
+  clarification, steering, or review rather than delegated execution.
+
+Select by semantic role, execution locality, required tools, and deliverable.
+Difficulty, model tier, and reasoning setting do not select a surface. Chat is
+the normal interactive controller, not a mandatory mediator for every
+automated or independently initiated workflow, a universal authority, a
+canonical record, or a project system of record. Ordinary chat, brainstorming,
+and conceptual discussion remain lightweight and do not inherit repository
+ceremony.
+
+Keep these dimensions distinct:
+
+| Dimension | Meaning |
+| --- | --- |
+| Interaction surface | Where a human discusses, steers, reviews, or delegates. |
+| Executor identity | The runtime or agent that performs the bounded work. |
+| Task shape | Interactive reasoning, a general delegated outcome, or repository execution. |
+| Model or reasoning choice | An execution setting that does not by itself change semantic role. |
+| Handoff contract | Current sources, authority declaration and owning reference, constraints, locality, validation, outputs, and stop boundary. |
+| Durable package pointer | The exact external manifest or sealed-package identity used to hydrate recoverable state. |
+| Durable continuity | The owning authoritative sources and records from which the work can be recovered. |
+
+Moving between Chat and Work does not create a new durable executor identity or
+authority contract merely because the interface changed. Moving to Codex is a
+distinct repository-execution handoff and must make repository, locality,
+tools, validation, delivery, and stop boundaries explicit. Shared application
+chrome, project membership, conversation history, product branding, or a
+folder name does not prove that context or authority transferred.
+
+### Surface-transition check
+
+At a surface transition, re-evaluate context sufficiency and any materially
+changed source, authority, locality, acting identity, tool, validation, output,
+or completion boundary. Retrieve newly activated owners and refresh mutable
+repository, GitHub, planning-system, and provider facts from the systems that
+own them before relying on those facts. Reuse still-current verified context;
+a surface change does not require blanket rehydration or replay of unchanged
+doctrine.
+
+### Thin semantic handoff envelope
+
+When complete recoverable state is held outside the conversation, a thin
+role-specific envelope carries only the current routing delta. Include, as
+applicable:
+
+- target surface or executor role;
+- bounded requested outcome;
+- exact self-describing governed manifest or sealed-package identity;
+- current human direction and bounded authority declaration, its owning
+  authority reference, and prohibited actions;
+- mutable sources that the target must refresh from their owners;
+- required locality and tools;
+- validation, outputs, and completion or stop boundary.
+
+These are semantic fields, not an operational package schema. The pointed
+package may preserve the complete contract, accepted inputs, source and
+artifact identities, prior decisions, receipts, validation evidence, and a
+recorded next permitted action. The target must retrieve and verify the exact
+manifest or sealed-package identity before relying on that payload. For
+material execution, use the exact identity evidence required by the owning
+package contract, such as an immutable path plus digest, file identity, attempt
+identity, or version. A mutable issue directory, package root, or bare folder
+path is navigation only; it is not the governing package identity.
+
+The envelope declares human direction, bounded authority, and the owning
+authority reference but creates zero authority itself. Stored contracts,
+next-action statements, paths, digests, packages, prompts, receipts,
+validation, and successful retrieval also create or transfer zero authority. A
+recorded next action remains historical or asserted instruction until the
+current acting identity and live authority are verified from their owner.
+
+If the exact package identity is inaccessible, unresolved, stale, mismatched,
+or ambiguous, stop before affected execution or return an explicit
+non-authorizing partial result. Do not reconstruct missing contract, authority,
+or evidence from conversation memory.
+
+### Target-shaped projections
+
+Shape the thin envelope for the selected target rather than sending a generic
+prompt.
+
+For Work, emphasize the delegated outcome, permitted connected sources and
+tools, source refresh, output form, quality checks, and return boundary:
+
+```text
+Target: Work — bounded general-purpose outcome
+Outcome: [source-backed non-repository deliverable]
+Governed payload: [exact manifest or sealed-package identity]
+Human direction and authority: [bounded declaration, owning reference, prohibitions]
+Refresh: [mutable sources to retrieve from their owners]
+Tools and locality: [permitted connected sources and execution location]
+Validation and output: [quality checks and deliverable form]
+Return boundary: [return to Chat for review or stop condition]
+```
+
+For Codex, emphasize repository execution, exact locality, terminal and Git
+tools, canonical validation, delivery, and the stop-before-merge boundary:
+
+```text
+Target: Codex — repository execution
+Outcome: [bounded repository change or review]
+Repository and locality: [repository, worktree, branch, relevant surface]
+Governed payload: [exact manifest or sealed-package identity]
+Human direction and authority: [bounded declaration, owning reference, prohibitions]
+Refresh: [repository, GitHub, planning, and provider facts to re-read]
+Tools: [terminal, tests, Git, worktrees, commits, PR, or code review as applicable]
+Validation and delivery: [canonical command, outputs, commit/push/PR expectation]
+Stop boundary: [including no merge or other prohibited transition]
+```
+
+### Examples
+
+1. **Difficult architecture discussion remains in Chat.** The human and Chat
+   are still comparing authority boundaries and tradeoffs. No bounded
+   deliverable or execution contract exists, so difficulty does not trigger a
+   move to Work or Codex.
+2. **Source-backed report moves from Chat to Work.** Chat establishes the
+   question and authority boundary, then sends a Work-shaped envelope for a
+   cited report with `Governed payload: [immutable manifest path plus exact
+   digest or file identity]`, current source-refresh instructions, output
+   checks, and return-to-Chat boundary. It does not paste the recoverable
+   package into the conversation.
+3. **Repository implementation moves from Chat to Codex.** Chat establishes a
+   bounded repository outcome, then sends a Codex-shaped envelope naming the
+   repository and worktree expectations, terminal and Git tools, canonical
+   validation, PR delivery, stop-before-merge boundary, and `Governed payload:
+   [exact sealed-package identity]`.
+4. **Discussion becomes delegated execution.** A task begins in Chat as an
+   open-ended product discussion. It stays there until the human selects a
+   bounded comparison report with accepted sources and review criteria; only
+   then does it move to Work.
+5. **Worker result returns to Chat.** Work returns the report identity,
+   validation evidence, limitations, and output—not new authority. Chat is
+   again the interactive surface for human review, interpretation,
+   disposition, or next-step selection.
+6. **Package reference fails closed.** A target receives only a mutable folder,
+   or the named manifest is inaccessible, stale, digest-mismatched, or
+   ambiguous. It stops the affected work or reports a non-authorizing partial
+   result without rebuilding the missing payload from conversation memory.
+
 ## Thread Routing And Configuration Continuity
 
 Model selection, reasoning or thinking configuration, and thread routing are
@@ -207,6 +361,7 @@ Reason:
 
 ## Quick Navigation
 
+- [Task-Shape Surface Selection And Thin Handoffs](#task-shape-surface-selection-and-thin-handoffs)
 - [Repository Implementation Task](#repository-implementation-task)
 - [Parallel Batch Add-On](#parallel-batch-add-on)
 - [Orchestration Handoff](#orchestration-handoff)

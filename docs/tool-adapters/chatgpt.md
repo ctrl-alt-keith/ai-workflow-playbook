@@ -56,6 +56,30 @@ repository execution posture and
 [`maintenance-automations.md`](../maintenance-automations.md) when locality or
 unattended-work guidance is activated.
 
+### Interactive control-plane projection
+
+Chat is the normal interactive control plane for human-led clarification,
+scoping, authority decisions, decomposition, steering, review, and disposition.
+Work is the preferred ChatGPT surface for a bounded general-purpose multi-step
+outcome or non-repository deliverable. Hard reasoning may remain in Chat while
+the task is still interactive; difficulty, model tier, or reasoning setting
+does not select Work or Codex.
+
+This is a default task-shape projection, not a claim that Chat is canonical,
+universally authoritative, or required to mediate every workflow. Chat and
+Work remain nested surfaces under one ChatGPT adapter. Use the shared routing,
+surface-transition, thin-envelope, and target-shaping rules in
+[`prompts.md`](../prompts.md#task-shape-surface-selection-and-thin-handoffs).
+
+When a handoff points to an exact package through a connected app, treat access
+as runtime evidence. Inspect or attempt retrieval of the named manifest or
+sealed-package identity before claiming it is accessible, and verify the exact
+identity before relying on its payload. Listing a folder or reaching a mutable
+package root proves neither exact-package access nor current authority. If the
+identity cannot be accessed, resolved, or verified, fail closed or return an
+explicit non-authorizing partial result without reconstructing it from Chat or
+Work memory.
+
 ## Connected apps, approvals, and consequential actions
 
 An installed or authenticated app, available action, or product approval

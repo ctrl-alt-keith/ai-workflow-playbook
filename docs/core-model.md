@@ -135,6 +135,33 @@ semantic change.
 - Summarize changes, evidence, and open questions
 - Help capture reusable patterns after delivery
 
+## Interactive Control And Bounded Execution
+
+Interactive control and bounded execution are semantic roles, not universal
+product identities or authority classes. An interactive controller supports
+human-led clarification, scoping, authority decisions, decomposition,
+steering, review, and disposition. A bounded executor performs a defined
+outcome under an explicit execution contract. Difficult or consequential
+reasoning may remain with the controller while it is still interactive
+judgment; a bounded deliverable and execution contract, not difficulty or
+model choice, establish the execution handoff.
+
+The controller does not become canonical, universally authoritative, or a
+required intermediary for every workflow. Human direction and the source that
+owns each fact or decision retain their existing authority. Independently
+initiated or automated work may begin under another owning contract without an
+interactive controller.
+
+A semantic handoff declares the current bounded action, the existing human
+authority and its owning reference, the sources and constraints that apply,
+and the completion boundary. It may point to exact durable recoverable state
+instead of reproducing that state in conversation. The handoff, its pointer,
+the recovered payload, a recorded next action, validation, and successful
+retrieval create zero authority. The receiving actor must verify its identity
+and current authority, refresh mutable facts from their owning sources, and
+fail closed where the applicable contract or exact recoverable state cannot be
+resolved.
+
 ## Authority And Transitions
 
 Authority is permission to make a decision or cross a workflow boundary. It is

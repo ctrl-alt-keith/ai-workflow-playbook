@@ -289,6 +289,9 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         normalized_codex = " ".join(codex.split())
         normalized_chatgpt = " ".join(chatgpt.split())
         normalized_claude = " ".join(claude.split())
+        naming_section = prompts.split(
+            "### Executor-Applied Visible Thread Names", 1
+        )[1].split("\n## ", 1)[0]
         canonical_fragment = (
             "Thread name:\n"
             "- Before substantive work, set this thread's visible name to: `[exact visible name]`.\n"
@@ -336,8 +339,8 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             prompts,
         )
         self.assertIn("Repository Implementation Task", prompts)
-        self.assertNotIn("Codex", prompts)
-        self.assertNotIn("ChatGPT", prompts)
+        self.assertNotIn("Codex", naming_section)
+        self.assertNotIn("ChatGPT", naming_section)
         self.assertIn("matching executor adapter", prompts)
         self.assertIn("Codex is currently the Playbook adapter", normalized_codex)
         self.assertEqual(codex.count(canonical_fragment), 1)
