@@ -384,6 +384,131 @@ If no permitted route is available, a prerequisite is unmet, retry could
 duplicate an unsafe effect, or a route would weaken an invariant, delivery
 fails closed and records diagnostic evidence when possible.
 
+## Issue-Owned Durable Rendered-Prompt Handoff Profile
+
+Use this profile when exact rendered-prompt bytes become a dependency for an
+executor attempt, review, recovery, or replay. It is a compatible operational
+profile of the prompt contract and governed-artifact lifecycle, not a
+provider-specific storage schema, prompt-management platform, or requirement
+to preserve routine prompts.
+
+The candidate and storage-admission boundaries are inherited from
+[`Governed Artifact Capture`](evidence-lifecycle.md#governed-artifact-capture),
+and baseline capture mechanics are inherited from
+[`Direct Durable Capture`](evidence-lifecycle.md#direct-durable-capture). The
+conditions below project those owners onto rendered prompts and narrow capture
+with the dated-and-versioned name, no-autorename, provider identity, revision,
+and content-hash requirements. They also add prompt-specific delivery,
+attempt-evidence, recovery, and cleanup semantics without creating a second
+governed-artifact owner.
+
+### Admission
+
+A rendered prompt is eligible for durable handoff only when all six conditions
+are affirmative:
+
+1. the output is substantial rather than ordinary chat;
+2. exact identity is required for execution, review, recovery, replay, or
+   another authorized dependency;
+3. regeneration or conversation-only retention would weaken that dependency;
+4. storage, visibility, privacy, and retention admission are affirmative under
+   the owning storage contract;
+5. the bytes contain no secrets, credentials, prohibited material, or unrelated
+   personal, employer, or client content; and
+6. the governing issue and natural durable owner are unambiguous.
+
+Routine prompts remain non-durable by default. Missing or uncertain permission,
+visibility, retention, ownership, or exact-byte preservation fails closed.
+Redaction produces a different rendered-prompt identity and must never be
+represented as the original exact prompt.
+
+### One durable identity
+
+The owning storage contract selects one immutable issue-owned destination for
+the rendered prompt. Create it with one writer, a semantic versioned and dated
+name, absent-create semantics, no overwrite, and no autorename. Corrections use
+a new immutable version with predecessor lineage; do not create mutable
+`latest`, `current`, or status-driven aliases.
+
+New text prompts use UTF-8 without a byte-order mark, LF line endings, an
+explicit final-newline rule, exact byte size, and SHA-256 over the exact
+rendered bytes. Immediately retrieve the raw stored bytes and verify the format,
+size, digest, immutable human locator, provider locator, provider object
+identity, provider revision, provider content hash when available, and
+containment beneath the owning issue destination. Provider content hashes stay
+distinct from whole-file SHA-256.
+
+The owning storage contract, rather than this provider-neutral profile, defines
+the concrete provider, account, namespace, issue-path grammar, privacy,
+visibility, and retention values. Do not copy those project-specific values
+into reusable doctrine or executor adapters.
+
+### Delivery
+
+There is no separate durable exchange, handoff, inbox, registry, or transport
+root. Select delivery in this order:
+
+1. the executor retrieves the exact issue-owned durable object directly through
+   a currently qualified connector or provider route; or
+2. one private OS-managed executor-owned attempt-local retrieval carries the
+   same exact bytes when direct provider retrieval is unavailable or
+   unqualified.
+
+The fallback is disposable transport mechanics, not a second durable artifact,
+planning surface, queue, registry, or authority source. Operator-mediated exact
+retrieval is permitted when the controller can verify the provider object and
+the executor can verify the local bytes. Copy/paste is not an exact-byte route
+unless the result is rendered, admitted, and identified as a new prompt.
+
+Before acceptance, the receiving attempt verifies the durable identity,
+delivery identity, local byte size and SHA-256 where a local copy exists,
+encoding, BOM state, line endings, final-newline rule, and current authority.
+Fallback changes delivery only; it cannot change prompt bytes, semantic
+meaning, validation, provenance, evidence, authority handling, or required
+capabilities.
+
+### Evidence and coordination states
+
+Keep separate identities for:
+
+- the durable rendered prompt;
+- the delivery operation;
+- executor acknowledgement;
+- executor attempt;
+- attempt receipt;
+- executor output; and
+- human disposition.
+
+The smallest sufficient coordination evidence may report `PRESERVED`,
+`DELIVERED`, `ACCEPTED`, `STARTED`, `COMPLETED`, `FAILED`, or
+`UNKNOWN`. Each state describes observed evidence under its owning operation;
+it is not workflow approval, lifecycle authority, or permission to enter the
+next state. Preserve an append-only attempt receipt that binds the contract,
+prompt, selected route, delivery evidence, consumed digest, acting identity,
+current authority result, output identity, and terminal outcome as applicable.
+
+### Recovery, fresh execution, and cleanup
+
+Recovery follows the owning planning decision to the immutable rendered-prompt
+identity, delivery evidence, executor attempt receipt, and executor output,
+then freshly retrieves current repository, provider, planning, and authority
+state from their owners. Historical prompt bytes and receipts remain historical
+evidence; they never become current authority or current mutable state.
+
+Fresh execution selects current compatible inputs under current authority.
+Replay uses the recorded contract and exact historical inputs under the replay
+rules above. Do not present a new execution as replay when any required
+historical identity is missing or mismatched.
+
+This profile creates no durable transport object to clean. Remove only the
+private attempt-local retrieval after the attempt no longer depends on it and
+required delivery and attempt evidence is preserved. Never delete or rewrite
+the durable prompt as transport cleanup, and do not infer recurring cleanup or
+hygiene automation from this bounded rule.
+
+Preservation, delivery, acknowledgement, hashes, provider state, validation,
+receipts, execution, and cleanup transfer zero authority.
+
 ## Semantic Versioning
 
 Use semantic versions to classify meaning and exact digests to identify bytes:

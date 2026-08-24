@@ -47,6 +47,13 @@ brainstorming, transient explanations, routine status, and outputs without an
 exact downstream identity dependency remain ordinary chat. Routine work does
 not inherit governed-artifact ceremony.
 
+When the candidate is a rendered prompt intended for exact executor handoff,
+also apply the narrower
+[`issue-owned durable rendered-prompt handoff profile`](prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile).
+That profile projects this candidate and storage-admission boundary onto prompt
+delivery and attempt evidence; it does not create a second governed-artifact
+owner or storage permission.
+
 ### Storage Admission
 
 After candidate recognition and before retaining any bytes, apply the owning

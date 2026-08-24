@@ -118,6 +118,31 @@ available. For GitHub PR and issue work, prefer connector-first inspection per
 `gh` supplement it and remain appropriate for verified connector gaps or
 repo-local workflows.
 
+### Issue-Owned Durable Prompt Retrieval
+
+Apply the shared
+[`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
+when Claude Code receives an exact issue-owned prompt. Direct provider
+consumption is qualified only when the current Claude surface can retrieve raw
+bytes and the required provider identity metadata through a permitted,
+observed route. Do not infer that qualification from connector presence,
+extracted text, a synced folder, or another actor's successful retrieval.
+
+Otherwise use one private OS-managed executor-attempt copy produced by an
+authorized controller or operator from the raw durable object. Bind the launch
+to its exact path, expected size, SHA-256, and declared text format; disable
+session persistence; grant only the narrow read-only tools required to consume
+and verify it; and record whether Claude computed the digest itself or relied
+on controller-bound digest evidence plus exact read evidence. A direct Claude
+provider limitation does not block this profile when the exact attempt-local
+route succeeds.
+
+Keep delivery, acknowledgement, Claude attempt, attempt receipt, and output
+identities separate. Preserve required evidence, then remove and verify removal
+of only the private attempt-local copy after the attempt no longer depends on
+it. The concrete provider, account, namespace, destination, retention, and
+visibility values remain outside this reusable adapter.
+
 ## Claude Model, Thinking, And Thread Routing
 
 Choose the lowest-cost Claude Code model/configuration expected to preserve the

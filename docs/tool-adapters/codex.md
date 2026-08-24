@@ -296,6 +296,32 @@ and
 define shared anchors and conformance inputs. They do not implement a Codex
 renderer, validator, receipt, or transport.
 
+### Issue-Owned Durable Prompt Retrieval
+
+Apply the shared
+[`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
+when Codex receives an exact issue-owned prompt. Prefer direct retrieval only
+when the current connector or provider route exposes raw bytes and the required
+provider identity metadata and that exact route has been qualified for the
+attempt. A connected account, extracted text, local synchronization, or a
+successful prior call does not prove exact-byte retrieval.
+
+When direct retrieval is unavailable or unqualified, the controller or operator
+may download the raw provider object once into a private OS-managed
+attempt-local directory, verify the provider identity and raw bytes, and pass
+Codex the exact local path plus expected size and SHA-256. Codex verifies the
+consumed local bytes and declared text format before acceptance. Do not use a
+locally synchronized provider mount as provider identity, treat the local
+retrieval as durable, or create an exchange root.
+
+Record the delivery operation and Codex attempt separately from the durable
+prompt. Distinguish `DELIVERED`, `ACCEPTED`, `STARTED`, and the terminal
+attempt outcome rather than inferring one from another. Preserve required
+evidence, then remove and verify removal of only the attempt-local retrieval
+after the attempt no longer depends on it. The concrete provider, account,
+namespace, issue locator, retention, and visibility policy stay in their project
+or storage owner, not this adapter.
+
 ## Startup Deltas
 
 Before repo-scoped work:
