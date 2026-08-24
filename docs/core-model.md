@@ -162,6 +162,52 @@ and current authority, refresh mutable facts from their owning sources, and
 fail closed where the applicable contract or exact recoverable state cannot be
 resolved.
 
+## Kickoff Mutation Boundaries
+
+Kickoff is neither a universally read-only phase nor permission to begin every
+later phase. A controller or generated prompt must state the task-appropriate
+mutation boundary explicitly and keep these three classes distinct:
+
+1. **Task-owned orchestration and evidence mutations may be permitted.** When
+   current authority and prerequisites support them, a controller may update
+   the governing task, append concise task-owned progress or source
+   assessments, produce and preserve a decision package or exact downstream
+   prompt and its receipt, verify read-back, and record exact identities. The
+   applicable planning, evidence, and storage owners still decide whether and
+   how each write is admitted.
+2. **Delegated substantive execution is not implied.** Kickoff bookkeeping or
+   evidence capture does not authorize repository mutation, implementation,
+   migration, destructive cleanup, production execution, provider
+   reconfiguration, or other task substance assigned to a later executor or
+   phase. That work requires its own bounded authority and satisfied
+   prerequisites.
+3. **Human-gated transitions remain separately human-gated.** Architecture or
+   operational adoption, destructive approval, merge, release, publication,
+   scientific adoption, and any task-specific human decision gate require the
+   authorized human decision against the exact reviewed identity.
+
+The existence of a thread does not establish readiness. If authority or a
+prerequisite fails, the controller must not mark the governing work in progress
+merely because kickoff occurred. It may record the exact blocker only when that
+task-owned write is useful and authorized. Unrelated planning items,
+repositories, providers, and execution state remain untouched.
+
+A genuinely read-only kickoff remains valid when the owning workflow requires
+it. State why the restriction is needed and scope it to the applicable actor,
+phase, and mutation surfaces instead of relying on a vague blanket phrase.
+
+Controller-owned orchestration is distinct from prompt-contract machinery.
+Hydrators, representation adapters, renderers, validators, receipts, and
+checkpoints remain evidence-only under
+[`prompt-contracts.md`](prompt-contracts.md#ownership-and-live-authority) and
+must not drive lifecycle state or orchestration.
+
+A prompt, digest, receipt, artifact, planning status, successful call, storage
+object, comment, validation result, retrieval, review verdict, branch, commit,
+or pull request creates zero authority. These records may exercise or evidence
+authority that already exists; they cannot authorize a later phase or cross a
+human gate.
+
 ## Authority And Transitions
 
 Authority is permission to make a decision or cross a workflow boundary. It is
