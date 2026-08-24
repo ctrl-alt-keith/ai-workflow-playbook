@@ -19,9 +19,15 @@ class KickoffMutationBoundaryTests(unittest.TestCase):
         cls.prompts = " ".join(cls.prompts_raw.split())
         cls.prompt_contracts = normalized(DOCS / "prompt-contracts.md")
 
-        start = cls.prompts_raw.index("## Explicit Kickoff Mutation Boundary")
-        end = cls.prompts_raw.index("## Thread Routing And Configuration Continuity")
-        cls.boundary_section = cls.prompts_raw[start:end]
+        prompt_start = cls.prompts_raw.index("## Explicit Kickoff Mutation Boundary")
+        prompt_end = cls.prompts_raw.index(
+            "## Thread Routing And Configuration Continuity"
+        )
+        cls.boundary_section = cls.prompts_raw[prompt_start:prompt_end]
+
+        core_start = cls.core_raw.index("## Kickoff Mutation Boundaries")
+        core_end = cls.core_raw.index("## Authority And Transitions")
+        cls.core_boundary_section = cls.core_raw[core_start:core_end]
 
     def test_core_owns_the_three_class_authority_boundary(self):
         for phrase in (
@@ -45,10 +51,25 @@ class KickoffMutationBoundaryTests(unittest.TestCase):
         ):
             self.assertIn(phrase, self.prompts)
 
-        self.assertGreaterEqual(
-            self.prompts_raw.count("- Kickoff mutation boundary:"), 2
-        )
+        self.assertGreaterEqual(self.prompts_raw.count("Kickoff mutation boundary:"), 5)
         self.assertIn("`kickoff_mutation_boundary`", self.prompts_raw)
+
+        for heading, next_heading in (
+            ("## Repository Implementation Task", "## Parallel Batch Add-On"),
+            ("## Orchestration Handoff", "## Governed Artifact Capture Add-On"),
+            ("## PR Review", None),
+        ):
+            start = self.prompts_raw.index(heading)
+            end = self.prompts_raw.index(next_heading) if next_heading else None
+            template = self.prompts_raw[start:end]
+            for field in (
+                "Orchestration/evidence mutations:",
+                "Delegated substantive execution:",
+                "Human-gated transitions:",
+                "Unrelated state:",
+                "Blocked kickoff:",
+            ):
+                self.assertIn(field, template, f"{heading}: {field}")
 
     def test_read_only_and_blocked_kickoffs_are_narrow_and_fail_closed(self):
         for phrase in (
@@ -79,6 +100,16 @@ class KickoffMutationBoundaryTests(unittest.TestCase):
     def test_shared_prompt_doctrine_is_provider_neutral(self):
         for provider_name in ("Dropbox", "Linear", "ChatGPT", "Codex"):
             self.assertNotIn(provider_name, self.boundary_section)
+            self.assertNotIn(provider_name, self.core_boundary_section)
+
+    def test_blanket_phrases_are_examples_not_instruction_substitutes(self):
+        for phrase in (
+            "`read-only first response`",
+            "`no mutation on kickoff`",
+            "`do not touch anything yet`",
+            "as substitutes for the actual boundary",
+        ):
+            self.assertIn(phrase, self.boundary_section)
 
     def test_adjacent_owner_boundaries_remain_explicit(self):
         for phrase in (

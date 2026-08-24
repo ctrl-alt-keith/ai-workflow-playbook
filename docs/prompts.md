@@ -131,7 +131,8 @@ Kickoff mutation boundary:
 - Orchestration/evidence mutations: [task-owned writes allowed now, their
   prerequisites, and the authority that permits them; or none]
 - Delegated substantive execution: [work reserved for a later executor or
-  phase and therefore prohibited during kickoff]
+  phase and prohibited here, or work separately authorized here under its own
+  bounded authority]
 - Human-gated transitions: [decisions that still require a separate exact
   human authorization]
 - Unrelated state: [planning items, repositories, providers, and execution
@@ -159,7 +160,7 @@ drive lifecycle state or orchestration.
 
 | Situation | Explicit kickoff boundary |
 | --- | --- |
-| Ready kickoff | Prerequisites pass, so the controller may advance the governing task, preserve the exact downstream prompt and receipt under the applicable evidence contract, verify their identities, and return the handoff. It performs none of the delegated repository execution. |
+| Ready kickoff | Current authority and prerequisites pass, so the controller may advance the governing task, preserve the exact downstream prompt and receipt under the applicable evidence contract, verify their identities, and return the handoff. It performs none of the delegated repository execution. |
 | Blocked kickoff | A prerequisite or authority check fails. The controller does not falsely advance the task; it may record the exact blocker when that task-owned write is useful and authorized. No downstream execution is implied. |
 | Architecture thread | The controller may write and preserve the task-owned decision package. Architecture adoption remains a separate human decision against the reviewed package identity. |
 | Destructive workflow | The controller may produce and preserve a read-only manifest. Deletion remains separately human-approved and is not authorized by the manifest. |
@@ -423,8 +424,16 @@ Delivery:
 
 Permissions and completion boundary:
 - Authorized actions: [local edits, validation, commit, push, PR, or narrower]
-- Kickoff mutation boundary: [task-owned orchestration/evidence writes allowed;
-  delegated substantive execution boundary; separately human-gated transitions]
+- Kickoff mutation boundary:
+  - Orchestration/evidence mutations: [task-owned writes allowed now, their
+    prerequisites, and the authority that permits them; or none]
+  - Delegated substantive execution: [work separately authorized here under
+    its own bounded authority, or reserved for a later executor or phase]
+  - Human-gated transitions: [decisions requiring separate human authorization]
+  - Unrelated state: [planning items, repositories, providers, and execution
+    state that remain untouched]
+  - Blocked kickoff: [do not falsely advance the governing task; record the
+    exact blocker only when useful and authorized]
 - Completion ends at: [validated artifact, review packet, draft PR, or other]
 
 Stop rules:
@@ -478,8 +487,15 @@ Constraints:
 Completion and stop boundary:
 - [required result, validation, delivery, and conditions that require stopping]
 Kickoff mutation boundary:
-- [task-owned orchestration/evidence writes allowed; delegated substantive
-  execution boundary; separately human-gated transitions; blocked behavior]
+- Orchestration/evidence mutations: [task-owned writes allowed now, their
+  prerequisites, and the authority that permits them; or none]
+- Delegated substantive execution: [work reserved for a later executor or
+  phase and prohibited here, or work separately authorized here]
+- Human-gated transitions: [decisions requiring separate human authorization]
+- Unrelated state: [planning items, repositories, providers, and execution
+  state that remain untouched]
+- Blocked kickoff: [do not falsely advance the governing task; record the exact
+  blocker only when useful and authorized]
 ```
 
 Required inputs:
@@ -557,8 +573,16 @@ Delivery:
 
 Permissions and completion boundary:
 - Authorized actions: [read-only inspection, local edits, delivery, or narrower]
-- Kickoff mutation boundary: [task-owned orchestration/evidence writes allowed;
-  delegated substantive execution boundary; separately human-gated transitions]
+- Kickoff mutation boundary:
+  - Orchestration/evidence mutations: [task-owned writes allowed now, their
+    prerequisites, and the authority that permits them; or none]
+  - Delegated substantive execution: [work reserved for a later executor or
+    phase and prohibited here, or work separately authorized here]
+  - Human-gated transitions: [decisions requiring separate human authorization]
+  - Unrelated state: [planning items, repositories, providers, and execution
+    state that remain untouched]
+  - Blocked kickoff: [do not falsely advance the governing task; record the
+    exact blocker only when useful and authorized]
 - Completion ends at: [artifact, review packet, PR, report, or other]
 
 Stop rules:
@@ -640,9 +664,19 @@ Instructions:
 - Stay in review/audit mode unless the human explicitly changes the task.
 - Treat user summaries, completion reports, and pasted excerpts as navigation,
   not PR evidence.
-- Do not mutate the PR unless explicitly asked.
 - If required PR evidence is unavailable, state that blocker and caveat any
   feedback from already-present information.
+
+Kickoff mutation boundary:
+- Orchestration/evidence mutations: none; this reviewer only inspects and
+  reports in chat because the task is review/audit mode.
+- Delegated substantive execution: none; implementation is outside this review.
+- Human-gated transitions: PR comments, approvals, change requests, merge, and
+  every other PR mutation require separate authorization.
+- Unrelated state: the repository, planning items, providers, and execution
+  state remain untouched.
+- Blocked kickoff: report missing evidence without mutating state or inferring
+  readiness.
 
 Output format:
 1. Review findings: severity-ordered findings with file or PR references where
