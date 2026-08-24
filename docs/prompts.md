@@ -319,7 +319,7 @@ deterministic model output.
 
 The Playbook-owned machine-readable anchors and canonicalization vectors are:
 
-- [`prompt-contract-semantic-anchors-v1.json`](prompt-contract-semantic-anchors-v1.json)
+- [`prompt-contract-semantic-anchors-v2.json`](prompt-contract-semantic-anchors-v2.json)
 - [`prompt-contract-canonicalization-vectors-v1.json`](prompt-contract-canonicalization-vectors-v1.json)
 
 They encode semantic anchors and conformance evidence only. They are not an
@@ -355,7 +355,7 @@ Reason:
 - [Parallel Batch Add-On](#parallel-batch-add-on)
 - [Orchestration Handoff](#orchestration-handoff)
 - [Governed Artifact Capture Add-On](#governed-artifact-capture-add-on)
-- [Issue-Owned Durable Prompt Handoff Add-On](#issue-owned-durable-prompt-handoff-add-on)
+- [Issue-Owned Durable Prompt Delivery Envelope Add-On](#issue-owned-durable-prompt-delivery-envelope-add-on)
 - [Implementation Delivery Add-On](#implementation-delivery-add-on)
 - [PR Review](#pr-review)
 
@@ -604,21 +604,27 @@ admission, capture the complete artifact directly, verify its exact identity,
 leave the proportionate permitted producing receipt, and return only a compact
 conversation summary. The add-on grants no acceptance or downstream authority.
 
-## Issue-Owned Durable Prompt Handoff Add-On
+## Issue-Owned Durable Prompt Delivery Envelope Add-On
 
-Append this only when the six-condition admission test in
+Attach this external delivery envelope only after the executable rendered
+prompt has been deterministically frozen and the six-condition admission test in
 [`prompt-contracts.md`](prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
 passes and the owning storage contract permits exact durable retention. Resolve
 provider, account, namespace, and issue-path values from that narrower owner;
-do not embed them in this reusable prompt shape.
+do not embed them in the referenced rendered prompt. This envelope is not part
+of the referenced rendered-prompt bytes or rendered-prompt digest. It is an
+add-on to the delivery packet, not an instruction to append self-identity to the
+executable prompt.
 
 ```text
-Issue-owned durable rendered prompt:
+External issue-owned durable prompt delivery envelope:
+- Boundary: this envelope is not part of the referenced rendered-prompt bytes or rendered-prompt digest
 - Governing issue and authority reference: [planning identity and current human authority]
-- Exact durable identity: [immutable human locator, provider locator, object identity, revision, size, SHA-256, and provider content hash when available]
+- Exact durable identity: [immutable human locator, provider locator, object identity, size, SHA-256, provider revision when exposed or explicit unavailable status, and provider content hash when available]
 - Admission result: [six conditions passed, with privacy, visibility, retention, and natural owner]
 - Delivery policy: retrieve the durable object directly through a qualified route; otherwise use one private executor-owned attempt-local exact retrieval
 - Prohibited delivery: no exchange root, mutable alias, shadow durable copy, or copy/paste claim of byte identity
+- Identity timing: derive final size, SHA-256, provider identity evidence, and delivery route only after the rendered prompt is frozen; never embed a placeholder self-digest
 
 Receiver verification:
 - Verify raw or attempt-local bytes, size, SHA-256, UTF-8, no BOM, LF endings, and the declared final-newline rule before acceptance.
@@ -626,8 +632,9 @@ Receiver verification:
 - Fail closed on collision, mismatch, missing identity, prohibited retention, unsupported required capability, or ambiguous authority.
 
 Evidence:
-- Keep durable prompt, delivery, acknowledgement, executor attempt, attempt receipt, output, and human disposition as separate identities.
-- Record only observed PRESERVED, DELIVERED, ACCEPTED, STARTED, COMPLETED, FAILED, or UNKNOWN states.
+- Keep operator metadata, this envelope, durable prompt, producing receipt, delivery evidence, acknowledgement, executor attempt, attempt receipt, output, and human disposition as separate identities.
+- Every admitted prompt write has exactly one distinct producing receipt.
+- Record only observed PRESERVED, DELIVERED, ACCEPTED, STARTED, COMPLETED, FAILED, or UNKNOWN states under the minimum predicates in the canonical profile; never infer acceptance from delivery, start from acceptance, or human acceptance or authority from completion.
 - Every prompt, path, hash, delivery, receipt, validation result, and successful execution transfers zero authority.
 
 Cleanup:

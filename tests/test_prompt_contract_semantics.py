@@ -7,7 +7,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
-ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v1.json"
+ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v2.json"
+LEGACY_ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v1.json"
 VECTOR_PATH = DOCS / "prompt-contract-canonicalization-vectors-v1.json"
 
 
@@ -27,12 +28,42 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.anchor = json.loads(ANCHOR_PATH.read_text(encoding="utf-8"))
+        cls.legacy_anchor = json.loads(
+            LEGACY_ANCHOR_PATH.read_text(encoding="utf-8")
+        )
 
     def test_anchor_identity_and_required_keys(self):
         self.assertEqual(
             self.anchor["artifact_type"], "prompt_contract_semantic_anchors"
         )
-        self.assertEqual(self.anchor["anchor_version"], "1.1.0")
+        self.assertEqual(self.anchor["anchor_version"], "2.0.0")
+        self.assertEqual(self.anchor["compatibility_major"], 2)
+
+        self.assertEqual(self.legacy_anchor["anchor_version"], "1.1.0")
+        legacy_bytes = LEGACY_ANCHOR_PATH.read_bytes()
+        self.assertEqual(len(legacy_bytes), 8662)
+        self.assertEqual(
+            hashlib.sha256(legacy_bytes).hexdigest(),
+            "e0ee48d832e911c2b88caf3e5fc82bf826ac0d4a2315b19302d88e20ffbd488c",
+        )
+        legacy_capture = self.legacy_anchor["issue_owned_durable_handoff_profile"][
+            "durable_capture"
+        ]
+        self.assertIs(legacy_capture["provider_revision_required"], True)
+        self.assertNotIn(
+            "provider_revision_recorded_when_available", legacy_capture
+        )
+
+        supersession = self.anchor["supersession"]
+        self.assertEqual(
+            supersession["supersedes_for_new_compatible_selection"],
+            LEGACY_ANCHOR_PATH.name,
+        )
+        self.assertIs(
+            supersession["historical_consumers_remain_pinned_to_recorded_major"],
+            True,
+        )
+        self.assertIs(supersession["implicit_major_adoption_prohibited"], True)
 
         required_keys = {
             "artifact_classes",
@@ -77,7 +108,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertEqual(set(self.anchor["required_identity_names"]), required_identities)
 
     def test_prompt_contract_artifacts_have_no_duplicate_object_keys(self):
-        for path in (ANCHOR_PATH, VECTOR_PATH):
+        for path in (LEGACY_ANCHOR_PATH, ANCHOR_PATH, VECTOR_PATH):
             with self.subTest(path=path.name):
                 load_json_without_duplicate_keys(path.read_text(encoding="utf-8"))
 
@@ -165,6 +196,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             set(profile["evidence_identities"]),
             {
                 "durable_rendered_prompt",
+                "producing_receipt",
                 "delivery_operation",
                 "executor_acknowledgement",
                 "executor_attempt",
@@ -179,9 +211,58 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             "exact_byte_size_and_sha256_required",
             "provider_content_hash_recorded_when_available",
             "provider_object_identity_required",
-            "provider_revision_required",
+            "provider_revision_recorded_when_available",
+            "provider_revision_unavailability_recorded_when_not_exposed",
+            "provider_revision_must_not_be_fabricated",
         ):
             self.assertTrue(profile["durable_capture"][key])
+        self.assertNotIn(
+            "provider_revision_required", profile["durable_capture"]
+        )
+
+        envelope = profile["delivery_envelope"]
+        self.assertTrue(
+            envelope["external_to_referenced_rendered_prompt_bytes_and_digest"]
+        )
+        self.assertTrue(
+            envelope["rendered_prompt_frozen_before_final_identity_derivation"]
+        )
+        self.assertTrue(
+            envelope["placeholder_self_identity_in_rendered_prompt_prohibited"]
+        )
+
+        producing_receipt = profile["producing_receipt"]
+        self.assertTrue(
+            producing_receipt["exactly_one_per_admitted_artifact_write"]
+        )
+        self.assertIn("attempt_receipt", producing_receipt["distinct_from"])
+        self.assertTrue(
+            producing_receipt[
+                "exact_reconciliation_reuses_or_repairs_to_exactly_one_receipt"
+            ]
+        )
+
+        reconciliation = profile["exact_reconciliation"]
+        for key in (
+            "limited_to_prior_ambiguous_absent_create_result",
+            "same_frozen_target_and_provider_object_identity_required",
+            "raw_readback_exact_match_required",
+            "no_second_write_proven",
+            "preexisting_object_without_these_facts_is_collision",
+        ):
+            self.assertTrue(reconciliation[key])
+
+        requirements = profile["coordination_state_requirements"]
+        self.assertEqual(set(requirements), set(profile["coordination_states"]))
+        self.assertIn("delivery_alone_insufficient", requirements["ACCEPTED"])
+        self.assertIn(
+            "acknowledgement_alone_insufficient", requirements["STARTED"]
+        )
+        self.assertIn(
+            "does_not_imply_correctness_human_acceptance_merge_release_or_adoption",
+            requirements["COMPLETED"],
+        )
+        self.assertIn("no_later_state_inferred", requirements["UNKNOWN"])
         self.assertEqual(len(profile["admission_fail_closed_triggers"]), 5)
         self.assertFalse(profile["transport_cleanup"]["delete_durable_prompt"])
         self.assertFalse(
@@ -206,6 +287,14 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertTrue(fresh["select_once_before_hydration"])
         self.assertTrue(fresh["no_input_moves_during_attempt"])
         self.assertIn("validator_identity", fresh["immutable_for_attempt"])
+
+        self.assertIn(
+            "compatibility_major_exact_match", self.anchor["compatibility_rules"]
+        )
+        self.assertIn(
+            "compatibility_major_mismatch",
+            self.anchor["mandatory_fail_closed_triggers"],
+        )
 
         transport = self.anchor["transport_invariants"]
         self.assertTrue(transport["fallback_changes_delivery_only"])
@@ -249,6 +338,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
 
         canonical_doc = (DOCS / "prompt-contracts.md").read_text(encoding="utf-8")
         self.assertIn(ANCHOR_PATH.name, canonical_doc)
+        self.assertIn(LEGACY_ANCHOR_PATH.name, canonical_doc)
         self.assertIn(VECTOR_PATH.name, canonical_doc)
 
     def test_local_links_in_affected_documentation_resolve(self):

@@ -130,12 +130,22 @@ extracted text, a synced folder, or another actor's successful retrieval.
 
 Otherwise use one private OS-managed executor-attempt copy produced by an
 authorized controller or operator from the raw durable object. Bind the launch
-to its exact path, expected size, SHA-256, and declared text format; disable
-session persistence; grant only the narrow read-only tools required to consume
-and verify it; and record whether Claude computed the digest itself or relied
+to its exact path, expected size, SHA-256, and declared text format. Retrieval
+and byte verification require only the minimum read capability needed to
+inspect the prompt. Record whether Claude computed the digest itself or relied
 on controller-bound digest evidence plus exact read evidence. A direct Claude
 provider limitation does not block this profile when the exact attempt-local
 route succeeds.
+
+After prompt acceptance, choose Claude's tools and permission mode from the
+bounded task's authorized execution requirements. Read-only tools are mandatory
+only when the owning task is read-only or a narrower reviewer or qualification
+contract requires read-only inspection. Disable session persistence only when
+the owning execution, reviewer, or qualification contract requires it. Prompt
+handoff alone does not prohibit write tools, tests, repository mutation, output
+creation, or session persistence already authorized by the bounded task.
+Preservation and exact retrieval still grant no substantive execution
+authority.
 
 Keep delivery, acknowledgement, Claude attempt, attempt receipt, and output
 identities separate. Preserve required evidence, then remove and verify removal

@@ -12,8 +12,14 @@ generator, state store, schema implementation, or lifecycle orchestrator. An
 owning repository may implement those mechanics under its local contract, but
 the implementation must preserve the boundaries defined here.
 
-The versioned machine-readable companion is
-[`prompt-contract-semantic-anchors-v1.json`](prompt-contract-semantic-anchors-v1.json).
+The current versioned machine-readable companion for new selections is
+[`prompt-contract-semantic-anchors-v2.json`](prompt-contract-semantic-anchors-v2.json).
+The historical
+[`prompt-contract-semantic-anchors-v1.json`](prompt-contract-semantic-anchors-v1.json)
+remains immutable for compatibility-major v1 consumers. Version 2 supersedes
+version 1 for new compatible selection, but no consumer adopts the new major
+implicitly; replay and historical consumers remain pinned to their recorded
+major and exact bytes.
 RFC 8785 conformance cases are in
 [`prompt-contract-canonicalization-vectors-v1.json`](prompt-contract-canonicalization-vectors-v1.json).
 
@@ -397,8 +403,9 @@ The candidate and storage-admission boundaries are inherited from
 and baseline capture mechanics are inherited from
 [`Direct Durable Capture`](evidence-lifecycle.md#direct-durable-capture). The
 conditions below project those owners onto rendered prompts and narrow capture
-with the dated-and-versioned name, no-autorename, provider identity, revision,
-and content-hash requirements. They also add prompt-specific delivery,
+with the dated-and-versioned name, no-autorename, provider identity,
+capability-conditional revision evidence, and content-hash requirements. They
+also add prompt-specific delivery,
 attempt-evidence, recovery, and cleanup semantics without creating a second
 governed-artifact owner.
 
@@ -434,14 +441,33 @@ New text prompts use UTF-8 without a byte-order mark, LF line endings, an
 explicit final-newline rule, exact byte size, and SHA-256 over the exact
 rendered bytes. Immediately retrieve the raw stored bytes and verify the format,
 size, digest, immutable human locator, provider locator, provider object
-identity, provider revision, provider content hash when available, and
-containment beneath the owning issue destination. Provider content hashes stay
-distinct from whole-file SHA-256.
+identity, provider content hash when available, and containment beneath the
+owning issue destination. Record provider revision when the owning provider
+exposes it. Otherwise record explicitly that revision evidence is unavailable;
+never fabricate a revision or treat another identifier as its substitute.
+Provider content hashes stay distinct from whole-file SHA-256.
 
 The owning storage contract, rather than this provider-neutral profile, defines
 the concrete provider, account, namespace, issue-path grammar, privacy,
 visibility, and retention values. Do not copy those project-specific values
 into reusable doctrine or executor adapters.
+
+### External delivery envelope
+
+Freeze the exact rendered-prompt bytes before deriving their final size,
+SHA-256, provider object identity, provider revision evidence, or delivery
+route. Record those derived identities in an external delivery envelope or in
+delivery and producing-receipt evidence. The envelope is not part of the
+referenced rendered-prompt bytes or rendered-prompt digest.
+
+Do not embed a placeholder digest or other provisional self-identity in the
+rendered prompt and later describe it as the final identity. A copied,
+reformatted, or otherwise changed prompt is not byte-identical; when admitted,
+it receives a new deterministic rendering and exact identity.
+
+Keep operator metadata, the external delivery envelope, rendered prompt,
+producing receipt, delivery evidence, and attempt receipt as separate
+boundaries. The semantic prompt contract remains separate from all of them.
 
 ### Delivery
 
@@ -472,6 +498,7 @@ capabilities.
 Keep separate identities for:
 
 - the durable rendered prompt;
+- the producing receipt;
 - the delivery operation;
 - executor acknowledgement;
 - executor attempt;
@@ -479,13 +506,39 @@ Keep separate identities for:
 - executor output; and
 - human disposition.
 
-The smallest sufficient coordination evidence may report `PRESERVED`,
-`DELIVERED`, `ACCEPTED`, `STARTED`, `COMPLETED`, `FAILED`, or
-`UNKNOWN`. Each state describes observed evidence under its owning operation;
-it is not workflow approval, lifecycle authority, or permission to enter the
-next state. Preserve an append-only attempt receipt that binds the contract,
-prompt, selected route, delivery evidence, consumed digest, acting identity,
-current authority result, output identity, and terminal outcome as applicable.
+Every admitted durable prompt write inherits the requirement for exactly one
+distinct producing receipt from
+[`Producing Receipt And Compact Delivery`](evidence-lifecycle.md#producing-receipt-and-compact-delivery).
+It is not the rendered prompt, delivery evidence, executor acknowledgement,
+attempt receipt, output, or human disposition.
+
+`Reconciled exact` is limited to recovery after an ambiguous result from a
+prior absent-create attempt: the same frozen target and provider object identity
+already exist, raw readback exact-matches the intended bytes and identity, and
+the recovery proves that no second write occurred. Reuse the prior write's one
+producing receipt when it is verified; if that write completed without a
+receipt, recovery creates exactly one and records the ambiguity and lineage. A
+pre-existing object without those facts is a collision, not reconciliation.
+
+The smallest sufficient coordination evidence may report the following states
+only when their minimum predicates are met:
+
+| State | Minimum evidence |
+| --- | --- |
+| `PRESERVED` | One durable object was created, or a prior ambiguous absent-create was reconciled exact under the rule above; raw provider readback exact-matched the intended bytes, size, format, digest, and containment. |
+| `DELIVERED` | One delivery operation identifies the exact rendered prompt, selected route, intended target, and observed delivery result. |
+| `ACCEPTED` | The receiving executor explicitly acknowledges the prompt identity; delivery alone is insufficient. |
+| `STARTED` | One unique executor attempt actually began; acknowledgement alone is insufficient. |
+| `COMPLETED` | The attempt reached a terminal successful execution result and records the output identity where applicable. Completion does not imply correctness, human acceptance, merge, release, or adoption. |
+| `FAILED` | A bounded failure class, attempt or delivery identity, and last verified state are recorded. |
+| `UNKNOWN` | Required evidence is unavailable; no later state is inferred. |
+
+Each state describes observed evidence under its owning operation; it is not
+workflow approval, lifecycle authority, transition permission, or evidence
+that a later state occurred. Preserve an append-only attempt receipt that binds
+the contract, prompt, selected route, delivery evidence, consumed digest,
+acting identity, current authority result, output identity, and terminal
+outcome as applicable.
 
 ### Recovery, fresh execution, and cleanup
 
