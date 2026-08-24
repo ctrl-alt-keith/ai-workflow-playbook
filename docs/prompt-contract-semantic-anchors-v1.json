@@ -1,5 +1,5 @@
 {
-  "anchor_version": "1.0.0",
+  "anchor_version": "1.1.0",
   "artifact_type": "prompt_contract_semantic_anchors",
   "artifact_classes": [
     "immutable_semantic_prompt_contract",
@@ -89,6 +89,78 @@
     "no_state_transition": true,
     "prompt_text_is_not_authorization": true,
     "validation_is_not_authorization": true
+  },
+  "issue_owned_durable_handoff_profile": {
+    "admission_conditions": [
+      "substantial_output",
+      "exact_identity_required_for_authorized_dependency",
+      "regeneration_or_chat_only_retention_weakens_dependency",
+      "storage_visibility_privacy_and_retention_affirmative",
+      "no_secrets_credentials_prohibited_or_unrelated_content",
+      "issue_and_natural_owner_unambiguous"
+    ],
+    "coordination_states": [
+      "PRESERVED",
+      "DELIVERED",
+      "ACCEPTED",
+      "STARTED",
+      "COMPLETED",
+      "FAILED",
+      "UNKNOWN"
+    ],
+    "delivery_routes": [
+      "qualified_direct_durable_object_retrieval",
+      "private_executor_owned_attempt_local_exact_retrieval"
+    ],
+    "durable_capture": {
+      "absent_create": true,
+      "autorename": false,
+      "containment_verification_required": true,
+      "corrections_create_new_immutable_version": true,
+      "exact_byte_size_and_sha256_required": true,
+      "issue_owned_destination_selected_by_storage_contract": true,
+      "no_overwrite": true,
+      "one_writer": true,
+      "provider_content_hash_recorded_when_available": true,
+      "provider_object_identity_required": true,
+      "provider_revision_required": true,
+      "raw_provider_readback_required": true
+    },
+    "admission_fail_closed_triggers": [
+      "storage_visibility_privacy_or_retention_not_affirmative",
+      "destination_collision_or_identity_mismatch",
+      "prohibited_content_detected",
+      "issue_or_natural_owner_ambiguous",
+      "exact_byte_preservation_uncertain"
+    ],
+    "evidence_identities": [
+      "durable_rendered_prompt",
+      "delivery_operation",
+      "executor_acknowledgement",
+      "executor_attempt",
+      "attempt_receipt",
+      "executor_output",
+      "human_disposition"
+    ],
+    "prohibited_surfaces_and_claims": [
+      "separate_durable_exchange_root",
+      "mutable_prompt_alias",
+      "shadow_durable_transport_copy",
+      "copy_paste_as_exact_byte_route"
+    ],
+    "recovery_chain": [
+      "planning_decision",
+      "durable_rendered_prompt_identity",
+      "delivery_evidence",
+      "executor_attempt_receipt",
+      "executor_output_identity",
+      "fresh_current_source_retrieval"
+    ],
+    "transport_cleanup": {
+      "delete_durable_prompt": false,
+      "remove_private_attempt_local_copy_after_dependency_and_evidence_end": true,
+      "requires_recurring_cleanup_automation": false
+    }
   },
   "mandatory_fail_closed_triggers": [
     "missing_required_identity_or_evidence",

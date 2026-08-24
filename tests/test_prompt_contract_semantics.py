@@ -32,7 +32,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertEqual(
             self.anchor["artifact_type"], "prompt_contract_semantic_anchors"
         )
-        self.assertEqual(self.anchor["anchor_version"], "1.0.0")
+        self.assertEqual(self.anchor["anchor_version"], "1.1.0")
 
         required_keys = {
             "artifact_classes",
@@ -42,6 +42,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             "contract_receipt_boundary",
             "fresh_selection_rules",
             "invariants",
+            "issue_owned_durable_handoff_profile",
             "mandatory_fail_closed_triggers",
             "ownership_precedence",
             "reasoning_classes",
@@ -149,6 +150,43 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             "validation_is_not_authorization",
         ):
             self.assertIs(invariants[name], True)
+
+    def test_issue_owned_durable_handoff_profile(self):
+        profile = self.anchor["issue_owned_durable_handoff_profile"]
+        self.assertEqual(len(profile["admission_conditions"]), 6)
+        self.assertEqual(
+            profile["delivery_routes"],
+            [
+                "qualified_direct_durable_object_retrieval",
+                "private_executor_owned_attempt_local_exact_retrieval",
+            ],
+        )
+        self.assertEqual(
+            set(profile["evidence_identities"]),
+            {
+                "durable_rendered_prompt",
+                "delivery_operation",
+                "executor_acknowledgement",
+                "executor_attempt",
+                "attempt_receipt",
+                "executor_output",
+                "human_disposition",
+            },
+        )
+        self.assertTrue(profile["durable_capture"]["raw_provider_readback_required"])
+        for key in (
+            "containment_verification_required",
+            "exact_byte_size_and_sha256_required",
+            "provider_content_hash_recorded_when_available",
+            "provider_object_identity_required",
+            "provider_revision_required",
+        ):
+            self.assertTrue(profile["durable_capture"][key])
+        self.assertEqual(len(profile["admission_fail_closed_triggers"]), 5)
+        self.assertFalse(profile["transport_cleanup"]["delete_durable_prompt"])
+        self.assertFalse(
+            profile["transport_cleanup"]["requires_recurring_cleanup_automation"]
+        )
 
     def test_reasoning_versioning_transport_and_fresh_selection(self):
         self.assertEqual(self.anchor["reasoning_classes"], ["light", "medium", "high"])

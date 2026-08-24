@@ -304,6 +304,7 @@ Reason:
 - [Parallel Batch Add-On](#parallel-batch-add-on)
 - [Orchestration Handoff](#orchestration-handoff)
 - [Governed Artifact Capture Add-On](#governed-artifact-capture-add-on)
+- [Issue-Owned Durable Prompt Handoff Add-On](#issue-owned-durable-prompt-handoff-add-on)
 - [Implementation Delivery Add-On](#implementation-delivery-add-on)
 - [PR Review](#pr-review)
 
@@ -518,6 +519,37 @@ Name that workflow and any narrower storage constraints. After storage
 admission, capture the complete artifact directly, verify its exact identity,
 leave the proportionate permitted producing receipt, and return only a compact
 conversation summary. The add-on grants no acceptance or downstream authority.
+
+## Issue-Owned Durable Prompt Handoff Add-On
+
+Append this only when the six-condition admission test in
+[`prompt-contracts.md`](prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
+passes and the owning storage contract permits exact durable retention. Resolve
+provider, account, namespace, and issue-path values from that narrower owner;
+do not embed them in this reusable prompt shape.
+
+```text
+Issue-owned durable rendered prompt:
+- Governing issue and authority reference: [planning identity and current human authority]
+- Exact durable identity: [immutable human locator, provider locator, object identity, revision, size, SHA-256, and provider content hash when available]
+- Admission result: [six conditions passed, with privacy, visibility, retention, and natural owner]
+- Delivery policy: retrieve the durable object directly through a qualified route; otherwise use one private executor-owned attempt-local exact retrieval
+- Prohibited delivery: no exchange root, mutable alias, shadow durable copy, or copy/paste claim of byte identity
+
+Receiver verification:
+- Verify raw or attempt-local bytes, size, SHA-256, UTF-8, no BOM, LF endings, and the declared final-newline rule before acceptance.
+- Re-read current authority and mutable repository, provider, and planning state from their owners before execution.
+- Fail closed on collision, mismatch, missing identity, prohibited retention, unsupported required capability, or ambiguous authority.
+
+Evidence:
+- Keep durable prompt, delivery, acknowledgement, executor attempt, attempt receipt, output, and human disposition as separate identities.
+- Record only observed PRESERVED, DELIVERED, ACCEPTED, STARTED, COMPLETED, FAILED, or UNKNOWN states.
+- Every prompt, path, hash, delivery, receipt, validation result, and successful execution transfers zero authority.
+
+Cleanup:
+- Preserve required delivery and attempt evidence, then remove only the private attempt-local retrieval when the attempt no longer depends on it.
+- Do not delete or rewrite the durable prompt and do not create recurring cleanup automation.
+```
 
 ## Implementation Delivery Add-On
 

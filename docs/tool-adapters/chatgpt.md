@@ -162,6 +162,32 @@ authority, decision-boundary, and re-observation rules remain in
 [`core-model.md`](../core-model.md), while connector availability is governed
 by [`start-here.md`](../start-here.md#connector-availability-is-runtime-evidence).
 
+### Issue-Owned Durable Prompt Capture And Handoff
+
+Apply the shared
+[`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
+when ChatGPT prepares an exact prompt for another executor. After the
+six-condition admission test and the owning storage contract pass, ChatGPT may
+use an authorized connected app to create the one immutable issue-owned object
+with absent-create semantics. It must re-observe the acting account, raw stored
+bytes, path and object identities, revision, exact size and SHA-256, provider
+content hash when available, text format, and containment before reporting
+`PRESERVED`. Overwrite, autorename, a destination collision, or an identity
+mismatch fails closed. Extracted text alone is not exact-byte readback.
+
+Prefer a receiving executor's qualified direct retrieval of that durable object.
+When the receiver cannot directly retrieve and verify it, ChatGPT may coordinate
+one raw download into a private executor-owned attempt-local directory through
+an authorized operator or controller. That copy changes delivery only: it is
+not a second durable artifact, exchange surface, planning queue, or authority
+source. Keep delivery evidence, the receiving attempt, its receipt, output, and
+human disposition distinct from the durable prompt.
+
+The concrete provider, account, namespace, issue-path grammar, visibility,
+privacy, and retention rules belong to the project or storage owner and must
+not be copied into this adapter. Prompt preservation, delivery, hashes,
+receipts, and successful execution transfer zero authority.
+
 ## Workspace Agents
 
 Workspace Agents are a ChatGPT execution surface, not a second adapter.
