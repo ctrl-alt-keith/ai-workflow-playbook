@@ -151,6 +151,16 @@ def scan_text(
     for index, line in enumerate(lines):
         for match in URL_RE.findall(line):
             url = clean_url(match)
+            try:
+                parsed_url = urlparse(url)
+            except ValueError:
+                # URL-like text can still contain malformed hosts (for
+                # example, an unmatched IPv6 bracket). It is not actionable
+                # source evidence, so do not emit a warning with an empty or
+                # misleading domain.
+                continue
+            if not parsed_url.hostname:
+                continue
             if is_official(url, official_suffixes) or justified(lines, index):
                 continue
             context = public_api_context(lines, index)
