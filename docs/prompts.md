@@ -115,6 +115,56 @@ form, quality checks, and return boundary. A repository-executor projection
 also makes repository identity and locality, repository tools, canonical
 validation, delivery, and the stop-before-merge boundary explicit.
 
+## Explicit Kickoff Mutation Boundary
+
+Every generated kickoff or orchestration prompt must declare an explicit,
+task-appropriate mutation boundary. Apply the three-class model in
+[`core-model.md`](core-model.md#kickoff-mutation-boundaries); do not use vague
+blanket phrases such as `read-only first response`, `no mutation on kickoff`,
+`do not touch anything yet`, or `do not mutate the planning or artifact system
+in the first response` as substitutes for the actual boundary.
+
+Use this provider-neutral projection and resolve each field for the task:
+
+```text
+Kickoff mutation boundary:
+- Orchestration/evidence mutations: [task-owned writes allowed now, their
+  prerequisites, and the authority that permits them; or none]
+- Delegated substantive execution: [work reserved for a later executor or
+  phase and therefore prohibited during kickoff]
+- Human-gated transitions: [decisions that still require a separate exact
+  human authorization]
+- Unrelated state: [planning items, repositories, providers, and execution
+  state that remain untouched]
+- Blocked kickoff: [do not falsely advance the governing task; record the exact
+  blocker only when that task-owned write is useful and authorized]
+```
+
+When the kickoff is genuinely fully read-only, say why, name the actor and
+mutation surfaces covered, and keep the restriction no broader or longer than
+the owning workflow requires. When orchestration or evidence writes are
+allowed, state that they do not authorize delegated substantive execution or a
+human-gated transition. Prompt text, digests, receipts, artifacts, planning
+status, successful calls, storage objects, comments, validation, retrieval,
+review, branches, commits, and pull requests create zero authority.
+
+This prompt projection does not redefine interactive-control or target-surface
+routing, artifact storage admission, transport, delivery, retention, cleanup,
+or replay, or operator-visible progress and client behavior. It governs the
+controller's declared boundary, not prompt-contract machinery: hydrators,
+adapters, renderers, validators, receipts, and checkpoints remain unable to
+drive lifecycle state or orchestration.
+
+### Provider-neutral examples
+
+| Situation | Explicit kickoff boundary |
+| --- | --- |
+| Ready kickoff | Prerequisites pass, so the controller may advance the governing task, preserve the exact downstream prompt and receipt under the applicable evidence contract, verify their identities, and return the handoff. It performs none of the delegated repository execution. |
+| Blocked kickoff | A prerequisite or authority check fails. The controller does not falsely advance the task; it may record the exact blocker when that task-owned write is useful and authorized. No downstream execution is implied. |
+| Architecture thread | The controller may write and preserve the task-owned decision package. Architecture adoption remains a separate human decision against the reviewed package identity. |
+| Destructive workflow | The controller may produce and preserve a read-only manifest. Deletion remains separately human-approved and is not authorized by the manifest. |
+| Delegated repository implementation | The controller may preserve the downstream prompt and task-owned planning evidence. The repository executor owns repository mutation only under its own bounded authority and prerequisites. |
+
 ## Thread Routing And Configuration Continuity
 
 Model selection, reasoning or thinking configuration, and thread routing are
@@ -373,6 +423,8 @@ Delivery:
 
 Permissions and completion boundary:
 - Authorized actions: [local edits, validation, commit, push, PR, or narrower]
+- Kickoff mutation boundary: [task-owned orchestration/evidence writes allowed;
+  delegated substantive execution boundary; separately human-gated transitions]
 - Completion ends at: [validated artifact, review packet, draft PR, or other]
 
 Stop rules:
@@ -425,6 +477,9 @@ Constraints:
 - [only task-specific constraints not already owned by the referenced sources]
 Completion and stop boundary:
 - [required result, validation, delivery, and conditions that require stopping]
+Kickoff mutation boundary:
+- [task-owned orchestration/evidence writes allowed; delegated substantive
+  execution boundary; separately human-gated transitions; blocked behavior]
 ```
 
 Required inputs:
@@ -434,6 +489,7 @@ Required inputs:
 - `canonical_source`
 - `source_evidence`
 - `interaction_mode`
+- `kickoff_mutation_boundary`
 - `validation_path`
 - `delivery_expectation`
 
@@ -501,6 +557,8 @@ Delivery:
 
 Permissions and completion boundary:
 - Authorized actions: [read-only inspection, local edits, delivery, or narrower]
+- Kickoff mutation boundary: [task-owned orchestration/evidence writes allowed;
+  delegated substantive execution boundary; separately human-gated transitions]
 - Completion ends at: [artifact, review packet, PR, report, or other]
 
 Stop rules:
