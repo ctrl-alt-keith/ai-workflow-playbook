@@ -289,8 +289,8 @@ For a versioned material prompt:
 - require the execution or adoption layer to re-read live durable authority
   and verify the acting identity immediately before action.
 
-The Playbook artifacts
-[`prompt-contract-semantic-anchors-v1.json`](../prompt-contract-semantic-anchors-v1.json)
+The current Playbook artifacts
+[`prompt-contract-semantic-anchors-v2.json`](../prompt-contract-semantic-anchors-v2.json)
 and
 [`prompt-contract-canonicalization-vectors-v1.json`](../prompt-contract-canonicalization-vectors-v1.json)
 define shared anchors and conformance inputs. They do not implement a Codex

@@ -170,10 +170,12 @@ when ChatGPT prepares an exact prompt for another executor. After the
 six-condition admission test and the owning storage contract pass, ChatGPT may
 use an authorized connected app to create the one immutable issue-owned object
 with absent-create semantics. It must re-observe the acting account, raw stored
-bytes, path and object identities, revision, exact size and SHA-256, provider
-content hash when available, text format, and containment before reporting
-`PRESERVED`. Overwrite, autorename, a destination collision, or an identity
-mismatch fails closed. Extracted text alone is not exact-byte readback.
+bytes, path and object identities, exact size and SHA-256, provider revision
+when exposed, provider content hash when available, text format, and containment
+before reporting `PRESERVED`. When the provider does not expose revision
+metadata, record that unavailability explicitly and never fabricate a revision.
+Overwrite, autorename, a destination collision, or an identity mismatch fails
+closed. Extracted text alone is not exact-byte readback.
 
 Prefer a receiving executor's qualified direct retrieval of that durable object.
 When the receiver cannot directly retrieve and verify it, ChatGPT may coordinate

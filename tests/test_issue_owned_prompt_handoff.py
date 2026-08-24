@@ -43,6 +43,10 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
                 "### Issue-Owned Durable Prompt Capture And Handoff",
             ),
         )
+        cls.delivery_envelope = markdown_section(
+            DOCS / "prompts.md",
+            "## Issue-Owned Durable Prompt Delivery Envelope Add-On",
+        )
 
     def test_prompt_contract_is_the_profile_owner(self):
         heading = "## Issue-Owned Durable Rendered-Prompt Handoff Profile"
@@ -93,6 +97,91 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         ):
             self.assertIn(phrase, self.contract)
 
+    def test_delivery_envelope_is_external_to_rendered_prompt_identity(self):
+        self.assertIn(
+            "## Issue-Owned Durable Prompt Delivery Envelope Add-On",
+            self.prompts,
+        )
+        self.assertNotIn(
+            "## Issue-Owned Durable Prompt Handoff Add-On",
+            self.prompts,
+        )
+        for phrase in (
+            "This envelope is not part of the referenced rendered-prompt bytes or rendered-prompt digest",
+            "add-on to the delivery packet",
+            "derive final size, SHA-256, provider identity evidence, and delivery route only after the rendered prompt is frozen",
+            "never embed a placeholder self-digest",
+        ):
+            self.assertIn(phrase, " ".join(self.delivery_envelope.split()))
+
+        for phrase in (
+            "Freeze the exact rendered-prompt bytes before deriving their final size",
+            "The envelope is not part of the referenced rendered-prompt bytes or rendered-prompt digest",
+            "Do not embed a placeholder digest",
+            "A copied, reformatted, or otherwise changed prompt is not byte-identical",
+        ):
+            self.assertIn(phrase, self.contract)
+
+    def test_claude_retrieval_verification_does_not_narrow_execution(self):
+        for phrase in (
+            "Retrieval and byte verification require only the minimum read capability",
+            "After prompt acceptance, choose Claude's tools and permission mode from the bounded task's authorized execution requirements",
+            "Read-only tools are mandatory only when",
+            "Disable session persistence only when",
+            "Prompt handoff alone does not prohibit write tools, tests, repository mutation, output creation, or session persistence",
+        ):
+            self.assertIn(phrase, self.claude)
+
+        retrieval_section = self.adapter_profiles[1]
+        self.assertNotIn("disable session persistence; grant only", retrieval_section)
+        self.assertNotIn("grant only the narrow read-only tools", retrieval_section)
+
+    def test_provider_revision_evidence_is_capability_conditional(self):
+        for phrase in (
+            "Record provider revision when the owning provider exposes it",
+            "record explicitly that revision evidence is unavailable",
+            "never fabricate a revision",
+        ):
+            self.assertIn(phrase, self.contract)
+        self.assertIn("provider revision when exposed", self.chatgpt)
+        self.assertIn("record that unavailability explicitly", self.chatgpt)
+        self.assertNotIn(
+            "provider identity, provider revision, provider content hash when available",
+            self.contract,
+        )
+        self.assertNotIn(
+            "object identity, revision, size, SHA-256",
+            self.prompts,
+        )
+
+    def test_producing_receipt_and_state_predicates_are_distinct(self):
+        self.assertIn("exactly one distinct producing receipt", self.contract)
+        self.assertIn("It is not the rendered prompt, delivery evidence", self.contract)
+        for state in (
+            "`PRESERVED`",
+            "`DELIVERED`",
+            "`ACCEPTED`",
+            "`STARTED`",
+            "`COMPLETED`",
+            "`FAILED`",
+            "`UNKNOWN`",
+        ):
+            self.assertIn(state, self.contract)
+        for boundary in (
+            "prior ambiguous absent-create was reconciled exact",
+            "One delivery operation identifies the exact rendered prompt, selected route, intended target, and observed delivery result",
+            "A bounded failure class, attempt or delivery identity, and last verified state are recorded",
+            "delivery alone is insufficient",
+            "acknowledgement alone is insufficient",
+            "does not imply correctness, human acceptance, merge, release, or adoption",
+            "no later state is inferred",
+        ):
+            self.assertIn(boundary, self.contract)
+        self.assertNotIn(
+            "The smallest sufficient coordination evidence may report `PRESERVED`",
+            self.contract,
+        )
+
     def test_recovery_cleanup_and_authority_remain_bounded(self):
         for phrase in (
             "freshly retrieves current repository, provider, planning, and authority",
@@ -117,6 +206,14 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             self.assertNotRegex(adapter, re.compile(r"\b\d{8,}\b"))
             self.assertNotRegex(
                 adapter,
+                re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"),
+            )
+
+        for reusable_section in (self.delivery_envelope, *self.adapter_profiles):
+            self.assertNotRegex(reusable_section, re.compile(r"ns:\d+//"))
+            self.assertNotRegex(reusable_section, re.compile(r"\bid:[A-Za-z0-9_-]+"))
+            self.assertNotRegex(
+                reusable_section,
                 re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"),
             )
 
