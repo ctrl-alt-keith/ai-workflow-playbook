@@ -490,7 +490,8 @@ Kickoff mutation boundary:
 - Orchestration/evidence mutations: [task-owned writes allowed now, their
   prerequisites, and the authority that permits them; or none]
 - Delegated substantive execution: [work reserved for a later executor or
-  phase and prohibited here, or work separately authorized here]
+  phase and prohibited here, or work separately authorized here under its own
+  bounded authority]
 - Human-gated transitions: [decisions requiring separate human authorization]
 - Unrelated state: [planning items, repositories, providers, and execution
   state that remain untouched]
@@ -577,7 +578,8 @@ Permissions and completion boundary:
   - Orchestration/evidence mutations: [task-owned writes allowed now, their
     prerequisites, and the authority that permits them; or none]
   - Delegated substantive execution: [work reserved for a later executor or
-    phase and prohibited here, or work separately authorized here]
+    phase and prohibited here, or work separately authorized here under its own
+    bounded authority]
   - Human-gated transitions: [decisions requiring separate human authorization]
   - Unrelated state: [planning items, repositories, providers, and execution
     state that remain untouched]
@@ -668,8 +670,9 @@ Instructions:
   feedback from already-present information.
 
 Kickoff mutation boundary:
-- Orchestration/evidence mutations: none; this reviewer only inspects and
-  reports in chat because the task is review/audit mode.
+- Orchestration/evidence mutations: [none for review-only, or the exact
+  separately authorized PR comment or review action]; this reviewer otherwise
+  only inspects and reports in chat because the task is review/audit mode.
 - Delegated substantive execution: none; implementation is outside this review.
 - Human-gated transitions: PR comments, approvals, change requests, merge, and
   every other PR mutation require separate authorization.

@@ -27,7 +27,9 @@ class KickoffMutationBoundaryTests(unittest.TestCase):
 
         core_start = cls.core_raw.index("## Kickoff Mutation Boundaries")
         core_end = cls.core_raw.index("## Authority And Transitions")
-        cls.core_boundary_section = cls.core_raw[core_start:core_end]
+        cls.core_boundary_section = " ".join(
+            cls.core_raw[core_start:core_end].split()
+        )
 
     def test_core_owns_the_three_class_authority_boundary(self):
         for phrase in (
@@ -95,7 +97,7 @@ class KickoffMutationBoundaryTests(unittest.TestCase):
             "pull request",
             "creates zero authority",
         ):
-            self.assertIn(phrase, self.core)
+            self.assertIn(phrase, self.core_boundary_section)
 
     def test_shared_prompt_doctrine_is_provider_neutral(self):
         for provider_name in ("Dropbox", "Linear", "ChatGPT", "Codex"):
