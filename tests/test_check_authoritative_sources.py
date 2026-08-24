@@ -49,6 +49,14 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
 
         self.assertEqual(findings, [])
 
+    def test_ignores_malformed_url_like_tokens(self) -> None:
+        findings = scanner.scan_text(
+            "docs/example.md",
+            "REST API references include https://:bad and https://[broken.",
+        )
+
+        self.assertEqual(findings, [])
+
     def test_ignores_official_url_in_public_api_context(self) -> None:
         findings = scanner.scan_text(
             "docs/example.md",
