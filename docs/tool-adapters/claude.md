@@ -106,8 +106,9 @@ The CLI controls have different effects:
 The repository [`claude-review`](../../scripts/claude-review) launcher composes
 these controls for governed review. A versioned JSON review config binds the
 source graph, launch root and exact additional directories, guard roots,
-candidate and exact `HEAD`, disjoint evidence directory, immutable preflight-receipt path, exact
-stream and terminal-receipt paths for every permitted attempt, observational
+candidate and exact `HEAD`, disjoint evidence directory, immutable
+preflight-receipt and final-output paths, exact stream and terminal-receipt
+paths for every permitted attempt, observational
 command argv, retry cap, observation intervals, and cancellation policy. Mutable
 live-state mechanics remain in private controller attempt-local scratch. The
 launcher accepts

@@ -692,6 +692,7 @@ class GovernedReviewConfig:
     candidate_head: str
     evidence_directory: Path
     preflight_receipt: Path
+    final_output: Path
     attempt_artifacts: tuple[tuple[Path, Path], ...]
     allowed_commands: tuple[tuple[str, ...], ...]
     max_attempts: int
@@ -713,6 +714,7 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
         "candidate_head",
         "evidence_directory",
         "preflight_receipt",
+        "final_output",
     )
     for key in required_strings:
         if not isinstance(body.get(key), str) or not body[key]:
@@ -725,10 +727,14 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
     evidence = Path(body["evidence_directory"]).resolve(strict=True)
     preflight_receipt_parent = Path(body["preflight_receipt"]).parent.resolve(strict=True)
     preflight_receipt = preflight_receipt_parent / Path(body["preflight_receipt"]).name
+    final_output_parent = Path(body["final_output"]).parent.resolve(strict=True)
+    final_output = final_output_parent / Path(body["final_output"]).name
     if not launch_root.is_dir() or not candidate.is_dir() or not evidence.is_dir():
         raise ValueError("launch root, candidate worktree, and evidence directory must be existing directories")
     if not contained(preflight_receipt, evidence):
         raise ValueError("preflight receipt must be inside the declared evidence directory")
+    if not contained(final_output, evidence):
+        raise ValueError("final review output must be inside the declared evidence directory")
     additional = tuple(Path(value).resolve(strict=True) for value in body.get("additional_directories", []))
     if any(not value.is_dir() for value in additional):
         raise ValueError("every additional directory must exist and be a directory")
@@ -774,7 +780,7 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
         attempt_artifacts.append((paths[0], paths[1]))
     if len(attempt_artifacts) != max_attempts:
         raise ValueError("attempt_artifacts must provide one exact stream/receipt pair for each allowed attempt")
-    artifact_paths = [preflight_receipt, *(path for pair in attempt_artifacts for path in pair)]
+    artifact_paths = [preflight_receipt, final_output, *(path for pair in attempt_artifacts for path in pair)]
     if len(set(artifact_paths)) != len(artifact_paths):
         raise ValueError("governed artifact paths must be distinct")
     validated_commands = [validate_command(value) for value in body.get("allowed_commands", [])]
@@ -803,6 +809,7 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
         candidate_head=candidate_head,
         evidence_directory=evidence,
         preflight_receipt=preflight_receipt,
+        final_output=final_output,
         attempt_artifacts=tuple(attempt_artifacts),
         allowed_commands=commands,
         max_attempts=max_attempts,
@@ -851,6 +858,8 @@ def trusted_system_executable(name: str, environment: dict[str, str]) -> Path:
 
 
 def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) -> dict[str, object]:
+    if config.final_output.exists() or config.final_output.is_symlink():
+        raise RuntimeError(f"configured governed artifact already exists: {config.final_output}")
     for stream_path, terminal_receipt_path in config.attempt_artifacts:
         for artifact in (stream_path, terminal_receipt_path):
             if artifact.exists() or artifact.is_symlink():
@@ -1460,6 +1469,15 @@ def run_governed_review(
             "failure_classification": None if final_exit == 0 else attempt_summaries[-1]["classification"],
             "automated_retry_attempted": len(attempt_summaries) > 1,
         }
+        if final_output is not None:
+            final_output_bytes = final_output.encode("utf-8")
+            exclusive_write(config.final_output, final_output_bytes)
+            overall["final_output_artifact"] = {
+                "path": str(config.final_output),
+                "size": len(final_output_bytes),
+                "sha256": sha256_bytes(final_output_bytes),
+                "final_newline": final_output_bytes.endswith(b"\n"),
+            }
         emit_diagnostics(overall, diagnostics_destination)
         if final_output is not None:
             sys.stdout.write(final_output)
@@ -1606,6 +1624,7 @@ def main(argv: list[str] | None = None) -> int:
                 reserved_artifacts = {
                     config.path,
                     config.preflight_receipt,
+                    config.final_output,
                     *(path for pair in config.attempt_artifacts for path in pair),
                 }
                 if diagnostics_path in reserved_artifacts:

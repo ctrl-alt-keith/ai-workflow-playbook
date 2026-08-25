@@ -89,7 +89,8 @@ launch that cannot reach the candidate is a contract failure, not a partially
 qualified review.
 
 Bind an exact immutable stream and terminal-receipt path for every permitted
-attempt. Keep mutable live-process mechanics in private controller-owned
+attempt and a distinct exact path for successful final reviewer output. Keep
+mutable live-process mechanics in private controller-owned
 attempt-local scratch and expose their exact locator while the controller is
 live; do not turn a replace-in-place state file into a durable artifact. Only
 the configured no-overwrite artifacts enter the governed evidence destination.

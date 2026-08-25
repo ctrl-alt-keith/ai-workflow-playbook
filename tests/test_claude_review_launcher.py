@@ -504,6 +504,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "candidate_head": candidate_head,
             "evidence_directory": str(self.evidence),
             "preflight_receipt": str(self.evidence / "preflight-receipt.json"),
+            "final_output": str(self.evidence / "review-output.md"),
             "attempt_artifacts": [
                 {
                     "stream": str(self.evidence / f"attempt-{number}-stream.jsonl"),
@@ -551,6 +552,9 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         preflight_receipt = Path((body or self.config_body())["preflight_receipt"])
         if preflight_receipt.exists() or preflight_receipt.is_symlink():
             preflight_receipt.unlink()
+        final_output = Path((body or self.config_body())["final_output"])
+        if final_output.exists() or final_output.is_symlink():
+            final_output.unlink()
         for item in (body or self.config_body())["attempt_artifacts"]:
             for value in item.values():
                 artifact = Path(value)
@@ -587,6 +591,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         common, diagnostic = self.run_governed()
         self.assertEqual(common.returncode, 0)
         self.assertEqual(common.stdout, "ACCEPT\n")
+        self.assertEqual((self.evidence / "review-output.md").read_text(encoding="utf-8"), "ACCEPT")
         self.assertEqual(diagnostic["preflight"]["status"], "passed")
         preflight = json.loads((self.evidence / "preflight-receipt.json").read_text(encoding="utf-8"))
         self.assertEqual(preflight["kind"], "claude_governed_review_preflight_receipt")
@@ -720,6 +725,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         body["review_id"] = "CAK-155-auth"
         body["evidence_directory"] = str(auth_root)
         body["preflight_receipt"] = str(auth_root / "preflight-receipt.json")
+        body["final_output"] = str(auth_root / "review-output.md")
         body["attempt_artifacts"] = [
             {
                 "stream": str(auth_root / f"attempt-{number}-stream.jsonl"),
