@@ -110,9 +110,11 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
             normalized(DOCS / "evidence-lifecycle.md"),
         )
 
-    def test_only_darwin_has_a_bounded_platform_projection(self):
+    def test_darwin_and_linux_have_bounded_platform_projections(self):
         self.assertIn("/usr/bin/getconf DARWIN_USER_TEMP_DIR", self.readiness)
-        self.assertIn("Linux and Windows mappings remain unqualified", self.readiness)
+        self.assertIn("bounded Linux precedent from CAK-155", self.readiness)
+        self.assertIn("exact sticky shared-temporary mode `01777`", self.readiness)
+        self.assertIn("Windows and other mappings remain unqualified", self.readiness)
 
     def test_nearby_guidance_does_not_restore_a_persistent_default(self):
         self.assertNotIn("Keep temporary workflow state repo-local", self.agents)

@@ -43,7 +43,16 @@ SAFE_GIT_SUBCOMMANDS = {
     "status",
 }
 SAFE_EXECUTABLES = {"git", "shasum", "stat", "wc"}
-FORBIDDEN_GIT_OPTIONS = {"-c", "--config-env", "--exec-path", "--paginate"}
+FORBIDDEN_GIT_OPTIONS = {
+    "-c",
+    "--config-env",
+    "--exec-path",
+    "--git-dir",
+    "--namespace",
+    "--paginate",
+    "--work-tree",
+}
+FORBIDDEN_GIT_EFFECT_OPTIONS = {"--ext-diff", "--filters", "--output", "--textconv"}
 REQUIRED_TOOLS = {"Bash", "Glob", "Grep", "Read"}
 OAUTH_REAUTHENTICATION_DISPOSITION = (
     "REVIEWER INFRASTRUCTURE FAILURE — OPERATOR REAUTHENTICATION REQUIRED"
@@ -54,6 +63,145 @@ OAUTH_REAUTHENTICATION_MESSAGE = (
     "reauthenticate Claude interactively, then rerun this task. Candidate bytes and "
     "review state remain unchanged."
 )
+
+
+@dataclass
+class AttemptScratch:
+    path: Path
+    parent: Path
+    projection: str
+    parent_uid: int
+    parent_mode: int
+    parent_device: int
+    parent_inode: int
+    device: int
+    inode: int
+
+    @classmethod
+    def allocate(cls, environment: dict[str, str], prefix: str) -> "AttemptScratch":
+        fixture_parent = environment.get("CLAUDE_REVIEW_TEST_SCRATCH_PARENT")
+        if fixture_parent and environment.get("CLAUDE_REVIEW_TEST_FIXTURE") == "1":
+            parent = Path(fixture_parent).resolve(strict=True)
+            projection = "test_fixture_explicit_parent"
+        elif sys.platform == "darwin":
+            result = subprocess.run(
+                ["/usr/bin/getconf", "DARWIN_USER_TEMP_DIR"],
+                check=False,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            if result.returncode != 0 or not result.stdout.strip():
+                raise RuntimeError("qualified Darwin attempt-scratch root is unavailable")
+            parent = Path(result.stdout.strip()).resolve(strict=True)
+            projection = "darwin_getconf_user_temp_dir"
+        elif sys.platform.startswith("linux"):
+            linux_parent = Path("/tmp")
+            if linux_parent.is_symlink():
+                raise RuntimeError("qualified Linux /tmp route rejects a symbolic-link parent")
+            parent = linux_parent.resolve(strict=True)
+            projection = "linux_fhs_tmp"
+        else:
+            raise RuntimeError("no qualified attempt-scratch platform projection is available")
+        parent_metadata = parent.lstat()
+        shared_linux_parent = (
+            projection == "linux_fhs_tmp"
+            and parent_metadata.st_uid == 0
+            and stat.S_IMODE(parent_metadata.st_mode) == 0o1777
+        )
+        private_parent = (
+            projection != "linux_fhs_tmp"
+            and parent_metadata.st_uid == os.geteuid()
+            and not stat.S_IMODE(parent_metadata.st_mode) & 0o077
+        )
+        if (
+            not parent.is_absolute()
+            or not stat.S_ISDIR(parent_metadata.st_mode)
+            or parent.is_symlink()
+            or not (shared_linux_parent or private_parent)
+        ):
+            raise RuntimeError("attempt-scratch parent failed ownership, mode, or directory validation")
+        created = Path(tempfile.mkdtemp(prefix=prefix, dir=parent))
+        os.chmod(created, 0o700)
+        metadata = created.lstat()
+        if (
+            created.parent != parent
+            or created.is_symlink()
+            or not stat.S_ISDIR(metadata.st_mode)
+            or metadata.st_uid != os.geteuid()
+            or stat.S_IMODE(metadata.st_mode) != 0o700
+            or metadata.st_dev != parent_metadata.st_dev
+        ):
+            raise RuntimeError("fresh attempt-scratch child failed containment or identity validation")
+        return cls(
+            path=created,
+            parent=parent,
+            projection=projection,
+            parent_uid=parent_metadata.st_uid,
+            parent_mode=stat.S_IMODE(parent_metadata.st_mode),
+            parent_device=parent_metadata.st_dev,
+            parent_inode=parent_metadata.st_ino,
+            device=metadata.st_dev,
+            inode=metadata.st_ino,
+        )
+
+    def record(self) -> dict[str, object]:
+        return {
+            "path": str(self.path),
+            "parent": str(self.parent),
+            "projection": self.projection,
+            "parent_uid": self.parent_uid,
+            "parent_mode": oct(self.parent_mode),
+            "parent_device": self.parent_device,
+            "parent_inode": self.parent_inode,
+            "device": self.device,
+            "inode": self.inode,
+        }
+
+    def __enter__(self) -> Path:
+        return self.path
+
+    def __exit__(self, _error_type: object, _error: object, _traceback: object) -> None:
+        self.cleanup()
+
+    def cleanup(self) -> None:
+        parent_metadata = self.parent.lstat()
+        metadata = self.path.lstat()
+        if (
+            self.parent.is_symlink()
+            or not stat.S_ISDIR(parent_metadata.st_mode)
+            or (parent_metadata.st_dev, parent_metadata.st_ino) != (self.parent_device, self.parent_inode)
+            or parent_metadata.st_uid != self.parent_uid
+            or stat.S_IMODE(parent_metadata.st_mode) != self.parent_mode
+            or self.path.parent != self.parent
+            or self.path.is_symlink()
+            or not stat.S_ISDIR(metadata.st_mode)
+            or metadata.st_uid != os.geteuid()
+            or stat.S_IMODE(metadata.st_mode) != 0o700
+            or (metadata.st_dev, metadata.st_ino) != (self.device, self.inode)
+        ):
+            raise RuntimeError(f"attempt-scratch cleanup identity changed; residue preserved: {self.path}")
+        pending = [self.path]
+        while pending:
+            directory = pending.pop()
+            with os.scandir(directory) as entries:
+                for entry in entries:
+                    entry_metadata = entry.stat(follow_symlinks=False)
+                    if (
+                        entry_metadata.st_uid != os.geteuid()
+                        or entry_metadata.st_dev != self.device
+                        or entry.is_symlink()
+                        or not (stat.S_ISDIR(entry_metadata.st_mode) or stat.S_ISREG(entry_metadata.st_mode))
+                    ):
+                        raise RuntimeError(
+                            f"attempt-scratch cleanup found unsafe residue; residue preserved: {self.path}"
+                        )
+                    if stat.S_ISDIR(entry_metadata.st_mode):
+                        pending.append(Path(entry.path))
+        shutil.rmtree(self.path)
+        if self.path.exists() or self.path.is_symlink():
+            raise RuntimeError(f"attempt-scratch cleanup did not remove the exact child: {self.path}")
 
 
 def bounded_redacted(value: str) -> str:
@@ -206,13 +354,19 @@ def emit_diagnostics(record: dict[str, Any], destination: Path | None) -> None:
     encoded = json.dumps(record, sort_keys=True)
     print(f"claude-review diagnostics: {encoded}", file=sys.stderr)
     if destination is not None:
-        try:
-            destination.write_text(f"{encoded}\n", encoding="utf-8")
-        except OSError as error:
-            print(
-                f"claude-review diagnostics file was not written: {bounded_redacted(str(error))}",
-                file=sys.stderr,
-            )
+        exclusive_write(destination, f"{encoded}\n".encode("utf-8"))
+
+
+def unused_diagnostics_destination(destination: Path | None) -> Path | None:
+    if destination is None:
+        return None
+    try:
+        destination.parent.resolve(strict=True)
+        if destination.exists() or destination.is_symlink():
+            return None
+    except OSError:
+        return None
+    return destination
 
 
 def failure_fields(classification: str | None) -> dict[str, Any]:
@@ -403,15 +557,27 @@ def snapshot_delta(before: dict[str, object], after: dict[str, object]) -> list[
 
 
 def safe_command_environment(base: dict[str, str], scratch: Path) -> dict[str, str]:
+    hooks = scratch / "empty-git-hooks"
+    hooks.mkdir(mode=0o700, exist_ok=True)
     environment = base.copy()
     environment.update(
         {
+            "GIT_ATTR_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": "/dev/null",
             "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_COUNT": "3",
+            "GIT_CONFIG_KEY_0": "core.hooksPath",
+            "GIT_CONFIG_VALUE_0": str(hooks),
+            "GIT_CONFIG_KEY_1": "core.fsmonitor",
+            "GIT_CONFIG_VALUE_1": "false",
+            "GIT_CONFIG_KEY_2": "core.untrackedCache",
+            "GIT_CONFIG_VALUE_2": "false",
             "GIT_EXTERNAL_DIFF": "/usr/bin/false",
             "GIT_OPTIONAL_LOCKS": "0",
             "GIT_PAGER": "cat",
             "PAGER": "cat",
             "PYTHONDONTWRITEBYTECODE": "1",
+            "PYTHONPYCACHEPREFIX": str(scratch / "python-cache"),
             "TMPDIR": str(scratch),
         }
     )
@@ -421,23 +587,26 @@ def safe_command_environment(base: dict[str, str], scratch: Path) -> dict[str, s
 def validate_command(argv: object) -> list[str]:
     if not isinstance(argv, list) or not argv or not all(isinstance(value, str) and value for value in argv):
         raise ValueError("each allowed command must be a non-empty JSON argv array")
-    executable = Path(argv[0]).name
+    executable = argv[0]
     if executable not in SAFE_EXECUTABLES:
-        raise ValueError(f"unsupported reviewer command executable: {executable}")
+        raise ValueError(f"unsupported or noncanonical reviewer command executable: {executable}")
     if executable == "git":
-        if any(value in FORBIDDEN_GIT_OPTIONS or value.startswith("--exec-path=") for value in argv[1:]):
+        if any(
+            value in FORBIDDEN_GIT_OPTIONS
+            or value in FORBIDDEN_GIT_EFFECT_OPTIONS
+            or value.startswith(("--config-env=", "--exec-path=", "--git-dir=", "--namespace=", "--work-tree="))
+            or value.startswith(("--filter=", "--output="))
+            for value in argv[1:]
+        ):
             raise ValueError("Git configuration and execution-path overrides are not observational grants")
         subcommand = None
         index = 1
         while index < len(argv):
             value = argv[index]
-            if value in {"-C", "--git-dir", "--work-tree", "--namespace"}:
+            if value == "-C":
                 if index + 1 >= len(argv):
                     break
                 index += 2
-                continue
-            if value.startswith("--git-dir=") or value.startswith("--work-tree=") or value.startswith("--namespace="):
-                index += 1
                 continue
             if value.startswith("-"):
                 index += 1
@@ -454,7 +623,60 @@ def validate_command(argv: object) -> list[str]:
                 raise ValueError("patch-producing git log requires --no-ext-diff and --no-textconv")
     if executable == "shasum" and argv[1:3] != ["-a", "256"]:
         raise ValueError("only exact SHA-256 shasum operations are supported")
+    if executable == "stat":
+        valid_shape = (
+            len(argv) == 2
+            or (len(argv) == 4 and argv[1] in {"-c", "-f"})
+            or (len(argv) == 3 and argv[1].startswith("--format="))
+        )
+        if not valid_shape:
+            raise ValueError("stat inspection requires one source path and an optional fixed format")
+    if executable == "wc":
+        supported = {"-c", "-l", "-m", "-w", "--bytes", "--chars", "--lines", "--words"}
+        if any(value.startswith("-") and value not in supported for value in argv[1:]):
+            raise ValueError("wc inspection uses an unsupported option")
     return argv
+
+
+def validate_command_scope(argv: list[str], source_roots: list[Path]) -> None:
+    def validate_path(value: str, base: Path | None = None) -> Path:
+        path = Path(value)
+        if base is not None and not path.is_absolute():
+            path = base / path
+        if not path.is_absolute():
+            raise ValueError(f"observational command path must be absolute: {value}")
+        resolved = path.resolve(strict=True)
+        if not any(contained(resolved, root) for root in source_roots):
+            raise ValueError(f"observational command path is outside the declared source graph: {resolved}")
+        return resolved
+
+    executable = Path(argv[0]).name
+    if executable == "git":
+        positions = [index for index, value in enumerate(argv) if value == "-C"]
+        if len(positions) != 1 or positions[0] + 1 >= len(argv):
+            raise ValueError("each governed Git command requires exactly one explicit -C source root")
+        command_root = validate_path(argv[positions[0] + 1])
+        for value in argv[positions[0] + 2 :]:
+            if value.startswith("/"):
+                validate_path(value)
+        if "--" in argv:
+            for value in argv[argv.index("--") + 1 :]:
+                if value.startswith(":"):
+                    raise ValueError("Git pathspec magic is outside the exact observational command grammar")
+                validate_path(value, command_root)
+        return
+    if executable == "shasum":
+        paths = argv[3:]
+    elif executable == "wc":
+        paths = [value for value in argv[1:] if not value.startswith("-")]
+    elif len(argv) == 4 and argv[1] in {"-c", "-f"}:
+        paths = argv[3:]
+    else:
+        paths = argv[-1:]
+    if not paths:
+        raise ValueError(f"{executable} inspection requires an absolute source path")
+    for value in paths:
+        validate_path(value)
 
 
 @dataclass(frozen=True)
@@ -467,7 +689,10 @@ class GovernedReviewConfig:
     source_locations: tuple[tuple[Path, Path], ...]
     guard_roots: tuple[Path, ...]
     candidate: Path
+    candidate_head: str
     evidence_directory: Path
+    preflight_receipt: Path
+    attempt_artifacts: tuple[tuple[Path, Path], ...]
     allowed_commands: tuple[tuple[str, ...], ...]
     max_attempts: int
     observation_interval: float
@@ -480,15 +705,30 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
     body = json.loads(raw)
     if not isinstance(body, dict) or body.get("schema_version") != GOVERNED_CONFIG_VERSION:
         raise ValueError(f"review config must use schema_version {GOVERNED_CONFIG_VERSION}")
-    required_strings = ("review_id", "contract_id", "launch_root", "candidate_worktree", "evidence_directory")
+    required_strings = (
+        "review_id",
+        "contract_id",
+        "launch_root",
+        "candidate_worktree",
+        "candidate_head",
+        "evidence_directory",
+        "preflight_receipt",
+    )
     for key in required_strings:
         if not isinstance(body.get(key), str) or not body[key]:
             raise ValueError(f"review config requires non-empty {key}")
     launch_root = Path(body["launch_root"]).resolve(strict=True)
     candidate = Path(body["candidate_worktree"]).resolve(strict=True)
+    candidate_head = body["candidate_head"].lower()
+    if len(candidate_head) not in {40, 64} or any(value not in "0123456789abcdef" for value in candidate_head):
+        raise ValueError("candidate_head must be an exact 40- or 64-character hexadecimal object identity")
     evidence = Path(body["evidence_directory"]).resolve(strict=True)
+    preflight_receipt_parent = Path(body["preflight_receipt"]).parent.resolve(strict=True)
+    preflight_receipt = preflight_receipt_parent / Path(body["preflight_receipt"]).name
     if not launch_root.is_dir() or not candidate.is_dir() or not evidence.is_dir():
         raise ValueError("launch root, candidate worktree, and evidence directory must be existing directories")
+    if not contained(preflight_receipt, evidence):
+        raise ValueError("preflight receipt must be inside the declared evidence directory")
     additional = tuple(Path(value).resolve(strict=True) for value in body.get("additional_directories", []))
     if any(not value.is_dir() for value in additional):
         raise ValueError("every additional directory must exist and be a directory")
@@ -511,12 +751,36 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
     guard_roots = tuple(dict.fromkeys(Path(value).resolve(strict=True) for value in body.get("guard_roots", [str(candidate)])))
     if candidate not in guard_roots:
         guard_roots = (candidate, *guard_roots)
+    if any(not any(contained(root, guard) for guard in guard_roots) for root, _ in locations):
+        raise ValueError("every declared source root must be covered by a guarded no-delta root")
     if any(contained(evidence, root) or contained(root, evidence) for root in guard_roots):
         raise ValueError("evidence directory must be disjoint from every guarded source root")
-    commands = tuple(tuple(validate_command(value)) for value in body.get("allowed_commands", []))
     max_attempts = body.get("max_attempts", MAX_GOVERNED_ATTEMPTS)
     if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or not 1 <= max_attempts <= MAX_GOVERNED_ATTEMPTS:
         raise ValueError(f"max_attempts must be between 1 and {MAX_GOVERNED_ATTEMPTS}")
+    attempt_artifacts: list[tuple[Path, Path]] = []
+    for item in body.get("attempt_artifacts", []):
+        if not isinstance(item, dict) or not isinstance(item.get("stream"), str) or not isinstance(
+            item.get("terminal_receipt"), str
+        ):
+            raise ValueError("each attempt_artifacts item requires stream and terminal_receipt paths")
+        paths: list[Path] = []
+        for value in (item["stream"], item["terminal_receipt"]):
+            parent = Path(value).parent.resolve(strict=True)
+            artifact = parent / Path(value).name
+            if not contained(artifact, evidence):
+                raise ValueError("every attempt artifact must be inside the declared evidence directory")
+            paths.append(artifact)
+        attempt_artifacts.append((paths[0], paths[1]))
+    if len(attempt_artifacts) != max_attempts:
+        raise ValueError("attempt_artifacts must provide one exact stream/receipt pair for each allowed attempt")
+    artifact_paths = [preflight_receipt, *(path for pair in attempt_artifacts for path in pair)]
+    if len(set(artifact_paths)) != len(artifact_paths):
+        raise ValueError("governed artifact paths must be distinct")
+    validated_commands = [validate_command(value) for value in body.get("allowed_commands", [])]
+    for command in validated_commands:
+        validate_command_scope(command, [root for root, _ in locations])
+    commands = tuple(tuple(command) for command in validated_commands)
     observation = float(body.get("observation_interval_seconds", 1.0))
     soft = float(body.get("soft_liveness_threshold_seconds", 60.0))
     grace = float(body.get("graceful_termination_seconds", 10.0))
@@ -536,7 +800,10 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
         source_locations=tuple(locations),
         guard_roots=guard_roots,
         candidate=candidate,
+        candidate_head=candidate_head,
         evidence_directory=evidence,
+        preflight_receipt=preflight_receipt,
+        attempt_artifacts=tuple(attempt_artifacts),
         allowed_commands=commands,
         max_attempts=max_attempts,
         observation_interval=observation,
@@ -545,9 +812,11 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
     )
 
 
-def permission_hook(config_path: Path) -> int:
+def permission_hook(config_path: Path, expected_digest: str | None) -> int:
     try:
         config = load_governed_config(config_path)
+        if expected_digest is None or config.digest != expected_digest:
+            raise ValueError("review config identity changed after launch")
         hook_input = json.load(sys.stdin)
         command = hook_input.get("tool_input", {}).get("command")
         allowed = {shlex.join(list(argv)) for argv in config.allowed_commands}
@@ -570,7 +839,22 @@ def permission_hook(config_path: Path) -> int:
     return 0
 
 
+def trusted_system_executable(name: str, environment: dict[str, str]) -> Path:
+    executable = shutil.which(name, path=environment.get("PATH"))
+    if executable is None:
+        raise RuntimeError(f"observational command executable is unavailable: {name}")
+    path = Path(executable).resolve(strict=True)
+    metadata = path.stat()
+    if not stat.S_ISREG(metadata.st_mode) or metadata.st_uid != 0 or stat.S_IMODE(metadata.st_mode) & 0o022:
+        raise RuntimeError(f"observational command executable is not trusted system code: {path}")
+    return path
+
+
 def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) -> dict[str, object]:
+    for stream_path, terminal_receipt_path in config.attempt_artifacts:
+        for artifact in (stream_path, terminal_receipt_path):
+            if artifact.exists() or artifact.is_symlink():
+                raise RuntimeError(f"configured governed artifact already exists: {artifact}")
     path_results: list[dict[str, object]] = []
     for root, representative in config.source_locations:
         if representative.is_dir():
@@ -580,9 +864,24 @@ def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) 
                 stream.read(1)
         path_results.append({"root": str(root), "representative": str(representative), "status": "readable"})
     command_results: list[dict[str, object]] = []
+    git_executable = trusted_system_executable("git", environment)
+    head_result = subprocess.run(
+        [str(git_executable), "-C", str(config.candidate), "rev-parse", "HEAD"],
+        check=False,
+        cwd=config.launch_root,
+        env=environment,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    effective_head = head_result.stdout.strip().lower()
+    if head_result.returncode != 0 or effective_head != config.candidate_head:
+        raise RuntimeError("candidate HEAD does not match the exact governed review identity")
     for argv in config.allowed_commands:
+        executable_path = trusted_system_executable(argv[0], environment)
         result = subprocess.run(
-            list(argv),
+            [str(executable_path), *argv[1:]],
             check=False,
             cwd=config.launch_root,
             env=environment,
@@ -593,6 +892,8 @@ def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) 
         command_results.append(
             {
                 "argv": list(argv),
+                "resolved_executable": str(executable_path),
+                "executable_identity": file_identity(executable_path),
                 "exit_code": result.returncode,
                 "stdout_sha256": sha256_bytes(result.stdout),
                 "stderr_sha256": sha256_bytes(result.stderr),
@@ -600,17 +901,29 @@ def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) 
         )
         if result.returncode != 0:
             raise RuntimeError(f"command preflight failed: {shlex.join(list(argv))}")
-    probe = config.evidence_directory / f".claude-review-preflight-{uuid.uuid4().hex}"
-    exclusive_write(probe, b"preflight\n")
-    probe.unlink()
-    return {
+    record = {
+        "kind": "claude_governed_review_preflight_receipt",
+        "review_id": config.body["review_id"],
+        "contract_id": config.body["contract_id"],
+        "config_sha256": config.digest,
         "status": "passed",
         "requested_launch_root": str(config.launch_root),
         "effective_launch_root": str(config.launch_root),
+        "candidate_head": effective_head,
         "additional_directories": [str(path) for path in config.additional_directories],
         "paths": path_results,
         "commands": command_results,
         "evidence_destination": str(config.evidence_directory),
+    }
+    encoded = canonical_json_bytes(record)
+    exclusive_write(config.preflight_receipt, encoded)
+    return {
+        **record,
+        "receipt": {
+            "path": str(config.preflight_receipt),
+            "size": len(encoded),
+            "sha256": sha256_bytes(encoded),
+        },
     }
 
 
@@ -640,7 +953,12 @@ def governed_claude_arguments(config: GovernedReviewConfig, model_arguments: lis
                         {
                             "type": "command",
                             "command": str(Path(__file__).resolve()),
-                            "args": ["--permission-hook", str(config.path)],
+                            "args": [
+                                "--permission-hook",
+                                str(config.path),
+                                "--permission-hook-digest",
+                                config.digest,
+                            ],
                         }
                     ],
                 }
@@ -788,17 +1106,31 @@ def terminate_recorded_group(live_state_path: Path, authority: str, *, force_aut
     grace = grace_seconds if grace_seconds is not None else float(state.get("graceful_termination_seconds", 10.0))
     deadline = time.monotonic() + grace
     while time.monotonic() < deadline:
-        latest = json.loads(live_state_path.read_text(encoding="utf-8"))
+        try:
+            latest = json.loads(live_state_path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            if process_start_identity(pid) is None:
+                return 0
+            raise RuntimeError("live-state mechanics disappeared while the exact process identity remained live")
         if latest.get("state") in {"exited", "terminal"}:
             return 0
         time.sleep(min(0.1, max(0.0, deadline - time.monotonic())))
     if not force_authorized:
         state.update({"state": "awaiting_operator_disposition", "force_escalation": "not_authorized"})
-        replace_live_state(live_state_path, state)
+        try:
+            replace_live_state(live_state_path, state)
+        except FileNotFoundError:
+            if process_start_identity(pid) is None:
+                return 0
+            raise RuntimeError("live-state mechanics disappeared while the exact process identity remained live")
         return 75
     os.killpg(pgid, signal.SIGKILL)
     state.update({"state": "force_termination_authorized", "forced_signal": "SIGKILL"})
-    replace_live_state(live_state_path, state)
+    try:
+        replace_live_state(live_state_path, state)
+    except FileNotFoundError:
+        if process_start_identity(pid) is not None:
+            raise RuntimeError("live-state mechanics disappeared while the exact process identity remained live")
     return 0
 
 
@@ -836,8 +1168,7 @@ def run_governed_review(
         "cancellation_policy": config.body["cancellation_policy"],
     }
     controller_id = uuid.uuid4().hex
-    with tempfile.TemporaryDirectory(prefix="claude-review-attempt-") as scratch_name:
-        scratch = Path(scratch_name)
+    with AttemptScratch.allocate(child_environment, "claude-review-controller-") as scratch:
         environment = safe_command_environment(child_environment, scratch)
         initial_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
         try:
@@ -882,11 +1213,12 @@ def run_governed_review(
         final_output: str | None = None
         final_exit = REVIEWER_FAILURE_EXIT
         for attempt_number in range(1, config.max_attempts + 1):
+            attempt_scratch = AttemptScratch.allocate(child_environment, "claude-review-attempt-")
+            environment = safe_command_environment(child_environment, attempt_scratch.path)
             attempt_id = f"{config.body['review_id']}-{attempt_number}-{uuid.uuid4().hex}"
             attempt_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
-            output_path = config.evidence_directory / f"{attempt_id}-claude-stream.jsonl"
-            receipt_path = config.evidence_directory / f"{attempt_id}-terminal-receipt.json"
-            live_state_path = config.evidence_directory / f"{attempt_id}-live-state.json"
+            output_path, receipt_path = config.attempt_artifacts[attempt_number - 1]
+            live_state_path = scratch / f"{attempt_id}-live-state.json"
             started = time.time()
             process = subprocess.Popen(
                 command,
@@ -915,6 +1247,7 @@ def run_governed_review(
                 "graceful_termination_seconds": config.graceful_termination_seconds,
             }
             exclusive_write(live_state_path, canonical_json_bytes(live_state))
+            print(f"claude-review live-state: {live_state_path}", file=sys.stderr, flush=True)
             stdout_collector = PipeCollector(process.stdout)
             stderr_collector = PipeCollector(process.stderr)
             process.stdin.write(prompt)
@@ -993,6 +1326,14 @@ def run_governed_review(
             parsed = parse_stream(stdout)
             capability_failure = init_capability_failure(parsed)
             classification, retryable = retry_classification(parsed, process.returncode)
+            auth_failure = classify_failure(
+                stderr.decode("utf-8", errors="replace"),
+                stdout.decode("utf-8", errors="replace"),
+                process.returncode,
+            )
+            if auth_failure and auth_failure.startswith("AUTH_"):
+                classification = auth_failure
+                retryable = False
             if capability_failure or capability_signal_sent:
                 classification = capability_failure or live_capability_failure or "startup_capability_error"
                 retryable = False
@@ -1004,11 +1345,24 @@ def run_governed_review(
             if changes:
                 classification = "reviewer_side_effect_failure"
                 retryable = False
+            claude_version = version_of(executable, environment, cwd=str(config.launch_root))
+            scratch_record = attempt_scratch.record()
+            try:
+                attempt_scratch.cleanup()
+                scratch_cleanup: dict[str, object] = {"passed": True, "residue": None}
+            except RuntimeError as error:
+                scratch_cleanup = {
+                    "passed": False,
+                    "residue": str(attempt_scratch.path),
+                    "error": bounded_redacted(str(error)),
+                }
+                classification = "attempt_scratch_cleanup_failure"
+                retryable = False
             result = parsed.get("result")
             if classification == "success" and isinstance(result, dict) and isinstance(result.get("result"), str):
                 final_output = result["result"]
                 final_exit = 0
-            elif classification == "terminal_auth_or_billing_failure":
+            elif classification == "terminal_auth_or_billing_failure" or classification.startswith("AUTH_"):
                 final_exit = AUTH_FAILURE_EXIT
             terminal_state = "terminal"
             if process.returncode < 0:
@@ -1032,10 +1386,11 @@ def run_governed_review(
                 },
                 "runtime": {
                     "claude_executable": executable,
-                    "claude_version": version_of(executable, environment, cwd=str(config.launch_root)),
+                    "claude_version": claude_version,
                     "requested_argv": redacted_argv(command),
                     "effective_init": parsed.get("init"),
                 },
+                "attempt_scratch": {**scratch_record, "cleanup": scratch_cleanup},
                 "failure_classification": None if classification == "success" else classification,
                 "retry_eligible": retryable,
                 "candidate_verdict": "uninterpreted" if classification == "success" else "not_produced",
@@ -1045,6 +1400,19 @@ def run_governed_review(
                 "stream_evidence": {
                     "in_process_retry_events": len(parsed.get("retry_events", [])),
                     "malformed_records": parsed.get("malformed_records"),
+                },
+                "lifecycle": {
+                    key: live_state[key]
+                    for key in (
+                        "soft_liveness_threshold_crossed",
+                        "soft_liveness_observation",
+                        "capability_failure",
+                        "termination_disposition",
+                        "termination_authority",
+                        "graceful_signal",
+                        "forced_signal",
+                    )
+                    if key in live_state
                 },
                 "no_delta_postflight": {
                     "baseline_sha256": attempt_snapshot["sha256"],
@@ -1073,6 +1441,7 @@ def run_governed_review(
                     "receipt": str(receipt_path),
                     "classification": classification,
                     "retry_eligible": retryable,
+                    "live_state": str(live_state_path),
                 }
             )
             if classification == "success" or not retryable or attempt_number == config.max_attempts:
@@ -1111,6 +1480,7 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--auth-preflight", action="store_true")
     parser.add_argument("--review-config", type=Path)
     parser.add_argument("--permission-hook", type=Path)
+    parser.add_argument("--permission-hook-digest")
     parser.add_argument("--request-termination", type=Path)
     parser.add_argument("--decline-termination", type=Path)
     parser.add_argument("--terminate", type=Path)
@@ -1132,7 +1502,7 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = parse_arguments(argv or sys.argv[1:])
     if args.permission_hook:
-        return permission_hook(args.permission_hook)
+        return permission_hook(args.permission_hook, args.permission_hook_digest)
     if args.request_termination:
         return request_or_decline_termination(args.request_termination, decline=False)
     if args.decline_termination:
@@ -1173,8 +1543,24 @@ def main(argv: list[str] | None = None) -> int:
     executable = shutil.which(args.claude_bin, path=child_environment.get("PATH"))
 
     selected_arguments = preflight_arguments(args.claude_args) if args.auth_preflight else args.claude_args
-    preflight_directory = tempfile.TemporaryDirectory(prefix="claude-review-preflight-") if args.auth_preflight else None
-    execution_cwd = preflight_directory.name if preflight_directory else os.getcwd()
+    try:
+        preflight_directory = (
+            AttemptScratch.allocate(child_environment, "claude-review-preflight-") if args.auth_preflight else None
+        )
+    except RuntimeError as error:
+        emit_diagnostics(
+            {
+                "kind": "claude_reviewer_attempt",
+                "attempt_kind": "auth_preflight",
+                "failure_classification": "attempt_scratch_contract_failure",
+                "candidate_verdict": "not_applicable",
+                "substantive_review_output": False,
+                "error": bounded_redacted(str(error)),
+            },
+            args.diagnostics_file,
+        )
+        return REVIEWER_FAILURE_EXIT
+    execution_cwd = str(preflight_directory.path) if preflight_directory else os.getcwd()
     command = [executable, "-p", *selected_arguments] if executable else None
     runtime = {
         "claude_executable": executable,
@@ -1212,6 +1598,20 @@ def main(argv: list[str] | None = None) -> int:
     if args.review_config is not None and not args.auth_preflight:
         try:
             config = load_governed_config(args.review_config)
+            if args.diagnostics_file is not None:
+                diagnostics_parent = args.diagnostics_file.parent.resolve(strict=True)
+                diagnostics_path = diagnostics_parent / args.diagnostics_file.name
+                if not contained(diagnostics_path, config.evidence_directory):
+                    raise ValueError("governed diagnostics must be inside the declared evidence directory")
+                reserved_artifacts = {
+                    config.path,
+                    config.preflight_receipt,
+                    *(path for pair in config.attempt_artifacts for path in pair),
+                }
+                if diagnostics_path in reserved_artifacts:
+                    raise ValueError("governed diagnostics must have a distinct immutable artifact path")
+                if diagnostics_path.exists() or diagnostics_path.is_symlink():
+                    raise ValueError("governed diagnostics destination must not already exist")
             prompt = sys.stdin.buffer.read()
             if not prompt:
                 raise ValueError("governed review prompt must not be empty")
@@ -1224,6 +1624,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.diagnostics_file,
             )
         except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as error:
+            failure_destination = unused_diagnostics_destination(args.diagnostics_file)
             emit_diagnostics(
                 {
                     "kind": "claude_governed_review",
@@ -1232,7 +1633,7 @@ def main(argv: list[str] | None = None) -> int:
                     "substantive_review_output": False,
                     "error": bounded_redacted(str(error)),
                 },
-                args.diagnostics_file,
+                failure_destination,
             )
             return REVIEWER_FAILURE_EXIT
 
@@ -1276,6 +1677,23 @@ def main(argv: list[str] | None = None) -> int:
         if failure
         else result.returncode
     )
+    scratch_cleanup: dict[str, object] | None = None
+    if preflight_directory:
+        scratch_record = preflight_directory.record()
+        try:
+            preflight_directory.cleanup()
+            scratch_cleanup = {**scratch_record, "cleanup": {"passed": True, "residue": None}}
+        except RuntimeError as error:
+            failure = "attempt_scratch_cleanup_failure"
+            launcher_exit_code = REVIEWER_FAILURE_EXIT
+            scratch_cleanup = {
+                **scratch_record,
+                "cleanup": {
+                    "passed": False,
+                    "residue": str(preflight_directory.path),
+                    "error": bounded_redacted(str(error)),
+                },
+            }
     record = {
         "kind": "claude_reviewer_attempt",
         "attempt_kind": "auth_preflight" if args.auth_preflight else "substantive_review",
@@ -1291,6 +1709,8 @@ def main(argv: list[str] | None = None) -> int:
         "auth_preflight_status": "AUTH_PREFLIGHT_OK" if args.auth_preflight and failure is None else None,
         **failure_fields(failure),
     }
+    if scratch_cleanup is not None:
+        record["attempt_scratch"] = scratch_cleanup
     if args.auth_preflight and failure == "PREFLIGHT_OUTPUT_MISMATCH":
         record["preflight_output"] = bounded_redacted(stdout)
     if stdout and failure is None:
@@ -1298,8 +1718,6 @@ def main(argv: list[str] | None = None) -> int:
     emit_diagnostics(record, args.diagnostics_file)
     if failure == "AUTH_OAUTH_TOKEN_EXPIRED_401":
         print(OAUTH_REAUTHENTICATION_MESSAGE, file=sys.stderr)
-    if preflight_directory:
-        preflight_directory.cleanup()
     return launcher_exit_code
 
 

@@ -106,8 +106,11 @@ The CLI controls have different effects:
 The repository [`claude-review`](../../scripts/claude-review) launcher composes
 these controls for governed review. A versioned JSON review config binds the
 source graph, launch root and exact additional directories, guard roots,
-candidate, disjoint evidence directory, exact observational command argv,
-retry cap, observation intervals, and cancellation policy. The launcher accepts
+candidate and exact `HEAD`, disjoint evidence directory, immutable preflight-receipt path, exact
+stream and terminal-receipt paths for every permitted attempt, observational
+command argv, retry cap, observation intervals, and cancellation policy. Mutable
+live-state mechanics remain in private controller attempt-local scratch. The
+launcher accepts
 only model and supported effort selection after `--`; it owns the tool,
 permission, MCP, settings, hook, output, and persistence flags.
 
@@ -115,8 +118,11 @@ The generated `PreToolUse` hook permits `Read`, `Grep`, and `Glob`, and permits
 `Bash` only when its command text exactly equals the shell rendering of one
 configured argv vector. The controller independently executes each configured
 command before review under a safe environment that disables system Git
-configuration, external diffs, optional Git locks, pagers, and Python bytecode
-writes, with temporary state redirected to attempt-local scratch. It rejects
+and user Git configuration, repository hooks and filesystem monitors, external
+diffs, optional Git locks, pagers, and Python bytecode writes, with temporary
+state redirected to fresh attempt-local scratch through the qualified macOS or
+Linux route in [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
+It rejects
 non-observational Git operations and commands whose result could invoke shell,
 text-conversion, external-diff, or interpreter side effects.
 

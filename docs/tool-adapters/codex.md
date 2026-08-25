@@ -724,9 +724,9 @@ Before an expensive independent review, run the same launcher with
 `--auth-preflight`. It reuses the effective-user environment and executable
 resolution, sends only the fixed `CLAUDE_AUTH_OK` prompt on standard input,
 disables all Claude tools, passes `--no-session-persistence`, and runs from a
-fresh temporary directory. It may retain the selected model and effort, but it
-is not substantive review and does not read repository, candidate, or held-out
-content.
+fresh private attempt-local directory through the qualified macOS or Linux
+route. It may retain the selected model and effort, but it is not substantive
+review and does not read repository, candidate, or held-out content.
 For example:
 
 ```text
@@ -740,8 +740,10 @@ review after a preflight failure.
 After successful auth preflight, invoke the governed review from the owning
 controller and keep awaiting that exact launcher until its live-state record is
 terminal. The review config must cover every source root, bind the candidate and
+exact `HEAD`, and bind the
 disjoint admitted evidence destination, enumerate exact observational command
-argv, and declare retry and cancellation policy. Do not use a Codex tool timeout
+argv and immutable per-attempt artifact paths, and declare retry and cancellation
+policy. Do not use a Codex tool timeout
 or missing output as evidence that Claude exited, and do not launch a replacement
 while the recorded process group may still be live. If the interactive contract
 requires a disposition, use the launcher's request, decline, or authority-bound

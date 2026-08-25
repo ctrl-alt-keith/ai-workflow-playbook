@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 import pwd
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -52,9 +53,10 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             if auth_preflight:
                 command.append("--auth-preflight")
             effective_environment = (environment or os.environ.copy()).copy()
+            effective_environment["CLAUDE_REVIEW_TEST_FIXTURE"] = "1"
+            effective_environment["CLAUDE_REVIEW_TEST_SCRATCH_PARENT"] = str(temporary)
             if not auth_preflight:
                 command.append("--classification-fixture")
-                effective_environment["CLAUDE_REVIEW_TEST_FIXTURE"] = "1"
             command.extend(("--", "--model", "opus", "--effort", "high", "--tools", "Read"))
             completed = subprocess.run(
                 command,
@@ -351,6 +353,11 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                env={
+                    **os.environ,
+                    "CLAUDE_REVIEW_TEST_FIXTURE": "1",
+                    "CLAUDE_REVIEW_TEST_SCRATCH_PARENT": str(temporary),
+                },
             )
 
         self.assertEqual(completed.returncode, 0)
@@ -450,6 +457,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "    (candidate / 'tracked.txt').write_text('staged\\n')\n"
             "    subprocess.run(['git','-C',str(candidate),'add','tracked.txt'], check=True)\n"
             "if scenario == 'escaped_output': (package / 'escaped-review.txt').write_text('escaped')\n"
+            "if scenario == 'unsafe_scratch': (pathlib.Path(os.environ['TMPDIR']) / 'escape').symlink_to(candidate)\n"
             "if scenario == 'silent': time.sleep(0.08)\n"
             "if scenario == 'ignore_term':\n"
             "    signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
@@ -466,12 +474,21 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':'authentication_failed'}), flush=True)\n"
             "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}'}), flush=True)\n"
             "    raise SystemExit(1)\n"
+            "if scenario == 'auth_precise':\n"
+            "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}','result':'API Error: 401 OAuth access token has expired'}), flush=True)\n"
+            "    raise SystemExit(1)\n"
             "print(json.dumps({'type':'result','subtype':'success','is_error':False,'session_id':f's{attempt}','result':'ACCEPT'}), flush=True)\n",
             encoding="utf-8",
         )
         self.fake.chmod(0o755)
 
     def config_body(self, *, launch_root=None, additional=None, max_attempts=3):
+        candidate_head = subprocess.run(
+            ["git", "-C", str(self.candidate), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
         return {
             "schema_version": 1,
             "review_id": "CAK-155-fixture",
@@ -484,7 +501,16 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             ],
             "guard_roots": [str(self.candidate), str(self.package)],
             "candidate_worktree": str(self.candidate),
+            "candidate_head": candidate_head,
             "evidence_directory": str(self.evidence),
+            "preflight_receipt": str(self.evidence / "preflight-receipt.json"),
+            "attempt_artifacts": [
+                {
+                    "stream": str(self.evidence / f"attempt-{number}-stream.jsonl"),
+                    "terminal_receipt": str(self.evidence / f"attempt-{number}-terminal-receipt.json"),
+                }
+                for number in range(1, max_attempts + 1)
+            ],
             "allowed_commands": [
                 ["git", "-C", str(self.candidate), "status", "--porcelain=v2", "--untracked-files=all"]
             ],
@@ -511,6 +537,8 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 "FAKE_COUNT": str(self.count),
                 "FAKE_CANDIDATE": str(self.candidate),
                 "FAKE_PACKAGE": str(self.package),
+                "CLAUDE_REVIEW_TEST_FIXTURE": "1",
+                "CLAUDE_REVIEW_TEST_SCRATCH_PARENT": str(self.root),
             }
         )
         return environment
@@ -518,6 +546,16 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
     def run_governed(self, scenario="success", *, body=None):
         config = self.write_config(body)
         diagnostics = self.evidence / "overall.json"
+        if diagnostics.exists() or diagnostics.is_symlink():
+            diagnostics.unlink()
+        preflight_receipt = Path((body or self.config_body())["preflight_receipt"])
+        if preflight_receipt.exists() or preflight_receipt.is_symlink():
+            preflight_receipt.unlink()
+        for item in (body or self.config_body())["attempt_artifacts"]:
+            for value in item.values():
+                artifact = Path(value)
+                if artifact.exists() or artifact.is_symlink():
+                    artifact.unlink()
         completed = subprocess.run(
             [
                 str(LAUNCHER),
@@ -550,6 +588,8 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(common.returncode, 0)
         self.assertEqual(common.stdout, "ACCEPT\n")
         self.assertEqual(diagnostic["preflight"]["status"], "passed")
+        preflight = json.loads((self.evidence / "preflight-receipt.json").read_text(encoding="utf-8"))
+        self.assertEqual(preflight["kind"], "claude_governed_review_preflight_receipt")
 
         self.count.unlink()
         for path in self.evidence.glob("CAK-155-fixture-*"):
@@ -564,6 +604,54 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         completed, diagnostic = self.run_governed(body=body)
         self.assertEqual(completed.returncode, 70)
         self.assertEqual(diagnostic["failure_classification"], "review_contract_failure")
+        self.assertFalse(self.count.exists())
+
+    def test_command_and_guard_scope_fail_before_substantive_review(self):
+        command_body = self.config_body()
+        command_body["allowed_commands"] = [["stat", "/etc/hosts"]]
+        completed, diagnostic = self.run_governed(body=command_body)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "review_contract_failure")
+        self.assertFalse(self.count.exists())
+
+        output_body = self.config_body()
+        output_body["allowed_commands"] = [
+            [
+                "git",
+                "-C",
+                str(self.candidate),
+                "diff",
+                "--no-ext-diff",
+                "--no-textconv",
+                f"--output={self.package / 'forbidden.diff'}",
+            ]
+        ]
+        completed, diagnostic = self.run_governed(body=output_body)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "review_contract_failure")
+        self.assertFalse((self.package / "forbidden.diff").exists())
+
+        executable_body = self.config_body()
+        executable_body["allowed_commands"] = [
+            ["/tmp/git", "-C", str(self.candidate), "status", "--porcelain=v2"]
+        ]
+        completed, diagnostic = self.run_governed(body=executable_body)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "review_contract_failure")
+        self.assertFalse(self.count.exists())
+
+        guard_body = self.config_body()
+        guard_body["guard_roots"] = [str(self.candidate)]
+        completed, diagnostic = self.run_governed(body=guard_body)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "review_contract_failure")
+        self.assertFalse(self.count.exists())
+
+        head_body = self.config_body()
+        head_body["candidate_head"] = "0" * 40
+        completed, diagnostic = self.run_governed(body=head_body)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "access_or_command_preflight_failure")
         self.assertFalse(self.count.exists())
 
     def test_direct_review_preserves_deliberately_dirty_candidate(self):
@@ -616,6 +704,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual({receipt["controller_id"] for receipt in receipts}, {diagnostic["controller_id"]})
         self.assertEqual(len({json.dumps(receipt["contract_identity"], sort_keys=True) for receipt in receipts}), 1)
         self.assertEqual(receipts[1]["execution_kind"], "fresh_execution_exact_input_repeat")
+        scratch_paths = [receipt["attempt_scratch"]["path"] for receipt in receipts]
+        self.assertEqual(len(set(scratch_paths)), 2)
+        self.assertTrue(all(receipt["attempt_scratch"]["cleanup"]["passed"] for receipt in receipts))
+        self.assertTrue(all(not Path(path).exists() for path in scratch_paths))
 
     def test_retry_exhaustion_stops_at_three_and_auth_stops_at_one(self):
         exhausted, exhausted_diagnostic = self.run_governed("transient_always")
@@ -627,6 +719,14 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         body = self.config_body()
         body["review_id"] = "CAK-155-auth"
         body["evidence_directory"] = str(auth_root)
+        body["preflight_receipt"] = str(auth_root / "preflight-receipt.json")
+        body["attempt_artifacts"] = [
+            {
+                "stream": str(auth_root / f"attempt-{number}-stream.jsonl"),
+                "terminal_receipt": str(auth_root / f"attempt-{number}-terminal-receipt.json"),
+            }
+            for number in range(1, body["max_attempts"] + 1)
+        ]
         config = auth_root / "review-config.json"
         config.write_text(json.dumps(body), encoding="utf-8")
         diagnostics = auth_root / "overall.json"
@@ -642,19 +742,116 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 78)
         self.assertEqual(len(json.loads(diagnostics.read_text())["attempts"]), 1)
 
+    def test_precise_terminal_auth_record_stops_without_retry(self):
+        completed, diagnostic = self.run_governed("auth_precise")
+        self.assertEqual(completed.returncode, 78)
+        self.assertEqual(diagnostic["failure_classification"], "AUTH_OAUTH_TOKEN_EXPIRED_401")
+        self.assertEqual(len(diagnostic["attempts"]), 1)
+
+    def test_attempt_scratch_cleanup_failure_preserves_residue_and_stops(self):
+        completed, diagnostic = self.run_governed("unsafe_scratch")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "attempt_scratch_cleanup_failure")
+        receipt = self.receipts()[0]
+        self.assertFalse(receipt["attempt_scratch"]["cleanup"]["passed"])
+        self.assertTrue(Path(receipt["attempt_scratch"]["cleanup"]["residue"]).exists())
+
+    def test_governed_diagnostics_are_no_overwrite(self):
+        config = self.write_config()
+        diagnostics = self.evidence / "overall.json"
+        diagnostics.write_text("operator-owned\n", encoding="utf-8")
+        completed = subprocess.run(
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            input="prompt\n",
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=self.environment("success"),
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostics.read_text(encoding="utf-8"), "operator-owned\n")
+        self.assertFalse(self.count.exists())
+
+        diagnostics.unlink()
+        preflight_receipt = self.evidence / "preflight-receipt.json"
+        preflight_receipt.write_text("operator-owned-preflight\n", encoding="utf-8")
+        completed = subprocess.run(
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            input="prompt\n",
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=self.environment("success"),
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(preflight_receipt.read_text(encoding="utf-8"), "operator-owned-preflight\n")
+        self.assertEqual(
+            json.loads(diagnostics.read_text(encoding="utf-8"))["failure_classification"],
+            "access_or_command_preflight_failure",
+        )
+        self.assertFalse(self.count.exists())
+
+    def test_permission_hook_fails_closed_if_config_identity_changes(self):
+        import importlib.machinery
+        import importlib.util
+
+        config = self.write_config()
+        loader = importlib.machinery.SourceFileLoader("claude_review_hook", str(LAUNCHER))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[loader.name] = module
+        loader.exec_module(module)
+        digest = module.sha256_bytes(config.read_bytes())
+        hook_input = json.dumps(
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": shlex.join(self.config_body()["allowed_commands"][0])},
+            }
+        )
+        command = [
+            str(LAUNCHER),
+            "--permission-hook",
+            str(config),
+            "--permission-hook-digest",
+            digest,
+        ]
+        allowed = subprocess.run(
+            command,
+            input=hook_input,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=self.environment("success"),
+            check=False,
+        )
+        self.assertEqual(json.loads(allowed.stdout)["hookSpecificOutput"]["permissionDecision"], "allow")
+
+        changed = self.config_body(max_attempts=2)
+        config.write_text(json.dumps(changed), encoding="utf-8")
+        denied = subprocess.run(
+            command,
+            input=hook_input,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=self.environment("success"),
+            check=False,
+        )
+        self.assertEqual(json.loads(denied.stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
+
     def test_soft_liveness_threshold_never_terminates_or_replaces_attempt(self):
         completed, _ = self.run_governed("silent")
         self.assertEqual(completed.returncode, 0)
-        live = json.loads(next(self.evidence.glob("*-live-state.json")).read_text())
-        self.assertTrue(live["soft_liveness_threshold_crossed"])
+        self.assertTrue(self.receipts()[0]["lifecycle"]["soft_liveness_threshold_crossed"])
         self.assertEqual(self.count.read_text(), "1")
 
     def test_effective_tool_mismatch_stops_the_live_attempt(self):
         completed, diagnostic = self.run_governed("tool_mismatch")
         self.assertEqual(completed.returncode, 70)
         self.assertEqual(diagnostic["failure_classification"], "effective_tool_set_mismatch")
-        live = json.loads(next(self.evidence.glob("*-live-state.json")).read_text())
-        self.assertEqual(live["capability_failure"], "effective_tool_set_mismatch")
+        self.assertEqual(self.receipts()[0]["lifecycle"]["capability_failure"], "effective_tool_set_mismatch")
         self.assertEqual(self.count.read_text(), "1")
 
     def test_request_and_decline_termination_keep_same_process_live(self):
@@ -672,10 +869,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         assert process.stdin is not None
         process.stdin.write("prompt\n")
         process.stdin.close()
-        deadline = time.monotonic() + 2
+        deadline = time.monotonic() + 5
         live = None
         while time.monotonic() < deadline:
-            matches = list(self.evidence.glob("*-live-state.json"))
+            matches = list(self.root.glob("claude-review-controller-*/*-live-state.json"))
             if matches:
                 live = matches[0]
                 break
@@ -689,7 +886,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             [str(LAUNCHER), "--terminate", str(live), "--termination-authority", "Keith confirmed fixture termination", "--grace-seconds", "0.2"],
             check=False,
         )
-        process.wait(timeout=2)
+        process.wait(timeout=5)
         assert process.stdout is not None and process.stderr is not None
         process.stdout.close()
         process.stderr.close()
@@ -722,6 +919,47 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         contained_after = module.source_snapshot([self.candidate], self.candidate, environment)
         self.assertEqual(module.snapshot_delta(contained_baseline, contained_after), [])
         self.assertTrue(any(scratch.rglob("*.pyc")))
+
+    def test_attempt_scratch_cleanup_fails_closed_on_symlink_residue(self):
+        import importlib.machinery
+        import importlib.util
+
+        loader = importlib.machinery.SourceFileLoader("claude_review_scratch", str(LAUNCHER))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[loader.name] = module
+        loader.exec_module(module)
+        environment = self.environment("success")
+        scratch = module.AttemptScratch.allocate(environment, "unsafe-cleanup-")
+        unsafe = scratch.path / "escape"
+        unsafe.symlink_to(self.candidate)
+        with self.assertRaisesRegex(RuntimeError, "unsafe residue"):
+            scratch.cleanup()
+        self.assertTrue(scratch.path.exists())
+        unsafe.unlink()
+        scratch.cleanup()
+        self.assertFalse(scratch.path.exists())
+
+    def test_host_platform_attempt_scratch_projection_is_qualified(self):
+        import importlib.machinery
+        import importlib.util
+
+        if sys.platform != "darwin" and not sys.platform.startswith("linux"):
+            self.skipTest("host has no qualified attempt-scratch projection")
+        loader = importlib.machinery.SourceFileLoader("claude_review_platform_scratch", str(LAUNCHER))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[loader.name] = module
+        loader.exec_module(module)
+        environment = os.environ.copy()
+        environment.pop("CLAUDE_REVIEW_TEST_FIXTURE", None)
+        environment.pop("CLAUDE_REVIEW_TEST_SCRATCH_PARENT", None)
+        scratch = module.AttemptScratch.allocate(environment, "platform-projection-")
+        expected = "darwin_getconf_user_temp_dir" if sys.platform == "darwin" else "linux_fhs_tmp"
+        self.assertEqual(scratch.projection, expected)
+        self.assertEqual(scratch.path.stat().st_mode & 0o777, 0o700)
+        scratch.cleanup()
+        self.assertFalse(scratch.path.exists())
 
 
 if __name__ == "__main__":

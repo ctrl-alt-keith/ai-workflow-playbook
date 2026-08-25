@@ -80,13 +80,19 @@ candidate evidence or grounds to substitute another reviewer.
 
 A governed review begins with a controller-owned launch contract, not with a
 provider command assembled ad hoc. The contract must bind the exact prompt and
-configuration identities, candidate worktree, complete source graph, launch
+configuration identities, candidate worktree and commit, complete source graph, launch
 root, additional readable directories, guarded roots, exact observational
 commands, evidence destination, retry bound, and cancellation policy. Choose a
 launch root that commonly owns the source graph when practical; otherwise
 declare every additional directory explicitly. A narrow package-directory
 launch that cannot reach the candidate is a contract failure, not a partially
 qualified review.
+
+Bind an exact immutable stream and terminal-receipt path for every permitted
+attempt. Keep mutable live-process mechanics in private controller-owned
+attempt-local scratch and expose their exact locator while the controller is
+live; do not turn a replace-in-place state file into a durable artifact. Only
+the configured no-overwrite artifacts enter the governed evidence destination.
 
 Before accepting substantive review, the controller must:
 
@@ -106,8 +112,10 @@ Before accepting substantive review, the controller must:
 Treat provider permission flags as one control, not the whole read-only proof.
 Use the narrowest available tool set, command grammar, provider hooks, sandbox
 or filesystem restrictions, disabled connector surface, safe environment, and
-controller-side preflight together. Preserve the exact preflight result and
-any material qualification gap.
+controller-side preflight together. Preserve the exact preflight result in an
+exclusive, no-overwrite receipt at the admitted evidence destination; do not
+create and delete a write probe in a durable artifact namespace. Preserve any
+material qualification gap even when the preflight receipt cannot be produced.
 
 Read-only completion requires a positive whole-source no-delta postflight. The
 baseline must accept deliberately dirty, staged, untracked, and ignored source
