@@ -112,6 +112,12 @@ Before accepting substantive review, the controller must:
   connectors, startup capabilities, or source reachability differ from the
   contract.
 
+Controller-side command preflight does not prove that the same command can run
+inside the provider process. Require a successful in-provider result from one
+exact granted command canary, reject any sandbox-bypass request, and fail closed
+when the canary is missing or fails. This qualifies the command transport; it
+does not replace controller-side execution of every configured command form.
+
 Treat provider permission flags as one control, not the whole read-only proof.
 Use the narrowest available tool set, command grammar, provider hooks, sandbox
 or filesystem restrictions, disabled connector surface, safe environment, and
@@ -130,7 +136,8 @@ disjoint evidence destination after its retention and visibility rules admit
 those bytes.
 
 An attempt is complete only after the exact reviewer process group is terminal,
-its output is captured, its terminal receipt is durable, and no-delta
+all output collectors reach end-of-stream, its output is captured, its terminal
+receipt is durable, and no-delta
 postflight passes. A fresh attempt may repeat the exact inputs only for an
 explicitly documented transient provider class, after the prior attempt is
 fully terminal, under the same controller and contract identity, and within a

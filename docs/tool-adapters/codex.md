@@ -757,6 +757,13 @@ attempt-local scratch on macOS or Linux so provider bootstrap writes cannot
 enter the candidate. Effective initialization must report that exact scratch
 directory before output can qualify.
 
+Controller-side command preflight is followed by an in-provider exact-command
+canary. The launcher rejects a missing or failed canary and any
+`dangerouslyDisableSandbox` request; do not bypass a nested-sandbox failure.
+After Claude's direct process exits, keep awaiting the recorded process group
+and complete both stream collectors before freezing output or considering an
+eligible exact-input repeat.
+
 The launcher performs representative access and command-effect preflight,
 validates Claude's effective initialization metadata, snapshots all guarded
 source bytes and the Git index, and requires a positive no-delta postflight.

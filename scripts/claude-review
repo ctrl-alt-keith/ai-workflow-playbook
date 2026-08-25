@@ -789,6 +789,8 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
     for command in validated_commands:
         validate_command_scope(command, [root for root, _ in locations])
     commands = tuple(tuple(command) for command in validated_commands)
+    if not commands:
+        raise ValueError("governed review requires at least one exact observational command canary")
     observation = float(body.get("observation_interval_seconds", 1.0))
     soft = float(body.get("soft_liveness_threshold_seconds", 60.0))
     grace = float(body.get("graceful_termination_seconds", 10.0))
@@ -827,9 +829,14 @@ def permission_hook(config_path: Path, expected_digest: str | None) -> int:
         if expected_digest is None or config.digest != expected_digest:
             raise ValueError("review config identity changed after launch")
         hook_input = json.load(sys.stdin)
-        command = hook_input.get("tool_input", {}).get("command")
+        tool_input = hook_input.get("tool_input", {})
+        command = tool_input.get("command")
         allowed = {shlex.join(list(argv)) for argv in config.allowed_commands}
-        permitted = hook_input.get("tool_name") == "Bash" and command in allowed
+        permitted = (
+            hook_input.get("tool_name") == "Bash"
+            and command in allowed
+            and tool_input.get("dangerouslyDisableSandbox") is not True
+        )
     except (OSError, ValueError, json.JSONDecodeError, TypeError):
         permitted = False
     decision = "allow" if permitted else "deny"
@@ -918,8 +925,8 @@ def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) 
         "contract_id": config.body["contract_id"],
         "config_sha256": config.digest,
         "status": "passed",
-        "requested_launch_root": str(config.launch_root),
-        "effective_launch_root": str(config.launch_root),
+        "configured_logical_launch_root": str(config.launch_root),
+        "provider_runtime_cwd": "not_observed_until_attempt_init",
         "candidate_head": effective_head,
         "additional_directories": [str(path) for path in config.additional_directories],
         "paths": path_results,
@@ -940,11 +947,14 @@ def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) 
 
 def governed_system_prompt(config: GovernedReviewConfig) -> str:
     commands = "\n".join(f"- {shlex.join(list(argv))}" for argv in config.allowed_commands) or "- none"
+    canary = shlex.join(list(config.allowed_commands[0]))
     return (
         "Governed review capability boundary. Perform no mutation. Use only Read, Grep, Glob, "
         "and the exact Bash commands listed below. Do not use shell operators, redirects, wrappers, "
         "interpreters, tests, builds, package tools, network tools, MCP tools, subagents, or output files. "
-        "Return the review only through the final response. Exact Bash commands:\n"
+        "Never request sandbox bypass. Before substantive analysis, execute this exact Bash capability "
+        f"canary once and stop if it fails: {canary}. The controller rejects output without its successful "
+        "in-provider tool result. Return the review only through the final response. Exact Bash commands:\n"
         f"{commands}\n"
     )
 
@@ -974,12 +984,6 @@ def governed_claude_arguments(config: GovernedReviewConfig, model_arguments: lis
                     ],
                 }
             ]
-        },
-        "sandbox": {
-            "enabled": True,
-            "filesystem": {"denyWrite": [str(path) for path in config.guard_roots]},
-            "network": {"allowedDomains": []},
-            "autoAllowBashIfSandboxed": False,
         },
     }
     system_prompt = governed_system_prompt(config)
@@ -1088,10 +1092,22 @@ def process_start_identity(pid: int) -> str | None:
     return None
 
 
+def process_group_exists(pgid: int) -> bool:
+    try:
+        os.killpg(pgid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
 def parse_stream(records: bytes) -> dict[str, object]:
     init: dict[str, object] | None = None
     result: dict[str, object] | None = None
     retry_events: list[dict[str, object]] = []
+    bash_calls: dict[str, dict[str, object]] = {}
+    bash_results: list[dict[str, object]] = []
     malformed = 0
     for line in records.splitlines():
         try:
@@ -1107,7 +1123,48 @@ def parse_stream(records: bytes) -> dict[str, object]:
             retry_events.append(record)
         elif record.get("type") == "result":
             result = record
-    return {"init": init, "result": result, "retry_events": retry_events, "malformed_records": malformed}
+        message = record.get("message")
+        content = message.get("content", []) if isinstance(message, dict) else []
+        if not isinstance(content, list):
+            continue
+        for item in content:
+            if not isinstance(item, dict):
+                continue
+            if item.get("type") == "tool_use" and item.get("name") == "Bash":
+                tool_input = item.get("input")
+                tool_id = item.get("id")
+                if isinstance(tool_input, dict) and isinstance(tool_id, str):
+                    bash_calls[tool_id] = {
+                        "command": tool_input.get("command"),
+                        "sandbox_bypass_requested": tool_input.get("dangerouslyDisableSandbox") is True,
+                    }
+            elif item.get("type") == "tool_result" and isinstance(item.get("tool_use_id"), str):
+                call = bash_calls.get(item["tool_use_id"])
+                if call is not None:
+                    bash_results.append({**call, "is_error": item.get("is_error") is True})
+    return {
+        "init": init,
+        "result": result,
+        "retry_events": retry_events,
+        "bash_results": bash_results,
+        "malformed_records": malformed,
+    }
+
+
+def provider_command_canary_failure(parsed: dict[str, object], command: tuple[str, ...]) -> str | None:
+    expected = shlex.join(list(command))
+    results = [
+        item
+        for item in parsed.get("bash_results", [])
+        if isinstance(item, dict) and item.get("command") == expected
+    ]
+    if not results:
+        return "missing_provider_command_canary"
+    if any(item.get("sandbox_bypass_requested") for item in results):
+        return "provider_command_canary_requested_sandbox_bypass"
+    if not any(item.get("is_error") is False for item in results):
+        return "provider_command_canary_failed"
+    return None
 
 
 def init_capability_failure(
@@ -1147,9 +1204,18 @@ def init_capability_failure(
             requested_model = model_arguments[index + 1]
         elif argument.startswith("--model="):
             requested_model = argument.split("=", 1)[1]
-    if requested_model and requested_model.lower() in {"opus", "sonnet", "haiku"}:
+    if requested_model:
         effective_model = init.get("model")
-        if not isinstance(effective_model, str) or requested_model.lower() not in effective_model.lower():
+        aliases = {"opus", "sonnet", "haiku"}
+        matches = (
+            isinstance(effective_model, str)
+            and (
+                requested_model.lower() in effective_model.lower()
+                if requested_model.lower() in aliases
+                else requested_model == effective_model
+            )
+        )
+        if not matches:
             return "effective_model_mismatch"
     return None
 
@@ -1406,8 +1472,42 @@ def run_governed_review(
                     if key in external_state:
                         live_state[key] = external_state[key]
                 replace_live_state(live_state_path, live_state)
-            stdout_collector.thread.join(timeout=2)
-            stderr_collector.thread.join(timeout=2)
+            live_state["direct_process_exit_code"] = process.returncode
+            while process_group_exists(pgid):
+                live_state["state"] = "awaiting_process_group_terminal"
+                live_state["process_group_terminal"] = False
+                if time.monotonic() >= next_soft:
+                    live_state["soft_liveness_threshold_crossed"] = True
+                    live_state["soft_liveness_observation"] = (
+                        "direct_process_exited; process_group_still_live; continuing_same_attempt"
+                    )
+                    next_soft = time.monotonic() + config.soft_liveness_threshold
+                live_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
+                live_changes = snapshot_delta(attempt_snapshot, live_snapshot)
+                emergency_conditions = config.body["cancellation_policy"].get("emergency_stop_conditions", [])
+                if live_changes and "unauthorized_mutation" in emergency_conditions and not emergency_signal_sent:
+                    live_state.update(
+                        {
+                            "state": "emergency_stop_in_progress",
+                            "emergency_condition": "unauthorized_mutation",
+                            "emergency_changed_paths": live_changes,
+                            "graceful_signal": "SIGTERM",
+                        }
+                    )
+                    try:
+                        os.killpg(pgid, signal.SIGTERM)
+                        live_state["graceful_signal_delivery"] = "sent"
+                    except OSError as error:
+                        live_state["graceful_signal_delivery"] = "not_delivered"
+                        live_state["graceful_signal_error"] = bounded_redacted(str(error))
+                    emergency_signal_sent = True
+                replace_live_state(live_state_path, live_state)
+                time.sleep(config.observation_interval)
+            live_state["process_group_terminal"] = True
+            live_state["state"] = "collecting_terminal_stream"
+            replace_live_state(live_state_path, live_state)
+            stdout_collector.thread.join()
+            stderr_collector.thread.join()
             stdout = stdout_collector.bytes()
             stderr = stderr_collector.bytes()
             exclusive_write(output_path, stdout)
@@ -1417,6 +1517,7 @@ def run_governed_review(
                 expected_cwd=attempt_scratch.path,
                 model_arguments=model_arguments,
             )
+            canary_failure = provider_command_canary_failure(parsed, config.allowed_commands[0])
             classification, retryable = retry_classification(parsed, process.returncode)
             auth_failure = classify_failure(
                 stderr.decode("utf-8", errors="replace"),
@@ -1428,6 +1529,9 @@ def run_governed_review(
                 retryable = False
             if capability_failure or capability_signal_sent:
                 classification = capability_failure or live_capability_failure or "startup_capability_error"
+                retryable = False
+            if canary_failure:
+                classification = canary_failure
                 retryable = False
             if live_state.get("termination_authority"):
                 classification = "operator_authorized_termination"
@@ -1494,6 +1598,12 @@ def run_governed_review(
                 "stream_evidence": {
                     "in_process_retry_events": len(parsed.get("retry_events", [])),
                     "malformed_records": parsed.get("malformed_records"),
+                    "collectors_complete": stdout_collector.done.is_set() and stderr_collector.done.is_set(),
+                    "provider_command_canary": {
+                        "command": list(config.allowed_commands[0]),
+                        "passed": canary_failure is None,
+                        "failure_classification": canary_failure,
+                    },
                 },
                 "lifecycle": {
                     key: live_state[key]
@@ -1505,6 +1615,7 @@ def run_governed_review(
                         "termination_authority",
                         "graceful_signal",
                         "forced_signal",
+                        "process_group_terminal",
                     )
                     if key in live_state
                 },

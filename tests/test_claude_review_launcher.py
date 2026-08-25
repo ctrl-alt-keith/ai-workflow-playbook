@@ -449,8 +449,15 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "candidate = pathlib.Path(os.environ['FAKE_CANDIDATE'])\n"
             "package = pathlib.Path(os.environ['FAKE_PACKAGE'])\n"
             "tools = ['Bash','Glob','Grep'] if scenario == 'tool_mismatch' else ['Bash','Glob','Grep','Read']\n"
+            "model = 'wrong-exact-model' if scenario == 'model_mismatch' else os.environ.get('FAKE_EFFECTIVE_MODEL', 'fake-opus')\n"
             "cwd = str(candidate) if scenario == 'cwd_mismatch' else os.getcwd()\n"
-            "print(json.dumps({'type':'system','subtype':'init','session_id':f's{attempt}','model':'fake-opus','tools':tools,'mcp_servers':[],'permissionMode':'dontAsk','plugins':[],'skills':[],'slash_commands':[],'cwd':cwd} ), flush=True)\n"
+            "print(json.dumps({'type':'system','subtype':'init','session_id':f's{attempt}','model':model,'tools':tools,'mcp_servers':[],'permissionMode':'dontAsk','plugins':[],'skills':[],'slash_commands':[],'cwd':cwd} ), flush=True)\n"
+            "canary_id = f'canary-{attempt}'\n"
+            "canary_command = f'git -C {candidate} status --porcelain=v2 --untracked-files=all'\n"
+            "canary_input = {'command': canary_command}\n"
+            "if scenario == 'canary_bypass': canary_input['dangerouslyDisableSandbox'] = True\n"
+            "print(json.dumps({'type':'assistant','message':{'content':[{'type':'tool_use','id':canary_id,'name':'Bash','input':canary_input}]}}), flush=True)\n"
+            "print(json.dumps({'type':'user','message':{'content':[{'type':'tool_result','tool_use_id':canary_id,'content':'canary','is_error':scenario == 'dead_command_grant'}]}}), flush=True)\n"
             "if scenario == 'tool_mismatch': time.sleep(0.08)\n"
             "if scenario == 'cwd_mismatch': time.sleep(0.08)\n"
             "if scenario == 'provider_bootstrap': (pathlib.Path.cwd() / '.claude' / '.cc-writes').mkdir(parents=True)\n"
@@ -463,6 +470,11 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "if scenario == 'escaped_output': (package / 'escaped-review.txt').write_text('escaped')\n"
             "if scenario == 'unsafe_scratch': (pathlib.Path(os.environ['TMPDIR']) / 'escape').symlink_to(candidate)\n"
             "if scenario == 'silent': time.sleep(0.08)\n"
+            "if scenario == 'transient_with_lingering_child' and attempt == 1:\n"
+            "    marker = os.environ['FAKE_LINGER_MARKER']\n"
+            "    subprocess.Popen([sys.executable, '-c', f\"import pathlib,time; time.sleep(0.15); pathlib.Path({marker!r}).write_text('terminal')\"])\n"
+            "if scenario == 'transient_with_lingering_child' and attempt == 2:\n"
+            "    assert pathlib.Path(os.environ['FAKE_LINGER_MARKER']).read_text() == 'terminal'\n"
             "if scenario == 'ignore_term':\n"
             "    signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
             "    time.sleep(10)\n"
@@ -470,7 +482,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':'server_error'}), flush=True)\n"
             "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}'}), flush=True)\n"
             "    time.sleep(10)\n"
-            "if scenario in {'transient_once','transient_always'} and (scenario == 'transient_always' or attempt == 1):\n"
+            "if scenario in {'transient_once','transient_always','transient_with_lingering_child'} and (scenario == 'transient_always' or attempt == 1):\n"
             "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':'server_error'}), flush=True)\n"
             "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}'}), flush=True)\n"
             "    raise SystemExit(1)\n"
@@ -544,11 +556,12 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 "FAKE_PACKAGE": str(self.package),
                 "CLAUDE_REVIEW_TEST_FIXTURE": "1",
                 "CLAUDE_REVIEW_TEST_SCRATCH_PARENT": str(self.root),
+                "FAKE_LINGER_MARKER": str(self.root / "lingering-child-terminal"),
             }
         )
         return environment
 
-    def run_governed(self, scenario="success", *, body=None):
+    def run_governed(self, scenario="success", *, body=None, model="opus"):
         config = self.write_config(body)
         diagnostics = self.evidence / "overall.json"
         if diagnostics.exists() or diagnostics.is_symlink():
@@ -575,7 +588,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 str(config),
                 "--",
                 "--model",
-                "opus",
+                model,
                 "--effort",
                 "high",
             ],
@@ -632,6 +645,24 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertFalse((self.package / ".claude").exists())
         self.assertFalse(Path(receipt["runtime"]["provider_runtime_cwd"]).exists())
 
+    def test_dead_or_bypass_command_canary_fails_closed(self):
+        for scenario, expected in (
+            ("dead_command_grant", "provider_command_canary_failed"),
+            ("canary_bypass", "provider_command_canary_requested_sandbox_bypass"),
+        ):
+            with self.subTest(scenario=scenario):
+                completed, diagnostic = self.run_governed(scenario)
+                self.assertEqual(completed.returncode, 70)
+                self.assertEqual(diagnostic["failure_classification"], expected)
+                self.assertFalse(self.receipts()[0]["stream_evidence"]["provider_command_canary"]["passed"])
+
+    def test_exact_model_selector_is_enforced(self):
+        exact, _ = self.run_governed(model="fake-opus")
+        self.assertEqual(exact.returncode, 0)
+        mismatch, diagnostic = self.run_governed("model_mismatch", model="fake-opus")
+        self.assertEqual(mismatch.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "effective_model_mismatch")
+
     def test_safe_environment_disables_claude_instruction_and_auto_memory_loading(self):
         import importlib.machinery
         import importlib.util
@@ -646,6 +677,16 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         environment = module.safe_command_environment(os.environ.copy(), scratch)
         self.assertEqual(environment["CLAUDE_CODE_DISABLE_AUTO_MEMORY"], "1")
         self.assertEqual(environment["CLAUDE_CODE_DISABLE_CLAUDE_MDS"], "1")
+
+        config = module.load_governed_config(self.write_config())
+        arguments, system_prompt = module.governed_claude_arguments(
+            config,
+            ["--model", "opus", "--effort", "high"],
+        )
+        settings = json.loads(arguments[arguments.index("--settings") + 1])
+        self.assertNotIn("sandbox", settings)
+        self.assertIn("Before substantive analysis", system_prompt)
+        self.assertIn(shlex.join(self.config_body()["allowed_commands"][0]), system_prompt)
 
     def test_effective_runtime_cwd_mismatch_stops_the_live_attempt(self):
         completed, diagnostic = self.run_governed("cwd_mismatch")
@@ -762,6 +803,15 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(len(set(scratch_paths)), 2)
         self.assertTrue(all(receipt["attempt_scratch"]["cleanup"]["passed"] for receipt in receipts))
         self.assertTrue(all(not Path(path).exists() for path in scratch_paths))
+
+    def test_lingering_process_group_blocks_retry_until_terminal(self):
+        completed, diagnostic = self.run_governed("transient_with_lingering_child")
+        self.assertEqual(completed.returncode, 0)
+        self.assertEqual(len(diagnostic["attempts"]), 2)
+        receipts = self.receipts()
+        self.assertTrue(all(receipt["lifecycle"]["process_group_terminal"] for receipt in receipts))
+        self.assertTrue(all(receipt["stream_evidence"]["collectors_complete"] for receipt in receipts))
+        self.assertEqual((self.root / "lingering-child-terminal").read_text(), "terminal")
 
     def test_retry_exhaustion_stops_at_three_and_auth_stops_at_one(self):
         exhausted, exhausted_diagnostic = self.run_governed("transient_always")
@@ -882,6 +932,29 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(json.loads(allowed.stdout)["hookSpecificOutput"]["permissionDecision"], "allow")
+
+        bypass_input = json.dumps(
+            {
+                "tool_name": "Bash",
+                "tool_input": {
+                    "command": shlex.join(self.config_body()["allowed_commands"][0]),
+                    "dangerouslyDisableSandbox": True,
+                },
+            }
+        )
+        bypass_denied = subprocess.run(
+            command,
+            input=bypass_input,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=self.environment("success"),
+            check=False,
+        )
+        self.assertEqual(
+            json.loads(bypass_denied.stdout)["hookSpecificOutput"]["permissionDecision"],
+            "deny",
+        )
 
         changed = self.config_body(max_attempts=2)
         config.write_text(json.dumps(changed), encoding="utf-8")

@@ -102,9 +102,11 @@ The CLI controls have different effects:
 - `--strict-mcp-config` restricts MCP configuration supplied for the launch;
   use it with an empty declared MCP config when the review forbids connectors.
 - `PreToolUse` hooks can block a tool call before execution, while sandbox
-  filesystem controls can deny writes. Settings and hooks can merge from
+  filesystem controls can deny writes. A nested host sandbox can also make the
+  provider sandbox unavailable. Settings and hooks can merge from
   higher-precedence managed sources, so neither control alone proves the
-  effective posture.
+  effective posture; never request or permit `dangerouslyDisableSandbox` as a
+  workaround.
 
 The repository [`claude-review`](../../scripts/claude-review) launcher composes
 these controls for governed review. A versioned JSON review config binds the
@@ -120,7 +122,10 @@ permission, MCP, settings, hook, output, and persistence flags.
 
 The generated `PreToolUse` hook permits `Read`, `Grep`, and `Glob`, and permits
 `Bash` only when its command text exactly equals the shell rendering of one
-configured argv vector. The controller independently executes each configured
+configured argv vector and the tool input does not request sandbox bypass. The
+launcher does not force-enable Claude's provider sandbox because bounded review
+under a nested host sandbox showed that it can make every granted Bash command
+unusable. Instead, the controller independently executes each configured
 command before review under a safe environment that disables system Git
 and user Git configuration, repository hooks and filesystem monitors, external
 diffs, optional Git locks, pagers, Python bytecode writes, Claude instruction
@@ -132,6 +137,13 @@ It rejects
 non-observational Git operations and commands whose result could invoke shell,
 text-conversion, external-diff, or interpreter side effects.
 
+The first configured exact command is also an in-provider capability canary.
+The system prompt requires it before substantive analysis, and the controller
+accepts reviewer output only when the structured stream contains its successful
+tool result without a sandbox-bypass request. A missing, failed, or bypassed
+canary is reviewer infrastructure failure even if the provider returns a
+nominally successful result.
+
 Use `--output-format stream-json --verbose` initialization as effective runtime
 evidence. The first `system/init` record must report exactly `Bash`, `Glob`,
 `Grep`, and `Read`; no MCP servers, plugins, skills, slash commands, or
@@ -139,8 +151,8 @@ capability-startup error; `dontAsk` permission mode; the requested model family;
 and the exact attempt-scratch runtime directory. Stop the process on a mismatch
 and reject any eventual output. The launcher still
 performs whole-source and Git-index no-delta checks because provider flags,
-hooks, sandbox controls, and initialization metadata are defense in depth, not
-a proof that no effect occurred.
+hooks, command-canary evidence, and initialization metadata are defense in
+depth, not a proof that no effect occurred.
 
 Anthropic documents `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` and
 `CLAUDE_CODE_DISABLE_CLAUDE_MDS=1` in its
@@ -153,8 +165,11 @@ Claude's structured `system/api_retry` event is an in-process provider retry
 inside the same attempt. Only a terminal `overloaded` or `server_error` result
 may qualify for the launcher's bounded fresh exact-input repeat. Rate limiting,
 authentication, billing, capability, access, command, mutation, cancellation,
-and unknown errors stop without an outer retry. The launcher records and awaits
-the exact process group as required by the shared
+and unknown errors stop without an outer retry. After the direct provider
+process exits, the launcher keeps awaiting the same process group until it is
+terminal, then waits for both output collectors to reach end-of-stream before
+freezing the stream artifact or considering a retry. The launcher records the
+exact process group as required by the shared
 [`live-process lifecycle`](../orchestration-and-parallelism.md#live-process-lifecycle).
 Do not infer a portable SIGTERM result or exit-code mapping from Claude Code;
 record the observed local process outcome.
