@@ -719,8 +719,51 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         body["review_id"] = "../../escaped-review"
         with self.assertRaisesRegex(ValueError, "path-safe"):
             module.load_governed_config(self.write_config(body))
-        with self.assertRaisesRegex(ValueError, "requires a value"):
-            module.preflight_arguments(["--model", "--effort", "high"])
+        for arguments in (
+            ["--model"],
+            ["--model", ""],
+            ["--model="],
+            ["--model", "--effort", "high"],
+        ):
+            with self.subTest(arguments=arguments), self.assertRaisesRegex(ValueError, "requires"):
+                module.preflight_arguments(arguments)
+
+    def test_pipe_collector_distinguishes_eof_from_reader_failure(self):
+        import importlib.machinery
+        import importlib.util
+
+        loader = importlib.machinery.SourceFileLoader("claude_review_collector", str(LAUNCHER))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[loader.name] = module
+        loader.exec_module(module)
+
+        class BrokenStream:
+            def readline(self):
+                raise OSError("fixture read failure")
+
+        collector = module.PipeCollector(BrokenStream())
+        collector.thread.join(timeout=1)
+        self.assertTrue(collector.done.is_set())
+        self.assertFalse(collector.eof.is_set())
+        self.assertEqual(collector.error, "fixture read failure")
+
+    def test_automated_stop_state_is_not_downgraded_by_stale_control_state(self):
+        import importlib.machinery
+        import importlib.util
+
+        loader = importlib.machinery.SourceFileLoader("claude_review_control_merge", str(LAUNCHER))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[loader.name] = module
+        loader.exec_module(module)
+        live = self.root / "fixture-live-state.json"
+        control = self.root / "fixture-control-state.json"
+        live.write_text(json.dumps({"state": "emergency_stop_in_progress"}), encoding="utf-8")
+        control.write_text(json.dumps({"state": "running", "termination_disposition": "declined_keep_waiting"}), encoding="utf-8")
+        merged = module.merged_external_state(live, {"state": "emergency_stop_in_progress"})
+        self.assertEqual(merged["state"], "emergency_stop_in_progress")
+        self.assertEqual(merged["termination_disposition"], "declined_keep_waiting")
 
     def test_effective_runtime_cwd_mismatch_stops_the_live_attempt(self):
         completed, diagnostic = self.run_governed("cwd_mismatch")
@@ -1295,6 +1338,16 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         ):
             with self.subTest(changed=changed):
                 self.assertFalse(validate(**{**accepted, **changed}))
+
+        private = {
+            **accepted,
+            "projection": "darwin_getconf_user_temp_dir",
+            "parent_uid": 501,
+            "parent_mode": 0o700,
+        }
+        self.assertTrue(validate(**private))
+        self.assertFalse(validate(**{**private, "parent_uid": 502}))
+        self.assertFalse(validate(**{**private, "parent_mode": 0o750}))
 
 
 if __name__ == "__main__":

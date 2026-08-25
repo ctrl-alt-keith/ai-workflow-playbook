@@ -73,6 +73,15 @@ LIVE_ATTEMPT_STATES = {
     "emergency_stop_in_progress",
     "termination_authorized",
 }
+# These are intentionally absent: force_termination_authorized has committed
+# terminal intent, and collecting_terminal_stream begins only after the exact
+# process group is terminal. Neither state can safely accept new authority.
+AUTOMATED_STOP_STATES = {"capability_stop_in_progress", "emergency_stop_in_progress"}
+NONTERMINATING_CONTROL_STATES = {
+    "running",
+    "awaiting_operator_disposition",
+    "awaiting_process_group_terminal",
+}
 
 
 def qualified_attempt_scratch_parent_shape(
@@ -433,8 +442,8 @@ def preflight_arguments(arguments: list[str]) -> list[str]:
             if index + 1 >= len(arguments):
                 raise ValueError(f"{argument} requires a value")
             value = arguments[index + 1]
-            if value.startswith("-"):
-                raise ValueError(f"{argument} requires a value, not another option")
+            if not value or value.startswith("-"):
+                raise ValueError(f"{argument} requires a non-empty value, not another option")
             selected.extend((argument, value))
             index += 2
         elif any(argument.startswith(f"{option}=") for option in permitted):
@@ -518,7 +527,13 @@ def merged_external_state(live_state_path: Path, fallback: dict[str, Any]) -> di
         except (OSError, json.JSONDecodeError):
             continue
         if isinstance(record, dict):
-            merged.update(record)
+            applicable = record.copy()
+            if (
+                merged.get("state") in AUTOMATED_STOP_STATES
+                and applicable.get("state") in NONTERMINATING_CONTROL_STATES
+            ):
+                applicable.pop("state")
+            merged.update(applicable)
     return merged
 
 
@@ -1093,6 +1108,8 @@ class PipeCollector:
         self.stream = stream
         self.lines: list[bytes] = []
         self.done = threading.Event()
+        self.eof = threading.Event()
+        self.error: str | None = None
         self.thread = threading.Thread(target=self._read, daemon=True)
         self.thread.start()
 
@@ -1100,6 +1117,9 @@ class PipeCollector:
         try:
             for line in iter(self.stream.readline, b""):
                 self.lines.append(line)
+            self.eof.set()
+        except Exception as error:
+            self.error = bounded_redacted(str(error))
         finally:
             self.done.set()
 
@@ -1352,7 +1372,6 @@ def terminate_recorded_group(live_state_path: Path, authority: str, *, force_aut
                 return 0
             raise RuntimeError("live-state mechanics disappeared while the exact process identity remained live")
         return 75
-    os.killpg(pgid, signal.SIGKILL)
     state.update({"state": "force_termination_authorized", "forced_signal": "SIGKILL"})
     try:
         replace_live_state(live_state_path, state)
@@ -1360,6 +1379,7 @@ def terminate_recorded_group(live_state_path: Path, authority: str, *, force_aut
     except FileNotFoundError:
         if process_start_identity(pid) is not None:
             raise RuntimeError("live-state mechanics disappeared while the exact process identity remained live")
+    os.killpg(pgid, signal.SIGKILL)
     return 0
 
 
@@ -1697,8 +1717,12 @@ def run_governed_review(
                     "in_process_retry_events": len(parsed.get("retry_events", [])),
                     "malformed_records": parsed.get("malformed_records"),
                     "collectors_reached_eof_before_stream_freeze": (
-                        stdout_collector.done.is_set() and stderr_collector.done.is_set()
+                        stdout_collector.eof.is_set() and stderr_collector.eof.is_set()
                     ),
+                    "collector_read_errors": {
+                        "stdout": stdout_collector.error,
+                        "stderr": stderr_collector.error,
+                    },
                     "provider_command_canary": {
                         "command": list(config.allowed_commands[0]),
                         "passed": canary_failure is None,
