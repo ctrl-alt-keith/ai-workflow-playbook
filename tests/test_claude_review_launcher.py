@@ -446,6 +446,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "attempt = int(count.read_text()) + 1 if count.exists() else 1\n"
             "count.write_text(str(attempt))\n"
             "scenario = os.environ.get('FAKE_SCENARIO', 'success')\n"
+            "if scenario == 'ignore_term': signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
             "candidate = pathlib.Path(os.environ['FAKE_CANDIDATE'])\n"
             "package = pathlib.Path(os.environ['FAKE_PACKAGE'])\n"
             "tools = ['Bash','Glob','Grep'] if scenario == 'tool_mismatch' else ['Bash','Glob','Grep','Read']\n"
@@ -466,6 +467,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "if scenario == 'mutate_then_wait':\n"
             "    (candidate / 'tracked.txt').write_text('changed\\n')\n"
             "    time.sleep(10)\n"
+            "if scenario == 'mutate_ignore_term':\n"
+            "    signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
+            "    (candidate / 'tracked.txt').write_text('changed\\n')\n"
+            "    time.sleep(10)\n"
             "if scenario == 'new_ignored': (candidate / 'generated.cache').write_text('cache')\n"
             "if scenario == 'remove_untracked': (candidate / 'preexisting.txt').unlink()\n"
             "if scenario == 'index_mutation':\n"
@@ -482,7 +487,6 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "if scenario == 'linger_after_direct_exit':\n"
             "    subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(10)'])\n"
             "if scenario == 'ignore_term':\n"
-            "    signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
             "    time.sleep(10)\n"
             "if scenario == 'hang_after_transient':\n"
             "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':'server_error'}), flush=True)\n"
@@ -701,6 +705,23 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertIn("Before substantive analysis", system_prompt)
         self.assertIn(shlex.join(self.config_body()["allowed_commands"][0]), system_prompt)
 
+    def test_review_id_and_preflight_selector_values_fail_closed(self):
+        import importlib.machinery
+        import importlib.util
+
+        loader = importlib.machinery.SourceFileLoader("claude_review_inputs", str(LAUNCHER))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[loader.name] = module
+        loader.exec_module(module)
+
+        body = self.config_body()
+        body["review_id"] = "../../escaped-review"
+        with self.assertRaisesRegex(ValueError, "path-safe"):
+            module.load_governed_config(self.write_config(body))
+        with self.assertRaisesRegex(ValueError, "requires a value"):
+            module.preflight_arguments(["--model", "--effort", "high"])
+
     def test_effective_runtime_cwd_mismatch_stops_the_live_attempt(self):
         completed, diagnostic = self.run_governed("cwd_mismatch")
         self.assertEqual(completed.returncode, 70)
@@ -806,6 +827,43 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(lifecycle["graceful_signal"], "SIGTERM")
         self.assertEqual(lifecycle["graceful_signal_delivery"], "sent")
 
+    def test_emergency_stop_state_is_persisted_and_remains_operator_addressable(self):
+        config = self.write_config()
+        diagnostics = self.evidence / "overall.json"
+        process = subprocess.Popen(
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=self.environment("mutate_ignore_term"),
+        )
+        self.addCleanup(lambda: process.poll() is None and process.kill())
+        assert process.stdin is not None
+        process.stdin.write("prompt\n")
+        process.stdin.close()
+        deadline = time.monotonic() + 5
+        live = None
+        while time.monotonic() < deadline:
+            matches = list(self.root.glob("claude-review-controller-*/*-live-state.json"))
+            if matches and json.loads(matches[0].read_text()).get("state") == "emergency_stop_in_progress":
+                live = matches[0]
+                break
+            time.sleep(0.01)
+        self.assertIsNotNone(live)
+        terminated = subprocess.run(
+            [str(LAUNCHER), "--terminate", str(live), "--termination-authority", "fixture emergency force authority", "--grace-seconds", "0.02", "--force-authorized"],
+            check=False,
+        )
+        self.assertEqual(terminated.returncode, 0)
+        process.wait(timeout=5)
+        assert process.stdout is not None and process.stderr is not None
+        process.stdout.close()
+        process.stderr.close()
+        receipt = self.receipts()[0]
+        self.assertEqual(receipt["lifecycle"]["emergency_condition"], "unauthorized_mutation")
+        self.assertEqual(receipt["lifecycle"]["forced_signal"], "SIGKILL")
+
     def test_removal_of_preexisting_untracked_content_is_detected(self):
         (self.candidate / "preexisting.txt").write_text("untracked\n", encoding="utf-8")
         completed, diagnostic = self.run_governed("remove_untracked")
@@ -832,7 +890,12 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(len(diagnostic["attempts"]), 2)
         receipts = self.receipts()
         self.assertTrue(all(receipt["lifecycle"]["process_group_terminal"] for receipt in receipts))
-        self.assertTrue(all(receipt["stream_evidence"]["collectors_complete"] for receipt in receipts))
+        self.assertTrue(
+            all(
+                receipt["stream_evidence"]["collectors_reached_eof_before_stream_freeze"]
+                for receipt in receipts
+            )
+        )
         self.assertEqual((self.root / "lingering-child-terminal").read_text(), "terminal")
 
     def test_retry_exhaustion_stops_at_three_and_auth_stops_at_one(self):
@@ -1204,6 +1267,34 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(scratch.path.stat().st_mode & 0o777, 0o700)
         scratch.cleanup()
         self.assertFalse(scratch.path.exists())
+
+    def test_linux_attempt_scratch_parent_projection_is_host_independent(self):
+        import importlib.machinery
+        import importlib.util
+
+        loader = importlib.machinery.SourceFileLoader("claude_review_linux_shape", str(LAUNCHER))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[loader.name] = module
+        loader.exec_module(module)
+        validate = module.qualified_attempt_scratch_parent_shape
+        accepted = {
+            "projection": "linux_fhs_tmp",
+            "parent_uid": 0,
+            "parent_mode": 0o1777,
+            "parent_is_directory": True,
+            "parent_is_symlink": False,
+            "effective_uid": 501,
+        }
+        self.assertTrue(validate(**accepted))
+        for changed in (
+            {"parent_uid": 501},
+            {"parent_mode": 0o777},
+            {"parent_is_directory": False},
+            {"parent_is_symlink": True},
+        ):
+            with self.subTest(changed=changed):
+                self.assertFalse(validate(**{**accepted, **changed}))
 
 
 if __name__ == "__main__":

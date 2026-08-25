@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import pwd
+import re
 import shlex
 import shutil
 import signal
@@ -64,6 +65,32 @@ OAUTH_REAUTHENTICATION_MESSAGE = (
     "review state remain unchanged."
 )
 
+LIVE_ATTEMPT_STATES = {
+    "running",
+    "awaiting_operator_disposition",
+    "awaiting_process_group_terminal",
+    "capability_stop_in_progress",
+    "emergency_stop_in_progress",
+    "termination_authorized",
+}
+
+
+def qualified_attempt_scratch_parent_shape(
+    *,
+    projection: str,
+    parent_uid: int,
+    parent_mode: int,
+    parent_is_directory: bool,
+    parent_is_symlink: bool,
+    effective_uid: int,
+) -> bool:
+    """Validate the security-relevant parent shape for a platform projection."""
+    if not parent_is_directory or parent_is_symlink:
+        return False
+    if projection == "linux_fhs_tmp":
+        return parent_uid == 0 and parent_mode == 0o1777
+    return parent_uid == effective_uid and not parent_mode & 0o077
+
 
 @dataclass
 class AttemptScratch:
@@ -105,21 +132,16 @@ class AttemptScratch:
         else:
             raise RuntimeError("no qualified attempt-scratch platform projection is available")
         parent_metadata = parent.lstat()
-        shared_linux_parent = (
-            projection == "linux_fhs_tmp"
-            and parent_metadata.st_uid == 0
-            and stat.S_IMODE(parent_metadata.st_mode) == 0o1777
-        )
-        private_parent = (
-            projection != "linux_fhs_tmp"
-            and parent_metadata.st_uid == os.geteuid()
-            and not stat.S_IMODE(parent_metadata.st_mode) & 0o077
-        )
         if (
             not parent.is_absolute()
-            or not stat.S_ISDIR(parent_metadata.st_mode)
-            or parent.is_symlink()
-            or not (shared_linux_parent or private_parent)
+            or not qualified_attempt_scratch_parent_shape(
+                projection=projection,
+                parent_uid=parent_metadata.st_uid,
+                parent_mode=stat.S_IMODE(parent_metadata.st_mode),
+                parent_is_directory=stat.S_ISDIR(parent_metadata.st_mode),
+                parent_is_symlink=parent.is_symlink(),
+                effective_uid=os.geteuid(),
+            )
         ):
             raise RuntimeError("attempt-scratch parent failed ownership, mode, or directory validation")
         created = Path(tempfile.mkdtemp(prefix=prefix, dir=parent))
@@ -407,10 +429,18 @@ def preflight_arguments(arguments: list[str]) -> list[str]:
     index = 0
     while index < len(arguments):
         argument = arguments[index]
-        if argument in permitted and index + 1 < len(arguments):
-            selected.extend((argument, arguments[index + 1]))
+        if argument in permitted:
+            if index + 1 >= len(arguments):
+                raise ValueError(f"{argument} requires a value")
+            value = arguments[index + 1]
+            if value.startswith("-"):
+                raise ValueError(f"{argument} requires a value, not another option")
+            selected.extend((argument, value))
             index += 2
         elif any(argument.startswith(f"{option}=") for option in permitted):
+            value = argument.partition("=")[2]
+            if not value or value.startswith("-"):
+                raise ValueError(f"{argument.partition('=')[0]} requires a valid value")
             selected.append(argument)
             index += 1
         else:
@@ -760,6 +790,9 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
     for key in required_strings:
         if not isinstance(body.get(key), str) or not body[key]:
             raise ValueError(f"review config requires non-empty {key}")
+    review_id = body["review_id"]
+    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", review_id) is None or ".." in review_id:
+        raise ValueError("review_id must be a path-safe identifier")
     launch_root = Path(body["launch_root"]).resolve(strict=True)
     candidate = Path(body["candidate_worktree"]).resolve(strict=True)
     candidate_head = body["candidate_head"].lower()
@@ -1278,7 +1311,8 @@ def retry_classification(parsed: dict[str, object], exit_code: int) -> tuple[str
 
 def terminate_recorded_group(live_state_path: Path, authority: str, *, force_authorized: bool, grace_seconds: float | None) -> int:
     state = json.loads(live_state_path.read_text(encoding="utf-8"))
-    if state.get("state") not in {"running", "awaiting_operator_disposition", "awaiting_process_group_terminal"}:
+    state = merged_external_state(live_state_path, state)
+    if state.get("state") not in LIVE_ATTEMPT_STATES:
         raise RuntimeError("recorded attempt is not live")
     pid = state.get("pid")
     pgid = state.get("process_group_id")
@@ -1331,7 +1365,8 @@ def terminate_recorded_group(live_state_path: Path, authority: str, *, force_aut
 
 def request_or_decline_termination(live_state_path: Path, *, decline: bool) -> int:
     state = json.loads(live_state_path.read_text(encoding="utf-8"))
-    if state.get("state") not in {"running", "awaiting_operator_disposition", "awaiting_process_group_terminal"}:
+    state = merged_external_state(live_state_path, state)
+    if state.get("state") not in LIVE_ATTEMPT_STATES:
         raise RuntimeError("recorded attempt is not live")
     if decline:
         resumed_state = "awaiting_process_group_terminal" if state.get("direct_process_exit_code") is not None else "running"
@@ -1417,6 +1452,8 @@ def run_governed_review(
             attempt_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
             output_path, receipt_path = config.attempt_artifacts[attempt_number - 1]
             live_state_path = scratch / f"{attempt_id}-live-state.json"
+            if not contained(live_state_path, scratch):
+                raise RuntimeError("live-state path escaped controller scratch")
             started = time.time()
             process = subprocess.Popen(
                 command,
@@ -1458,6 +1495,10 @@ def run_governed_review(
             live_capability_failure: str | None = None
             while process.poll() is None:
                 time.sleep(config.observation_interval)
+                external_state = merged_external_state(live_state_path, live_state)
+                for key in ("state", "termination_disposition", "termination_authority", "graceful_signal", "forced_signal", "force_escalation"):
+                    if key in external_state:
+                        live_state[key] = external_state[key]
                 output_exists = bool(stdout_collector.lines or stderr_collector.lines)
                 if output_exists:
                     live_state["partial_output_exists"] = True
@@ -1513,10 +1554,6 @@ def run_governed_review(
                         live_state["graceful_signal_delivery"] = "not_delivered"
                         live_state["graceful_signal_error"] = bounded_redacted(str(error))
                     emergency_signal_sent = True
-                external_state = merged_external_state(live_state_path, live_state)
-                for key in ("state", "termination_disposition", "termination_authority", "graceful_signal", "forced_signal", "force_escalation"):
-                    if key in external_state:
-                        live_state[key] = external_state[key]
                 replace_live_state(live_state_path, live_state)
             live_state["direct_process_exit_code"] = process.returncode
             while process_group_exists(pgid):
@@ -1524,7 +1561,13 @@ def run_governed_review(
                 for key in ("state", "termination_disposition", "termination_authority", "graceful_signal", "forced_signal", "force_escalation"):
                     if key in external_state:
                         live_state[key] = external_state[key]
-                if live_state.get("state") not in {"awaiting_operator_disposition", "termination_authorized", "force_termination_authorized"}:
+                if live_state.get("state") not in {
+                    "awaiting_operator_disposition",
+                    "termination_authorized",
+                    "force_termination_authorized",
+                    "capability_stop_in_progress",
+                    "emergency_stop_in_progress",
+                }:
                     live_state["state"] = "awaiting_process_group_terminal"
                 live_state["process_group_terminal"] = False
                 if time.monotonic() >= next_soft:
@@ -1653,7 +1696,9 @@ def run_governed_review(
                 "stream_evidence": {
                     "in_process_retry_events": len(parsed.get("retry_events", [])),
                     "malformed_records": parsed.get("malformed_records"),
-                    "collectors_complete": stdout_collector.done.is_set() and stderr_collector.done.is_set(),
+                    "collectors_reached_eof_before_stream_freeze": (
+                        stdout_collector.done.is_set() and stderr_collector.done.is_set()
+                    ),
                     "provider_command_canary": {
                         "command": list(config.allowed_commands[0]),
                         "passed": canary_failure is None,

@@ -479,7 +479,7 @@ Examples:
 7. Historical `scratch/` references may remain as frozen provenance, but no
    mutable guidance may imply that they are the current disposable default.
 
-The exercised platform projections currently recorded by this Playbook are:
+The qualified platform projections currently implemented by this Playbook are:
 
 - the bounded Darwin precedent from CAK-158/150: resolve with
   `/usr/bin/getconf DARWIN_USER_TEMP_DIR` and require its private directory
@@ -497,7 +497,11 @@ requires it for temporary files and says programs must not assume preservation
 between invocations, while the Linux
 [`mkdtemp(3)` interface](https://man7.org/linux/man-pages/man3/mkdtemp.3.html)
 creates the unique child as `0700`. These projections are
-platform-specific evidence, not a generic environment-variable rule. Windows
+platform-specific designs, not a generic environment-variable rule. The Linux
+parent-shape predicate has deterministic host-independent fixtures for its
+accepted and rejected ownership, mode, object-type, and symlink cases; an
+actual Linux invocation must still pass the same runtime checks before it is
+platform evidence. Windows
 and other mappings remain unqualified until their own qualified platform
 projections exist. Without a qualified mapping, the downstream repository or
 tool contract must select another explicitly authorized design or stop the
