@@ -45,7 +45,7 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
             "all dependency-bearing output has been promoted and exact-verified",
             "required evidence has been preserved",
             "the executor attempts cleanup",
-            "Only the owning executor may dispose of its crash residue",
+            "Only the owning executor, or an operator explicitly authorized",
             "Cleanup is best-effort, not a crash or reboot deletion guarantee",
             "Never silently fall back",
             "Fail closed on unexpected members",
@@ -70,9 +70,10 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
 
     def test_first_normative_use_and_repository_working_state_are_distinct(self):
         full_term = "**Attempt-local disposable scratch**"
-        first_definition = self.readiness_text.index(full_term)
-        self.assertNotIn("Use attempt-local scratch only", self.readiness_text[:first_definition])
-        self.assertIn("Use **attempt-local scratch** after this first use", self.readiness)
+        normalized_text = " ".join(self.readiness_text.casefold().split())
+        first_definition = normalized_text.index(full_term.casefold())
+        self.assertNotIn("attempt-local scratch", normalized_text[:first_definition])
+        self.assertIn("Use **attempt-local scratch** after this definition", self.readiness)
         self.assertIn(".venv", self.readiness)
         self.assertIn("compiler/dependency caches", self.readiness)
         self.assertIn("worktrees, and tool state are not automatically scratch", self.readiness)
@@ -88,6 +89,7 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
         for label in (
             "**Durable state**",
             "**Repository-owned working state**",
+            "**Tool-owned working state**",
             "**Attempt-local disposable scratch**",
             "**Crash residue**",
             "**Legacy workspace scratch**",
@@ -95,7 +97,12 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
             self.assertIn(label, section)
         self.assertIn("workflow-state ownership and lifecycle classification", self.readiness)
         self.assertIn("tool-owned working state under its tool's contract", self.agents)
-        for projection in (self.codex, self.claude, normalized(DOCS / "prompt-contracts.md")):
+        for projection in (
+            self.codex,
+            self.claude,
+            normalized(DOCS / "prompt-contracts.md"),
+            normalized(DOCS / "prompts.md"),
+        ):
             self.assertIn("Revalidate containment and identity", projection)
             self.assertIn("repo-readiness.md", projection)
 

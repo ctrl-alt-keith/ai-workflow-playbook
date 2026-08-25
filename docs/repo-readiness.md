@@ -394,9 +394,9 @@ This does not require a particular storage system or make every temporary file
 durable.
 
 `scratch` is a lifecycle and storage class, not an assumed persistent workspace
-pathname. Bare `scratch` denotes that semantic class, never a global directory.
-Classify bytes by their natural owner and lifecycle, not because they look
-temporary:
+pathname. In this document, bare `scratch` denotes that semantic class, never a
+global directory. Classify bytes by their natural owner and lifecycle, not
+because they look temporary:
 
 - **Durable state** is required for authority, evidence, recovery, replay,
   review, planning, or execution identity. Preserve it under its natural
@@ -411,7 +411,7 @@ temporary:
   scratch.
 - **Attempt-local disposable scratch** is private, short-lived mechanics for
   one material attempt with no required post-attempt role. Use
-  **attempt-local scratch** after this first use. It can hold one-off
+  **attempt-local scratch** after this definition. It can hold one-off
   extraction, command staging, generated runners, transient conversion,
   prompt-retrieval copies, and ephemeral subprocess material when their loss
   cannot impair recovery.
@@ -454,8 +454,9 @@ crash residue, revalidate safe containment and identity. Fail closed on
 unexpected members, ownership or identity change, path escape,
 symlink/reparse-like or special objects, unsafe or unavailable roots, or
 failed revalidation. Never reuse crash residue; when cleanup cannot run, leave
-it in place and report it. Only the owning executor may dispose of its crash
-residue; preserve it when the interruption is under investigation.
+it in place and report it. Only the owning executor, or an operator explicitly
+authorized under that executor's contract, may dispose of its crash residue;
+preserve it when the interruption is under investigation.
 
 Examples:
 
