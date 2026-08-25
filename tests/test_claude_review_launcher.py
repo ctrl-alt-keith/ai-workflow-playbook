@@ -16,6 +16,26 @@ LAUNCHER = ROOT / "scripts" / "claude-review"
 
 
 class ClaudeReviewLauncherTests(unittest.TestCase):
+    def test_review_modes_cannot_be_combined_with_lifecycle_controls(self):
+        for review_mode in (("--auth-preflight",), ("--review-config", "review-config.json")):
+            for control_mode in (
+                ("--permission-hook", "review-config.json"),
+                ("--request-termination", "live-state.json"),
+                ("--decline-termination", "live-state.json"),
+                ("--terminate", "live-state.json"),
+            ):
+                with self.subTest(review_mode=review_mode, control_mode=control_mode):
+                    completed = subprocess.run(
+                        [str(LAUNCHER), *review_mode, *control_mode],
+                        text=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        check=False,
+                    )
+
+                    self.assertEqual(completed.returncode, 2)
+                    self.assertIn("not allowed with argument", completed.stderr)
+
     def run_launcher(
         self,
         fake_body: str,

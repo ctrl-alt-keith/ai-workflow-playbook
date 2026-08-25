@@ -718,7 +718,11 @@ append-only attempt receipts. For substantive review, pass `--review-config`
 with the versioned governed-launch JSON and pass only model and supported effort
 selection after `--`. The launcher owns the Claude tools, permission mode, MCP,
 settings, hook, output, and session-persistence flags; do not append competing
-review flags.
+review flags. Put `--review-config` immediately after `./scripts/claude-review`;
+the stable direct prefix lets a machine-local Codex execution policy grant only
+the governed review mode. Authentication preflight follows the same convention.
+The launcher rejects either mode when combined with permission-hook or lifecycle
+control modes, so an allowed review prefix cannot authorize those controls.
 
 Before an expensive independent review, run the same launcher with
 `--auth-preflight`. It reuses the effective-user environment and executable
@@ -730,7 +734,7 @@ review and does not read repository, candidate, or held-out content.
 For example:
 
 ```text
-scripts/claude-review --auth-preflight -- --model opus --effort high
+./scripts/claude-review --auth-preflight -- --model opus --effort high
 ```
 
 `AUTH_PREFLIGHT_OK` means authentication worked for that process context only;
