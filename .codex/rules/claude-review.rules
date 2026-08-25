@@ -1,0 +1,18 @@
+# Repository-relative launcher bytes are writable during development, so the
+# project layer never auto-allows them outside the sandbox. Production allow
+# rules are rendered in the user layer for one exact installed absolute path.
+prefix_rule(
+    pattern=[
+        "./scripts/claude-review",
+        [
+            "--permission-hook",
+            "--auth-preflight",
+            "--review-config",
+            "--request-termination",
+            "--decline-termination",
+            "--terminate",
+        ],
+    ],
+    decision="prompt",
+    justification="Repository-relative Claude reviewer execution requires explicit approval.",
+)

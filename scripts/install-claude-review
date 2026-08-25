@@ -1,0 +1,257 @@
+#!/usr/bin/env python3
+"""Install one exact reviewed Claude launcher and render its user-layer rule."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import stat
+import subprocess
+import tempfile
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE_LAUNCHER = ROOT / "scripts" / "claude-review"
+RULE_TEMPLATE = ROOT / ".codex" / "rule-templates" / "claude-review.rules"
+
+
+def digest(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
+
+
+def canonical(value: object) -> bytes:
+    return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+
+
+def git(*arguments: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(ROOT), *arguments],
+        check=False,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or "Git source identity check failed")
+    return result.stdout.strip()
+
+
+def exact_executable_identity(selector: Path) -> dict[str, object]:
+    if not selector.is_absolute():
+        raise ValueError("--claude-bin must be an exact absolute path")
+    selector_metadata = selector.lstat()
+    resolved = selector.resolve(strict=True)
+    metadata = resolved.stat()
+    if selector_metadata.st_uid != os.geteuid() or metadata.st_uid != os.geteuid():
+        raise ValueError("Claude selector and target must be owned by the effective user")
+    mode = stat.S_IMODE(metadata.st_mode)
+    if not stat.S_ISREG(metadata.st_mode) or mode & 0o022 or not mode & 0o100:
+        raise ValueError("Claude target must be owner-executable and not group/world-writable")
+    version = subprocess.run(
+        [str(resolved), "--version"],
+        check=False,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        timeout=5,
+    )
+    if version.returncode != 0 or not (version.stdout or version.stderr).strip():
+        raise ValueError("Claude target did not provide an exact version identity")
+    return {
+        "requested_selector": str(selector),
+        "selector_kind": "symlink" if stat.S_ISLNK(selector_metadata.st_mode) else "file",
+        "selector_target": os.readlink(selector) if stat.S_ISLNK(selector_metadata.st_mode) else None,
+        "selector_uid": selector_metadata.st_uid,
+        "selector_mode": oct(stat.S_IMODE(selector_metadata.st_mode)),
+        "resolved_path": str(resolved),
+        "resolved_uid": metadata.st_uid,
+        "resolved_mode": oct(mode),
+        "resolved_device": metadata.st_dev,
+        "resolved_inode": metadata.st_ino,
+        "resolved_size": metadata.st_size,
+        "resolved_sha256": digest(resolved.read_bytes()),
+        "version": (version.stdout or version.stderr).strip()[:1000],
+    }
+
+
+def contained(path: Path, root: Path) -> bool:
+    try:
+        path.resolve(strict=False).relative_to(root.resolve(strict=True))
+    except (OSError, ValueError):
+        return False
+    return True
+
+
+def validate_destination(path: Path, forbidden_roots: list[Path]) -> None:
+    if not path.is_absolute():
+        raise ValueError(f"machine-local destination must be absolute: {path}")
+    if any(contained(path, root) or contained(root, path) for root in forbidden_roots):
+        raise ValueError(f"machine-local destination overlaps a forbidden writable root: {path}")
+    ancestor = path
+    while not ancestor.exists():
+        ancestor = ancestor.parent
+    metadata = ancestor.stat()
+    if metadata.st_uid not in {0, os.geteuid()} or stat.S_IMODE(metadata.st_mode) & 0o022:
+        raise ValueError(f"destination ancestor is not operator-controlled: {ancestor}")
+
+
+def exclusive_or_identical(path: Path, payload: bytes, mode: int) -> str:
+    try:
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
+    except FileExistsError:
+        if path.is_symlink() or path.read_bytes() != payload:
+            raise ValueError(f"existing installed object is not byte-identical: {path}")
+        return "existing_identical"
+    with os.fdopen(descriptor, "wb") as stream:
+        stream.write(payload)
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.chmod(path, mode)
+    return "created"
+
+
+def replace_expected(path: Path, payload: bytes, expected_sha256: str | None) -> dict[str, object]:
+    prior = None
+    if path.exists() or path.is_symlink():
+        if path.is_symlink():
+            raise ValueError("active rule must not be a symbolic link")
+        prior_bytes = path.read_bytes()
+        prior = {"size": len(prior_bytes), "sha256": digest(prior_bytes)}
+        if prior_bytes == payload:
+            return {"result": "existing_identical", "prior": prior}
+        if expected_sha256 is None or prior["sha256"] != expected_sha256:
+            raise ValueError("existing active rule does not match --expected-existing-rule-sha256")
+    elif expected_sha256 is not None:
+        raise ValueError("an expected active rule identity was supplied but no rule exists")
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.chmod(temporary, 0o600)
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+    return {"result": "replaced" if prior else "created", "prior": prior}
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--claude-bin", required=True, type=Path)
+    parser.add_argument(
+        "--install-root",
+        type=Path,
+        default=Path.home() / ".local" / "libexec" / "ai-workflow-playbook" / "claude-review",
+    )
+    parser.add_argument(
+        "--active-rule",
+        type=Path,
+        default=Path.home() / ".codex" / "rules" / "claude-review.rules",
+    )
+    parser.add_argument("--activation-receipt", required=True, type=Path)
+    parser.add_argument("--expected-existing-rule-sha256")
+    parser.add_argument("--forbidden-root", action="append", default=[], type=Path)
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_arguments()
+    args.install_root = args.install_root.resolve(strict=False)
+    args.active_rule = args.active_rule.parent.resolve(strict=False) / args.active_rule.name
+    args.activation_receipt = (
+        args.activation_receipt.parent.resolve(strict=False) / args.activation_receipt.name
+    )
+    if args.activation_receipt.exists() or args.activation_receipt.is_symlink():
+        raise ValueError("activation receipt destination must be absent")
+    status = git("status", "--porcelain=v1", "--untracked-files=all")
+    if status:
+        raise RuntimeError("reviewed source repository must be completely clean before installation")
+    commit = git("rev-parse", "HEAD")
+    source_remote = git("remote", "get-url", "origin")
+    launcher_bytes = SOURCE_LAUNCHER.read_bytes()
+    launcher_sha256 = digest(launcher_bytes)
+    source_rule_sha256 = digest(RULE_TEMPLATE.read_bytes())
+    forbidden = [ROOT, *(root.resolve(strict=True) for root in args.forbidden_root)]
+    validate_destination(args.install_root, forbidden)
+    validate_destination(args.active_rule, forbidden)
+    validate_destination(args.activation_receipt, forbidden)
+    auth_diagnostics_directory = args.activation_receipt.parent
+    auth_diagnostics_directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    auth_diagnostics_metadata = auth_diagnostics_directory.lstat()
+    if (
+        auth_diagnostics_directory.is_symlink()
+        or not stat.S_ISDIR(auth_diagnostics_metadata.st_mode)
+        or auth_diagnostics_metadata.st_uid != os.geteuid()
+        or stat.S_IMODE(auth_diagnostics_metadata.st_mode) & 0o022
+        or auth_diagnostics_directory.resolve(strict=True) != auth_diagnostics_directory
+    ):
+        raise ValueError("auth diagnostics directory is not exact operator-controlled state")
+    claude_identity = exact_executable_identity(args.claude_bin)
+    selector_location = args.claude_bin.parent.resolve(strict=True) / args.claude_bin.name
+    for root in forbidden:
+        if contained(Path(claude_identity["resolved_path"]), root) or contained(selector_location, root):
+            raise ValueError("Claude selector and target must be outside every forbidden writable root")
+    version_directory = args.install_root / f"{commit}-{launcher_sha256[:16]}"
+    version_directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    version_metadata = version_directory.lstat()
+    if (
+        version_directory.is_symlink()
+        or not stat.S_ISDIR(version_metadata.st_mode)
+        or version_metadata.st_uid != os.geteuid()
+        or stat.S_IMODE(version_metadata.st_mode) & 0o022
+    ):
+        raise ValueError("versioned installation directory is not operator-controlled")
+    installed_launcher = version_directory / "claude-review"
+    rendered_rule = RULE_TEMPLATE.read_text(encoding="utf-8").replace(
+        "__CLAUDE_REVIEW_LAUNCHER__", str(installed_launcher)
+    ).encode("utf-8")
+    active_rule_sha256 = digest(rendered_rule)
+    manifest = {
+        "schema_version": 1,
+        "source_repository": str(ROOT),
+        "source_remote": source_remote,
+        "source_commit": commit,
+        "source_launcher_path": str(SOURCE_LAUNCHER),
+        "source_launcher_sha256": launcher_sha256,
+        "source_rule_template_path": str(RULE_TEMPLATE),
+        "source_rule_template_sha256": source_rule_sha256,
+        "installed_launcher_path": str(installed_launcher),
+        "installed_launcher_sha256": launcher_sha256,
+        "active_rule_path": str(args.active_rule),
+        "active_rule_sha256": active_rule_sha256,
+        "claude_selector": str(args.claude_bin),
+        "claude_identity": claude_identity,
+        "forbidden_roots": [str(root) for root in forbidden],
+        "auth_diagnostics_directory": str(auth_diagnostics_directory),
+    }
+    launcher_result = exclusive_or_identical(installed_launcher, launcher_bytes, 0o500)
+    manifest_path = version_directory / "claude-review-installation.json"
+    manifest_bytes = canonical(manifest)
+    manifest_result = exclusive_or_identical(manifest_path, manifest_bytes, 0o400)
+    rule_result = replace_expected(args.active_rule, rendered_rule, args.expected_existing_rule_sha256)
+    receipt = {
+        "kind": "claude_review_activation_receipt",
+        **manifest,
+        "installation_manifest_path": str(manifest_path),
+        "installation_manifest_sha256": digest(manifest_bytes),
+        "launcher_result": launcher_result,
+        "manifest_result": manifest_result,
+        "active_rule_result": rule_result,
+    }
+    args.activation_receipt.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    exclusive_or_identical(args.activation_receipt, canonical(receipt), 0o600)
+    print(json.dumps(receipt, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

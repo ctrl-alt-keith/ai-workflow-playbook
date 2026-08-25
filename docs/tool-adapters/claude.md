@@ -78,6 +78,116 @@ paths; use attempt-local scratch only for short-lived private process mechanics
 whose loss cannot impair recovery. See
 [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
+### Governed read-only reviewer launch
+
+Claude Code treats the invocation working directory as its project root and
+may create project-local startup mechanics before any model tool call.
+`--add-dir` makes each declared source directory available. The governed
+launcher therefore treats the configured launch root as the logical source
+anchor, passes that root and every additional source root exactly through
+`--add-dir`, and runs the provider from fresh qualified attempt-local scratch.
+This contains provider bootstrap state without excluding any reviewed source.
+Read a representative object from every root before review. Do not infer
+candidate reachability from a prompt-package launch directory.
+
+The CLI controls have different effects:
+
+- `--tools` restricts the built-in tool set; `--allowedTools` auto-approves
+  matching tools but does not restrict other tools.
+- `--permission-mode dontAsk` suppresses permission prompts but still permits
+  Claude's built-in read-only Bash classification; it is not an exact command
+  allowlist.
+- permission rules evaluate `deny`, then `ask`, then `allow`, first match, and
+  Bash string patterns are not a substitute for argv validation.
+- `--strict-mcp-config` restricts MCP configuration supplied for the launch;
+  use it with an empty declared MCP config when the review forbids connectors.
+- `PreToolUse` hooks can block a tool call before execution, while sandbox
+  filesystem controls can deny writes. A nested host sandbox can also make the
+  provider sandbox unavailable. Settings and hooks can merge from
+  higher-precedence managed sources, so neither control alone proves the
+  effective posture; never request or permit `dangerouslyDisableSandbox` as a
+  workaround.
+
+The repository [`claude-review`](../../scripts/claude-review) source composes
+these controls for governed review. Production auth and review run only through
+the exact machine-local installation rendered by
+[`install-claude-review`](../../scripts/install-claude-review). That installed
+launcher verifies its reviewed bytes, active Codex rule, and the exact absolute
+Claude selector plus resolved user-owned, non-writable executable identity; it
+does not select `claude` from inherited `PATH`. A versioned JSON review config binds the
+source graph, launch root and exact additional directories, guard roots,
+candidate and exact `HEAD`, disjoint evidence directory, immutable
+preflight-receipt and final-output paths, exact stream and terminal-receipt
+paths for every permitted attempt, observational
+command argv, retry cap, observation intervals, and cancellation policy. Mutable
+live-state mechanics remain in private controller attempt-local scratch. The
+launcher accepts
+only model and supported effort selection after `--`; it owns the tool,
+permission, MCP, settings, hook, output, and persistence flags.
+
+The generated `PreToolUse` hook permits `Read`, `Grep`, and `Glob`, and permits
+`Bash` only when its command text exactly equals the shell rendering of one
+configured argv vector and the tool input does not request sandbox bypass. The
+launcher does not force-enable Claude's provider sandbox because bounded review
+under a nested host sandbox showed that it can make every granted Bash command
+unusable. Instead, the controller independently executes each configured
+command before review under a safe environment that disables system Git
+and user Git configuration, repository hooks and filesystem monitors, external
+diffs, optional Git locks, pagers, Python bytecode writes, Claude instruction
+memory loading, and Claude auto memory, with the provider working directory and
+temporary state redirected to fresh attempt-local scratch through the qualified
+macOS or Linux route in
+[`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
+It accepts only the exact Git status, diff, log, and revision forms needed by
+the qualifying review, each with one explicit `git -C` declared root. Exact
+revision grammar prevents unresolved operands from falling through to Git's
+filesystem comparison behavior. Explicit or inferred `diff --no-index`, path
+operands, traversal, unadmitted pathspec magic, shell forms, configuration
+overrides, text conversion, and external diff fail before provider launch.
+
+The first configured exact command is also an in-provider capability canary.
+The system prompt requires it before substantive analysis, and the controller
+accepts reviewer output only when the structured stream contains its successful
+tool result without a sandbox-bypass request. A missing, failed, or bypassed
+canary is reviewer infrastructure failure even if the provider returns a
+nominally successful result.
+
+Use `--output-format stream-json --verbose` initialization as effective runtime
+evidence. The first `system/init` record must report exactly `Bash`, `Glob`,
+`Grep`, and `Read`; no MCP servers, plugins, skills, slash commands, or
+capability-startup error; `dontAsk` permission mode; the requested model family;
+and the exact attempt-scratch runtime directory. Stop the process on a mismatch
+and reject any eventual output. The launcher still
+performs whole-source, Git-index, and Git-administration no-delta checks because provider flags,
+hooks, command-canary evidence, and initialization metadata are defense in
+depth, not a proof that no effect occurred. Git-administration lock files remain
+in the decisive baseline and terminal snapshot. New, removed, replaced, or
+changed locks contaminate the attempt; an exact unchanged pre-existing lock is
+distinguished from reviewer-attributable delta.
+
+Anthropic documents `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` and
+`CLAUDE_CODE_DISABLE_CLAUDE_MDS=1` in its
+[environment-variable reference](https://code.claude.com/docs/en/env-vars).
+They suppress memory loading and writes; attempt-scratch runtime placement and
+whole-source no-delta checks remain required controls rather than assumptions
+about undocumented provider internals.
+
+Claude's structured `system/api_retry` event is an in-process provider retry
+inside the same attempt. Only a terminal `overloaded` or `server_error` result
+may qualify for the launcher's bounded fresh exact-input repeat. Rate limiting,
+authentication, billing, capability, access, command, mutation, cancellation,
+and unknown errors stop without an outer retry. After the direct provider
+process exits, the launcher keeps awaiting the same process group until it is
+terminal, then waits for both output collectors to reach end-of-stream before
+freezing the stream artifact or considering a retry. The launcher records the
+exact process group as required by the shared
+[`live-process lifecycle`](../orchestration-and-parallelism.md#live-process-lifecycle).
+Mutable control state in controller scratch preserves request, decline,
+graceful authority, and separately authorized force authority even after the
+direct provider pid exits while another recorded group member remains live.
+Do not infer a portable SIGTERM result or exit-code mapping from Claude Code;
+record the observed local process outcome.
+
 ## Worktrees And Subagents
 
 Apply the one-repository, one-branch, one-worktree, one-PR rule and

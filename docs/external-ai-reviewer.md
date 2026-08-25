@@ -76,6 +76,105 @@ revoked/invalid-credential classes separately; unknown auth-shaped output must
 fail closed without a conjectured provider cause. Neither kind of failure is
 candidate evidence or grounds to substitute another reviewer.
 
+### Governed reviewer launch and completion
+
+A governed review begins with a controller-owned launch contract, not with a
+provider command assembled ad hoc. The contract must bind the exact prompt and
+configuration identities, candidate worktree and commit, complete source graph,
+logical launch root, additional readable directories, guarded roots, exact observational
+commands, evidence destination, retry bound, and cancellation policy. Choose a
+logical launch root that commonly owns the source graph when practical; otherwise
+declare every additional directory explicitly. A narrow package-directory
+launch that cannot reach the candidate is a contract failure, not a partially
+qualified review. A provider may run from fresh attempt-local scratch to contain
+its own startup mechanics only when the launcher exposes every logical source
+root explicitly and verifies the effective runtime directory during initialization.
+
+Bind an exact immutable stream and terminal-receipt path for every permitted
+attempt and a distinct exact path for successful final reviewer output. Keep
+mutable live-process mechanics in private controller-owned
+attempt-local scratch and expose their exact locator while the controller is
+live; do not turn a replace-in-place state file into a durable artifact. Only
+the configured no-overwrite artifacts enter the governed evidence destination.
+
+Before accepting substantive review, the controller must:
+
+- read a representative object from every declared source location;
+- execute every exact observational command with the review environment and
+  reject hidden wrappers, interpreters, shell operators, hooks, pagers, external
+  diffs, text-conversion drivers, and other command effects that exceed the
+  grant;
+- verify that the evidence destination is writable and disjoint from guarded
+  sources;
+- record the requested logical launch root, actual provider runtime directory,
+  additional directories, tools, commands, and permission posture; and
+- inspect provider initialization evidence and stop if the effective tools,
+  connectors, startup capabilities, or source reachability differ from the
+  contract.
+
+Treat each observational command as an exact argv grammar, not a generic
+executable plus token scan. Retain only the subcommand forms the review needs.
+For Git, require one exact `git -C` declared root, classify every token as an
+admitted option or exact revision/object expression, and reject unresolved
+tokens rather than allowing Git to reinterpret them as paths. Explicit and
+implicit `diff --no-index`, path traversal, outside absolute paths, mixed
+inside/outside operands, unadmitted pathspec magic, and missing path boundaries
+are contract failures before provider launch. If a retained Git form accepts
+paths, require its exact path boundary and resolve every operand inside one
+declared source root.
+
+Controller-side command preflight does not prove that the same command can run
+inside the provider process. Require a successful in-provider result from one
+exact granted command canary, reject any sandbox-bypass request, and fail closed
+when the canary is missing or fails. This qualifies the command transport; it
+does not replace controller-side execution of every configured command form.
+
+Treat provider permission flags as one control, not the whole read-only proof.
+Use the narrowest available tool set, command grammar, provider hooks, sandbox
+or filesystem restrictions, disabled connector surface, safe environment, and
+controller-side preflight together. Preserve the exact preflight result in an
+exclusive, no-overwrite receipt at the admitted evidence destination; do not
+create and delete a write probe in a durable artifact namespace. Preserve any
+material qualification gap even when the preflight receipt cannot be produced.
+
+Read-only completion requires a positive whole-source no-delta postflight. The
+baseline must accept deliberately dirty, staged, untracked, and ignored source
+state without cleaning or normalizing it, then detect content creation,
+modification, removal, mode or symlink changes, Git-index changes, and writes
+to the candidate-specific and shared Git administration directories—including lock-file
+creation, removal, replacement, mode, symlink, and content changes—and writes that escape
+the candidate into another guarded source. Apply the same index and administration
+coverage to another guarded source that is itself a repository. Repository status alone is
+insufficient. Reviewer output and receipts belong only in the declared,
+disjoint evidence destination after its retention and visibility rules admit
+those bytes.
+
+Do not broadly exclude `.lock` paths from the decisive baseline-to-terminal
+comparison. An unchanged pre-existing lock may remain when its exact identity
+matches. A new, removed, or changed lock is reviewer side-effect contamination:
+produce no qualifying verdict, do not reset it automatically, and stop until it
+is corrected and dispositioned. Any live-monitor exception must identify one
+controller-owned transient lock by exact path, actor, and lifetime and must not
+apply to terminal postflight.
+
+An attempt is complete only after the exact reviewer process group is terminal,
+all output collectors reach end-of-stream, its output is captured, its terminal
+receipt is durable, and no-delta
+postflight passes. A fresh attempt may repeat the exact inputs only for an
+explicitly documented transient provider class, after the prior attempt is
+fully terminal, under the same controller and contract identity, and within a
+small declared cap. This is a fresh execution with an exact-input repeat, not a
+historical replay. Authentication, billing, access, capability, command,
+mutation, cancellation, and unknown failures are not automatically retryable.
+Provider-internal retry events are evidence inside one attempt unless the
+outer contract explicitly classifies the terminal result as eligible for a new
+attempt.
+
+Apply the shared live-process rules in
+[`orchestration-and-parallelism.md#live-process-lifecycle`](orchestration-and-parallelism.md#live-process-lifecycle).
+Silence, partial output, elapsed time, or a soft liveness threshold never proves
+termination and never authorizes a replacement attempt.
+
 Use [`review-packet.md#independent-review-findings-and-re-review`](review-packet.md#independent-review-findings-and-re-review)
 for finding disposition and the decision between no re-review, focused
 re-review, and a fresh proposal with full review. Do not duplicate those

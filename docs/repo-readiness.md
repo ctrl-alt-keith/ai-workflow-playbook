@@ -479,17 +479,38 @@ Examples:
 7. Historical `scratch/` references may remain as frozen provenance, but no
    mutable guidance may imply that they are the current disposable default.
 
-The only exercised platform projection currently recorded by this Playbook is
-the bounded Darwin precedent from CAK-158/150: resolve with
-`/usr/bin/getconf DARWIN_USER_TEMP_DIR`, validate rather than trust `$TMPDIR`,
-use a fresh private unique child, and reject path escape, symlinks, special
-objects, residue reuse, and unsafe cleanup through qualified
-mode/ownership/device/inode checks. This is Darwin evidence, not portable
-doctrine. Linux and Windows mappings remain unqualified until their own
-qualified platform projections exist. Without a qualified mapping, the
-downstream repository or tool contract must select another explicitly
-authorized design or stop the dependent operation; a generic attempt-local
-example does not itself qualify that platform.
+The platform projections currently implemented by this Playbook are:
+
+- the bounded Darwin precedent from CAK-158/150: resolve with
+  `/usr/bin/getconf DARWIN_USER_TEMP_DIR` and require its private directory
+  ownership and mode; and
+- the bounded Linux design from CAK-155, pending first Linux-host execution
+  evidence: use fixed `/tmp` only when it is a real root-owned directory with
+  exact sticky shared-temporary mode `01777`.
+
+Each projection validates its own platform root rather than trusting `$TMPDIR`,
+uses a fresh private unique child with mode `0700`, binds parent and child
+device/inode identity, and rejects path escape, symlinks, special objects,
+residue reuse, ownership or mode drift, and unsafe cleanup. The Linux design
+additionally treats its shared parent as admissible only with the exact
+root-owned `01777` shape; this does not make it equivalent to Darwin's private
+per-user parent. Linux `/tmp` is appropriate only for disposable
+attempt mechanics: the
+[Filesystem Hierarchy Standard](https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s18.html)
+requires it for temporary files and says programs must not assume preservation
+between invocations, while the Linux
+[`mkdtemp(3)` interface](https://man7.org/linux/man-pages/man3/mkdtemp.3.html)
+creates the unique child as `0700`. These projections are
+platform-specific designs, not a generic environment-variable rule. The Linux
+parent-shape predicate has deterministic host-independent fixtures for its
+accepted and rejected ownership, mode, object-type, and symlink cases; an
+actual Linux invocation must still pass the same runtime checks before it is
+platform evidence. Windows
+and other mappings remain unqualified until their own qualified platform
+projections exist. Without a qualified mapping, the downstream repository or
+tool contract must select another explicitly authorized design or stop the
+dependent operation; a generic attempt-local example does not itself qualify
+that platform.
 
 For Codex specifically, configured
 `[sandbox_workspace_write].writable_roots` may not be the full effective
