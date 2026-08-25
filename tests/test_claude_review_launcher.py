@@ -3,8 +3,10 @@ import os
 from pathlib import Path
 import pwd
 import subprocess
+import sys
 import tempfile
 import textwrap
+import time
 import unittest
 
 
@@ -49,6 +51,10 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             ]
             if auth_preflight:
                 command.append("--auth-preflight")
+            effective_environment = (environment or os.environ.copy()).copy()
+            if not auth_preflight:
+                command.append("--classification-fixture")
+                effective_environment["CLAUDE_REVIEW_TEST_FIXTURE"] = "1"
             command.extend(("--", "--model", "opus", "--effort", "high", "--tools", "Read"))
             completed = subprocess.run(
                 command,
@@ -57,7 +63,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                env=environment or os.environ.copy(),
+                env=effective_environment,
             )
             return completed, json.loads(diagnostics.read_text(encoding="utf-8"))
 
@@ -356,6 +362,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         loader = importlib.machinery.SourceFileLoader("claude_review", str(LAUNCHER))
         spec = importlib.util.spec_from_loader(loader.name, loader)
         module = importlib.util.module_from_spec(spec)
+        sys.modules[loader.name] = module
         loader.exec_module(module)
 
         self.assertEqual(
@@ -386,6 +393,335 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 "[REDACTED]",
             ],
         )
+
+
+class GovernedClaudeReviewLauncherTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.candidate = self.root / "candidate"
+        self.package = self.root / "review-package"
+        self.evidence = self.root / "evidence"
+        self.candidate.mkdir()
+        self.package.mkdir()
+        self.evidence.mkdir()
+        (self.package / "brief.md").write_text("review brief\n", encoding="utf-8")
+        subprocess.run(["git", "init", "-q", str(self.candidate)], check=True)
+        (self.candidate / ".gitignore").write_text("*.cache\n", encoding="utf-8")
+        (self.candidate / "tracked.txt").write_text("tracked\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(self.candidate), "add", "."], check=True)
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(self.candidate),
+                "-c",
+                "user.name=Fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "commit",
+                "-qm",
+                "fixture",
+            ],
+            check=True,
+        )
+        self.count = self.root / "count"
+        self.fake = self.root / "fake-claude"
+        self.fake.write_text(
+            "#!/usr/bin/env python3\n"
+            "import json, os, pathlib, signal, subprocess, sys, time\n"
+            "if '--version' in sys.argv:\n"
+            "    print('fake-claude 2.1.241')\n"
+            "    raise SystemExit(0)\n"
+            "count = pathlib.Path(os.environ['FAKE_COUNT'])\n"
+            "attempt = int(count.read_text()) + 1 if count.exists() else 1\n"
+            "count.write_text(str(attempt))\n"
+            "scenario = os.environ.get('FAKE_SCENARIO', 'success')\n"
+            "candidate = pathlib.Path(os.environ['FAKE_CANDIDATE'])\n"
+            "package = pathlib.Path(os.environ['FAKE_PACKAGE'])\n"
+            "tools = ['Bash','Glob','Grep'] if scenario == 'tool_mismatch' else ['Bash','Glob','Grep','Read']\n"
+            "print(json.dumps({'type':'system','subtype':'init','session_id':f's{attempt}','model':'fake-opus','tools':tools,'mcp_servers':[]} ), flush=True)\n"
+            "if scenario == 'tool_mismatch': time.sleep(0.08)\n"
+            "if scenario == 'mutate_tracked': (candidate / 'tracked.txt').write_text('changed\\n')\n"
+            "if scenario == 'new_ignored': (candidate / 'generated.cache').write_text('cache')\n"
+            "if scenario == 'remove_untracked': (candidate / 'preexisting.txt').unlink()\n"
+            "if scenario == 'index_mutation':\n"
+            "    (candidate / 'tracked.txt').write_text('staged\\n')\n"
+            "    subprocess.run(['git','-C',str(candidate),'add','tracked.txt'], check=True)\n"
+            "if scenario == 'escaped_output': (package / 'escaped-review.txt').write_text('escaped')\n"
+            "if scenario == 'silent': time.sleep(0.08)\n"
+            "if scenario == 'ignore_term':\n"
+            "    signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
+            "    time.sleep(10)\n"
+            "if scenario == 'hang_after_transient':\n"
+            "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':'server_error'}), flush=True)\n"
+            "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}'}), flush=True)\n"
+            "    time.sleep(10)\n"
+            "if scenario in {'transient_once','transient_always'} and (scenario == 'transient_always' or attempt == 1):\n"
+            "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':'server_error'}), flush=True)\n"
+            "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}'}), flush=True)\n"
+            "    raise SystemExit(1)\n"
+            "if scenario == 'auth':\n"
+            "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':'authentication_failed'}), flush=True)\n"
+            "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}'}), flush=True)\n"
+            "    raise SystemExit(1)\n"
+            "print(json.dumps({'type':'result','subtype':'success','is_error':False,'session_id':f's{attempt}','result':'ACCEPT'}), flush=True)\n",
+            encoding="utf-8",
+        )
+        self.fake.chmod(0o755)
+
+    def config_body(self, *, launch_root=None, additional=None, max_attempts=3):
+        return {
+            "schema_version": 1,
+            "review_id": "CAK-155-fixture",
+            "contract_id": "sha256:fixture-contract",
+            "launch_root": str(launch_root or self.root),
+            "additional_directories": [str(path) for path in (additional or [])],
+            "source_locations": [
+                {"root": str(self.candidate), "representative": str(self.candidate / "tracked.txt")},
+                {"root": str(self.package), "representative": str(self.package / "brief.md")},
+            ],
+            "guard_roots": [str(self.candidate), str(self.package)],
+            "candidate_worktree": str(self.candidate),
+            "evidence_directory": str(self.evidence),
+            "allowed_commands": [
+                ["git", "-C", str(self.candidate), "status", "--porcelain=v2", "--untracked-files=all"]
+            ],
+            "max_attempts": max_attempts,
+            "observation_interval_seconds": 0.005,
+            "soft_liveness_threshold_seconds": 0.02,
+            "graceful_termination_seconds": 0.05,
+            "cancellation_policy": {
+                "mode": "interactive",
+                "emergency_stop_conditions": ["unauthorized_mutation"],
+            },
+        }
+
+    def write_config(self, body=None):
+        path = self.evidence / "review-config.json"
+        path.write_text(json.dumps(body or self.config_body()), encoding="utf-8")
+        return path
+
+    def environment(self, scenario):
+        environment = os.environ.copy()
+        environment.update(
+            {
+                "FAKE_SCENARIO": scenario,
+                "FAKE_COUNT": str(self.count),
+                "FAKE_CANDIDATE": str(self.candidate),
+                "FAKE_PACKAGE": str(self.package),
+            }
+        )
+        return environment
+
+    def run_governed(self, scenario="success", *, body=None):
+        config = self.write_config(body)
+        diagnostics = self.evidence / "overall.json"
+        completed = subprocess.run(
+            [
+                str(LAUNCHER),
+                "--claude-bin",
+                str(self.fake),
+                "--diagnostics-file",
+                str(diagnostics),
+                "--review-config",
+                str(config),
+                "--",
+                "--model",
+                "opus",
+                "--effort",
+                "high",
+            ],
+            check=False,
+            input="exact review prompt\n",
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=self.environment(scenario),
+        )
+        return completed, json.loads(diagnostics.read_text(encoding="utf-8"))
+
+    def receipts(self):
+        return [json.loads(path.read_text(encoding="utf-8")) for path in sorted(self.evidence.glob("*-terminal-receipt.json"))]
+
+    def test_common_root_and_exact_additional_directory_cover_source_graph(self):
+        common, diagnostic = self.run_governed()
+        self.assertEqual(common.returncode, 0)
+        self.assertEqual(common.stdout, "ACCEPT\n")
+        self.assertEqual(diagnostic["preflight"]["status"], "passed")
+
+        self.count.unlink()
+        for path in self.evidence.glob("CAK-155-fixture-*"):
+            path.unlink()
+        additional_body = self.config_body(launch_root=self.package, additional=[self.candidate])
+        added, added_diagnostic = self.run_governed(body=additional_body)
+        self.assertEqual(added.returncode, 0)
+        self.assertEqual(added_diagnostic["preflight"]["additional_directories"], [str(self.candidate.resolve())])
+
+    def test_narrow_package_root_fails_before_substantive_review(self):
+        body = self.config_body(launch_root=self.package)
+        completed, diagnostic = self.run_governed(body=body)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "review_contract_failure")
+        self.assertFalse(self.count.exists())
+
+    def test_direct_review_preserves_deliberately_dirty_candidate(self):
+        (self.candidate / "tracked.txt").write_text("intentional dirty bytes\n", encoding="utf-8")
+        (self.candidate / "preexisting.txt").write_text("untracked\n", encoding="utf-8")
+        (self.candidate / "preexisting.cache").write_text("ignored\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(self.candidate), "add", "tracked.txt"], check=True)
+        before = subprocess.run(
+            ["git", "-C", str(self.candidate), "status", "--porcelain=v2", "--ignored"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout
+        completed, _ = self.run_governed()
+        after = subprocess.run(
+            ["git", "-C", str(self.candidate), "status", "--porcelain=v2", "--ignored"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout
+        self.assertEqual(completed.returncode, 0)
+        self.assertEqual(before, after)
+        self.assertTrue(self.receipts()[0]["no_delta_postflight"]["passed"])
+
+    def test_postflight_detects_tracked_ignored_index_untracked_and_escaped_mutation(self):
+        scenarios = ("mutate_tracked", "new_ignored", "index_mutation", "escaped_output")
+        for scenario in scenarios:
+            with self.subTest(scenario=scenario):
+                if scenario == "mutate_tracked":
+                    pass
+                completed, diagnostic = self.run_governed(scenario)
+                self.assertEqual(completed.returncode, 70)
+                self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
+                receipt_path = Path(diagnostic["attempts"][-1]["receipt"])
+                receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+                self.assertFalse(receipt["no_delta_postflight"]["passed"])
+
+    def test_removal_of_preexisting_untracked_content_is_detected(self):
+        (self.candidate / "preexisting.txt").write_text("untracked\n", encoding="utf-8")
+        completed, diagnostic = self.run_governed("remove_untracked")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
+
+    def test_transient_retry_recovers_without_contract_or_controller_drift(self):
+        completed, diagnostic = self.run_governed("transient_once")
+        self.assertEqual(completed.returncode, 0)
+        self.assertEqual(len(diagnostic["attempts"]), 2)
+        receipts = self.receipts()
+        self.assertEqual(len(receipts), 2)
+        self.assertEqual({receipt["controller_id"] for receipt in receipts}, {diagnostic["controller_id"]})
+        self.assertEqual(len({json.dumps(receipt["contract_identity"], sort_keys=True) for receipt in receipts}), 1)
+        self.assertEqual(receipts[1]["execution_kind"], "fresh_execution_exact_input_repeat")
+
+    def test_retry_exhaustion_stops_at_three_and_auth_stops_at_one(self):
+        exhausted, exhausted_diagnostic = self.run_governed("transient_always")
+        self.assertEqual(exhausted.returncode, 70)
+        self.assertEqual(len(exhausted_diagnostic["attempts"]), 3)
+
+        auth_root = self.root / "auth-evidence"
+        auth_root.mkdir()
+        body = self.config_body()
+        body["review_id"] = "CAK-155-auth"
+        body["evidence_directory"] = str(auth_root)
+        config = auth_root / "review-config.json"
+        config.write_text(json.dumps(body), encoding="utf-8")
+        diagnostics = auth_root / "overall.json"
+        completed = subprocess.run(
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            input="prompt\n",
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=self.environment("auth"),
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 78)
+        self.assertEqual(len(json.loads(diagnostics.read_text())["attempts"]), 1)
+
+    def test_soft_liveness_threshold_never_terminates_or_replaces_attempt(self):
+        completed, _ = self.run_governed("silent")
+        self.assertEqual(completed.returncode, 0)
+        live = json.loads(next(self.evidence.glob("*-live-state.json")).read_text())
+        self.assertTrue(live["soft_liveness_threshold_crossed"])
+        self.assertEqual(self.count.read_text(), "1")
+
+    def test_effective_tool_mismatch_stops_the_live_attempt(self):
+        completed, diagnostic = self.run_governed("tool_mismatch")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "effective_tool_set_mismatch")
+        live = json.loads(next(self.evidence.glob("*-live-state.json")).read_text())
+        self.assertEqual(live["capability_failure"], "effective_tool_set_mismatch")
+        self.assertEqual(self.count.read_text(), "1")
+
+    def test_request_and_decline_termination_keep_same_process_live(self):
+        config = self.write_config()
+        diagnostics = self.evidence / "overall.json"
+        process = subprocess.Popen(
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=self.environment("hang_after_transient"),
+        )
+        self.addCleanup(lambda: process.poll() is None and process.kill())
+        assert process.stdin is not None
+        process.stdin.write("prompt\n")
+        process.stdin.close()
+        deadline = time.monotonic() + 2
+        live = None
+        while time.monotonic() < deadline:
+            matches = list(self.evidence.glob("*-live-state.json"))
+            if matches:
+                live = matches[0]
+                break
+            time.sleep(0.01)
+        self.assertIsNotNone(live)
+        subprocess.run([str(LAUNCHER), "--request-termination", str(live)], check=True)
+        self.assertIsNone(process.poll())
+        subprocess.run([str(LAUNCHER), "--decline-termination", str(live)], check=True)
+        self.assertIsNone(process.poll())
+        subprocess.run(
+            [str(LAUNCHER), "--terminate", str(live), "--termination-authority", "Keith confirmed fixture termination", "--grace-seconds", "0.2"],
+            check=False,
+        )
+        process.wait(timeout=2)
+        assert process.stdout is not None and process.stderr is not None
+        process.stdout.close()
+        process.stderr.close()
+        self.assertEqual(self.count.read_text(), "1")
+
+    def test_observational_import_cache_is_detected_and_scratch_redirect_contains_it(self):
+        import importlib.machinery
+        import importlib.util
+
+        loader = importlib.machinery.SourceFileLoader("claude_review_governed", str(LAUNCHER))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[loader.name] = module
+        loader.exec_module(module)
+        module_path = self.candidate / "probe_module.py"
+        module_path.write_text("VALUE = 1\n", encoding="utf-8")
+        environment = os.environ.copy()
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        environment.pop("PYTHONDONTWRITEBYTECODE", None)
+        subprocess.run([sys.executable, "-c", "import probe_module"], cwd=self.candidate, env=environment, check=True)
+        changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        self.assertTrue(module.snapshot_delta(baseline, changed))
+
+        subprocess.run(["git", "-C", str(self.candidate), "clean", "-fd", "--", "__pycache__"], check=True)
+        scratch = self.root / "attempt-scratch"
+        scratch.mkdir(mode=0o700)
+        contained_baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        environment["PYTHONPYCACHEPREFIX"] = str(scratch)
+        subprocess.run([sys.executable, "-c", "import probe_module"], cwd=self.candidate, env=environment, check=True)
+        contained_after = module.source_snapshot([self.candidate], self.candidate, environment)
+        self.assertEqual(module.snapshot_delta(contained_baseline, contained_after), [])
+        self.assertTrue(any(scratch.rglob("*.pyc")))
 
 
 if __name__ == "__main__":

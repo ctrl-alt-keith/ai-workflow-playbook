@@ -78,6 +78,66 @@ paths; use attempt-local scratch only for short-lived private process mechanics
 whose loss cannot impair recovery. See
 [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
+### Governed read-only reviewer launch
+
+Claude Code treats the invocation working directory as its project root;
+`--add-dir` makes other declared directories available but does not replace the
+root. For governed review, launch from the common owning root of the complete
+source graph when practical, or pass each additional source root exactly. Read
+a representative object from every root before review. Do not infer candidate
+reachability from a prompt-package launch directory.
+
+The CLI controls have different effects:
+
+- `--tools` restricts the built-in tool set; `--allowedTools` auto-approves
+  matching tools but does not restrict other tools.
+- `--permission-mode dontAsk` suppresses permission prompts but still permits
+  Claude's built-in read-only Bash classification; it is not an exact command
+  allowlist.
+- permission rules evaluate `deny`, then `ask`, then `allow`, first match, and
+  Bash string patterns are not a substitute for argv validation.
+- `--strict-mcp-config` restricts MCP configuration supplied for the launch;
+  use it with an empty declared MCP config when the review forbids connectors.
+- `PreToolUse` hooks can block a tool call before execution, while sandbox
+  filesystem controls can deny writes. Settings and hooks can merge from
+  higher-precedence managed sources, so neither control alone proves the
+  effective posture.
+
+The repository [`claude-review`](../../scripts/claude-review) launcher composes
+these controls for governed review. A versioned JSON review config binds the
+source graph, launch root and exact additional directories, guard roots,
+candidate, disjoint evidence directory, exact observational command argv,
+retry cap, observation intervals, and cancellation policy. The launcher accepts
+only model and supported effort selection after `--`; it owns the tool,
+permission, MCP, settings, hook, output, and persistence flags.
+
+The generated `PreToolUse` hook permits `Read`, `Grep`, and `Glob`, and permits
+`Bash` only when its command text exactly equals the shell rendering of one
+configured argv vector. The controller independently executes each configured
+command before review under a safe environment that disables system Git
+configuration, external diffs, optional Git locks, pagers, and Python bytecode
+writes, with temporary state redirected to attempt-local scratch. It rejects
+non-observational Git operations and commands whose result could invoke shell,
+text-conversion, external-diff, or interpreter side effects.
+
+Use `--output-format stream-json --verbose` initialization as effective runtime
+evidence. The first `system/init` record must report exactly `Bash`, `Glob`,
+`Grep`, and `Read`, no MCP servers, and no capability-startup error. Stop the
+process on a mismatch and reject any eventual output. The launcher still
+performs whole-source and Git-index no-delta checks because provider flags,
+hooks, sandbox controls, and initialization metadata are defense in depth, not
+a proof that no effect occurred.
+
+Claude's structured `system/api_retry` event is an in-process provider retry
+inside the same attempt. Only a terminal `overloaded` or `server_error` result
+may qualify for the launcher's bounded fresh exact-input repeat. Rate limiting,
+authentication, billing, capability, access, command, mutation, cancellation,
+and unknown errors stop without an outer retry. The launcher records and awaits
+the exact process group as required by the shared
+[`live-process lifecycle`](../orchestration-and-parallelism.md#live-process-lifecycle).
+Do not infer a portable SIGTERM result or exit-code mapping from Claude Code;
+record the observed local process outcome.
+
 ## Worktrees And Subagents
 
 Apply the one-repository, one-branch, one-worktree, one-PR rule and

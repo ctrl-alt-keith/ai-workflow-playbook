@@ -4,15 +4,23 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
+import hashlib
 import json
 import os
 from pathlib import Path
 import pwd
+import shlex
 import shutil
+import signal
+import stat
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 from typing import Any
+import uuid
 
 
 AUTH_FAILURE_EXIT = 78
@@ -20,6 +28,23 @@ REVIEWER_FAILURE_EXIT = 70
 MAX_ERROR_CHARS = 1_000
 AUTH_PREFLIGHT_PROMPT = b"Reply exactly: CLAUDE_AUTH_OK\n"
 AUTH_PREFLIGHT_RESPONSE = "CLAUDE_AUTH_OK"
+GOVERNED_CONFIG_VERSION = 1
+MAX_GOVERNED_ATTEMPTS = 3
+TRANSIENT_OUTER_RETRY_ERRORS = {"overloaded", "server_error"}
+SAFE_GIT_SUBCOMMANDS = {
+    "cat-file",
+    "diff",
+    "diff-tree",
+    "log",
+    "ls-files",
+    "merge-base",
+    "rev-parse",
+    "show",
+    "status",
+}
+SAFE_EXECUTABLES = {"git", "shasum", "stat", "wc"}
+FORBIDDEN_GIT_OPTIONS = {"-c", "--config-env", "--exec-path", "--paginate"}
+REQUIRED_TOOLS = {"Bash", "Glob", "Grep", "Read"}
 OAUTH_REAUTHENTICATION_DISPOSITION = (
     "REVIEWER INFRASTRUCTURE FAILURE — OPERATOR REAUTHENTICATION REQUIRED"
 )
@@ -260,6 +285,820 @@ def redacted_argv(argv: list[str]) -> list[str]:
     return redacted
 
 
+def sha256_bytes(value: bytes) -> str:
+    return hashlib.sha256(value).hexdigest()
+
+
+def canonical_json_bytes(value: object) -> bytes:
+    return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+
+
+def contained(path: Path, root: Path) -> bool:
+    try:
+        path.resolve(strict=False).relative_to(root.resolve(strict=True))
+    except (OSError, ValueError):
+        return False
+    return True
+
+
+def exclusive_write(path: Path, payload: bytes) -> None:
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+    except BaseException:
+        try:
+            path.unlink()
+        except OSError:
+            pass
+        raise
+
+
+def replace_live_state(path: Path, record: dict[str, Any]) -> None:
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    exclusive_write(temporary, canonical_json_bytes(record))
+    os.replace(temporary, path)
+
+
+def file_identity(path: Path) -> dict[str, object]:
+    metadata = path.lstat()
+    mode = stat.S_IMODE(metadata.st_mode)
+    if stat.S_ISLNK(metadata.st_mode):
+        return {"kind": "symlink", "mode": mode, "target": os.readlink(path)}
+    if stat.S_ISREG(metadata.st_mode):
+        digest = hashlib.sha256()
+        with path.open("rb") as stream:
+            while chunk := stream.read(1024 * 1024):
+                digest.update(chunk)
+        return {"kind": "file", "mode": mode, "size": metadata.st_size, "sha256": digest.hexdigest()}
+    if stat.S_ISDIR(metadata.st_mode):
+        return {"kind": "directory", "mode": mode}
+    raise RuntimeError(f"unsupported special object in guarded source: {path}")
+
+
+def snapshot_root(root: Path) -> dict[str, object]:
+    root = root.absolute()
+    if not root.exists() and not root.is_symlink():
+        raise RuntimeError(f"guarded source does not exist: {root}")
+    entries: dict[str, object] = {".": file_identity(root)}
+    if not root.is_dir() or root.is_symlink():
+        return entries
+    pending = [root]
+    while pending:
+        directory = pending.pop()
+        for entry in sorted(os.scandir(directory), key=lambda item: item.name):
+            path = Path(entry.path)
+            if directory == root and entry.name == ".git":
+                continue
+            relative = str(path.relative_to(root))
+            entries[relative] = file_identity(path)
+            if entry.is_dir(follow_symlinks=False):
+                pending.append(path)
+    return entries
+
+
+def git_index_identity(candidate: Path, environment: dict[str, str]) -> dict[str, object]:
+    result = subprocess.run(
+        ["git", "-C", str(candidate), "rev-parse", "--git-path", "index"],
+        check=False,
+        env=environment,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"candidate is not a readable Git worktree: {bounded_redacted(result.stderr)}")
+    index = Path(result.stdout.strip())
+    if not index.is_absolute():
+        index = candidate / index
+    return {"path": str(index.resolve(strict=False)), "identity": file_identity(index) if index.exists() else {"kind": "missing"}}
+
+
+def source_snapshot(roots: list[Path], candidate: Path, environment: dict[str, str]) -> dict[str, object]:
+    body = {
+        "roots": {str(root): snapshot_root(root) for root in roots},
+        "git_index": git_index_identity(candidate, environment),
+    }
+    return {"body": body, "sha256": sha256_bytes(canonical_json_bytes(body))}
+
+
+def snapshot_delta(before: dict[str, object], after: dict[str, object]) -> list[str]:
+    before_body = before["body"]
+    after_body = after["body"]
+    changed: list[str] = []
+    before_roots = before_body["roots"]
+    after_roots = after_body["roots"]
+    for root in sorted(set(before_roots) | set(after_roots)):
+        old_entries = before_roots.get(root, {})
+        new_entries = after_roots.get(root, {})
+        for relative in sorted(set(old_entries) | set(new_entries)):
+            if old_entries.get(relative) != new_entries.get(relative):
+                changed.append(f"{root}:{relative}")
+    if before_body["git_index"] != after_body["git_index"]:
+        changed.append("git-index")
+    return changed
+
+
+def safe_command_environment(base: dict[str, str], scratch: Path) -> dict[str, str]:
+    environment = base.copy()
+    environment.update(
+        {
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_EXTERNAL_DIFF": "/usr/bin/false",
+            "GIT_OPTIONAL_LOCKS": "0",
+            "GIT_PAGER": "cat",
+            "PAGER": "cat",
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "TMPDIR": str(scratch),
+        }
+    )
+    return environment
+
+
+def validate_command(argv: object) -> list[str]:
+    if not isinstance(argv, list) or not argv or not all(isinstance(value, str) and value for value in argv):
+        raise ValueError("each allowed command must be a non-empty JSON argv array")
+    executable = Path(argv[0]).name
+    if executable not in SAFE_EXECUTABLES:
+        raise ValueError(f"unsupported reviewer command executable: {executable}")
+    if executable == "git":
+        if any(value in FORBIDDEN_GIT_OPTIONS or value.startswith("--exec-path=") for value in argv[1:]):
+            raise ValueError("Git configuration and execution-path overrides are not observational grants")
+        subcommand = None
+        index = 1
+        while index < len(argv):
+            value = argv[index]
+            if value in {"-C", "--git-dir", "--work-tree", "--namespace"}:
+                if index + 1 >= len(argv):
+                    break
+                index += 2
+                continue
+            if value.startswith("--git-dir=") or value.startswith("--work-tree=") or value.startswith("--namespace="):
+                index += 1
+                continue
+            if value.startswith("-"):
+                index += 1
+                continue
+            subcommand = value
+            break
+        if subcommand not in SAFE_GIT_SUBCOMMANDS:
+            raise ValueError(f"unsupported Git inspection subcommand: {subcommand}")
+        if subcommand in {"diff", "diff-tree", "show"}:
+            if "--no-ext-diff" not in argv or "--no-textconv" not in argv:
+                raise ValueError(f"git {subcommand} requires --no-ext-diff and --no-textconv")
+        if subcommand == "log" and any(value in argv for value in ("-p", "--patch")):
+            if "--no-ext-diff" not in argv or "--no-textconv" not in argv:
+                raise ValueError("patch-producing git log requires --no-ext-diff and --no-textconv")
+    if executable == "shasum" and argv[1:3] != ["-a", "256"]:
+        raise ValueError("only exact SHA-256 shasum operations are supported")
+    return argv
+
+
+@dataclass(frozen=True)
+class GovernedReviewConfig:
+    path: Path
+    body: dict[str, Any]
+    digest: str
+    launch_root: Path
+    additional_directories: tuple[Path, ...]
+    source_locations: tuple[tuple[Path, Path], ...]
+    guard_roots: tuple[Path, ...]
+    candidate: Path
+    evidence_directory: Path
+    allowed_commands: tuple[tuple[str, ...], ...]
+    max_attempts: int
+    observation_interval: float
+    soft_liveness_threshold: float
+    graceful_termination_seconds: float
+
+
+def load_governed_config(path: Path) -> GovernedReviewConfig:
+    raw = path.read_bytes()
+    body = json.loads(raw)
+    if not isinstance(body, dict) or body.get("schema_version") != GOVERNED_CONFIG_VERSION:
+        raise ValueError(f"review config must use schema_version {GOVERNED_CONFIG_VERSION}")
+    required_strings = ("review_id", "contract_id", "launch_root", "candidate_worktree", "evidence_directory")
+    for key in required_strings:
+        if not isinstance(body.get(key), str) or not body[key]:
+            raise ValueError(f"review config requires non-empty {key}")
+    launch_root = Path(body["launch_root"]).resolve(strict=True)
+    candidate = Path(body["candidate_worktree"]).resolve(strict=True)
+    evidence = Path(body["evidence_directory"]).resolve(strict=True)
+    if not launch_root.is_dir() or not candidate.is_dir() or not evidence.is_dir():
+        raise ValueError("launch root, candidate worktree, and evidence directory must be existing directories")
+    additional = tuple(Path(value).resolve(strict=True) for value in body.get("additional_directories", []))
+    if any(not value.is_dir() for value in additional):
+        raise ValueError("every additional directory must exist and be a directory")
+    authorized = (launch_root, *additional)
+    locations: list[tuple[Path, Path]] = []
+    for source in body.get("source_locations", []):
+        if not isinstance(source, dict) or not isinstance(source.get("root"), str) or not isinstance(source.get("representative"), str):
+            raise ValueError("each source location requires root and representative")
+        root = Path(source["root"]).resolve(strict=True)
+        representative = Path(source["representative"]).resolve(strict=True)
+        if not contained(representative, root):
+            raise ValueError(f"representative path escapes source root: {representative}")
+        if not any(contained(root, permitted) for permitted in authorized):
+            raise ValueError(f"source root is outside the launch/additional-directory graph: {root}")
+        locations.append((root, representative))
+    if not locations:
+        raise ValueError("at least one source location is required")
+    if not any(contained(candidate, root) or contained(root, candidate) for root, _ in locations):
+        raise ValueError("candidate worktree must be represented in the source graph")
+    guard_roots = tuple(dict.fromkeys(Path(value).resolve(strict=True) for value in body.get("guard_roots", [str(candidate)])))
+    if candidate not in guard_roots:
+        guard_roots = (candidate, *guard_roots)
+    if any(contained(evidence, root) or contained(root, evidence) for root in guard_roots):
+        raise ValueError("evidence directory must be disjoint from every guarded source root")
+    commands = tuple(tuple(validate_command(value)) for value in body.get("allowed_commands", []))
+    max_attempts = body.get("max_attempts", MAX_GOVERNED_ATTEMPTS)
+    if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or not 1 <= max_attempts <= MAX_GOVERNED_ATTEMPTS:
+        raise ValueError(f"max_attempts must be between 1 and {MAX_GOVERNED_ATTEMPTS}")
+    observation = float(body.get("observation_interval_seconds", 1.0))
+    soft = float(body.get("soft_liveness_threshold_seconds", 60.0))
+    grace = float(body.get("graceful_termination_seconds", 10.0))
+    if observation <= 0 or soft <= 0 or grace <= 0:
+        raise ValueError("observation, soft-liveness, and graceful-termination values must be positive")
+    cancellation = body.get("cancellation_policy")
+    if not isinstance(cancellation, dict) or cancellation.get("mode") not in {"interactive", "unattended"}:
+        raise ValueError("cancellation_policy.mode must be interactive or unattended")
+    if cancellation.get("mode") == "unattended" and not cancellation.get("human_approved_prelaunch"):
+        raise ValueError("unattended cancellation requires human_approved_prelaunch evidence")
+    return GovernedReviewConfig(
+        path=path.resolve(strict=True),
+        body=body,
+        digest=sha256_bytes(raw),
+        launch_root=launch_root,
+        additional_directories=additional,
+        source_locations=tuple(locations),
+        guard_roots=guard_roots,
+        candidate=candidate,
+        evidence_directory=evidence,
+        allowed_commands=commands,
+        max_attempts=max_attempts,
+        observation_interval=observation,
+        soft_liveness_threshold=soft,
+        graceful_termination_seconds=grace,
+    )
+
+
+def permission_hook(config_path: Path) -> int:
+    try:
+        config = load_governed_config(config_path)
+        hook_input = json.load(sys.stdin)
+        command = hook_input.get("tool_input", {}).get("command")
+        allowed = {shlex.join(list(argv)) for argv in config.allowed_commands}
+        permitted = hook_input.get("tool_name") == "Bash" and command in allowed
+    except (OSError, ValueError, json.JSONDecodeError, TypeError):
+        permitted = False
+    decision = "allow" if permitted else "deny"
+    reason = "exact observational command grant" if permitted else "command is outside the exact governed review grant"
+    print(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": decision,
+                    "permissionDecisionReason": reason,
+                }
+            }
+        )
+    )
+    return 0
+
+
+def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) -> dict[str, object]:
+    path_results: list[dict[str, object]] = []
+    for root, representative in config.source_locations:
+        if representative.is_dir():
+            next(os.scandir(representative), None)
+        else:
+            with representative.open("rb") as stream:
+                stream.read(1)
+        path_results.append({"root": str(root), "representative": str(representative), "status": "readable"})
+    command_results: list[dict[str, object]] = []
+    for argv in config.allowed_commands:
+        result = subprocess.run(
+            list(argv),
+            check=False,
+            cwd=config.launch_root,
+            env=environment,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        command_results.append(
+            {
+                "argv": list(argv),
+                "exit_code": result.returncode,
+                "stdout_sha256": sha256_bytes(result.stdout),
+                "stderr_sha256": sha256_bytes(result.stderr),
+            }
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"command preflight failed: {shlex.join(list(argv))}")
+    probe = config.evidence_directory / f".claude-review-preflight-{uuid.uuid4().hex}"
+    exclusive_write(probe, b"preflight\n")
+    probe.unlink()
+    return {
+        "status": "passed",
+        "requested_launch_root": str(config.launch_root),
+        "effective_launch_root": str(config.launch_root),
+        "additional_directories": [str(path) for path in config.additional_directories],
+        "paths": path_results,
+        "commands": command_results,
+        "evidence_destination": str(config.evidence_directory),
+    }
+
+
+def governed_system_prompt(config: GovernedReviewConfig) -> str:
+    commands = "\n".join(f"- {shlex.join(list(argv))}" for argv in config.allowed_commands) or "- none"
+    return (
+        "Governed review capability boundary. Perform no mutation. Use only Read, Grep, Glob, "
+        "and the exact Bash commands listed below. Do not use shell operators, redirects, wrappers, "
+        "interpreters, tests, builds, package tools, network tools, MCP tools, subagents, or output files. "
+        "Return the review only through the final response. Exact Bash commands:\n"
+        f"{commands}\n"
+    )
+
+
+def governed_claude_arguments(config: GovernedReviewConfig, model_arguments: list[str]) -> tuple[list[str], str]:
+    allowed_model_arguments = preflight_arguments(model_arguments)
+    if len(allowed_model_arguments) != len(model_arguments) + 3:  # adds --tools, empty value, and no-persistence
+        raise ValueError("governed review accepts only --model and --effort Claude arguments")
+    allowed_model_arguments = allowed_model_arguments[:-3]
+    allowed_tools = ["Read", "Grep", "Glob", *[f"Bash({shlex.join(list(argv))})" for argv in config.allowed_commands]]
+    hook_settings = {
+        "hooks": {
+            "PreToolUse": [
+                {
+                    "matcher": "Bash",
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": str(Path(__file__).resolve()),
+                            "args": ["--permission-hook", str(config.path)],
+                        }
+                    ],
+                }
+            ]
+        },
+        "sandbox": {
+            "enabled": True,
+            "filesystem": {"denyWrite": [str(path) for path in config.guard_roots]},
+            "network": {"allowedDomains": []},
+            "autoAllowBashIfSandboxed": False,
+        },
+    }
+    system_prompt = governed_system_prompt(config)
+    arguments = [
+        *allowed_model_arguments,
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--no-session-persistence",
+        "--disable-slash-commands",
+        "--no-chrome",
+        "--permission-mode",
+        "dontAsk",
+        "--tools",
+        "Bash,Glob,Grep,Read",
+        "--allowedTools",
+        *allowed_tools,
+        "--strict-mcp-config",
+        "--mcp-config",
+        '{"mcpServers":{}}',
+        "--setting-sources",
+        "",
+        "--settings",
+        json.dumps(hook_settings, separators=(",", ":")),
+        "--append-system-prompt",
+        system_prompt,
+    ]
+    for directory in config.additional_directories:
+        arguments.extend(("--add-dir", str(directory)))
+    return arguments, system_prompt
+
+
+class PipeCollector:
+    def __init__(self, stream: Any):
+        self.stream = stream
+        self.lines: list[bytes] = []
+        self.done = threading.Event()
+        self.thread = threading.Thread(target=self._read, daemon=True)
+        self.thread.start()
+
+    def _read(self) -> None:
+        try:
+            for line in iter(self.stream.readline, b""):
+                self.lines.append(line)
+        finally:
+            self.done.set()
+
+    def bytes(self) -> bytes:
+        return b"".join(self.lines)
+
+
+def process_start_identity(pid: int) -> str | None:
+    try:
+        result = subprocess.run(
+            ["ps", "-o", "lstart=", "-p", str(pid)],
+            check=False,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=2,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return result.stdout.strip() or None
+
+
+def parse_stream(records: bytes) -> dict[str, object]:
+    init: dict[str, object] | None = None
+    result: dict[str, object] | None = None
+    retry_events: list[dict[str, object]] = []
+    malformed = 0
+    for line in records.splitlines():
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            malformed += 1
+            continue
+        if not isinstance(record, dict):
+            malformed += 1
+        elif record.get("type") == "system" and record.get("subtype") == "init":
+            init = record
+        elif record.get("type") == "system" and record.get("subtype") == "api_retry":
+            retry_events.append(record)
+        elif record.get("type") == "result":
+            result = record
+    return {"init": init, "result": result, "retry_events": retry_events, "malformed_records": malformed}
+
+
+def init_capability_failure(parsed: dict[str, object]) -> str | None:
+    init = parsed.get("init")
+    if not isinstance(init, dict):
+        return "missing_system_init"
+    tools = set(value for value in init.get("tools", []) if isinstance(value, str))
+    if tools != REQUIRED_TOOLS:
+        return "effective_tool_set_mismatch"
+    mcp_servers = init.get("mcp_servers", [])
+    if mcp_servers:
+        return "effective_mcp_set_not_empty"
+    if init.get("mcp_server_errors") or init.get("plugin_errors"):
+        return "startup_capability_error"
+    return None
+
+
+def retry_classification(parsed: dict[str, object], exit_code: int) -> tuple[str, bool]:
+    result = parsed.get("result")
+    retries = parsed.get("retry_events")
+    if isinstance(result, dict) and result.get("subtype") == "success" and not result.get("is_error") and exit_code == 0:
+        return "success", False
+    if isinstance(retries, list) and retries:
+        last_error = retries[-1].get("error")
+        if last_error in TRANSIENT_OUTER_RETRY_ERRORS and isinstance(result, dict) and result.get("is_error"):
+            return f"terminal_transient_{last_error}", True
+        if last_error == "rate_limit":
+            return "terminal_rate_limit_policy_owned_by_cak_154", False
+        if last_error in {"authentication_failed", "oauth_org_not_allowed", "billing_error"}:
+            return "terminal_auth_or_billing_failure", False
+    return "terminal_unclassified_failure", False
+
+
+def terminate_recorded_group(live_state_path: Path, authority: str, *, force_authorized: bool, grace_seconds: float | None) -> int:
+    state = json.loads(live_state_path.read_text(encoding="utf-8"))
+    if state.get("state") not in {"running", "awaiting_operator_disposition"}:
+        raise RuntimeError("recorded attempt is not live")
+    pid = state.get("pid")
+    pgid = state.get("process_group_id")
+    if not isinstance(pid, int) or not isinstance(pgid, int) or os.getpgid(pid) != pgid:
+        raise RuntimeError("recorded process identity is no longer exact")
+    observed_start = process_start_identity(pid)
+    if state.get("process_start_identity") and observed_start != state["process_start_identity"]:
+        raise RuntimeError("recorded process start identity no longer matches")
+    state.update({"state": "termination_authorized", "termination_authority": authority, "graceful_signal": "SIGTERM"})
+    replace_live_state(live_state_path, state)
+    os.killpg(pgid, signal.SIGTERM)
+    grace = grace_seconds if grace_seconds is not None else float(state.get("graceful_termination_seconds", 10.0))
+    deadline = time.monotonic() + grace
+    while time.monotonic() < deadline:
+        latest = json.loads(live_state_path.read_text(encoding="utf-8"))
+        if latest.get("state") in {"exited", "terminal"}:
+            return 0
+        time.sleep(min(0.1, max(0.0, deadline - time.monotonic())))
+    if not force_authorized:
+        state.update({"state": "awaiting_operator_disposition", "force_escalation": "not_authorized"})
+        replace_live_state(live_state_path, state)
+        return 75
+    os.killpg(pgid, signal.SIGKILL)
+    state.update({"state": "force_termination_authorized", "forced_signal": "SIGKILL"})
+    replace_live_state(live_state_path, state)
+    return 0
+
+
+def request_or_decline_termination(live_state_path: Path, *, decline: bool) -> int:
+    state = json.loads(live_state_path.read_text(encoding="utf-8"))
+    if state.get("state") not in {"running", "awaiting_operator_disposition"}:
+        raise RuntimeError("recorded attempt is not live")
+    if decline:
+        state.update({"state": "running", "termination_disposition": "declined_keep_waiting"})
+    else:
+        state.update({"state": "awaiting_operator_disposition", "termination_disposition": "confirmation_required"})
+    replace_live_state(live_state_path, state)
+    return 0
+
+
+def run_governed_review(
+    config: GovernedReviewConfig,
+    executable: str,
+    child_environment: dict[str, str],
+    model_arguments: list[str],
+    prompt: bytes,
+    diagnostics_destination: Path | None,
+) -> int:
+    prompt_digest = sha256_bytes(prompt)
+    arguments, system_prompt = governed_claude_arguments(config, model_arguments)
+    contract_identity = {
+        "config_sha256": config.digest,
+        "prompt_sha256": prompt_digest,
+        "prompt_size": len(prompt),
+        "system_prompt_sha256": sha256_bytes(system_prompt.encode("utf-8")),
+        "requested_model_arguments": model_arguments,
+        "launch_root": str(config.launch_root),
+        "additional_directories": [str(path) for path in config.additional_directories],
+        "allowed_commands": [list(argv) for argv in config.allowed_commands],
+        "cancellation_policy": config.body["cancellation_policy"],
+    }
+    controller_id = uuid.uuid4().hex
+    with tempfile.TemporaryDirectory(prefix="claude-review-attempt-") as scratch_name:
+        scratch = Path(scratch_name)
+        environment = safe_command_environment(child_environment, scratch)
+        initial_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
+        try:
+            preflight = preflight_review(config, environment)
+        except (OSError, RuntimeError, ValueError) as error:
+            final_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
+            changes = snapshot_delta(initial_snapshot, final_snapshot)
+            record = {
+                "kind": "claude_governed_review",
+                "review_id": config.body["review_id"],
+                "contract_id": config.body["contract_id"],
+                "controller_id": controller_id,
+                "contract_identity": contract_identity,
+                "failure_classification": "access_or_command_preflight_failure",
+                "candidate_verdict": "not_produced",
+                "substantive_review_started": False,
+                "no_delta_postflight": {"passed": not changes, "changed_paths": changes},
+                "error": bounded_redacted(str(error)),
+            }
+            emit_diagnostics(record, diagnostics_destination)
+            return REVIEWER_FAILURE_EXIT
+        post_preflight_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
+        preflight_changes = snapshot_delta(initial_snapshot, post_preflight_snapshot)
+        if preflight_changes:
+            record = {
+                "kind": "claude_governed_review",
+                "review_id": config.body["review_id"],
+                "contract_id": config.body["contract_id"],
+                "controller_id": controller_id,
+                "contract_identity": contract_identity,
+                "preflight": preflight,
+                "failure_classification": "preflight_side_effect_failure",
+                "candidate_verdict": "not_produced",
+                "substantive_review_started": False,
+                "no_delta_postflight": {"passed": False, "changed_paths": preflight_changes},
+            }
+            emit_diagnostics(record, diagnostics_destination)
+            return REVIEWER_FAILURE_EXIT
+
+        command = [executable, "-p", *arguments]
+        attempt_summaries: list[dict[str, object]] = []
+        final_output: str | None = None
+        final_exit = REVIEWER_FAILURE_EXIT
+        for attempt_number in range(1, config.max_attempts + 1):
+            attempt_id = f"{config.body['review_id']}-{attempt_number}-{uuid.uuid4().hex}"
+            attempt_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
+            output_path = config.evidence_directory / f"{attempt_id}-claude-stream.jsonl"
+            receipt_path = config.evidence_directory / f"{attempt_id}-terminal-receipt.json"
+            live_state_path = config.evidence_directory / f"{attempt_id}-live-state.json"
+            started = time.time()
+            process = subprocess.Popen(
+                command,
+                cwd=config.launch_root,
+                env=environment,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                start_new_session=True,
+            )
+            assert process.stdin is not None and process.stdout is not None and process.stderr is not None
+            pgid = os.getpgid(process.pid)
+            live_state: dict[str, Any] = {
+                "kind": "claude_governed_review_live_state",
+                "review_id": config.body["review_id"],
+                "controller_id": controller_id,
+                "attempt_id": attempt_id,
+                "attempt_number": attempt_number,
+                "state": "running",
+                "pid": process.pid,
+                "process_group_id": pgid,
+                "process_start_identity": process_start_identity(process.pid),
+                "started_at_epoch": started,
+                "last_supported_evidence_at_epoch": started,
+                "partial_output_exists": False,
+                "graceful_termination_seconds": config.graceful_termination_seconds,
+            }
+            exclusive_write(live_state_path, canonical_json_bytes(live_state))
+            stdout_collector = PipeCollector(process.stdout)
+            stderr_collector = PipeCollector(process.stderr)
+            process.stdin.write(prompt)
+            process.stdin.close()
+            next_soft = time.monotonic() + config.soft_liveness_threshold
+            emergency_signal_sent = False
+            capability_signal_sent = False
+            initialization_checked = False
+            live_capability_failure: str | None = None
+            while process.poll() is None:
+                time.sleep(config.observation_interval)
+                output_exists = bool(stdout_collector.lines or stderr_collector.lines)
+                if output_exists:
+                    live_state["partial_output_exists"] = True
+                    live_state["last_supported_evidence_at_epoch"] = time.time()
+                if not initialization_checked:
+                    live_parsed = parse_stream(stdout_collector.bytes())
+                    if live_parsed.get("init") is not None:
+                        initialization_checked = True
+                        live_capability_failure = init_capability_failure(live_parsed)
+                        live_state["effective_initialization_checked"] = True
+                        if live_capability_failure:
+                            live_state.update(
+                                {
+                                    "state": "capability_stop_in_progress",
+                                    "capability_failure": live_capability_failure,
+                                    "graceful_signal": "SIGTERM",
+                                }
+                            )
+                            try:
+                                os.killpg(pgid, signal.SIGTERM)
+                                live_state["capability_signal_delivery"] = "sent"
+                            except OSError as error:
+                                live_state["capability_signal_delivery"] = "not_delivered"
+                                live_state["capability_signal_error"] = bounded_redacted(str(error))
+                            capability_signal_sent = True
+                if time.monotonic() >= next_soft:
+                    live_state["soft_liveness_threshold_crossed"] = True
+                    live_state["soft_liveness_observation"] = "process_group_still_running; continuing_same_attempt"
+                    next_soft = time.monotonic() + config.soft_liveness_threshold
+                live_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
+                live_changes = snapshot_delta(attempt_snapshot, live_snapshot)
+                emergency_conditions = config.body["cancellation_policy"].get("emergency_stop_conditions", [])
+                if live_changes and "unauthorized_mutation" in emergency_conditions and not emergency_signal_sent:
+                    live_state.update(
+                        {
+                            "state": "emergency_stop_in_progress",
+                            "emergency_condition": "unauthorized_mutation",
+                            "emergency_changed_paths": live_changes,
+                            "graceful_signal": "SIGTERM",
+                        }
+                    )
+                    try:
+                        os.killpg(pgid, signal.SIGTERM)
+                        live_state["graceful_signal_delivery"] = "sent"
+                    except OSError as error:
+                        # The child can become terminal between poll() and signal
+                        # delivery. Preserve the attempt and let the decisive
+                        # postflight classify the observed mutation.
+                        live_state["graceful_signal_delivery"] = "not_delivered"
+                        live_state["graceful_signal_error"] = bounded_redacted(str(error))
+                    emergency_signal_sent = True
+                try:
+                    external_state = json.loads(live_state_path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError):
+                    external_state = live_state
+                for key in ("state", "termination_disposition", "termination_authority", "graceful_signal", "forced_signal", "force_escalation"):
+                    if key in external_state:
+                        live_state[key] = external_state[key]
+                replace_live_state(live_state_path, live_state)
+            stdout_collector.thread.join(timeout=2)
+            stderr_collector.thread.join(timeout=2)
+            stdout = stdout_collector.bytes()
+            stderr = stderr_collector.bytes()
+            exclusive_write(output_path, stdout)
+            parsed = parse_stream(stdout)
+            capability_failure = init_capability_failure(parsed)
+            classification, retryable = retry_classification(parsed, process.returncode)
+            if capability_failure or capability_signal_sent:
+                classification = capability_failure or live_capability_failure or "startup_capability_error"
+                retryable = False
+            if live_state.get("termination_authority"):
+                classification = "operator_authorized_termination"
+                retryable = False
+            post_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
+            changes = snapshot_delta(attempt_snapshot, post_snapshot)
+            if changes:
+                classification = "reviewer_side_effect_failure"
+                retryable = False
+            result = parsed.get("result")
+            if classification == "success" and isinstance(result, dict) and isinstance(result.get("result"), str):
+                final_output = result["result"]
+                final_exit = 0
+            elif classification == "terminal_auth_or_billing_failure":
+                final_exit = AUTH_FAILURE_EXIT
+            terminal_state = "terminal"
+            if process.returncode < 0:
+                terminal_state = "terminated_by_signal"
+            receipt = {
+                "kind": "claude_governed_review_attempt_receipt",
+                "review_id": config.body["review_id"],
+                "contract_id": config.body["contract_id"],
+                "controller_id": controller_id,
+                "attempt_id": attempt_id,
+                "attempt_number": attempt_number,
+                "execution_kind": "fresh_execution_exact_input_repeat" if attempt_number > 1 else "fresh_execution",
+                "contract_identity": contract_identity,
+                "preflight": preflight,
+                "process": {
+                    "pid": process.pid,
+                    "process_group_id": pgid,
+                    "process_start_identity": live_state["process_start_identity"],
+                    "exit_code": process.returncode,
+                    "state": terminal_state,
+                },
+                "runtime": {
+                    "claude_executable": executable,
+                    "claude_version": version_of(executable, environment, cwd=str(config.launch_root)),
+                    "requested_argv": redacted_argv(command),
+                    "effective_init": parsed.get("init"),
+                },
+                "failure_classification": None if classification == "success" else classification,
+                "retry_eligible": retryable,
+                "candidate_verdict": "uninterpreted" if classification == "success" else "not_produced",
+                "substantive_review_output": classification == "success",
+                "raw_output": {"path": str(output_path), "size": len(stdout), "sha256": sha256_bytes(stdout)},
+                "stderr": bounded_redacted(stderr.decode("utf-8", errors="replace")),
+                "stream_evidence": {
+                    "in_process_retry_events": len(parsed.get("retry_events", [])),
+                    "malformed_records": parsed.get("malformed_records"),
+                },
+                "no_delta_postflight": {
+                    "baseline_sha256": attempt_snapshot["sha256"],
+                    "postflight_sha256": post_snapshot["sha256"],
+                    "passed": not changes,
+                    "changed_paths": changes,
+                },
+                "started_at_epoch": started,
+                "ended_at_epoch": time.time(),
+                "zero_authority": True,
+            }
+            exclusive_write(receipt_path, canonical_json_bytes(receipt))
+            live_state.update(
+                {
+                    "state": "terminal",
+                    "terminal_receipt": str(receipt_path),
+                    "ended_at_epoch": receipt["ended_at_epoch"],
+                    "exit_code": process.returncode,
+                    "failure_classification": receipt["failure_classification"],
+                }
+            )
+            replace_live_state(live_state_path, live_state)
+            attempt_summaries.append(
+                {
+                    "attempt_id": attempt_id,
+                    "receipt": str(receipt_path),
+                    "classification": classification,
+                    "retry_eligible": retryable,
+                }
+            )
+            if classification == "success" or not retryable or attempt_number == config.max_attempts:
+                break
+
+        overall = {
+            "kind": "claude_governed_review",
+            "review_id": config.body["review_id"],
+            "contract_id": config.body["contract_id"],
+            "controller_id": controller_id,
+            "contract_identity": contract_identity,
+            "preflight": preflight,
+            "attempts": attempt_summaries,
+            "candidate_verdict": "uninterpreted" if final_exit == 0 else "not_produced",
+            "substantive_review_output": final_exit == 0,
+            "failure_classification": None if final_exit == 0 else attempt_summaries[-1]["classification"],
+            "automated_retry_attempted": len(attempt_summaries) > 1,
+        }
+        emit_diagnostics(overall, diagnostics_destination)
+        if final_output is not None:
+            sys.stdout.write(final_output)
+            if final_output and not final_output.endswith("\n"):
+                sys.stdout.write("\n")
+        return final_exit
+
+
 def parse_arguments(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -270,6 +1109,15 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--claude-bin", default="claude")
     parser.add_argument("--diagnostics-file", type=Path)
     parser.add_argument("--auth-preflight", action="store_true")
+    parser.add_argument("--review-config", type=Path)
+    parser.add_argument("--permission-hook", type=Path)
+    parser.add_argument("--request-termination", type=Path)
+    parser.add_argument("--decline-termination", type=Path)
+    parser.add_argument("--terminate", type=Path)
+    parser.add_argument("--termination-authority")
+    parser.add_argument("--force-authorized", action="store_true")
+    parser.add_argument("--grace-seconds", type=float)
+    parser.add_argument("--classification-fixture", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("claude_args", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
     if args.claude_args[:1] == ["--"]:
@@ -283,6 +1131,24 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_arguments(argv or sys.argv[1:])
+    if args.permission_hook:
+        return permission_hook(args.permission_hook)
+    if args.request_termination:
+        return request_or_decline_termination(args.request_termination, decline=False)
+    if args.decline_termination:
+        return request_or_decline_termination(args.decline_termination, decline=True)
+    if args.terminate:
+        if not args.termination_authority:
+            raise SystemExit("--terminate requires --termination-authority")
+        return terminate_recorded_group(
+            args.terminate,
+            args.termination_authority,
+            force_authorized=args.force_authorized,
+            grace_seconds=args.grace_seconds,
+        )
+    classification_fixture = args.classification_fixture and os.environ.get("CLAUDE_REVIEW_TEST_FIXTURE") == "1"
+    if not args.auth_preflight and args.review_config is None and not classification_fixture:
+        raise SystemExit("substantive governed review requires --review-config")
     try:
         uid, user, effective_home = effective_identity()
     except RuntimeError as error:
@@ -342,6 +1208,33 @@ def main(argv: list[str] | None = None) -> int:
         if preflight_directory:
             preflight_directory.cleanup()
         return REVIEWER_FAILURE_EXIT
+
+    if args.review_config is not None and not args.auth_preflight:
+        try:
+            config = load_governed_config(args.review_config)
+            prompt = sys.stdin.buffer.read()
+            if not prompt:
+                raise ValueError("governed review prompt must not be empty")
+            return run_governed_review(
+                config,
+                executable,
+                child_environment,
+                args.claude_args,
+                prompt,
+                args.diagnostics_file,
+            )
+        except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as error:
+            emit_diagnostics(
+                {
+                    "kind": "claude_governed_review",
+                    "failure_classification": "review_contract_failure",
+                    "candidate_verdict": "not_produced",
+                    "substantive_review_output": False,
+                    "error": bounded_redacted(str(error)),
+                },
+                args.diagnostics_file,
+            )
+            return REVIEWER_FAILURE_EXIT
 
     prompt = AUTH_PREFLIGHT_PROMPT if args.auth_preflight else sys.stdin.buffer.read()
     try:

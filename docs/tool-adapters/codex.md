@@ -713,9 +713,12 @@ For an automated, non-interactive Claude review, use the repository's
 [`claude-review`](../../scripts/claude-review) launcher rather than a hand-built
 environment assignment. It derives the effective operating-system account,
 normalizes `USER`, `LOGNAME`, and `HOME` for the Claude child, reads the review
-prompt from standard input rather than argv, and emits a bounded, redacted
-diagnostic record. Pass the existing review flags unchanged after `--`; the
-launcher does not select a model, tools, permissions, or reviewer role.
+prompt from standard input rather than argv, and emits bounded diagnostics plus
+append-only attempt receipts. For substantive review, pass `--review-config`
+with the versioned governed-launch JSON and pass only model and supported effort
+selection after `--`. The launcher owns the Claude tools, permission mode, MCP,
+settings, hook, output, and session-persistence flags; do not append competing
+review flags.
 
 Before an expensive independent review, run the same launcher with
 `--auth-preflight`. It reuses the effective-user environment and executable
@@ -733,6 +736,26 @@ scripts/claude-review --auth-preflight -- --model opus --effort high
 `AUTH_PREFLIGHT_OK` means authentication worked for that process context only;
 it does not guarantee that a later review cannot expire. Do not start the
 review after a preflight failure.
+
+After successful auth preflight, invoke the governed review from the owning
+controller and keep awaiting that exact launcher until its live-state record is
+terminal. The review config must cover every source root, bind the candidate and
+disjoint admitted evidence destination, enumerate exact observational command
+argv, and declare retry and cancellation policy. Do not use a Codex tool timeout
+or missing output as evidence that Claude exited, and do not launch a replacement
+while the recorded process group may still be live. If the interactive contract
+requires a disposition, use the launcher's request, decline, or authority-bound
+termination control against the exact live-state path; force escalation requires
+separate authorization.
+
+The launcher performs representative access and command-effect preflight,
+validates Claude's effective initialization metadata, snapshots all guarded
+source bytes and the Git index, and requires a positive no-delta postflight.
+Its retry cap applies only to fresh executions that repeat exact input after a
+fully terminal, explicitly transient provider outcome. Provider-internal retry
+events remain part of one attempt. Preserve each attempt receipt even when no
+candidate verdict is produced, and apply finding disposition only to successful
+substantive review output.
 
 The launcher preserves distinct documented failure classes when provider output
 supports them: `AUTH_OAUTH_TOKEN_EXPIRED_401`,

@@ -139,6 +139,46 @@ The lane stop receipt records what the lane reports at its boundary. It does
 not grant downstream authority and does not replace direct inspection of the
 repository, pull request, validation, or other controlling source.
 
+## Live Process Lifecycle
+
+Launching an executor creates a live process obligation. The controller must
+assign an attempt identity, record the exact process and process-group identity
+with a start-time discriminator, and await observed terminal state. A tool-call
+timeout, quiet output, partial output, detached terminal, lost polling session,
+or soft liveness threshold is not process completion. Do not abandon the live
+attempt, declare it failed while it may still run, or launch an overlapping
+replacement.
+
+While the process is live, keep these states distinct:
+
+- `running`: continue observing the same process, including after soft
+  thresholds;
+- `awaiting operator disposition`: preserve the process and ask whether to keep
+  waiting or terminate when the interactive contract requires that choice;
+- `termination authorized`: record the exact authority and send the declared
+  graceful signal to the recorded process group;
+- `force escalation authorized`: only after a separately declared grace period
+  and separate authority, send the declared force signal; and
+- `terminal`: record observed exit or signal state, capture output, complete
+  postflight, and write the terminal receipt before any successor attempt.
+
+Interactive cancellation requires a current human decision for that exact live
+attempt. An unattended workflow may act only under a predeclared,
+human-approved cancellation policy with exact emergency conditions, signal
+sequence, grace interval, and escalation authority. A generic timeout or the
+controller's desire to make progress is not such a policy. If an unauthorized
+mutation is a declared emergency condition, the controller may invoke only the
+preauthorized response and must still await terminal state and perform
+postflight; detection does not erase the attempt.
+
+Termination is an infrastructure outcome, not a candidate verdict. Record
+whether a signal was requested, delivered, declined, ineffective, or escalated,
+and do not classify provider guarantees from an operating-system exit code
+alone. A terminated attempt is never an eligible transient retry unless the
+governing contract explicitly says so. Telemetry and operator-progress
+rendering may observe these states, but they do not define the lifecycle or
+create authority.
+
 ## Orchestrator Responsibilities
 
 The orchestrator owns the batch-level view. In a solo-operator workflow this is

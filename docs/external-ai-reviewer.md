@@ -76,6 +76,65 @@ revoked/invalid-credential classes separately; unknown auth-shaped output must
 fail closed without a conjectured provider cause. Neither kind of failure is
 candidate evidence or grounds to substitute another reviewer.
 
+### Governed reviewer launch and completion
+
+A governed review begins with a controller-owned launch contract, not with a
+provider command assembled ad hoc. The contract must bind the exact prompt and
+configuration identities, candidate worktree, complete source graph, launch
+root, additional readable directories, guarded roots, exact observational
+commands, evidence destination, retry bound, and cancellation policy. Choose a
+launch root that commonly owns the source graph when practical; otherwise
+declare every additional directory explicitly. A narrow package-directory
+launch that cannot reach the candidate is a contract failure, not a partially
+qualified review.
+
+Before accepting substantive review, the controller must:
+
+- read a representative object from every declared source location;
+- execute every exact observational command with the review environment and
+  reject hidden wrappers, interpreters, shell operators, hooks, pagers, external
+  diffs, text-conversion drivers, and other command effects that exceed the
+  grant;
+- verify that the evidence destination is writable and disjoint from guarded
+  sources;
+- record the requested launch root, additional directories, tools, commands,
+  and permission posture; and
+- inspect provider initialization evidence and stop if the effective tools,
+  connectors, startup capabilities, or source reachability differ from the
+  contract.
+
+Treat provider permission flags as one control, not the whole read-only proof.
+Use the narrowest available tool set, command grammar, provider hooks, sandbox
+or filesystem restrictions, disabled connector surface, safe environment, and
+controller-side preflight together. Preserve the exact preflight result and
+any material qualification gap.
+
+Read-only completion requires a positive whole-source no-delta postflight. The
+baseline must accept deliberately dirty, staged, untracked, and ignored source
+state without cleaning or normalizing it, then detect content creation,
+modification, removal, mode or symlink changes, Git-index changes, and writes
+that escape the candidate into another guarded source. Repository status alone
+is insufficient. Reviewer output and receipts belong only in the declared,
+disjoint evidence destination after its retention and visibility rules admit
+those bytes.
+
+An attempt is complete only after the exact reviewer process group is terminal,
+its output is captured, its terminal receipt is durable, and no-delta
+postflight passes. A fresh attempt may repeat the exact inputs only for an
+explicitly documented transient provider class, after the prior attempt is
+fully terminal, under the same controller and contract identity, and within a
+small declared cap. This is a fresh execution with an exact-input repeat, not a
+historical replay. Authentication, billing, access, capability, command,
+mutation, cancellation, and unknown failures are not automatically retryable.
+Provider-internal retry events are evidence inside one attempt unless the
+outer contract explicitly classifies the terminal result as eligible for a new
+attempt.
+
+Apply the shared live-process rules in
+[`orchestration-and-parallelism.md#live-process-lifecycle`](orchestration-and-parallelism.md#live-process-lifecycle).
+Silence, partial output, elapsed time, or a soft liveness threshold never proves
+termination and never authorizes a replacement attempt.
+
 Use [`review-packet.md#independent-review-findings-and-re-review`](review-packet.md#independent-review-findings-and-re-review)
 for finding disposition and the decision between no re-review, focused
 re-review, and a fresh proposal with full review. Do not duplicate those
