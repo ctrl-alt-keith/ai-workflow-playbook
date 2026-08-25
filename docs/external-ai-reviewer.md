@@ -112,6 +112,17 @@ Before accepting substantive review, the controller must:
   connectors, startup capabilities, or source reachability differ from the
   contract.
 
+Treat each observational command as an exact argv grammar, not a generic
+executable plus token scan. Retain only the subcommand forms the review needs.
+For Git, require one exact `git -C` declared root, classify every token as an
+admitted option or exact revision/object expression, and reject unresolved
+tokens rather than allowing Git to reinterpret them as paths. Explicit and
+implicit `diff --no-index`, path traversal, outside absolute paths, mixed
+inside/outside operands, unadmitted pathspec magic, and missing path boundaries
+are contract failures before provider launch. If a retained Git form accepts
+paths, require its exact path boundary and resolve every operand inside one
+declared source root.
+
 Controller-side command preflight does not prove that the same command can run
 inside the provider process. Require a successful in-provider result from one
 exact granted command canary, reject any sandbox-bypass request, and fail closed
@@ -130,11 +141,20 @@ Read-only completion requires a positive whole-source no-delta postflight. The
 baseline must accept deliberately dirty, staged, untracked, and ignored source
 state without cleaning or normalizing it, then detect content creation,
 modification, removal, mode or symlink changes, Git-index changes, and writes
-to the candidate-specific Git administration directory, and writes that escape
+to the candidate-specific Git administration directory—including lock-file
+creation, removal, replacement, mode, symlink, and content changes—and writes that escape
 the candidate into another guarded source. Repository status alone is
 insufficient. Reviewer output and receipts belong only in the declared,
 disjoint evidence destination after its retention and visibility rules admit
 those bytes.
+
+Do not broadly exclude `.lock` paths from the decisive baseline-to-terminal
+comparison. An unchanged pre-existing lock may remain when its exact identity
+matches. A new, removed, or changed lock is reviewer side-effect contamination:
+produce no qualifying verdict, do not reset it automatically, and stop until it
+is corrected and dispositioned. Any live-monitor exception must identify one
+controller-owned transient lock by exact path, actor, and lifetime and must not
+apply to terminal postflight.
 
 An attempt is complete only after the exact reviewer process group is terminal,
 all output collectors reach end-of-stream, its output is captured, its terminal

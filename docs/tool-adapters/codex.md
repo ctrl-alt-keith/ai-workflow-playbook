@@ -709,8 +709,8 @@ contract is in [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-st
 Direct Claude Code execution from Codex under `workspace-write` has a narrower
 qualified runtime contract in addition to the general child-process guidance:
 
-For an automated, non-interactive Claude review, use the repository's
-[`claude-review`](../../scripts/claude-review) launcher rather than a hand-built
+For local development and lifecycle controls, use the repository's
+[`claude-review`](../../scripts/claude-review) source rather than a hand-built
 environment assignment. It derives the effective operating-system account,
 normalizes `USER`, `LOGNAME`, and `HOME` for the Claude child, reads the review
 prompt from standard input rather than argv, and emits bounded diagnostics plus
@@ -718,9 +718,11 @@ append-only attempt receipts. For substantive review, pass `--review-config`
 with the versioned governed-launch JSON and pass only model and supported effort
 selection after `--`. The launcher owns the Claude tools, permission mode, MCP,
 settings, hook, output, and session-persistence flags; do not append competing
-review flags. Put `--review-config` immediately after `./scripts/claude-review`;
-the stable direct prefix lets a machine-local Codex execution policy grant only
-the governed review mode. Authentication preflight follows the same convention.
+review flags. Production auth and review use the byte-exact machine-local
+installation made by
+[`install-claude-review`](../../scripts/install-claude-review), not the writable
+repository path. Put `--review-config` immediately after that exact installed
+absolute path. Authentication preflight follows the same convention.
 The launcher rejects either mode when combined with permission-hook or lifecycle
 control modes, so an allowed review prefix cannot authorize those controls.
 
@@ -734,45 +736,55 @@ review and does not read repository, candidate, or held-out content.
 For example:
 
 ```text
-./scripts/claude-review --auth-preflight -- --model opus --effort high
+/ABSOLUTE/INSTALLED/PATH/claude-review --auth-preflight -- --model opus --effort high
 ```
 
-The launcher-specific Codex execution policy is co-located at
-[`../../.codex/rules/claude-review.rules`](../../.codex/rules/claude-review.rules).
-Codex loads project-local `.codex/rules/` files at startup when the project
-configuration layer is trusted. The rule allows only direct invocations whose
-first two arguments select authentication preflight or governed substantive
-review, and explicitly keeps permission-hook and lifecycle-control prefixes
-approval-gated. Codex rules are an experimental execution-policy surface; test
-the tracked rule after Codex upgrades and restart Codex after it changes.
-The allow decision constrains the direct command prefix; the launcher separately
-accepts only `claude` from the inherited `PATH` or the effective user's exact
-`~/.local/bin/claude` installation.
+The project rule at
+[`../../.codex/rules/claude-review.rules`](../../.codex/rules/claude-review.rules)
+keeps every writable repository-relative launcher form approval-gated. The
+portable machine-rule template is
+[`../../.codex/rule-templates/claude-review.rules`](../../.codex/rule-templates/claude-review.rules).
+Never copy that template unchanged into the user layer: its placeholder is not
+an executable identity, and a relative allow prefix can match writable bytes in
+more than one repository.
 
-The project-local rule is the portable source for macOS and Linux. A controller
-started from a broader workspace may not activate the nested project layer. If
-that controller must invoke the launcher, compare any existing user-layer copy
-with the tracked source first. Then copy the same reviewed bytes into the user
-layer and restart Codex:
+The installer verifies a clean exact source commit, copies the launcher to a
+commit-and-digest-qualified directory under an operator-controlled non-workspace
+root, records the source and installed hashes, exact Claude selector and resolved
+file identity, and renders the user rule with the exact installed absolute path.
+It refuses a different existing installed object and requires the caller to name
+the expected digest before replacing an existing active rule. Supply every
+candidate, evidence, workspace, and attempt-scratch root as a forbidden root.
+For example, using operator-selected absolute paths:
 
 ```sh
-mkdir -p "$HOME/.codex/rules"
-cp .codex/rules/claude-review.rules \
-  "$HOME/.codex/rules/claude-review.rules"
+./scripts/install-claude-review \
+  --claude-bin /ABSOLUTE/PATH/TO/QUALIFIED/CLAUDE \
+  --forbidden-root /ABSOLUTE/PATH/TO/WORKSPACE \
+  --forbidden-root /ABSOLUTE/PATH/TO/EVIDENCE \
+  --activation-receipt /ABSOLUTE/PRIVATE/PATH/activation-receipt.json \
+  --expected-existing-rule-sha256 EXPECTED_SHA256
 ```
 
-A user-layer copy is machine-local activation, not an independent policy
-source, and must stay byte-identical to the rule from the launcher revision it
-authorizes. Validate the tracked rule file without launching Claude:
+The generated user rule allows only direct auth-preflight and governed-review
+prefixes for that installed path. Lifecycle and permission-hook prefixes remain
+`prompt`; repository-relative, alternate-path, and shell-wrapped forms are not
+allowed. The installed launcher verifies its own bytes, the active-rule hash,
+and the recorded Claude selector and resolved executable identity before either
+allowed operation. It never resolves `claude` through inherited `PATH`.
+
+Codex loads rules at startup. After each explicit install or update, validate
+the rendered rule without launching Claude, then restart Codex before relying
+on it:
 
 ```sh
 codex execpolicy check --pretty \
-  --rules .codex/rules/claude-review.rules \
-  -- ./scripts/claude-review --auth-preflight --claude-bin claude
+  --rules /ABSOLUTE/PATH/TO/ACTIVE/claude-review.rules \
+  -- /ABSOLUTE/INSTALLED/PATH/claude-review --auth-preflight
 
 codex execpolicy check --pretty \
-  --rules .codex/rules/claude-review.rules \
-  -- ./scripts/claude-review --terminate /tmp/live-state.json \
+  --rules /ABSOLUTE/PATH/TO/ACTIVE/claude-review.rules \
+  -- /ABSOLUTE/INSTALLED/PATH/claude-review --terminate /tmp/live-state.json \
   --termination-authority operator-approved
 ```
 

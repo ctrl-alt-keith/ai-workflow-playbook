@@ -108,8 +108,13 @@ The CLI controls have different effects:
   effective posture; never request or permit `dangerouslyDisableSandbox` as a
   workaround.
 
-The repository [`claude-review`](../../scripts/claude-review) launcher composes
-these controls for governed review. A versioned JSON review config binds the
+The repository [`claude-review`](../../scripts/claude-review) source composes
+these controls for governed review. Production auth and review run only through
+the exact machine-local installation rendered by
+[`install-claude-review`](../../scripts/install-claude-review). That installed
+launcher verifies its reviewed bytes, active Codex rule, and the exact absolute
+Claude selector plus resolved user-owned, non-writable executable identity; it
+does not select `claude` from inherited `PATH`. A versioned JSON review config binds the
 source graph, launch root and exact additional directories, guard roots,
 candidate and exact `HEAD`, disjoint evidence directory, immutable
 preflight-receipt and final-output paths, exact stream and terminal-receipt
@@ -133,9 +138,12 @@ memory loading, and Claude auto memory, with the provider working directory and
 temporary state redirected to fresh attempt-local scratch through the qualified
 macOS or Linux route in
 [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
-It rejects
-non-observational Git operations and commands whose result could invoke shell,
-text-conversion, external-diff, or interpreter side effects.
+It accepts only the exact Git status, diff, log, and revision forms needed by
+the qualifying review, each with one explicit `git -C` declared root. Exact
+revision grammar prevents unresolved operands from falling through to Git's
+filesystem comparison behavior. Explicit or inferred `diff --no-index`, path
+operands, traversal, unadmitted pathspec magic, shell forms, configuration
+overrides, text conversion, and external diff fail before provider launch.
 
 The first configured exact command is also an in-provider capability canary.
 The system prompt requires it before substantive analysis, and the controller
@@ -150,9 +158,12 @@ evidence. The first `system/init` record must report exactly `Bash`, `Glob`,
 capability-startup error; `dontAsk` permission mode; the requested model family;
 and the exact attempt-scratch runtime directory. Stop the process on a mismatch
 and reject any eventual output. The launcher still
-performs whole-source and Git-index no-delta checks because provider flags,
+performs whole-source, Git-index, and Git-administration no-delta checks because provider flags,
 hooks, command-canary evidence, and initialization metadata are defense in
-depth, not a proof that no effect occurred.
+depth, not a proof that no effect occurred. Git-administration lock files remain
+in the decisive baseline and terminal snapshot. New, removed, replaced, or
+changed locks contaminate the attempt; an exact unchanged pre-existing lock is
+distinguished from reviewer-attributable delta.
 
 Anthropic documents `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` and
 `CLAUDE_CODE_DISABLE_CLAUDE_MDS=1` in its
