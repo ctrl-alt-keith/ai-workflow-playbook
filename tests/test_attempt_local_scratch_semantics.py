@@ -1,0 +1,63 @@
+from pathlib import Path
+import unittest
+
+
+ROOT = Path(__file__).resolve().parents[1]
+DOCS = ROOT / "docs"
+
+
+def normalized(path):
+    return " ".join(path.read_text(encoding="utf-8").split())
+
+
+class AttemptLocalScratchSemanticsTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.readiness = normalized(DOCS / "repo-readiness.md")
+        cls.codex = normalized(DOCS / "tool-adapters" / "codex.md")
+        cls.engineering = normalized(DOCS / "engineering-baseline.md")
+        cls.evidence = normalized(DOCS / "evidence-lifecycle.md")
+        cls.claude = normalized(DOCS / "tool-adapters" / "claude.md")
+        cls.agents = normalized(ROOT / "AGENTS.md")
+
+    def test_readiness_owns_the_lifecycle_taxonomy(self):
+        for phrase in (
+            "`scratch` is a lifecycle and storage class, not an assumed persistent workspace pathname",
+            "Durable state",
+            "Repository-owned working state",
+            "Attempt-local disposable scratch",
+            "Crash residue",
+            "Legacy workspace scratch",
+            "attempt-local scratch",
+            "Generic persistent `scratch/` is prohibited by default for disposable mechanics",
+        ):
+            self.assertIn(phrase, self.readiness)
+
+    def test_authority_promotion_cleanup_and_fallback_fail_closed(self):
+        for phrase in (
+            "not authority",
+            "Promotion precedes cleanup",
+            "exact-verify it",
+            "Never silently fall back",
+            "Fail closed on unexpected members",
+            "Do not reuse crash residue",
+        ):
+            self.assertIn(phrase, self.readiness)
+
+    def test_only_darwin_has_a_bounded_platform_projection(self):
+        self.assertIn("/usr/bin/getconf DARWIN_USER_TEMP_DIR", self.readiness)
+        self.assertIn("Linux and Windows mappings remain unqualified", self.readiness)
+
+    def test_nearby_guidance_does_not_restore_a_persistent_default(self):
+        self.assertNotIn("Keep temporary workflow state repo-local", self.agents)
+        self.assertIn("attempt-local disposable scratch", self.agents)
+        self.assertIn("attempt-local scratch", self.engineering)
+        self.assertIn("helper API or environment variable selects allocation mechanics", self.codex)
+        self.assertNotIn("Use repo-local scratch paths for workflow artifacts", self.codex)
+        self.assertNotIn("Ordinary repo-local scratch", self.evidence)
+        self.assertIn("attempt-local scratch is not a substitute", self.evidence)
+        self.assertIn("use attempt-local scratch only", self.claude)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -690,14 +690,17 @@ codex debug prompt-input -c 'sandbox_workspace_write.writable_roots=[]' effectiv
 
 Confirm the project root and intended durable roots remain writable, while
 `/private/tmp` and `/private/var/folders/.../T` are absent when the exclusion
-flags are enabled. Some tools need a writable temp directory; when implicit
-temp roots are excluded, configure those tools to use a repo-local temp path
-inside the effective sandbox or expect failures from compilers, archives,
-caches, and other temp-file users.
+flags are enabled. Some tools need a writable temporary directory; when
+implicit temp roots are excluded, configure them only under a separate,
+explicit repository or tool ownership contract, or expect failures from
+compilers, archives, caches, and other temp-file users. A helper API or
+environment variable selects allocation mechanics; it does not establish that
+ownership or authority.
 
-Use repo-local scratch paths for workflow artifacts that need review later. Use
-temporary OS paths only for short-lived process-local files whose path and
-contents do not matter after the command finishes.
+Use the natural durable or repository-owned path for workflow artifacts that
+need review later. Use attempt-local scratch only for short-lived private
+process mechanics whose loss cannot impair recovery; the shared lifecycle
+contract is in [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
 ### Qualified Direct Claude Code Path
 

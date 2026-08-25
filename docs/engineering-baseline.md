@@ -116,9 +116,10 @@ paths. This includes public docs, reusable examples, manifests, validation
 notes, PR evidence, and reusable workflow guidance.
 
 Prefer relative paths, repo-root placeholders, lint-safe example placeholders,
-and temporary-directory abstractions instead. When an example needs a scratch
-location, show the pattern rather than a captured local path, such as a
-`mktemp`-style temporary directory or `[temporary-directory]/artifact`.
+and temporary-directory abstractions instead. When an example needs
+attempt-local scratch, show the lifecycle pattern rather than a captured local
+path, such as a fresh private `mktemp`-style directory or
+`[attempt-local-directory]/artifact`.
 
 Machine-local paths reduce portability and can leak unnecessary local context
 into public artifacts. Keep path examples reusable unless the artifact is

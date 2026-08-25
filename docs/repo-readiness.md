@@ -372,7 +372,7 @@ For implementation changes, run commands from inside the target repository's
 dedicated worktree. Keep temporary workflow artifacts scoped to that repository
 whenever practical.
 Examples include local worktree directories, generated review artifacts,
-transient manifests, and task-specific scratch state.
+transient manifests, and repository-owned build or test state.
 
 Keep the execution surface isolated from unrelated operator state and primary
 checkouts. Unscoped local files, prior-run artifacts, implicit prompts,
@@ -387,31 +387,83 @@ attempts should leave their own reviewable record when the distinction matters.
 This does not require a particular storage system or make every temporary file
 durable.
 
-Use repo-local temporary state when artifacts belong to one repository's
-execution workflow and that repository's instructions support the local path.
-When temporary workflow material spans repositories or should remain visible
-during execution, use the workspace-level location that matches the artifact's
-durability:
+`scratch` is a lifecycle and storage class, not an assumed persistent workspace
+pathname. Bare `scratch` denotes that semantic class, never a global directory.
+Classify bytes by their natural owner and lifecycle, not because they look
+temporary:
 
-- `~/src/ctrl-alt-keith/scratch/` is for temporary, disposable, in-progress, or
-  throwaway working material, including prompt packs, one-off helper scripts,
-  experiments, transient manifests, and other workflow artifacts that can be
-  deleted after related work is merged, closed, or abandoned.
-- `~/src/ctrl-alt-keith/logs/` is for durable operational records, including
-  useful automation run logs, review logs, audit logs, validation summaries,
-  sweep outputs, and other log-like records worth preserving after a run.
-- `~/src/ctrl-alt-keith/history/` is for durable important documents,
-  generated artifacts, decisions, reports, or outputs that do not otherwise
-  have a natural repository home.
+- **Durable state** is required for authority, evidence, recovery, replay,
+  review, planning, or execution identity. Preserve it under its natural
+  durable owner's contract; no required durable state may exist solely in
+  scratch.
+- **Repository-owned working state** includes source, worktrees,
+  repository-native build/test state, and intentionally persistent repository
+  or tool caches. `.venv`, build trees, compiler/dependency caches, worktrees,
+  and tool state are not automatically scratch.
+- **Attempt-local disposable scratch** is private, short-lived mechanics for
+  one material attempt with no required post-attempt role. Use
+  **attempt-local scratch** after this first use. It can hold one-off
+  extraction, command staging, generated runners, transient conversion,
+  prompt-retrieval copies, and ephemeral subprocess material when their loss
+  cannot impair recovery.
+- **Crash residue** is surviving material from an interrupted attempt. It is
+  untrusted, never recovery state, and never reusable merely because it
+  survived.
+- **Legacy workspace scratch** is the historical persistent routing pattern
+  being retired. Frozen provenance may retain that wording or a historical
+  path, but mutable guidance must not present it as a current default.
 
-Preserve repo-local output paths when a repository already has a better
-canonical location. For automation-managed paths, create the selected directory
-before writing and report directory or write failures with the affected path.
+Each material attempt that needs disposable local mechanics receives fresh,
+private attempt-local scratch. Do not adopt or reuse it across attempts, and do
+not give it a planning, authority, evidence, recovery, replay, or sole-durable
+copy role. A persistent path literally named `scratch` is allowed only when an
+explicit owner assigns it a non-disposable role; prefer a role-specific name.
+Generic persistent `scratch/` is prohibited by default for disposable
+mechanics.
 
-Avoid `/tmp`, `/private/tmp`, or ad hoc temporary directories for workflow
-artifacts that may need later inspection. Use disposable OS temp locations only
-for short-lived process-local files whose path and contents do not matter after
-the command finishes.
+Environment variables such as `TMPDIR`, `TEMP`, and `TMP` are observations or
+inputs, not authority. Temporary-directory helpers are allocation mechanics,
+not authority. A platform mapping is usable only after its applicable owner
+qualifies it; otherwise fail closed or use another explicitly authorized design.
+Never silently fall back to the current directory, repository, workspace, home,
+provider mount, or unrelated persistent storage.
+
+Promotion precedes cleanup. When output unexpectedly becomes durable, first
+identify its natural durable owner, create and preserve it under that contract,
+exact-verify it, and preserve required producing and delivery evidence. Copying
+bytes elsewhere does not transfer ownership, authority, evidence acceptance, or
+recovery status. Only then may cleanup be considered.
+
+Cleanup is best-effort, not a crash or reboot deletion guarantee. Before
+removing attempt-local scratch or crash residue, revalidate safe containment
+and identity. Fail closed on unexpected members, ownership or identity change,
+path escape, symlink/reparse-like or special objects, unsafe or unavailable
+roots, or failed revalidation. Do not reuse crash residue when cleanup cannot
+run.
+
+Examples:
+
+1. Generated one-attempt command intermediates belong in attempt-local scratch.
+2. Exact durable prompt bytes may be copied into private executor mechanics and
+   disposed only after verified use and required evidence are preserved.
+3. Build and test intermediates follow repository or tool ownership and their
+   intended survival; they are not scratch merely because they are generated.
+4. A crashed attempt's survivors are untrusted residue, never a recovery input.
+5. An output found to need later review is promoted and exact-verified before
+   its former scratch location is cleaned.
+6. Without a qualified temporary-root mapping, fail closed or use another
+   explicitly authorized design; never silently fall back.
+7. Historical `scratch/` references may remain as frozen provenance, but no
+   mutable guidance may imply that they are the current disposable default.
+
+The only exercised platform projection currently recorded by this Playbook is
+the bounded Darwin precedent from CAK-158/150: resolve with
+`/usr/bin/getconf DARWIN_USER_TEMP_DIR`, validate rather than trust `$TMPDIR`,
+use a fresh private unique child, and reject path escape, symlinks, special
+objects, residue reuse, and unsafe cleanup through qualified
+mode/ownership/device/inode checks. This is Darwin evidence, not portable
+doctrine. Linux and Windows mappings remain unqualified until their own
+qualified platform projections exist.
 
 For Codex specifically, configured
 `[sandbox_workspace_write].writable_roots` may not be the full effective
