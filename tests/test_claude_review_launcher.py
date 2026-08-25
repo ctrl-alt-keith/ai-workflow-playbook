@@ -1636,6 +1636,24 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         replaced = module.source_snapshot([self.candidate], self.candidate, environment)
         self.assertIn("git-admin", module.snapshot_delta(baseline, replaced))
 
+    def test_snapshot_records_a_lock_that_vanishes_during_identity_capture(self):
+        module = load_script("claude_review_vanishing_lock", LAUNCHER)
+        root = self.root / "vanishing-lock-root"
+        root.mkdir()
+        lock = root / "index.lock"
+        lock.write_text("transient\n", encoding="utf-8")
+        original_file_identity = module.file_identity
+
+        def vanishing_file_identity(path):
+            if path == lock:
+                lock.unlink()
+                raise FileNotFoundError(path)
+            return original_file_identity(path)
+
+        module.file_identity = vanishing_file_identity
+        snapshot = module.snapshot_root(root)
+        self.assertEqual(snapshot["index.lock"], {"kind": "vanished_during_snapshot"})
+
     def test_interrupted_attempt_performs_lock_sensitive_terminal_postflight(self):
         completed, diagnostic = self.run_governed("git_lock_then_wait")
         self.assertEqual(completed.returncode, 70)

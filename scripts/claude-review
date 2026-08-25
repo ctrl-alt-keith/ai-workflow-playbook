@@ -656,12 +656,23 @@ def snapshot_root(root: Path) -> dict[str, object]:
     pending = [root]
     while pending:
         directory = pending.pop()
-        for entry in sorted(os.scandir(directory), key=lambda item: item.name):
+        try:
+            with os.scandir(directory) as iterator:
+                scanned = sorted(iterator, key=lambda item: item.name)
+        except FileNotFoundError:
+            relative_directory = str(directory.relative_to(root))
+            entries[relative_directory] = {"kind": "vanished_during_snapshot"}
+            continue
+        for entry in scanned:
             path = Path(entry.path)
             if directory == root and entry.name == ".git" and entry.is_dir(follow_symlinks=False):
                 continue
             relative = str(path.relative_to(root))
-            entries[relative] = file_identity(path)
+            try:
+                entries[relative] = file_identity(path)
+            except FileNotFoundError:
+                entries[relative] = {"kind": "vanished_during_snapshot"}
+                continue
             if entry.is_dir(follow_symlinks=False):
                 pending.append(path)
     return entries
