@@ -555,9 +555,11 @@ historical identity is missing or mismatched.
 
 This profile creates no durable transport object to clean. Remove only the
 private attempt-local retrieval after the attempt no longer depends on it and
-required delivery and attempt evidence is preserved. Never delete or rewrite
-the durable prompt as transport cleanup, and do not infer recurring cleanup or
-hygiene automation from this bounded rule.
+required delivery and attempt evidence is preserved. Revalidate containment and
+identity, and fail closed on the shared cleanup conditions in
+[`repo-readiness.md`](repo-readiness.md#repo-local-workflow-state). Never delete
+or rewrite the durable prompt as transport cleanup, and do not infer recurring
+cleanup or hygiene automation from this bounded rule.
 
 Preservation, delivery, acknowledgement, hashes, provider state, validation,
 receipts, execution, and cleanup transfer zero authority.

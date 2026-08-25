@@ -13,6 +13,7 @@ def normalized(path):
 class AttemptLocalScratchSemanticsTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.readiness_text = (DOCS / "repo-readiness.md").read_text(encoding="utf-8")
         cls.readiness = normalized(DOCS / "repo-readiness.md")
         cls.codex = normalized(DOCS / "tool-adapters" / "codex.md")
         cls.engineering = normalized(DOCS / "engineering-baseline.md")
@@ -44,6 +45,7 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
             "all dependency-bearing output has been promoted and exact-verified",
             "required evidence has been preserved",
             "the executor attempts cleanup",
+            "Only the owning executor may dispose of its crash residue",
             "Cleanup is best-effort, not a crash or reboot deletion guarantee",
             "Never silently fall back",
             "Fail closed on unexpected members",
@@ -59,6 +61,7 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
         for phrase in (
             "Classify workflow material by natural owner and lifecycle",
             "repository-owned working state stays in the repository",
+            "tool-owned working state stays under its tool's contract",
             "durable review, evidence, recovery, replay, planning, and execution-identity material belongs with its natural durable owner",
             "generated artifacts or manifests do not become repository-owned merely because they are local",
             "Locality does not transfer ownership or make evidence disposable",
@@ -67,11 +70,9 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
 
     def test_first_normative_use_and_repository_working_state_are_distinct(self):
         full_term = "**Attempt-local disposable scratch**"
-        short_term = "**attempt-local scratch**"
-        self.assertLess(
-            self.readiness.index(full_term),
-            self.readiness.index(short_term),
-        )
+        first_definition = self.readiness_text.index(full_term)
+        self.assertNotIn("Use attempt-local scratch only", self.readiness_text[:first_definition])
+        self.assertIn("Use **attempt-local scratch** after this first use", self.readiness)
         self.assertIn(".venv", self.readiness)
         self.assertIn("compiler/dependency caches", self.readiness)
         self.assertIn("worktrees, and tool state are not automatically scratch", self.readiness)
@@ -79,6 +80,24 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
         self.assertIn("Each material attempt that needs disposable local mechanics receives fresh", self.readiness)
         self.assertIn("Do not adopt or reuse it across attempts", self.readiness)
         self.assertIn("do not give it a planning, authority, evidence, recovery, replay, or sole-durable", self.readiness)
+
+    def test_taxonomy_and_cleanup_projections_delegate_to_the_canonical_owner(self):
+        section = self.readiness_text.split("## Repo-Local Workflow State", 1)[1].split(
+            "## Command Form And Intent Visibility", 1
+        )[0]
+        for label in (
+            "**Durable state**",
+            "**Repository-owned working state**",
+            "**Attempt-local disposable scratch**",
+            "**Crash residue**",
+            "**Legacy workspace scratch**",
+        ):
+            self.assertIn(label, section)
+        self.assertIn("workflow-state ownership and lifecycle classification", self.readiness)
+        self.assertIn("tool-owned working state under its tool's contract", self.agents)
+        for projection in (self.codex, self.claude, normalized(DOCS / "prompt-contracts.md")):
+            self.assertIn("Revalidate containment and identity", projection)
+            self.assertIn("repo-readiness.md", projection)
 
     def test_only_darwin_has_a_bounded_platform_projection(self):
         self.assertIn("/usr/bin/getconf DARWIN_USER_TEMP_DIR", self.readiness)

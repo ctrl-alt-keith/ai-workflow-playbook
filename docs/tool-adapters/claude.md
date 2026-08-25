@@ -151,7 +151,9 @@ authority.
 Keep delivery, acknowledgement, Claude attempt, attempt receipt, and output
 identities separate. Preserve required evidence, then remove and verify removal
 of only the private attempt-local copy after the attempt no longer depends on
-it. The concrete provider, account, namespace, destination, retention, and
+it. Revalidate containment and identity, and fail closed on the shared cleanup
+conditions in [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
+The concrete provider, account, namespace, destination, retention, and
 visibility values remain outside this reusable adapter.
 
 ## Claude Model, Thinking, And Thread Routing

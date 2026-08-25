@@ -320,7 +320,9 @@ attempt outcome rather than inferring one from another. Preserve required
 evidence, then remove and verify removal of only the attempt-local retrieval
 after the attempt no longer depends on it. The concrete provider, account,
 namespace, issue locator, retention, and visibility policy stay in their project
-or storage owner, not this adapter.
+or storage owner, not this adapter. Revalidate containment and identity, and
+fail closed on the shared cleanup conditions in
+[`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
 ## Startup Deltas
 

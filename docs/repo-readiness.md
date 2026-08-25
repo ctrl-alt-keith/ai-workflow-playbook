@@ -7,7 +7,9 @@ Define the smallest reusable baseline a repository should have before normal AI-
 ## Scope
 
 - This is a practical baseline, not a full policy or checklist.
-- It covers pull request flow, readiness state, validation, branch protection expectations, and the role of `AGENTS.md`.
+- It covers pull request flow, readiness state, validation, branch protection
+  expectations, the role of `AGENTS.md`, and workflow-state ownership and
+  lifecycle classification.
 - Repo-specific security, compliance, release, or approval rules should be defined only when needed by that repository.
 
 ## Baseline Expectations
@@ -370,11 +372,12 @@ posture.
 
 For implementation changes, run commands from inside the target repository's
 dedicated worktree. Classify workflow material by natural owner and lifecycle:
-repository-owned working state stays in the repository; durable review,
-evidence, recovery, replay, planning, and execution-identity material belongs
-with its natural durable owner; and generated artifacts or manifests do not
-become repository-owned merely because they are local. Use attempt-local
-scratch only for private mechanics whose loss cannot impair recovery. Locality
+repository-owned working state stays in the repository; tool-owned working
+state stays under its tool's contract; durable review, evidence, recovery,
+replay, planning, and execution-identity material belongs with its natural
+durable owner; and generated artifacts or manifests do not become
+repository-owned merely because they are local. Use **attempt-local disposable
+scratch** only for private mechanics whose loss cannot impair recovery. Locality
 does not transfer ownership or make evidence disposable.
 
 Keep the execution surface isolated from unrelated operator state and primary
@@ -400,9 +403,12 @@ temporary:
   durable owner's contract; no required durable state may exist solely in
   scratch.
 - **Repository-owned working state** includes source, worktrees,
-  repository-native build/test state, and intentionally persistent repository
-  or tool caches. `.venv`, build trees, compiler/dependency caches, worktrees,
-  and tool state are not automatically scratch.
+  repository-native build/test state, and intentionally persistent
+  repository-local caches. **Tool-owned working state** follows the applicable
+  tool's contract, including its persistent caches or state outside the
+  repository. Neither class is automatically scratch: `.venv`, build trees,
+  compiler/dependency caches, worktrees, and tool state are not automatically
+  scratch.
 - **Attempt-local disposable scratch** is private, short-lived mechanics for
   one material attempt with no required post-attempt role. Use
   **attempt-local scratch** after this first use. It can hold one-off
@@ -427,6 +433,9 @@ Environment variables such as `TMPDIR`, `TEMP`, and `TMP` are observations or
 inputs, not authority. Temporary-directory helpers are allocation mechanics,
 not authority. A platform mapping is usable only after its applicable owner
 qualifies it; otherwise fail closed or use another explicitly authorized design.
+An explicitly documented tool-owned temporary route may serve that tool's
+private mechanics under its own contract, but does not qualify a generic
+platform mapping or transfer storage authority.
 Never silently fall back to the current directory, repository, workspace, home,
 provider mount, or unrelated persistent storage.
 
@@ -445,7 +454,8 @@ crash residue, revalidate safe containment and identity. Fail closed on
 unexpected members, ownership or identity change, path escape,
 symlink/reparse-like or special objects, unsafe or unavailable roots, or
 failed revalidation. Never reuse crash residue; when cleanup cannot run, leave
-it in place and report it.
+it in place and report it. Only the owning executor may dispose of its crash
+residue; preserve it when the interruption is under investigation.
 
 Examples:
 
