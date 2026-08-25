@@ -755,6 +755,12 @@ file identity, and renders the user rule with the exact installed absolute path.
 It refuses a different existing installed object and requires the caller to name
 the expected digest before replacing an existing active rule. Supply every
 candidate, evidence, workspace, and attempt-scratch root as a forbidden root.
+The activation receipt's exact operator-controlled parent is also recorded as
+the auth-preflight diagnostics directory. An auto-approved auth preflight may
+create only one absent, path-safe JSON diagnostics file directly in that exact
+directory. Governed-review diagnostics must remain inside the config's exact
+evidence directory. A diagnostics-path or config failure is reported on the
+launcher's standard error without falling back to an unqualified file path.
 For example, using operator-selected absolute paths:
 
 ```sh

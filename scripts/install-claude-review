@@ -184,6 +184,17 @@ def main() -> int:
     validate_destination(args.install_root, forbidden)
     validate_destination(args.active_rule, forbidden)
     validate_destination(args.activation_receipt, forbidden)
+    auth_diagnostics_directory = args.activation_receipt.parent
+    auth_diagnostics_directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    auth_diagnostics_metadata = auth_diagnostics_directory.lstat()
+    if (
+        auth_diagnostics_directory.is_symlink()
+        or not stat.S_ISDIR(auth_diagnostics_metadata.st_mode)
+        or auth_diagnostics_metadata.st_uid != os.geteuid()
+        or stat.S_IMODE(auth_diagnostics_metadata.st_mode) & 0o022
+        or auth_diagnostics_directory.resolve(strict=True) != auth_diagnostics_directory
+    ):
+        raise ValueError("auth diagnostics directory is not exact operator-controlled state")
     claude_identity = exact_executable_identity(args.claude_bin)
     selector_location = args.claude_bin.parent.resolve(strict=True) / args.claude_bin.name
     for root in forbidden:
@@ -220,6 +231,7 @@ def main() -> int:
         "claude_selector": str(args.claude_bin),
         "claude_identity": claude_identity,
         "forbidden_roots": [str(root) for root in forbidden],
+        "auth_diagnostics_directory": str(auth_diagnostics_directory),
     }
     launcher_result = exclusive_or_identical(installed_launcher, launcher_bytes, 0o500)
     manifest_path = version_directory / "claude-review-installation.json"

@@ -383,6 +383,25 @@ def qualified_execution(selector: str | None, effective_uid: int) -> tuple[str, 
         for value in forbidden_roots
     ):
         raise ValueError("the resolved Claude executable is inside a forbidden writable root")
+    auth_diagnostics_value = manifest.get("auth_diagnostics_directory")
+    if not isinstance(auth_diagnostics_value, str) or not Path(auth_diagnostics_value).is_absolute():
+        raise ValueError("the installation manifest does not declare an exact auth diagnostics directory")
+    auth_diagnostics_directory = Path(auth_diagnostics_value)
+    auth_diagnostics_metadata = auth_diagnostics_directory.lstat()
+    if (
+        auth_diagnostics_directory.is_symlink()
+        or not stat.S_ISDIR(auth_diagnostics_metadata.st_mode)
+        or auth_diagnostics_metadata.st_uid != effective_uid
+        or stat.S_IMODE(auth_diagnostics_metadata.st_mode) & 0o022
+        or auth_diagnostics_directory.resolve(strict=True) != auth_diagnostics_directory
+    ):
+        raise ValueError("the auth diagnostics directory is not exact operator-controlled state")
+    if any(
+        contained(auth_diagnostics_directory, Path(value))
+        or contained(Path(value), auth_diagnostics_directory)
+        for value in forbidden_roots
+    ):
+        raise ValueError("the auth diagnostics directory overlaps a forbidden writable root")
     recorded = manifest.get("claude_identity")
     for key in (
         "requested_selector",
@@ -409,6 +428,7 @@ def qualified_execution(selector: str | None, effective_uid: int) -> tuple[str, 
             "source_launcher_sha256": manifest.get("source_launcher_sha256"),
             "installed_launcher_sha256": manifest.get("installed_launcher_sha256"),
             "active_rule_sha256": manifest.get("active_rule_sha256"),
+            "auth_diagnostics_directory": str(auth_diagnostics_directory),
         }
     )
     return str(Path(identity["resolved_path"])), identity
@@ -481,16 +501,29 @@ def emit_diagnostics(record: dict[str, Any], destination: Path | None) -> None:
         exclusive_write(destination, f"{encoded}\n".encode("utf-8"))
 
 
-def unused_diagnostics_destination(destination: Path | None) -> Path | None:
+def qualified_diagnostics_destination(
+    destination: Path | None,
+    root: Path,
+    *,
+    reserved: set[Path] | None = None,
+    exact_parent: bool = False,
+) -> Path | None:
     if destination is None:
         return None
-    try:
-        destination.parent.resolve(strict=True)
-        if destination.exists() or destination.is_symlink():
-            return None
-    except OSError:
-        return None
-    return destination
+    parent = destination.parent.resolve(strict=True)
+    qualified_root = root.resolve(strict=True)
+    qualified = parent / destination.name
+    if exact_parent and parent != qualified_root:
+        raise ValueError("diagnostics destination must use the exact qualified directory")
+    if not contained(qualified, qualified_root):
+        raise ValueError("diagnostics destination is outside the qualified directory")
+    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*\.json", destination.name) is None or ".." in destination.name:
+        raise ValueError("diagnostics destination must use a path-safe JSON filename")
+    if reserved is not None and qualified in reserved:
+        raise ValueError("governed diagnostics must use a distinct immutable artifact path")
+    if qualified.exists() or qualified.is_symlink():
+        raise ValueError("diagnostics destination must not already exist")
+    return qualified
 
 
 def failure_fields(classification: str | None) -> dict[str, Any]:
@@ -648,9 +681,11 @@ def file_identity(path: Path) -> dict[str, object]:
 
 def snapshot_root(root: Path) -> dict[str, object]:
     root = root.absolute()
-    if not root.exists() and not root.is_symlink():
-        raise RuntimeError(f"guarded source does not exist: {root}")
-    entries: dict[str, object] = {".": file_identity(root)}
+    try:
+        root_identity = file_identity(root)
+    except FileNotFoundError:
+        return {".": {"kind": "vanished_during_snapshot"}}
+    entries: dict[str, object] = {".": root_identity}
     if not root.is_dir() or root.is_symlink():
         return entries
     pending = [root]
@@ -693,7 +728,14 @@ def git_index_identity(candidate: Path, environment: dict[str, str]) -> dict[str
     index = Path(result.stdout.strip())
     if not index.is_absolute():
         index = candidate / index
-    return {"path": str(index.resolve(strict=False)), "identity": file_identity(index) if index.exists() else {"kind": "missing"}}
+    if not index.exists() and not index.is_symlink():
+        identity: dict[str, object] = {"kind": "missing"}
+    else:
+        try:
+            identity = file_identity(index)
+        except FileNotFoundError:
+            identity = {"kind": "vanished_during_snapshot"}
+    return {"path": str(index.resolve(strict=False)), "identity": identity}
 
 
 def git_admin_identity(candidate: Path, environment: dict[str, str]) -> dict[str, object]:
@@ -723,6 +765,18 @@ def source_snapshot(roots: list[Path], candidate: Path, environment: dict[str, s
         "git_admin": git_admin_identity(candidate, environment),
     }
     return {"body": body, "sha256": sha256_bytes(canonical_json_bytes(body))}
+
+
+def observed_source_snapshot(
+    roots: list[Path],
+    candidate: Path,
+    environment: dict[str, str],
+) -> tuple[dict[str, object] | None, str | None]:
+    """Capture live/postflight state without abandoning an already-started attempt."""
+    try:
+        return source_snapshot(roots, candidate, environment), None
+    except (OSError, RuntimeError, ValueError) as error:
+        return None, bounded_redacted(str(error))
 
 
 def snapshot_delta(before: dict[str, object], after: dict[str, object]) -> list[str]:
@@ -1595,6 +1649,7 @@ def run_governed_review(
             capability_signal_sent = False
             initialization_checked = False
             live_capability_failure: str | None = None
+            live_observation_failure: str | None = None
             while process.poll() is None:
                 time.sleep(config.observation_interval)
                 external_state = merged_external_state(live_state_path, live_state)
@@ -1634,8 +1689,22 @@ def run_governed_review(
                     live_state["soft_liveness_threshold_crossed"] = True
                     live_state["soft_liveness_observation"] = "process_group_still_running; continuing_same_attempt"
                     next_soft = time.monotonic() + config.soft_liveness_threshold
-                live_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
-                live_changes = snapshot_delta(attempt_snapshot, live_snapshot)
+                live_changes: list[str] = []
+                if live_observation_failure is None:
+                    live_snapshot, live_observation_error = observed_source_snapshot(
+                        list(config.guard_roots), config.candidate, environment
+                    )
+                    if live_observation_error is not None:
+                        live_observation_failure = live_observation_error
+                        live_state.update(
+                            {
+                                "state": "source_observation_failure_waiting_for_terminal",
+                                "source_observation_failure": live_observation_failure,
+                            }
+                        )
+                    else:
+                        assert live_snapshot is not None
+                        live_changes = snapshot_delta(attempt_snapshot, live_snapshot)
                 emergency_conditions = config.body["cancellation_policy"].get("emergency_stop_conditions", [])
                 if live_changes and "unauthorized_mutation" in emergency_conditions and not emergency_signal_sent:
                     live_state.update(
@@ -1669,6 +1738,7 @@ def run_governed_review(
                     "force_termination_authorized",
                     "capability_stop_in_progress",
                     "emergency_stop_in_progress",
+                    "source_observation_failure_waiting_for_terminal",
                 }:
                     live_state["state"] = "awaiting_process_group_terminal"
                 live_state["process_group_terminal"] = False
@@ -1678,8 +1748,22 @@ def run_governed_review(
                         "direct_process_exited; process_group_still_live; continuing_same_attempt"
                     )
                     next_soft = time.monotonic() + config.soft_liveness_threshold
-                live_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
-                live_changes = snapshot_delta(attempt_snapshot, live_snapshot)
+                live_changes = []
+                if live_observation_failure is None:
+                    live_snapshot, live_observation_error = observed_source_snapshot(
+                        list(config.guard_roots), config.candidate, environment
+                    )
+                    if live_observation_error is not None:
+                        live_observation_failure = live_observation_error
+                        live_state.update(
+                            {
+                                "state": "source_observation_failure_waiting_for_terminal",
+                                "source_observation_failure": live_observation_failure,
+                            }
+                        )
+                    else:
+                        assert live_snapshot is not None
+                        live_changes = snapshot_delta(attempt_snapshot, live_snapshot)
                 emergency_conditions = config.body["cancellation_policy"].get("emergency_stop_conditions", [])
                 if live_changes and "unauthorized_mutation" in emergency_conditions and not emergency_signal_sent:
                     live_state.update(
@@ -1736,9 +1820,17 @@ def run_governed_review(
             if live_state.get("termination_authority"):
                 classification = "operator_authorized_termination"
                 retryable = False
-            post_snapshot = source_snapshot(list(config.guard_roots), config.candidate, environment)
-            changes = snapshot_delta(attempt_snapshot, post_snapshot)
-            if changes:
+            post_snapshot, postflight_observation_failure = observed_source_snapshot(
+                list(config.guard_roots), config.candidate, environment
+            )
+            if post_snapshot is None:
+                changes = ["source-snapshot-unavailable"]
+            else:
+                changes = snapshot_delta(attempt_snapshot, post_snapshot)
+            if live_observation_failure is not None or postflight_observation_failure is not None:
+                classification = "source_observation_failure"
+                retryable = False
+            elif changes:
                 classification = "reviewer_side_effect_failure"
                 retryable = False
             claude_version = version_of(executable, environment, cwd=str(attempt_scratch.path))
@@ -1824,15 +1916,18 @@ def run_governed_review(
                         "graceful_signal_delivery",
                         "forced_signal",
                         "emergency_condition",
+                        "source_observation_failure",
                         "process_group_terminal",
                     )
                     if key in live_state
                 },
                 "no_delta_postflight": {
                     "baseline_sha256": attempt_snapshot["sha256"],
-                    "postflight_sha256": post_snapshot["sha256"],
-                    "passed": not changes,
+                    "postflight_sha256": post_snapshot["sha256"] if post_snapshot is not None else None,
+                    "passed": post_snapshot is not None and not changes,
                     "changed_paths": changes,
+                    "live_observation_failure": live_observation_failure,
+                    "postflight_capture_failure": postflight_observation_failure,
                 },
                 "started_at_epoch": started,
                 "ended_at_epoch": time.time(),
@@ -1949,6 +2044,7 @@ def main(argv: list[str] | None = None) -> int:
             grace_seconds=args.grace_seconds,
         )
     classification_fixture = args.classification_fixture and os.environ.get("CLAUDE_REVIEW_TEST_FIXTURE") == "1"
+    diagnostics_destination: Path | None = None
     if not args.auth_preflight and args.review_config is None and not classification_fixture:
         raise SystemExit("substantive governed review requires --review-config")
     try:
@@ -1966,7 +2062,7 @@ def main(argv: list[str] | None = None) -> int:
                 "stderr": bounded_redacted(str(error)),
                 **failure_fields("RUNTIME_LOGIN_CONTEXT_MISMATCH"),
             },
-            args.diagnostics_file,
+            None,
         )
         return REVIEWER_FAILURE_EXIT
     try:
@@ -1985,7 +2081,38 @@ def main(argv: list[str] | None = None) -> int:
                 "stderr": bounded_redacted(str(error)),
                 **failure_fields("reviewer_executable_not_authorized"),
             },
-            args.diagnostics_file,
+            None,
+        )
+        return REVIEWER_FAILURE_EXIT
+    try:
+        if args.auth_preflight and args.diagnostics_file is not None:
+            diagnostics_root = (
+                args.diagnostics_file.parent.resolve(strict=True)
+                if execution_identity.get("qualification") == "explicit_test_fixture"
+                else Path(str(execution_identity["auth_diagnostics_directory"]))
+            )
+            diagnostics_destination = qualified_diagnostics_destination(
+                args.diagnostics_file,
+                diagnostics_root,
+                exact_parent=True,
+            )
+        elif classification_fixture and args.diagnostics_file is not None:
+            diagnostics_destination = qualified_diagnostics_destination(
+                args.diagnostics_file,
+                args.diagnostics_file.parent.resolve(strict=True),
+                exact_parent=True,
+            )
+    except (OSError, ValueError) as error:
+        emit_diagnostics(
+            {
+                "kind": "claude_reviewer_attempt",
+                "attempt_kind": "auth_preflight" if args.auth_preflight else "substantive_review",
+                "failure_classification": "diagnostics_destination_not_authorized",
+                "candidate_verdict": "not_applicable" if args.auth_preflight else "not_produced",
+                "substantive_review_output": False,
+                "error": bounded_redacted(str(error)),
+            },
+            None,
         )
         return REVIEWER_FAILURE_EXIT
     inherited_home = os.environ.get("HOME")
@@ -2006,7 +2133,7 @@ def main(argv: list[str] | None = None) -> int:
                 "substantive_review_output": False,
                 "error": bounded_redacted(str(error)),
             },
-            args.diagnostics_file,
+            diagnostics_destination,
         )
         return REVIEWER_FAILURE_EXIT
     execution_cwd = str(preflight_directory.path) if preflight_directory else os.getcwd()
@@ -2029,21 +2156,17 @@ def main(argv: list[str] | None = None) -> int:
     if args.review_config is not None and not args.auth_preflight:
         try:
             config = load_governed_config(args.review_config)
-            if args.diagnostics_file is not None:
-                diagnostics_parent = args.diagnostics_file.parent.resolve(strict=True)
-                diagnostics_path = diagnostics_parent / args.diagnostics_file.name
-                if not contained(diagnostics_path, config.evidence_directory):
-                    raise ValueError("governed diagnostics must be inside the declared evidence directory")
-                reserved_artifacts = {
-                    config.path,
-                    config.preflight_receipt,
-                    config.final_output,
-                    *(path for pair in config.attempt_artifacts for path in pair),
-                }
-                if diagnostics_path in reserved_artifacts:
-                    raise ValueError("governed diagnostics must have a distinct immutable artifact path")
-                if diagnostics_path.exists() or diagnostics_path.is_symlink():
-                    raise ValueError("governed diagnostics destination must not already exist")
+            reserved_artifacts = {
+                config.path,
+                config.preflight_receipt,
+                config.final_output,
+                *(path for pair in config.attempt_artifacts for path in pair),
+            }
+            diagnostics_destination = qualified_diagnostics_destination(
+                args.diagnostics_file,
+                config.evidence_directory,
+                reserved=reserved_artifacts,
+            )
             prompt = sys.stdin.buffer.read()
             if not prompt:
                 raise ValueError("governed review prompt must not be empty")
@@ -2054,10 +2177,9 @@ def main(argv: list[str] | None = None) -> int:
                 child_environment,
                 args.claude_args,
                 prompt,
-                args.diagnostics_file,
+                diagnostics_destination,
             )
         except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as error:
-            failure_destination = unused_diagnostics_destination(args.diagnostics_file)
             emit_diagnostics(
                 {
                     "kind": "claude_governed_review",
@@ -2066,7 +2188,7 @@ def main(argv: list[str] | None = None) -> int:
                     "substantive_review_output": False,
                     "error": bounded_redacted(str(error)),
                 },
-                failure_destination,
+                None,
             )
             return REVIEWER_FAILURE_EXIT
 
@@ -2094,7 +2216,7 @@ def main(argv: list[str] | None = None) -> int:
                 "stderr": bounded_redacted(str(error)),
                 **failure_fields("reviewer_execution_failure"),
             },
-            args.diagnostics_file,
+            diagnostics_destination,
         )
         if preflight_directory:
             preflight_directory.cleanup()
@@ -2150,7 +2272,7 @@ def main(argv: list[str] | None = None) -> int:
         record["preflight_notices"] = accepted_auth_preflight_notices(stdout)
     if stdout and failure is None:
         sys.stdout.write(f"{AUTH_PREFLIGHT_RESPONSE}\n" if args.auth_preflight else stdout)
-    emit_diagnostics(record, args.diagnostics_file)
+    emit_diagnostics(record, diagnostics_destination)
     if failure == "AUTH_OAUTH_TOKEN_EXPIRED_401":
         print(OAUTH_REAUTHENTICATION_MESSAGE, file=sys.stderr)
     return launcher_exit_code

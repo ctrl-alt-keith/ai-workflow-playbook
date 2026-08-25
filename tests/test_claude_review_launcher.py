@@ -100,6 +100,8 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             launcher.chmod(0o500)
             active_rule = root / "active.rules"
             active_rule.write_text("fixture active rule\n", encoding="utf-8")
+            auth_diagnostics = root / "auth-diagnostics"
+            auth_diagnostics.mkdir(mode=0o700)
             candidate = root / "candidate"
             candidate.mkdir()
             count = root / "count"
@@ -128,6 +130,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 "claude_selector": str(qualified),
                 "claude_identity": identity,
                 "forbidden_roots": [str(candidate)],
+                "auth_diagnostics_directory": str(auth_diagnostics),
                 "source_commit": "fixture",
                 "source_launcher_sha256": self.launcher.sha256_bytes(launcher_bytes),
             }
@@ -137,7 +140,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             environment.pop("CLAUDE_REVIEW_TEST_FIXTURE", None)
             environment.update({"FIXTURE_COUNT": str(count), "PATH": f"{candidate}{os.pathsep}/usr/bin:/bin"})
 
-            accepted_diagnostics = root / "accepted.json"
+            accepted_diagnostics = auth_diagnostics / "accepted.json"
             accepted = subprocess.run(
                 [str(launcher), "--auth-preflight", "--diagnostics-file", str(accepted_diagnostics)],
                 check=False,
@@ -155,10 +158,23 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 "installed_exact_identity",
             )
 
+            outside_diagnostics = root / "outside.json"
+            outside = subprocess.run(
+                [str(launcher), "--auth-preflight", "--diagnostics-file", str(outside_diagnostics)],
+                check=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=environment,
+            )
+            self.assertEqual(outside.returncode, 70)
+            self.assertFalse(outside_diagnostics.exists())
+            self.assertEqual(count.read_text(encoding="utf-8"), "run\n")
+
             launcher.chmod(0o700)
             launcher.write_bytes(launcher_bytes + b"\n")
             launcher.chmod(0o500)
-            drifted_diagnostics = root / "drifted.json"
+            drifted_diagnostics = auth_diagnostics / "drifted.json"
             drifted = subprocess.run(
                 [str(launcher), "--auth-preflight", "--diagnostics-file", str(drifted_diagnostics)],
                 check=False,
@@ -167,12 +183,13 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 env=environment,
             )
             self.assertEqual(drifted.returncode, 70)
+            self.assertFalse(drifted_diagnostics.exists())
             self.assertEqual(count.read_text(encoding="utf-8"), "run\n")
 
             launcher.chmod(0o700)
             launcher.write_bytes(launcher_bytes)
             launcher.chmod(0o500)
-            arbitrary_diagnostics = root / "arbitrary.json"
+            arbitrary_diagnostics = auth_diagnostics / "arbitrary.json"
             arbitrary = subprocess.run(
                 [
                     str(launcher),
@@ -188,12 +205,13 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 env=environment,
             )
             self.assertEqual(arbitrary.returncode, 70)
+            self.assertFalse(arbitrary_diagnostics.exists())
             self.assertEqual(count.read_text(encoding="utf-8"), "run\n")
 
             manifest["claude_selector"] = str(shadow)
             manifest["claude_identity"] = self.launcher.executable_identity(shadow, os.geteuid())
             manifest_path.write_bytes(self.launcher.canonical_json_bytes(manifest))
-            forbidden_diagnostics = root / "forbidden.json"
+            forbidden_diagnostics = auth_diagnostics / "forbidden.json"
             forbidden = subprocess.run(
                 [str(launcher), "--auth-preflight", "--diagnostics-file", str(forbidden_diagnostics)],
                 check=False,
@@ -202,6 +220,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 env=environment,
             )
             self.assertEqual(forbidden.returncode, 70)
+            self.assertFalse(forbidden_diagnostics.exists())
             self.assertEqual(count.read_text(encoding="utf-8"), "run\n")
 
     def test_exact_git_grammar_accepts_only_qualifying_review_forms(self):
@@ -308,11 +327,10 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 stderr=subprocess.PIPE,
                 check=False,
             )
-            diagnostic = json.loads(diagnostics.read_text(encoding="utf-8"))
 
         self.assertEqual(completed.returncode, 70)
-        self.assertEqual(diagnostic["failure_classification"], "reviewer_executable_not_authorized")
-        self.assertIsNone(diagnostic["claude_exit_code"])
+        self.assertFalse(diagnostics.exists())
+        self.assertIn('"failure_classification": "reviewer_executable_not_authorized"', completed.stderr)
 
     def run_launcher(
         self,
@@ -811,6 +829,9 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "if scenario == 'git_lock_then_wait':\n"
             "    (candidate / '.git' / 'index.lock').write_text('reviewer lock\\n')\n"
             "    time.sleep(10)\n"
+            "if scenario == 'special_object_then_wait':\n"
+            "    os.mkfifo(candidate / 'reviewer.fifo')\n"
+            "    time.sleep(0.08)\n"
             "if scenario == 'escaped_output': (package / 'escaped-review.txt').write_text('escaped')\n"
             "if scenario == 'unsafe_scratch': (pathlib.Path(os.environ['TMPDIR']) / 'escape').symlink_to(candidate)\n"
             "if scenario == 'silent': time.sleep(0.08)\n"
@@ -944,7 +965,13 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             stderr=subprocess.PIPE,
             env=self.environment(scenario),
         )
-        return completed, json.loads(diagnostics.read_text(encoding="utf-8"))
+        if diagnostics.exists():
+            diagnostic = json.loads(diagnostics.read_text(encoding="utf-8"))
+        else:
+            prefix = "claude-review diagnostics: "
+            diagnostic_line = next(line for line in reversed(completed.stderr.splitlines()) if line.startswith(prefix))
+            diagnostic = json.loads(diagnostic_line[len(prefix) :])
+        return completed, diagnostic
 
     def receipts(self):
         return [json.loads(path.read_text(encoding="utf-8")) for path in sorted(self.evidence.glob("*-terminal-receipt.json"))]
@@ -1361,6 +1388,36 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         )
         self.assertFalse(self.count.exists())
 
+    def test_governed_diagnostics_reject_outside_path_without_fallback_write(self):
+        config = self.write_config()
+        outside = self.root / "outside-review-diagnostics.json"
+        completed = subprocess.run(
+            [
+                str(LAUNCHER),
+                "--claude-bin",
+                str(self.fake),
+                "--diagnostics-file",
+                str(outside),
+                "--review-config",
+                str(config),
+                "--",
+                "--model",
+                "opus",
+                "--effort",
+                "high",
+            ],
+            input="prompt\n",
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=self.environment("success"),
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 70)
+        self.assertFalse(outside.exists())
+        self.assertFalse(self.count.exists())
+        self.assertIn('"failure_classification": "review_contract_failure"', completed.stderr)
+
     def test_permission_hook_fails_closed_if_config_identity_changes(self):
         import importlib.machinery
         import importlib.util
@@ -1653,6 +1710,56 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         module.file_identity = vanishing_file_identity
         snapshot = module.snapshot_root(root)
         self.assertEqual(snapshot["index.lock"], {"kind": "vanished_during_snapshot"})
+
+    def test_snapshot_records_a_root_that_vanishes_during_identity_capture(self):
+        module = load_script("claude_review_vanishing_root", LAUNCHER)
+        root = self.root / "vanishing-root"
+        root.mkdir()
+        original_file_identity = module.file_identity
+
+        def vanishing_file_identity(path):
+            if path == root:
+                root.rmdir()
+                raise FileNotFoundError(path)
+            return original_file_identity(path)
+
+        module.file_identity = vanishing_file_identity
+        self.assertEqual(module.snapshot_root(root), {".": {"kind": "vanished_during_snapshot"}})
+
+    def test_git_index_records_vanishing_during_identity_capture(self):
+        module = load_script("claude_review_vanishing_index", LAUNCHER)
+        environment = os.environ.copy()
+        index = self.candidate / ".git" / "index"
+        original_bytes = index.read_bytes()
+        original_mode = index.stat().st_mode
+        original_file_identity = module.file_identity
+
+        def vanishing_file_identity(path):
+            if path == index:
+                index.unlink()
+                raise FileNotFoundError(path)
+            return original_file_identity(path)
+
+        module.file_identity = vanishing_file_identity
+        try:
+            identity = module.git_index_identity(self.candidate, environment)
+            self.assertEqual(identity["identity"], {"kind": "vanished_during_snapshot"})
+        finally:
+            index.write_bytes(original_bytes)
+            index.chmod(original_mode)
+
+    def test_live_snapshot_failure_awaits_terminal_and_writes_receipt(self):
+        completed, diagnostic = self.run_governed("special_object_then_wait")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "source_observation_failure")
+        receipt = self.receipts()[0]
+        self.assertEqual(receipt["failure_classification"], "source_observation_failure")
+        self.assertEqual(receipt["process"]["state"], "terminal")
+        self.assertTrue(receipt["lifecycle"]["process_group_terminal"])
+        self.assertIn("unsupported special object", receipt["lifecycle"]["source_observation_failure"])
+        self.assertFalse(receipt["no_delta_postflight"]["passed"])
+        self.assertEqual(receipt["no_delta_postflight"]["changed_paths"], ["source-snapshot-unavailable"])
+        self.assertIsNotNone(receipt["no_delta_postflight"]["postflight_capture_failure"])
 
     def test_interrupted_attempt_performs_lock_sensitive_terminal_postflight(self):
         completed, diagnostic = self.run_governed("git_lock_then_wait")
