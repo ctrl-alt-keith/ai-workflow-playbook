@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "check_authoritative_sources.py"
@@ -211,6 +212,34 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
         self.assertEqual(
             domains,
             ("docs.aws.amazon.com", "cloud.google.com", "learn.microsoft.com"),
+        )
+
+    def test_changed_markdown_files_returns_only_nonempty_git_output_lines(self) -> None:
+        completed = subprocess.CompletedProcess(
+            args=["git", "diff"],
+            returncode=0,
+            stdout="docs/guide.md\n\nREADME.md\n",
+        )
+
+        with mock.patch.object(scanner.subprocess, "run", return_value=completed):
+            paths = scanner.changed_markdown_files("base", "head")
+
+        self.assertEqual(paths, [Path("docs/guide.md"), Path("README.md")])
+
+    def test_changed_markdown_files_fails_closed_when_git_detection_fails(self) -> None:
+        completed = subprocess.CompletedProcess(
+            args=["git", "diff"],
+            returncode=1,
+            stdout="docs/ignored.md\n",
+        )
+
+        with mock.patch.object(scanner.subprocess, "run", return_value=completed):
+            with mock.patch("builtins.print") as print_mock:
+                paths = scanner.changed_markdown_files("base", "head")
+
+        self.assertEqual(paths, [])
+        print_mock.assert_called_once_with(
+            "authoritative-source-check: changed Markdown detection unavailable; scanning PR body only"
         )
 
     def test_nearby_source_justification_suppresses_warning(self) -> None:
