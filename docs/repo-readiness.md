@@ -394,9 +394,10 @@ This does not require a particular storage system or make every temporary file
 durable.
 
 `scratch` is a lifecycle and storage class, not an assumed persistent workspace
-pathname. In this document, bare `scratch` denotes that semantic class, never a
-global directory. Classify bytes by their natural owner and lifecycle, not
-because they look temporary:
+pathname. In this document, bare `scratch` denotes attempt-local disposable
+scratch unless expressly qualified as legacy or another owned class; it never
+denotes a global directory. Classify bytes by their natural owner and lifecycle,
+not because they look temporary:
 
 - **Durable state** is required for authority, evidence, recovery, replay,
   review, planning, or execution identity. Preserve it under its natural
@@ -431,8 +432,10 @@ mechanics.
 
 Environment variables such as `TMPDIR`, `TEMP`, and `TMP` are observations or
 inputs, not authority. Temporary-directory helpers are allocation mechanics,
-not authority. A platform mapping is usable only after its applicable owner
-qualifies it; otherwise fail closed or use another explicitly authorized design.
+not authority. An applicable owner qualifies a platform mapping in its own
+contract; this Playbook qualifies a generic mapping only through a recorded
+Playbook platform projection. Otherwise fail closed or use another explicitly
+authorized design.
 An explicitly documented tool-owned temporary route may serve that tool's
 private mechanics under its own contract, but does not qualify a generic
 platform mapping or transfer storage authority.
@@ -449,14 +452,17 @@ On normal completion, after the attempt no longer depends on scratch, all
 dependency-bearing output has been promoted and exact-verified, required
 evidence has been preserved, and containment and identity have been
 revalidated, the executor attempts cleanup. Cleanup is best-effort, not a
-crash or reboot deletion guarantee. Before removing attempt-local scratch or
-crash residue, revalidate safe containment and identity. Fail closed on
-unexpected members, ownership or identity change, path escape,
-symlink/reparse-like or special objects, unsafe or unavailable roots, or
-failed revalidation. Never reuse crash residue; when cleanup cannot run, leave
-it in place and report it. Only the owning executor, or an operator explicitly
-authorized under that executor's contract, may dispose of its crash residue;
-preserve it when the interruption is under investigation.
+crash or reboot deletion guarantee. Before removing attempt-local scratch,
+revalidate safe containment and identity. Fail closed on unexpected members,
+ownership or identity change, path escape, symlink/reparse-like or special
+objects, unsafe or unavailable roots, or failed revalidation.
+
+Crash residue is not normal-completion cleanup. Never reuse it; when cleanup
+cannot run, leave it in place and report it. Only the owning executor, or an
+operator explicitly authorized under that executor's contract, may dispose of
+it after the same containment and identity revalidation; preserve it when the
+interruption is under investigation. Platform-level temporary reclamation is
+outside this contract and neither grants disposal authority nor violates it.
 
 Examples:
 

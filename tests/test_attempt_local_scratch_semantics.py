@@ -49,7 +49,8 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
             "Cleanup is best-effort, not a crash or reboot deletion guarantee",
             "Never silently fall back",
             "Fail closed on unexpected members",
-            "Never reuse crash residue",
+            "Crash residue is not normal-completion cleanup",
+            "Never reuse it",
         ):
             self.assertIn(phrase, self.readiness)
 
@@ -69,10 +70,9 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
             self.assertIn(phrase, self.readiness)
 
     def test_first_normative_use_and_repository_working_state_are_distinct(self):
-        full_term = "**Attempt-local disposable scratch**"
-        normalized_text = " ".join(self.readiness_text.casefold().split())
-        first_definition = normalized_text.index(full_term.casefold())
-        self.assertNotIn("attempt-local scratch", normalized_text[:first_definition])
+        taxonomy_definition = self.readiness_text.index("- **Attempt-local disposable scratch**")
+        short_form = self.readiness_text.index("**attempt-local scratch**", taxonomy_definition)
+        self.assertGreater(short_form, taxonomy_definition)
         self.assertIn("Use **attempt-local scratch** after this definition", self.readiness)
         self.assertIn(".venv", self.readiness)
         self.assertIn("compiler/dependency caches", self.readiness)
@@ -104,7 +104,11 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
             normalized(DOCS / "prompts.md"),
         ):
             self.assertIn("Revalidate containment and identity", projection)
-            self.assertIn("repo-readiness.md", projection)
+            self.assertIn("repo-readiness.md#repo-local-workflow-state", projection)
+        self.assertIn(
+            "repo-readiness.md#repo-local-workflow-state",
+            normalized(DOCS / "evidence-lifecycle.md"),
+        )
 
     def test_only_darwin_has_a_bounded_platform_projection(self):
         self.assertIn("/usr/bin/getconf DARWIN_USER_TEMP_DIR", self.readiness)

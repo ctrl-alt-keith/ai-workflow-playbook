@@ -82,7 +82,8 @@ branch, a worktree, a commit, or a pull request.
 
 Ordinary repository-owned temporary state may remain temporary. Once an
 artifact is admitted, the owning durable destination controls, and
-attempt-local scratch is not a substitute for required durable capture.
+attempt-local scratch is not a substitute for required durable capture; see
+[`repo-readiness.md`](repo-readiness.md#repo-local-workflow-state).
 
 ### Producing Receipt And Compact Delivery
 
