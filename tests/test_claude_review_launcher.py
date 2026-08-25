@@ -458,10 +458,14 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "if scenario == 'canary_bypass': canary_input['dangerouslyDisableSandbox'] = True\n"
             "print(json.dumps({'type':'assistant','message':{'content':[{'type':'tool_use','id':canary_id,'name':'Bash','input':canary_input}]}}), flush=True)\n"
             "print(json.dumps({'type':'user','message':{'content':[{'type':'tool_result','tool_use_id':canary_id,'content':'canary','is_error':scenario == 'dead_command_grant'}]}}), flush=True)\n"
+            "if scenario == 'non_object_json': print('null', flush=True)\n"
             "if scenario == 'tool_mismatch': time.sleep(0.08)\n"
             "if scenario == 'cwd_mismatch': time.sleep(0.08)\n"
             "if scenario == 'provider_bootstrap': (pathlib.Path.cwd() / '.claude' / '.cc-writes').mkdir(parents=True)\n"
             "if scenario == 'mutate_tracked': (candidate / 'tracked.txt').write_text('changed\\n')\n"
+            "if scenario == 'mutate_then_wait':\n"
+            "    (candidate / 'tracked.txt').write_text('changed\\n')\n"
+            "    time.sleep(10)\n"
             "if scenario == 'new_ignored': (candidate / 'generated.cache').write_text('cache')\n"
             "if scenario == 'remove_untracked': (candidate / 'preexisting.txt').unlink()\n"
             "if scenario == 'index_mutation':\n"
@@ -475,6 +479,8 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "    subprocess.Popen([sys.executable, '-c', f\"import pathlib,time; time.sleep(0.15); pathlib.Path({marker!r}).write_text('terminal')\"])\n"
             "if scenario == 'transient_with_lingering_child' and attempt == 2:\n"
             "    assert pathlib.Path(os.environ['FAKE_LINGER_MARKER']).read_text() == 'terminal'\n"
+            "if scenario == 'linger_after_direct_exit':\n"
+            "    subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(10)'])\n"
             "if scenario == 'ignore_term':\n"
             "    signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
             "    time.sleep(10)\n"
@@ -656,6 +662,13 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 self.assertEqual(diagnostic["failure_classification"], expected)
                 self.assertFalse(self.receipts()[0]["stream_evidence"]["provider_command_canary"]["passed"])
 
+    def test_non_object_json_is_counted_without_orphaning_attempt(self):
+        completed, _ = self.run_governed("non_object_json")
+        self.assertEqual(completed.returncode, 0)
+        receipt = self.receipts()[0]
+        self.assertGreaterEqual(receipt["stream_evidence"]["malformed_records"], 1)
+        self.assertTrue(receipt["lifecycle"]["process_group_terminal"])
+
     def test_exact_model_selector_is_enforced(self):
         exact, _ = self.run_governed(model="fake-opus")
         self.assertEqual(exact.returncode, 0)
@@ -783,6 +796,15 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 receipt_path = Path(diagnostic["attempts"][-1]["receipt"])
                 receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
                 self.assertFalse(receipt["no_delta_postflight"]["passed"])
+
+    def test_live_mutation_triggers_predeclared_emergency_stop(self):
+        completed, diagnostic = self.run_governed("mutate_then_wait")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
+        lifecycle = self.receipts()[0]["lifecycle"]
+        self.assertEqual(lifecycle["emergency_condition"], "unauthorized_mutation")
+        self.assertEqual(lifecycle["graceful_signal"], "SIGTERM")
+        self.assertEqual(lifecycle["graceful_signal_delivery"], "sent")
 
     def test_removal_of_preexisting_untracked_content_is_detected(self):
         (self.candidate / "preexisting.txt").write_text("untracked\n", encoding="utf-8")
@@ -1020,6 +1042,85 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         process.stderr.close()
         self.assertEqual(self.count.read_text(), "1")
 
+    def test_force_escalation_requires_separate_authority(self):
+        config = self.write_config()
+        diagnostics = self.evidence / "overall.json"
+        process = subprocess.Popen(
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=self.environment("ignore_term"),
+        )
+        self.addCleanup(lambda: process.poll() is None and process.kill())
+        assert process.stdin is not None
+        process.stdin.write("prompt\n")
+        process.stdin.close()
+        deadline = time.monotonic() + 5
+        live = None
+        while time.monotonic() < deadline:
+            matches = list(self.root.glob("claude-review-controller-*/*-live-state.json"))
+            if matches and json.loads(matches[0].read_text()).get("partial_output_exists"):
+                live = matches[0]
+                break
+            time.sleep(0.01)
+        self.assertIsNotNone(live)
+        graceful = subprocess.run(
+            [str(LAUNCHER), "--terminate", str(live), "--termination-authority", "fixture graceful authority", "--grace-seconds", "0.02"],
+            check=False,
+        )
+        self.assertEqual(graceful.returncode, 75)
+        self.assertIsNone(process.poll())
+        forced = subprocess.run(
+            [str(LAUNCHER), "--terminate", str(live), "--termination-authority", "fixture force authority", "--grace-seconds", "0.02", "--force-authorized"],
+            check=False,
+        )
+        self.assertEqual(forced.returncode, 0)
+        process.wait(timeout=5)
+        assert process.stdout is not None and process.stderr is not None
+        process.stdout.close()
+        process.stderr.close()
+        receipt = self.receipts()[0]
+        self.assertEqual(receipt["lifecycle"]["forced_signal"], "SIGKILL")
+
+    def test_operator_can_terminate_group_after_direct_process_exit(self):
+        config = self.write_config()
+        diagnostics = self.evidence / "overall.json"
+        process = subprocess.Popen(
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=self.environment("linger_after_direct_exit"),
+        )
+        self.addCleanup(lambda: process.poll() is None and process.kill())
+        assert process.stdin is not None
+        process.stdin.write("prompt\n")
+        process.stdin.close()
+        deadline = time.monotonic() + 5
+        live = None
+        while time.monotonic() < deadline:
+            matches = list(self.root.glob("claude-review-controller-*/*-live-state.json"))
+            if matches and json.loads(matches[0].read_text()).get("state") == "awaiting_process_group_terminal":
+                live = matches[0]
+                break
+            time.sleep(0.01)
+        self.assertIsNotNone(live)
+        subprocess.run([str(LAUNCHER), "--request-termination", str(live)], check=True)
+        subprocess.run([str(LAUNCHER), "--decline-termination", str(live)], check=True)
+        terminated = subprocess.run(
+            [str(LAUNCHER), "--terminate", str(live), "--termination-authority", "fixture post-exit group authority", "--grace-seconds", "0.2"],
+            check=False,
+        )
+        self.assertEqual(terminated.returncode, 0)
+        process.wait(timeout=5)
+        assert process.stdout is not None and process.stderr is not None
+        process.stdout.close()
+        process.stderr.close()
+        self.assertEqual(self.receipts()[0]["failure_classification"], "operator_authorized_termination")
+
     def test_observational_import_cache_is_detected_and_scratch_redirect_contains_it(self):
         import importlib.machinery
         import importlib.util
@@ -1047,6 +1148,21 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         contained_after = module.source_snapshot([self.candidate], self.candidate, environment)
         self.assertEqual(module.snapshot_delta(contained_baseline, contained_after), [])
         self.assertTrue(any(scratch.rglob("*.pyc")))
+
+    def test_git_administration_mutation_is_detected(self):
+        import importlib.machinery
+        import importlib.util
+
+        loader = importlib.machinery.SourceFileLoader("claude_review_git_admin", str(LAUNCHER))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[loader.name] = module
+        loader.exec_module(module)
+        environment = os.environ.copy()
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        subprocess.run(["git", "-C", str(self.candidate), "config", "fixture.probe", "changed"], check=True)
+        changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        self.assertIn("git-admin", module.snapshot_delta(baseline, changed))
 
     def test_attempt_scratch_cleanup_fails_closed_on_symlink_residue(self):
         import importlib.machinery

@@ -171,6 +171,9 @@ terminal, then waits for both output collectors to reach end-of-stream before
 freezing the stream artifact or considering a retry. The launcher records the
 exact process group as required by the shared
 [`live-process lifecycle`](../orchestration-and-parallelism.md#live-process-lifecycle).
+Mutable control state in controller scratch preserves request, decline,
+graceful authority, and separately authorized force authority even after the
+direct provider pid exits while another recorded group member remains live.
 Do not infer a portable SIGTERM result or exit-code mapping from Claude Code;
 record the observed local process outcome.
 

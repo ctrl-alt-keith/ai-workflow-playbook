@@ -476,6 +476,22 @@ def replace_live_state(path: Path, record: dict[str, Any]) -> None:
     os.replace(temporary, path)
 
 
+def live_control_path(live_state_path: Path) -> Path:
+    return live_state_path.with_name(live_state_path.name.replace("-live-state.json", "-control-state.json"))
+
+
+def merged_external_state(live_state_path: Path, fallback: dict[str, Any]) -> dict[str, Any]:
+    merged = fallback.copy()
+    for path in (live_state_path, live_control_path(live_state_path)):
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(record, dict):
+            merged.update(record)
+    return merged
+
+
 def file_identity(path: Path) -> dict[str, object]:
     metadata = path.lstat()
     mode = stat.S_IMODE(metadata.st_mode)
@@ -504,7 +520,7 @@ def snapshot_root(root: Path) -> dict[str, object]:
         directory = pending.pop()
         for entry in sorted(os.scandir(directory), key=lambda item: item.name):
             path = Path(entry.path)
-            if directory == root and entry.name == ".git":
+            if directory == root and entry.name == ".git" and entry.is_dir(follow_symlinks=False):
                 continue
             relative = str(path.relative_to(root))
             entries[relative] = file_identity(path)
@@ -531,10 +547,31 @@ def git_index_identity(candidate: Path, environment: dict[str, str]) -> dict[str
     return {"path": str(index.resolve(strict=False)), "identity": file_identity(index) if index.exists() else {"kind": "missing"}}
 
 
+def git_admin_identity(candidate: Path, environment: dict[str, str]) -> dict[str, object]:
+    result = subprocess.run(
+        ["git", "-C", str(candidate), "rev-parse", "--absolute-git-dir"],
+        check=False,
+        env=environment,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"candidate Git administration directory is unreadable: {bounded_redacted(result.stderr)}")
+    git_directory = Path(result.stdout.strip()).resolve(strict=True)
+    entries = snapshot_root(git_directory)
+    for relative in list(entries):
+        if relative == "index" or relative.endswith(".lock"):
+            del entries[relative]
+    return {"path": str(git_directory), "entries": entries}
+
+
 def source_snapshot(roots: list[Path], candidate: Path, environment: dict[str, str]) -> dict[str, object]:
     body = {
         "roots": {str(root): snapshot_root(root) for root in roots},
         "git_index": git_index_identity(candidate, environment),
+        "git_admin": git_admin_identity(candidate, environment),
     }
     return {"body": body, "sha256": sha256_bytes(canonical_json_bytes(body))}
 
@@ -553,6 +590,8 @@ def snapshot_delta(before: dict[str, object], after: dict[str, object]) -> list[
                 changed.append(f"{root}:{relative}")
     if before_body["git_index"] != after_body["git_index"]:
         changed.append("git-index")
+    if before_body["git_admin"] != after_body["git_admin"]:
+        changed.append("git-admin")
     return changed
 
 
@@ -1117,6 +1156,7 @@ def parse_stream(records: bytes) -> dict[str, object]:
             continue
         if not isinstance(record, dict):
             malformed += 1
+            continue
         elif record.get("type") == "system" and record.get("subtype") == "init":
             init = record
         elif record.get("type") == "system" and record.get("subtype") == "api_retry":
@@ -1238,18 +1278,23 @@ def retry_classification(parsed: dict[str, object], exit_code: int) -> tuple[str
 
 def terminate_recorded_group(live_state_path: Path, authority: str, *, force_authorized: bool, grace_seconds: float | None) -> int:
     state = json.loads(live_state_path.read_text(encoding="utf-8"))
-    if state.get("state") not in {"running", "awaiting_operator_disposition"}:
+    if state.get("state") not in {"running", "awaiting_operator_disposition", "awaiting_process_group_terminal"}:
         raise RuntimeError("recorded attempt is not live")
     pid = state.get("pid")
     pgid = state.get("process_group_id")
-    if not isinstance(pid, int) or not isinstance(pgid, int) or os.getpgid(pid) != pgid:
+    if not isinstance(pid, int) or not isinstance(pgid, int):
         raise RuntimeError("recorded process identity is no longer exact")
     recorded_start = state.get("process_start_identity")
     observed_start = process_start_identity(pid)
-    if not isinstance(recorded_start, str) or not recorded_start or observed_start != recorded_start:
+    direct_process_reaped = state.get("direct_process_exit_code") is not None
+    if direct_process_reaped:
+        if observed_start is not None or not process_group_exists(pgid):
+            raise RuntimeError("recorded post-exit process group is no longer exact")
+    elif os.getpgid(pid) != pgid or not isinstance(recorded_start, str) or observed_start != recorded_start:
         raise RuntimeError("recorded process start identity no longer matches")
     state.update({"state": "termination_authorized", "termination_authority": authority, "graceful_signal": "SIGTERM"})
     replace_live_state(live_state_path, state)
+    replace_live_state(live_control_path(live_state_path), state)
     os.killpg(pgid, signal.SIGTERM)
     grace = grace_seconds if grace_seconds is not None else float(state.get("graceful_termination_seconds", 10.0))
     deadline = time.monotonic() + grace
@@ -1267,6 +1312,7 @@ def terminate_recorded_group(live_state_path: Path, authority: str, *, force_aut
         state.update({"state": "awaiting_operator_disposition", "force_escalation": "not_authorized"})
         try:
             replace_live_state(live_state_path, state)
+            replace_live_state(live_control_path(live_state_path), state)
         except FileNotFoundError:
             if process_start_identity(pid) is None:
                 return 0
@@ -1276,6 +1322,7 @@ def terminate_recorded_group(live_state_path: Path, authority: str, *, force_aut
     state.update({"state": "force_termination_authorized", "forced_signal": "SIGKILL"})
     try:
         replace_live_state(live_state_path, state)
+        replace_live_state(live_control_path(live_state_path), state)
     except FileNotFoundError:
         if process_start_identity(pid) is not None:
             raise RuntimeError("live-state mechanics disappeared while the exact process identity remained live")
@@ -1284,13 +1331,15 @@ def terminate_recorded_group(live_state_path: Path, authority: str, *, force_aut
 
 def request_or_decline_termination(live_state_path: Path, *, decline: bool) -> int:
     state = json.loads(live_state_path.read_text(encoding="utf-8"))
-    if state.get("state") not in {"running", "awaiting_operator_disposition"}:
+    if state.get("state") not in {"running", "awaiting_operator_disposition", "awaiting_process_group_terminal"}:
         raise RuntimeError("recorded attempt is not live")
     if decline:
-        state.update({"state": "running", "termination_disposition": "declined_keep_waiting"})
+        resumed_state = "awaiting_process_group_terminal" if state.get("direct_process_exit_code") is not None else "running"
+        state.update({"state": resumed_state, "termination_disposition": "declined_keep_waiting"})
     else:
         state.update({"state": "awaiting_operator_disposition", "termination_disposition": "confirmation_required"})
     replace_live_state(live_state_path, state)
+    replace_live_state(live_control_path(live_state_path), state)
     return 0
 
 
@@ -1464,17 +1513,19 @@ def run_governed_review(
                         live_state["graceful_signal_delivery"] = "not_delivered"
                         live_state["graceful_signal_error"] = bounded_redacted(str(error))
                     emergency_signal_sent = True
-                try:
-                    external_state = json.loads(live_state_path.read_text(encoding="utf-8"))
-                except (OSError, json.JSONDecodeError):
-                    external_state = live_state
+                external_state = merged_external_state(live_state_path, live_state)
                 for key in ("state", "termination_disposition", "termination_authority", "graceful_signal", "forced_signal", "force_escalation"):
                     if key in external_state:
                         live_state[key] = external_state[key]
                 replace_live_state(live_state_path, live_state)
             live_state["direct_process_exit_code"] = process.returncode
             while process_group_exists(pgid):
-                live_state["state"] = "awaiting_process_group_terminal"
+                external_state = merged_external_state(live_state_path, live_state)
+                for key in ("state", "termination_disposition", "termination_authority", "graceful_signal", "forced_signal", "force_escalation"):
+                    if key in external_state:
+                        live_state[key] = external_state[key]
+                if live_state.get("state") not in {"awaiting_operator_disposition", "termination_authorized", "force_termination_authorized"}:
+                    live_state["state"] = "awaiting_process_group_terminal"
                 live_state["process_group_terminal"] = False
                 if time.monotonic() >= next_soft:
                     live_state["soft_liveness_threshold_crossed"] = True
@@ -1503,6 +1554,10 @@ def run_governed_review(
                     emergency_signal_sent = True
                 replace_live_state(live_state_path, live_state)
                 time.sleep(config.observation_interval)
+            external_state = merged_external_state(live_state_path, live_state)
+            for key in ("state", "termination_disposition", "termination_authority", "graceful_signal", "forced_signal", "force_escalation"):
+                if key in external_state:
+                    live_state[key] = external_state[key]
             live_state["process_group_terminal"] = True
             live_state["state"] = "collecting_terminal_stream"
             replace_live_state(live_state_path, live_state)
@@ -1614,7 +1669,9 @@ def run_governed_review(
                         "termination_disposition",
                         "termination_authority",
                         "graceful_signal",
+                        "graceful_signal_delivery",
                         "forced_signal",
+                        "emergency_condition",
                         "process_group_terminal",
                     )
                     if key in live_state
