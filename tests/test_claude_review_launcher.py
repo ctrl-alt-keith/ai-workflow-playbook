@@ -353,6 +353,28 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0)
         self.assertEqual(diagnostic["auth_preflight_status"], "AUTH_PREFLIGHT_OK")
 
+    def test_auth_preflight_accepts_exact_no_tools_notice_but_rejects_other_suffixes(self):
+        accepted, accepted_diagnostic = self.run_launcher(
+            "print('CLAUDE_AUTH_OK')\n"
+            "print('Client.listTools() called but server does not advertise tools capability - returning empty list')\n",
+            auth_preflight=True,
+        )
+
+        self.assertEqual(accepted.returncode, 0)
+        self.assertEqual(accepted.stdout, "CLAUDE_AUTH_OK\n")
+        self.assertEqual(
+            accepted_diagnostic["preflight_notices"],
+            ["Client.listTools() called but server does not advertise tools capability - returning empty list"],
+        )
+
+        rejected, rejected_diagnostic = self.run_launcher(
+            "print('CLAUDE_AUTH_OK')\nprint('unexpected suffix')\n",
+            auth_preflight=True,
+        )
+
+        self.assertEqual(rejected.returncode, 70)
+        self.assertEqual(rejected_diagnostic["failure_classification"], "PREFLIGHT_OUTPUT_MISMATCH")
+
     def test_auth_preflight_retains_equals_form_model_and_effort(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             temporary = Path(temporary_directory)

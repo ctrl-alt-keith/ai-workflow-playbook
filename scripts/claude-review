@@ -29,6 +29,9 @@ REVIEWER_FAILURE_EXIT = 70
 MAX_ERROR_CHARS = 1_000
 AUTH_PREFLIGHT_PROMPT = b"Reply exactly: CLAUDE_AUTH_OK\n"
 AUTH_PREFLIGHT_RESPONSE = "CLAUDE_AUTH_OK"
+AUTH_PREFLIGHT_BENIGN_NOTICES = {
+    "Client.listTools() called but server does not advertise tools capability - returning empty list",
+}
 GOVERNED_CONFIG_VERSION = 1
 MAX_GOVERNED_ATTEMPTS = 3
 TRANSIENT_OUTER_RETRY_ERRORS = {"overloaded", "server_error"}
@@ -321,6 +324,16 @@ def is_auth_shaped_failure(output: str) -> bool:
     return "oauth" in normalized or "authentication" in normalized or "failed to authenticate" in normalized
 
 
+def accepted_auth_preflight_notices(output: str) -> list[str] | None:
+    lines = [line.strip() for line in output.splitlines() if line.strip()]
+    if not lines or lines[0] != AUTH_PREFLIGHT_RESPONSE or lines.count(AUTH_PREFLIGHT_RESPONSE) != 1:
+        return None
+    notices = lines[1:]
+    if any(line not in AUTH_PREFLIGHT_BENIGN_NOTICES for line in notices):
+        return None
+    return notices
+
+
 def classify_failure(stderr: str, stdout: str, exit_code: int, *, preflight: bool = False) -> str | None:
     classification = json_error_auth_failure_classification(stdout)
     if classification is not None:
@@ -343,7 +356,7 @@ def classify_failure(stderr: str, stdout: str, exit_code: int, *, preflight: boo
     if preflight:
         if is_auth_shaped_failure(stdout) or is_auth_shaped_failure(stderr):
             return "AUTH_UNKNOWN_FAIL_CLOSED"
-        if exit_code != 0 or stdout.strip() != AUTH_PREFLIGHT_RESPONSE:
+        if exit_code != 0 or accepted_auth_preflight_notices(stdout) is None:
             return "PREFLIGHT_OUTPUT_MISMATCH"
     if exit_code != 0 and (is_auth_shaped_failure(stdout) or is_auth_shaped_failure(stderr)):
         return "AUTH_UNKNOWN_FAIL_CLOSED"
@@ -2055,8 +2068,10 @@ def main(argv: list[str] | None = None) -> int:
         record["attempt_scratch"] = scratch_cleanup
     if args.auth_preflight and failure == "PREFLIGHT_OUTPUT_MISMATCH":
         record["preflight_output"] = bounded_redacted(stdout)
+    if args.auth_preflight and failure is None:
+        record["preflight_notices"] = accepted_auth_preflight_notices(stdout)
     if stdout and failure is None:
-        sys.stdout.write(stdout)
+        sys.stdout.write(f"{AUTH_PREFLIGHT_RESPONSE}\n" if args.auth_preflight else stdout)
     emit_diagnostics(record, args.diagnostics_file)
     if failure == "AUTH_OAUTH_TOKEN_EXPIRED_401":
         print(OAUTH_REAUTHENTICATION_MESSAGE, file=sys.stderr)
