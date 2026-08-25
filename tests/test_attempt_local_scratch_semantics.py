@@ -40,10 +40,28 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
             "Promotion precedes cleanup",
             "exact-verify it",
             "Copying bytes elsewhere does not transfer ownership, authority, evidence acceptance, or recovery status",
+            "after the attempt no longer depends on scratch",
+            "all dependency-bearing output has been promoted and exact-verified",
+            "required evidence has been preserved",
+            "the executor attempts cleanup",
             "Cleanup is best-effort, not a crash or reboot deletion guarantee",
             "Never silently fall back",
             "Fail closed on unexpected members",
             "Never reuse crash residue",
+        ):
+            self.assertIn(phrase, self.readiness)
+
+    def test_repo_locality_does_not_create_a_junk_drawer_default(self):
+        self.assertNotIn(
+            "Keep temporary workflow artifacts scoped to that repository whenever practical",
+            self.readiness,
+        )
+        for phrase in (
+            "Classify workflow material by natural owner and lifecycle",
+            "repository-owned working state stays in the repository",
+            "durable review, evidence, recovery, replay, planning, and execution-identity material belongs with its natural durable owner",
+            "generated artifacts or manifests do not become repository-owned merely because they are local",
+            "Locality does not transfer ownership or make evidence disposable",
         ):
             self.assertIn(phrase, self.readiness)
 

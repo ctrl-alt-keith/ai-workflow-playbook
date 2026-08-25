@@ -369,10 +369,13 @@ posture.
 ## Repo-Local Workflow State
 
 For implementation changes, run commands from inside the target repository's
-dedicated worktree. Keep temporary workflow artifacts scoped to that repository
-whenever practical.
-Examples include local worktree directories, generated review artifacts,
-transient manifests, and repository-owned build or test state.
+dedicated worktree. Classify workflow material by natural owner and lifecycle:
+repository-owned working state stays in the repository; durable review,
+evidence, recovery, replay, planning, and execution-identity material belongs
+with its natural durable owner; and generated artifacts or manifests do not
+become repository-owned merely because they are local. Use attempt-local
+scratch only for private mechanics whose loss cannot impair recovery. Locality
+does not transfer ownership or make evidence disposable.
 
 Keep the execution surface isolated from unrelated operator state and primary
 checkouts. Unscoped local files, prior-run artifacts, implicit prompts,
@@ -433,12 +436,16 @@ exact-verify it, and preserve required producing and delivery evidence. Copying
 bytes elsewhere does not transfer ownership, authority, evidence acceptance, or
 recovery status. Only then may cleanup be considered.
 
-Cleanup is best-effort, not a crash or reboot deletion guarantee. Before
-removing attempt-local scratch or crash residue, revalidate safe containment
-and identity. Fail closed on unexpected members, ownership or identity change,
-path escape, symlink/reparse-like or special objects, unsafe or unavailable
-roots, or failed revalidation. Never reuse crash residue; when cleanup cannot
-run, leave it in place and report it.
+On normal completion, after the attempt no longer depends on scratch, all
+dependency-bearing output has been promoted and exact-verified, required
+evidence has been preserved, and containment and identity have been
+revalidated, the executor attempts cleanup. Cleanup is best-effort, not a
+crash or reboot deletion guarantee. Before removing attempt-local scratch or
+crash residue, revalidate safe containment and identity. Fail closed on
+unexpected members, ownership or identity change, path escape,
+symlink/reparse-like or special objects, unsafe or unavailable roots, or
+failed revalidation. Never reuse crash residue; when cleanup cannot run, leave
+it in place and report it.
 
 Examples:
 
