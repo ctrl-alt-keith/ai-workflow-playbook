@@ -329,9 +329,19 @@ def accepted_auth_preflight_notices(output: str) -> list[str] | None:
     if not lines or lines[0] != AUTH_PREFLIGHT_RESPONSE or lines.count(AUTH_PREFLIGHT_RESPONSE) != 1:
         return None
     notices = lines[1:]
-    if any(line not in AUTH_PREFLIGHT_BENIGN_NOTICES for line in notices):
+    if len(notices) > 1 or any(line not in AUTH_PREFLIGHT_BENIGN_NOTICES for line in notices):
         return None
     return notices
+
+
+def validate_claude_selector(selector: str, effective_home: str) -> None:
+    effective_user_install = Path(effective_home) / ".local" / "bin" / "claude"
+    if selector == "claude" or Path(selector) == effective_user_install:
+        return
+    raise ValueError(
+        "--claude-bin must be 'claude' from the inherited PATH or the effective user's "
+        "exact ~/.local/bin/claude installation"
+    )
 
 
 def classify_failure(stderr: str, stdout: str, exit_code: int, *, preflight: bool = False) -> str | None:
@@ -1850,6 +1860,14 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
         parser.error("do not pass a positional prompt; provide the prompt on standard input")
     if any(value in {"-p", "--print", "--prompt"} for value in args.claude_args):
         parser.error("do not pass Claude prompt flags; provide the prompt on standard input")
+    if args.permission_hook is None and args.permission_hook_digest is not None:
+        parser.error("--permission-hook-digest requires --permission-hook")
+    if args.terminate is None and any(
+        value is not None for value in (args.termination_authority, args.grace_seconds)
+    ):
+        parser.error("termination authority and grace options require --terminate")
+    if args.terminate is None and args.force_authorized:
+        parser.error("--force-authorized requires --terminate")
     return args
 
 
@@ -1887,6 +1905,25 @@ def main(argv: list[str] | None = None) -> int:
                 "launcher_exit_code": REVIEWER_FAILURE_EXIT,
                 "stderr": bounded_redacted(str(error)),
                 **failure_fields("RUNTIME_LOGIN_CONTEXT_MISMATCH"),
+            },
+            args.diagnostics_file,
+        )
+        return REVIEWER_FAILURE_EXIT
+    try:
+        validate_claude_selector(args.claude_bin, effective_home)
+    except ValueError as error:
+        emit_diagnostics(
+            {
+                "kind": "claude_reviewer_attempt",
+                "attempt_kind": "auth_preflight" if args.auth_preflight else "substantive_review",
+                "runtime": {"effective_uid": uid, "effective_user": user, "cwd": os.getcwd()},
+                "failure_classification": "reviewer_executable_not_authorized",
+                "candidate_verdict": "not_applicable" if args.auth_preflight else "not_produced",
+                "substantive_review_output": False,
+                "claude_exit_code": None,
+                "launcher_exit_code": REVIEWER_FAILURE_EXIT,
+                "stderr": bounded_redacted(str(error)),
+                **failure_fields("reviewer_executable_not_authorized"),
             },
             args.diagnostics_file,
         )

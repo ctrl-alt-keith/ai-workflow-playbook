@@ -13,9 +13,24 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER = ROOT / "scripts" / "claude-review"
+CODEX_RULE = ROOT / ".codex" / "rules" / "claude-review.rules"
 
 
 class ClaudeReviewLauncherTests(unittest.TestCase):
+    def test_project_codex_rule_tracks_every_launcher_operation_mode(self):
+        rule = CODEX_RULE.read_text(encoding="utf-8")
+
+        for mode in (
+            "--auth-preflight",
+            "--review-config",
+            "--permission-hook",
+            "--request-termination",
+            "--decline-termination",
+            "--terminate",
+        ):
+            with self.subTest(mode=mode):
+                self.assertIn(f'"{mode}"', rule)
+
     def test_review_modes_cannot_be_combined_with_lifecycle_controls(self):
         for review_mode in (("--auth-preflight",), ("--review-config", "review-config.json")):
             for control_mode in (
@@ -36,6 +51,48 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                     self.assertEqual(completed.returncode, 2)
                     self.assertIn("not allowed with argument", completed.stderr)
 
+    def test_review_modes_reject_termination_only_modifiers(self):
+        for modifier in (
+            ("--termination-authority", "operator-approved"),
+            ("--grace-seconds", "1"),
+            ("--force-authorized",),
+        ):
+            with self.subTest(modifier=modifier):
+                completed = subprocess.run(
+                    [str(LAUNCHER), "--auth-preflight", *modifier],
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=False,
+                )
+
+                self.assertEqual(completed.returncode, 2)
+                self.assertIn("require", completed.stderr)
+                self.assertIn("--terminate", completed.stderr)
+
+    def test_arbitrary_claude_executable_selector_is_rejected_before_execution(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            diagnostics = Path(temporary_directory) / "diagnostics.json"
+            completed = subprocess.run(
+                [
+                    str(LAUNCHER),
+                    "--auth-preflight",
+                    "--claude-bin",
+                    "/bin/echo",
+                    "--diagnostics-file",
+                    str(diagnostics),
+                ],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            diagnostic = json.loads(diagnostics.read_text(encoding="utf-8"))
+
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "reviewer_executable_not_authorized")
+        self.assertIsNone(diagnostic["claude_exit_code"])
+
     def run_launcher(
         self,
         fake_body: str,
@@ -45,7 +102,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
     ):
         with tempfile.TemporaryDirectory() as temporary_directory:
             temporary = Path(temporary_directory)
-            fake_claude = temporary / "fake-claude"
+            fake_claude = temporary / "claude"
             fake_claude.write_text(
                 "#!/usr/bin/env python3\n"
                 "import os\n"
@@ -66,13 +123,14 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             command = [
                 str(LAUNCHER),
                 "--claude-bin",
-                str(fake_claude),
+                "claude",
                 "--diagnostics-file",
                 str(diagnostics),
             ]
             if auth_preflight:
                 command.append("--auth-preflight")
             effective_environment = (environment or os.environ.copy()).copy()
+            effective_environment["PATH"] = f"{temporary}{os.pathsep}{effective_environment.get('PATH', '')}"
             effective_environment["CLAUDE_REVIEW_TEST_FIXTURE"] = "1"
             effective_environment["CLAUDE_REVIEW_TEST_SCRATCH_PARENT"] = str(temporary)
             if not auth_preflight:
@@ -375,10 +433,20 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(rejected.returncode, 70)
         self.assertEqual(rejected_diagnostic["failure_classification"], "PREFLIGHT_OUTPUT_MISMATCH")
 
+        repeated, repeated_diagnostic = self.run_launcher(
+            "print('CLAUDE_AUTH_OK')\n"
+            "print('Client.listTools() called but server does not advertise tools capability - returning empty list')\n"
+            "print('Client.listTools() called but server does not advertise tools capability - returning empty list')\n",
+            auth_preflight=True,
+        )
+
+        self.assertEqual(repeated.returncode, 70)
+        self.assertEqual(repeated_diagnostic["failure_classification"], "PREFLIGHT_OUTPUT_MISMATCH")
+
     def test_auth_preflight_retains_equals_form_model_and_effort(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             temporary = Path(temporary_directory)
-            fake_claude = temporary / "fake-claude"
+            fake_claude = temporary / "claude"
             fake_claude.write_text(
                 "#!/usr/bin/env python3\n"
                 "import sys\n"
@@ -390,13 +458,14 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             )
             fake_claude.chmod(0o755)
             completed = subprocess.run(
-                [str(LAUNCHER), "--claude-bin", str(fake_claude), "--auth-preflight", "--", "--model=opus", "--effort=high"],
+                [str(LAUNCHER), "--claude-bin", "claude", "--auth-preflight", "--", "--model=opus", "--effort=high"],
                 check=False,
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env={
                     **os.environ,
+                    "PATH": f"{temporary}{os.pathsep}{os.environ.get('PATH', '')}",
                     "CLAUDE_REVIEW_TEST_FIXTURE": "1",
                     "CLAUDE_REVIEW_TEST_SCRATCH_PARENT": str(temporary),
                 },
@@ -476,7 +545,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             check=True,
         )
         self.count = self.root / "count"
-        self.fake = self.root / "fake-claude"
+        self.fake = self.root / "claude"
         self.fake.write_text(
             "#!/usr/bin/env python3\n"
             "import json, os, pathlib, signal, subprocess, sys, time\n"
@@ -611,6 +680,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 "FAKE_LINGER_MARKER": str(self.root / "lingering-child-terminal"),
             }
         )
+        environment["PATH"] = f"{self.root}{os.pathsep}{environment.get('PATH', '')}"
         return environment
 
     def run_governed(self, scenario="success", *, body=None, model="opus"):
@@ -633,7 +703,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             [
                 str(LAUNCHER),
                 "--claude-bin",
-                str(self.fake),
+                "claude",
                 "--diagnostics-file",
                 str(diagnostics),
                 "--review-config",
@@ -916,7 +986,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         config = self.write_config()
         diagnostics = self.evidence / "overall.json"
         process = subprocess.Popen(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", "claude", "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -1006,7 +1076,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         config.write_text(json.dumps(body), encoding="utf-8")
         diagnostics = auth_root / "overall.json"
         completed = subprocess.run(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", "claude", "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
             input="prompt\n",
             text=True,
             stdout=subprocess.PIPE,
@@ -1036,7 +1106,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         diagnostics = self.evidence / "overall.json"
         diagnostics.write_text("operator-owned\n", encoding="utf-8")
         completed = subprocess.run(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", "claude", "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
             input="prompt\n",
             text=True,
             stdout=subprocess.PIPE,
@@ -1052,7 +1122,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         preflight_receipt = self.evidence / "preflight-receipt.json"
         preflight_receipt.write_text("operator-owned-preflight\n", encoding="utf-8")
         completed = subprocess.run(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", "claude", "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
             input="prompt\n",
             text=True,
             stdout=subprocess.PIPE,
@@ -1156,7 +1226,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         config = self.write_config()
         diagnostics = self.evidence / "overall.json"
         process = subprocess.Popen(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", "claude", "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -1194,7 +1264,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         config = self.write_config()
         diagnostics = self.evidence / "overall.json"
         process = subprocess.Popen(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", "claude", "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -1236,7 +1306,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         config = self.write_config()
         diagnostics = self.evidence / "overall.json"
         process = subprocess.Popen(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", "claude", "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

@@ -745,11 +745,15 @@ first two arguments select authentication preflight or governed substantive
 review, and explicitly keeps permission-hook and lifecycle-control prefixes
 approval-gated. Codex rules are an experimental execution-policy surface; test
 the tracked rule after Codex upgrades and restart Codex after it changes.
+The allow decision constrains the direct command prefix; the launcher separately
+accepts only `claude` from the inherited `PATH` or the effective user's exact
+`~/.local/bin/claude` installation.
 
 The project-local rule is the portable source for macOS and Linux. A controller
 started from a broader workspace may not activate the nested project layer. If
-that controller must invoke the launcher, copy the same reviewed bytes into the
-user layer, then restart Codex:
+that controller must invoke the launcher, compare any existing user-layer copy
+with the tracked source first. Then copy the same reviewed bytes into the user
+layer and restart Codex:
 
 ```sh
 mkdir -p "$HOME/.codex/rules"
@@ -757,18 +761,17 @@ cp .codex/rules/claude-review.rules \
   "$HOME/.codex/rules/claude-review.rules"
 ```
 
-Compare an existing destination before replacing it. A user-layer copy is
-machine-local activation, not an independent policy source, and must stay
-byte-identical to the rule from the launcher revision it authorizes. Validate
-the combined effective policy without launching Claude:
+A user-layer copy is machine-local activation, not an independent policy
+source, and must stay byte-identical to the rule from the launcher revision it
+authorizes. Validate the tracked rule file without launching Claude:
 
 ```sh
 codex execpolicy check --pretty \
-  --rules "$HOME/.codex/rules/claude-review.rules" \
+  --rules .codex/rules/claude-review.rules \
   -- ./scripts/claude-review --auth-preflight --claude-bin claude
 
 codex execpolicy check --pretty \
-  --rules "$HOME/.codex/rules/claude-review.rules" \
+  --rules .codex/rules/claude-review.rules \
   -- ./scripts/claude-review --terminate /tmp/live-state.json \
   --termination-authority operator-approved
 ```

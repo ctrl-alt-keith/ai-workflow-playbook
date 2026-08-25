@@ -1,5 +1,5 @@
-# Keep reviewer lifecycle and permission-hook controls approval-gated even if a
-# broader user-layer rule exists. The most restrictive matching decision wins.
+# Keep the documented direct lifecycle and permission-hook forms approval-gated
+# even if a broader user-layer rule exists. The most restrictive match wins.
 prefix_rule(
     pattern=[
         "./scripts/claude-review",
