@@ -35,14 +35,27 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
 
     def test_authority_promotion_cleanup_and_fallback_fail_closed(self):
         for phrase in (
+            "no required durable state may exist solely in scratch",
             "not authority",
             "Promotion precedes cleanup",
             "exact-verify it",
+            "Copying bytes elsewhere does not transfer ownership, authority, evidence acceptance, or recovery status",
+            "Cleanup is best-effort, not a crash or reboot deletion guarantee",
             "Never silently fall back",
             "Fail closed on unexpected members",
-            "Do not reuse crash residue",
+            "Never reuse crash residue",
         ):
             self.assertIn(phrase, self.readiness)
+
+    def test_first_normative_use_and_repository_working_state_are_distinct(self):
+        self.assertLess(
+            self.readiness.index("Attempt-local disposable scratch"),
+            self.readiness.index("attempt-local scratch"),
+        )
+        self.assertIn(".venv", self.readiness)
+        self.assertIn("compiler/dependency caches", self.readiness)
+        self.assertIn("worktrees, and tool state are not automatically scratch", self.readiness)
+        self.assertNotIn("~/src/ctrl-alt-keith/scratch/", self.readiness)
 
     def test_only_darwin_has_a_bounded_platform_projection(self):
         self.assertIn("/usr/bin/getconf DARWIN_USER_TEMP_DIR", self.readiness)
@@ -52,6 +65,7 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
         self.assertNotIn("Keep temporary workflow state repo-local", self.agents)
         self.assertIn("attempt-local disposable scratch", self.agents)
         self.assertIn("attempt-local scratch", self.engineering)
+        self.assertIn("qualified route for its platform", self.engineering)
         self.assertIn("helper API or environment variable selects allocation mechanics", self.codex)
         self.assertNotIn("Use repo-local scratch paths for workflow artifacts", self.codex)
         self.assertNotIn("Ordinary repo-local scratch", self.evidence)

@@ -407,8 +407,7 @@ temporary:
   prompt-retrieval copies, and ephemeral subprocess material when their loss
   cannot impair recovery.
 - **Crash residue** is surviving material from an interrupted attempt. It is
-  untrusted, never recovery state, and never reusable merely because it
-  survived.
+  untrusted, never recovery state, and never reusable.
 - **Legacy workspace scratch** is the historical persistent routing pattern
   being retired. Frozen provenance may retain that wording or a historical
   path, but mutable guidance must not present it as a current default.
@@ -438,8 +437,8 @@ Cleanup is best-effort, not a crash or reboot deletion guarantee. Before
 removing attempt-local scratch or crash residue, revalidate safe containment
 and identity. Fail closed on unexpected members, ownership or identity change,
 path escape, symlink/reparse-like or special objects, unsafe or unavailable
-roots, or failed revalidation. Do not reuse crash residue when cleanup cannot
-run.
+roots, or failed revalidation. Never reuse crash residue; when cleanup cannot
+run, leave it in place and report it.
 
 Examples:
 
@@ -463,7 +462,10 @@ use a fresh private unique child, and reject path escape, symlinks, special
 objects, residue reuse, and unsafe cleanup through qualified
 mode/ownership/device/inode checks. This is Darwin evidence, not portable
 doctrine. Linux and Windows mappings remain unqualified until their own
-qualified platform projections exist.
+qualified platform projections exist. Without a qualified mapping, the
+downstream repository or tool contract must select another explicitly
+authorized design or stop the dependent operation; a generic attempt-local
+example does not itself qualify that platform.
 
 For Codex specifically, configured
 `[sandbox_workspace_write].writable_roots` may not be the full effective
