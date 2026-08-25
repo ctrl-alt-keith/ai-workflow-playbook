@@ -89,6 +89,121 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "forbidden writable root"):
                 self.installer.validate_destination(root / "installed" / "claude-review", [root])
 
+    def test_temporary_production_install_binds_launcher_rule_and_claude_identity(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            installed = root / "installed"
+            installed.mkdir()
+            launcher = installed / "claude-review"
+            launcher_bytes = LAUNCHER.read_bytes()
+            launcher.write_bytes(launcher_bytes)
+            launcher.chmod(0o500)
+            active_rule = root / "active.rules"
+            active_rule.write_text("fixture active rule\n", encoding="utf-8")
+            candidate = root / "candidate"
+            candidate.mkdir()
+            count = root / "count"
+            qualified = root / "qualified-claude"
+            shadow = candidate / "claude"
+            fake_body = (
+                "#!/usr/bin/env python3\n"
+                "import os, pathlib, sys\n"
+                "if '--version' in sys.argv:\n"
+                "    print('fixture-claude 1')\n"
+                "    raise SystemExit(0)\n"
+                "pathlib.Path(os.environ['FIXTURE_COUNT']).open('a').write('run\\n')\n"
+                "print('CLAUDE_AUTH_OK')\n"
+            )
+            qualified.write_text(fake_body, encoding="utf-8")
+            qualified.chmod(0o755)
+            shadow.write_text(fake_body.replace("fixture-claude 1", "shadow-claude 1"), encoding="utf-8")
+            shadow.chmod(0o755)
+            identity = self.launcher.executable_identity(qualified, os.geteuid())
+            manifest = {
+                "schema_version": 1,
+                "installed_launcher_path": str(launcher),
+                "installed_launcher_sha256": self.launcher.sha256_bytes(launcher_bytes),
+                "active_rule_path": str(active_rule),
+                "active_rule_sha256": self.launcher.sha256_bytes(active_rule.read_bytes()),
+                "claude_selector": str(qualified),
+                "claude_identity": identity,
+                "forbidden_roots": [str(candidate)],
+                "source_commit": "fixture",
+                "source_launcher_sha256": self.launcher.sha256_bytes(launcher_bytes),
+            }
+            manifest_path = installed / "claude-review-installation.json"
+            manifest_path.write_bytes(self.launcher.canonical_json_bytes(manifest))
+            environment = os.environ.copy()
+            environment.pop("CLAUDE_REVIEW_TEST_FIXTURE", None)
+            environment.update({"FIXTURE_COUNT": str(count), "PATH": f"{candidate}{os.pathsep}/usr/bin:/bin"})
+
+            accepted_diagnostics = root / "accepted.json"
+            accepted = subprocess.run(
+                [str(launcher), "--auth-preflight", "--diagnostics-file", str(accepted_diagnostics)],
+                check=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=environment,
+            )
+            self.assertEqual(accepted.returncode, 0)
+            self.assertEqual(count.read_text(encoding="utf-8"), "run\n")
+            accepted_record = json.loads(accepted_diagnostics.read_text(encoding="utf-8"))
+            self.assertEqual(accepted_record["runtime"]["claude_executable"], str(qualified))
+            self.assertEqual(
+                accepted_record["runtime"]["reviewer_execution_identity"]["qualification"],
+                "installed_exact_identity",
+            )
+
+            launcher.chmod(0o700)
+            launcher.write_bytes(launcher_bytes + b"\n")
+            launcher.chmod(0o500)
+            drifted_diagnostics = root / "drifted.json"
+            drifted = subprocess.run(
+                [str(launcher), "--auth-preflight", "--diagnostics-file", str(drifted_diagnostics)],
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=environment,
+            )
+            self.assertEqual(drifted.returncode, 70)
+            self.assertEqual(count.read_text(encoding="utf-8"), "run\n")
+
+            launcher.chmod(0o700)
+            launcher.write_bytes(launcher_bytes)
+            launcher.chmod(0o500)
+            arbitrary_diagnostics = root / "arbitrary.json"
+            arbitrary = subprocess.run(
+                [
+                    str(launcher),
+                    "--auth-preflight",
+                    "--claude-bin",
+                    "/bin/echo",
+                    "--diagnostics-file",
+                    str(arbitrary_diagnostics),
+                ],
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=environment,
+            )
+            self.assertEqual(arbitrary.returncode, 70)
+            self.assertEqual(count.read_text(encoding="utf-8"), "run\n")
+
+            manifest["claude_selector"] = str(shadow)
+            manifest["claude_identity"] = self.launcher.executable_identity(shadow, os.geteuid())
+            manifest_path.write_bytes(self.launcher.canonical_json_bytes(manifest))
+            forbidden_diagnostics = root / "forbidden.json"
+            forbidden = subprocess.run(
+                [str(launcher), "--auth-preflight", "--diagnostics-file", str(forbidden_diagnostics)],
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=environment,
+            )
+            self.assertEqual(forbidden.returncode, 70)
+            self.assertEqual(count.read_text(encoding="utf-8"), "run\n")
+
     def test_exact_git_grammar_accepts_only_qualifying_review_forms(self):
         root = "/tmp/declared-candidate"
         commit = "a" * 40
