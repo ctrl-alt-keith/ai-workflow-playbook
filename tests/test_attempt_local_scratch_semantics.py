@@ -48,14 +48,19 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
             self.assertIn(phrase, self.readiness)
 
     def test_first_normative_use_and_repository_working_state_are_distinct(self):
+        full_term = "**Attempt-local disposable scratch**"
+        short_term = "**attempt-local scratch**"
         self.assertLess(
-            self.readiness.index("Attempt-local disposable scratch"),
-            self.readiness.index("attempt-local scratch"),
+            self.readiness.index(full_term),
+            self.readiness.index(short_term),
         )
         self.assertIn(".venv", self.readiness)
         self.assertIn("compiler/dependency caches", self.readiness)
         self.assertIn("worktrees, and tool state are not automatically scratch", self.readiness)
         self.assertNotIn("~/src/ctrl-alt-keith/scratch/", self.readiness)
+        self.assertIn("Each material attempt that needs disposable local mechanics receives fresh", self.readiness)
+        self.assertIn("Do not adopt or reuse it across attempts", self.readiness)
+        self.assertIn("do not give it a planning, authority, evidence, recovery, replay, or sole-durable", self.readiness)
 
     def test_only_darwin_has_a_bounded_platform_projection(self):
         self.assertIn("/usr/bin/getconf DARWIN_USER_TEMP_DIR", self.readiness)
@@ -65,7 +70,7 @@ class AttemptLocalScratchSemanticsTests(unittest.TestCase):
         self.assertNotIn("Keep temporary workflow state repo-local", self.agents)
         self.assertIn("attempt-local disposable scratch", self.agents)
         self.assertIn("attempt-local scratch", self.engineering)
-        self.assertIn("qualified route for its platform", self.engineering)
+        self.assertIn("allocated only through its platform's qualified route", self.engineering)
         self.assertIn("helper API or environment variable selects allocation mechanics", self.codex)
         self.assertNotIn("Use repo-local scratch paths for workflow artifacts", self.codex)
         self.assertNotIn("Ordinary repo-local scratch", self.evidence)

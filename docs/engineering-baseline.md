@@ -118,8 +118,8 @@ notes, PR evidence, and reusable workflow guidance.
 Prefer relative paths, repo-root placeholders, lint-safe example placeholders,
 and temporary-directory abstractions instead. When an example needs
 attempt-local scratch, show the lifecycle pattern rather than a captured local
-path, such as a fresh private `mktemp`-style directory allocated through the
-qualified route for its platform or
+path, such as a fresh private directory allocated only through its platform's
+qualified route or
 `[attempt-local-directory]/artifact`.
 
 Machine-local paths reduce portability and can leak unnecessary local context
