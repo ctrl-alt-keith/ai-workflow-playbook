@@ -32,7 +32,10 @@ Repo-local rules take precedence only for repo-specific behavior.
 - For implementation changes, use one repository, one branch, one dedicated
   repo-local worktree under `.worktrees/`, and one pull request per change; see
   `docs/repo-readiness.md#pr-readiness`.
-- Keep temporary workflow state repo-local.
+- Keep repository-owned working state repo-local and tool-owned working state
+  under its tool's contract. Use attempt-local disposable scratch only for
+  private mechanics that have no required post-attempt role; see
+  `docs/repo-readiness.md#repo-local-workflow-state`.
 - Follow the command-form preflight rule in `docs/repo-readiness.md`: use direct
   `git ...`, `gh ...`, `make ...`, `python ...`, repo-local scripts, and tool
   commands for ordinary repository operations.

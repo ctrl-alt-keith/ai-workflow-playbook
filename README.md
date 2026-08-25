@@ -88,7 +88,7 @@ The first core module is delivery. Additional workflow families may be added lat
 - [`docs/ai-workflow-ecosystem.md`](docs/ai-workflow-ecosystem.md): conceptual overview of the repository ecosystem, retained-knowledge boundaries, and architectural direction
 - [`docs/engineering-baseline.md`](docs/engineering-baseline.md): foundational engineering expectations, including validation, source authority, review, merge authority, and ready-for-review defaults
 - [`docs/authoritative-source-check.md`](docs/authoritative-source-check.md): advisory authoritative-source scanner adoption, domain classification, source justifications, and reusable workflow pinning
-- [`docs/repo-readiness.md`](docs/repo-readiness.md): interaction-mode selection, governance operating model, repository workflow expectations, validation taxonomy, and `AGENTS.md` responsibilities
+- [`docs/repo-readiness.md`](docs/repo-readiness.md): interaction-mode selection, governance operating model, workflow-state ownership and lifecycle classification, repository workflow expectations, validation taxonomy, and `AGENTS.md` responsibilities
 - [`docs/repo-awareness-onboarding-refresh.md`](docs/repo-awareness-onboarding-refresh.md): repository discovery, inventory propagation, onboarding, and governance refresh procedure
 - [`docs/core-model.md`](docs/core-model.md): canonical domain-independent AI
   operating principles, roles, authority, phases, and durable continuity

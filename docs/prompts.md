@@ -639,6 +639,7 @@ Evidence:
 
 Cleanup:
 - Preserve required delivery and attempt evidence, then remove only the private attempt-local retrieval when the attempt no longer depends on it.
+- Revalidate containment and identity and fail closed on the shared cleanup conditions in `repo-readiness.md#repo-local-workflow-state`.
 - Do not delete or rewrite the durable prompt and do not create recurring cleanup automation.
 ```
 

@@ -72,10 +72,11 @@ tool calls in parallel; keep parallel calls to independent read-only inspection
 and never parallelize mutating Git or overlapping worktree operations.
 
 Isolation comes from the permission model and the working directory or Git
-worktree, not from a writable-root sandbox. Keep durable artifacts in the
-repo-local paths in
-[`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state); use OS
-temp locations only for short-lived process-local files.
+worktree, not from a writable-root sandbox. Keep durable artifacts under their
+natural durable owner and repository working state in its repository-owned
+paths; use attempt-local scratch only for short-lived private process mechanics
+whose loss cannot impair recovery. See
+[`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
 ## Worktrees And Subagents
 
@@ -150,7 +151,9 @@ authority.
 Keep delivery, acknowledgement, Claude attempt, attempt receipt, and output
 identities separate. Preserve required evidence, then remove and verify removal
 of only the private attempt-local copy after the attempt no longer depends on
-it. The concrete provider, account, namespace, destination, retention, and
+it. Revalidate containment and identity, and fail closed on the shared cleanup
+conditions in [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
+The concrete provider, account, namespace, destination, retention, and
 visibility values remain outside this reusable adapter.
 
 ## Claude Model, Thinking, And Thread Routing

@@ -132,7 +132,8 @@ scoped analysis, review, planning, advice, prompting, or mutation.
 - `docs/source-first-retrieval.md` -> repository triggers, retrieval ordering,
   verification gates, and recovery
 - `docs/repo-readiness.md` -> interaction mode, governance operating model,
-  command form, worktree, branch, validation, and PR expectations
+  workflow-state ownership and lifecycle, command form, worktree, branch,
+  validation, and PR expectations
 - `docs/orchestration-and-parallelism.md` -> single-thread, worker fan-out,
   reconciliation, validation, and merge sequencing guidance
 - `docs/multi-agent-synthesis.md` -> comparative discovery, convergence and
