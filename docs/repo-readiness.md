@@ -479,18 +479,22 @@ Examples:
 7. Historical `scratch/` references may remain as frozen provenance, but no
    mutable guidance may imply that they are the current disposable default.
 
-The qualified platform projections currently implemented by this Playbook are:
+The platform projections currently implemented by this Playbook are:
 
 - the bounded Darwin precedent from CAK-158/150: resolve with
   `/usr/bin/getconf DARWIN_USER_TEMP_DIR` and require its private directory
   ownership and mode; and
-- the bounded Linux precedent from CAK-155: use fixed `/tmp` only when it is a
-  real root-owned directory with exact sticky shared-temporary mode `01777`.
+- the bounded Linux design from CAK-155, pending first Linux-host execution
+  evidence: use fixed `/tmp` only when it is a real root-owned directory with
+  exact sticky shared-temporary mode `01777`.
 
-Both projections validate rather than trust `$TMPDIR`, use a fresh private
-unique child with mode `0700`, bind parent and child device/inode identity, and
-reject path escape, symlinks, special objects, residue reuse, ownership or mode
-drift, and unsafe cleanup. Linux `/tmp` is appropriate only for disposable
+Each projection validates its own platform root rather than trusting `$TMPDIR`,
+uses a fresh private unique child with mode `0700`, binds parent and child
+device/inode identity, and rejects path escape, symlinks, special objects,
+residue reuse, ownership or mode drift, and unsafe cleanup. The Linux design
+additionally treats its shared parent as admissible only with the exact
+root-owned `01777` shape; this does not make it equivalent to Darwin's private
+per-user parent. Linux `/tmp` is appropriate only for disposable
 attempt mechanics: the
 [Filesystem Hierarchy Standard](https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s18.html)
 requires it for temporary files and says programs must not assume preservation

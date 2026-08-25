@@ -141,9 +141,10 @@ Read-only completion requires a positive whole-source no-delta postflight. The
 baseline must accept deliberately dirty, staged, untracked, and ignored source
 state without cleaning or normalizing it, then detect content creation,
 modification, removal, mode or symlink changes, Git-index changes, and writes
-to the candidate-specific Git administration directory—including lock-file
+to the candidate-specific and shared Git administration directories—including lock-file
 creation, removal, replacement, mode, symlink, and content changes—and writes that escape
-the candidate into another guarded source. Repository status alone is
+the candidate into another guarded source. Apply the same index and administration
+coverage to another guarded source that is itself a repository. Repository status alone is
 insufficient. Reviewer output and receipts belong only in the declared,
 disjoint evidence destination after its retention and visibility rules admit
 those bytes.

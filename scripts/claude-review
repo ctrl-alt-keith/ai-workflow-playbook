@@ -53,6 +53,7 @@ LIVE_ATTEMPT_STATES = {
     "running",
     "awaiting_operator_disposition",
     "awaiting_process_group_terminal",
+    "source_observation_failure_waiting_for_terminal",
     "capability_stop_in_progress",
     "emergency_stop_in_progress",
     "termination_authorized",
@@ -65,6 +66,7 @@ NONTERMINATING_CONTROL_STATES = {
     "running",
     "awaiting_operator_disposition",
     "awaiting_process_group_terminal",
+    "source_observation_failure_waiting_for_terminal",
 }
 
 
@@ -348,12 +350,19 @@ def executable_identity(path: Path, effective_uid: int) -> dict[str, object]:
     }
 
 
-def qualified_execution(selector: str | None, effective_uid: int) -> tuple[str, dict[str, object]]:
+def qualified_execution(
+    selector: str | None,
+    effective_uid: int,
+    *,
+    explicit_test_fixture: bool = False,
+) -> tuple[str, dict[str, object]]:
     """Bind production execution to the installed launcher, rule, and Claude identity."""
     launcher = Path(__file__).resolve(strict=True)
-    if os.environ.get("CLAUDE_REVIEW_TEST_FIXTURE") == "1":
+    if explicit_test_fixture:
         if selector is None:
             raise ValueError("test fixtures require an explicit absolute --claude-bin")
+        if launcher.with_name(INSTALLATION_MANIFEST_NAME).exists():
+            raise ValueError("an installed production launcher cannot use test executable qualification")
         identity = executable_identity(Path(selector), effective_uid)
         identity["qualification"] = "explicit_test_fixture"
         return str(Path(identity["resolved_path"])), identity
@@ -738,9 +747,9 @@ def git_index_identity(candidate: Path, environment: dict[str, str]) -> dict[str
     return {"path": str(index.resolve(strict=False)), "identity": identity}
 
 
-def git_admin_identity(candidate: Path, environment: dict[str, str]) -> dict[str, object]:
+def resolved_git_directory(candidate: Path, argument: str, environment: dict[str, str]) -> Path:
     result = subprocess.run(
-        ["git", "-C", str(candidate), "rev-parse", "--absolute-git-dir"],
+        ["git", "-C", str(candidate), "rev-parse", argument],
         check=False,
         env=environment,
         stdin=subprocess.DEVNULL,
@@ -749,13 +758,66 @@ def git_admin_identity(candidate: Path, environment: dict[str, str]) -> dict[str
         text=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(f"candidate Git administration directory is unreadable: {bounded_redacted(result.stderr)}")
-    git_directory = Path(result.stdout.strip()).resolve(strict=True)
-    entries = snapshot_root(git_directory)
-    for relative in list(entries):
-        if relative == "index":
-            del entries[relative]
-    return {"path": str(git_directory), "entries": entries}
+        raise RuntimeError(f"Git administration directory is unreadable: {bounded_redacted(result.stderr)}")
+    directory = Path(result.stdout.strip())
+    if not directory.is_absolute():
+        directory = candidate / directory
+    return directory.resolve(strict=True)
+
+
+def git_admin_identity(candidate: Path, environment: dict[str, str]) -> dict[str, object]:
+    git_directory = resolved_git_directory(candidate, "--absolute-git-dir", environment)
+    common_directory = resolved_git_directory(candidate, "--git-common-dir", environment)
+    index_path = Path(str(git_index_identity(candidate, environment)["path"]))
+
+    def administration_directory(path: Path) -> dict[str, object]:
+        entries = snapshot_root(path)
+        for relative in list(entries):
+            if (path / relative).resolve(strict=False) == index_path:
+                del entries[relative]
+        return {"path": str(path), "entries": entries}
+
+    identity = {"worktree_git_directory": administration_directory(git_directory)}
+    if common_directory == git_directory:
+        identity["common_git_directory"] = {
+            "path": str(common_directory),
+            "same_as_worktree_git_directory": True,
+        }
+    else:
+        identity["common_git_directory"] = administration_directory(common_directory)
+    return identity
+
+
+def guarded_repository_identities(
+    roots: list[Path],
+    candidate: Path,
+    environment: dict[str, str],
+) -> dict[str, object]:
+    identities: dict[str, object] = {}
+    candidate = candidate.resolve(strict=True)
+    for root in roots:
+        qualified_root = root.resolve(strict=True)
+        if qualified_root == candidate or not qualified_root.is_dir():
+            continue
+        result = subprocess.run(
+            ["git", "-C", str(qualified_root), "rev-parse", "--show-toplevel"],
+            check=False,
+            env=environment,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if result.returncode != 0:
+            continue
+        repository_root = Path(result.stdout.strip()).resolve(strict=True)
+        if repository_root != qualified_root:
+            continue
+        identities[str(qualified_root)] = {
+            "git_index": git_index_identity(qualified_root, environment),
+            "git_admin": git_admin_identity(qualified_root, environment),
+        }
+    return identities
 
 
 def source_snapshot(roots: list[Path], candidate: Path, environment: dict[str, str]) -> dict[str, object]:
@@ -763,6 +825,7 @@ def source_snapshot(roots: list[Path], candidate: Path, environment: dict[str, s
         "roots": {str(root): snapshot_root(root) for root in roots},
         "git_index": git_index_identity(candidate, environment),
         "git_admin": git_admin_identity(candidate, environment),
+        "guarded_git_repositories": guarded_repository_identities(roots, candidate, environment),
     }
     return {"body": body, "sha256": sha256_bytes(canonical_json_bytes(body))}
 
@@ -795,6 +858,11 @@ def snapshot_delta(before: dict[str, object], after: dict[str, object]) -> list[
         changed.append("git-index")
     if before_body["git_admin"] != after_body["git_admin"]:
         changed.append("git-admin")
+    before_repositories = before_body.get("guarded_git_repositories", {})
+    after_repositories = after_body.get("guarded_git_repositories", {})
+    for root in sorted(set(before_repositories) | set(after_repositories)):
+        if before_repositories.get(root) != after_repositories.get(root):
+            changed.append(f"git-admin:{root}")
     return changed
 
 
@@ -1523,7 +1591,12 @@ def request_or_decline_termination(live_state_path: Path, *, decline: bool) -> i
     if state.get("state") not in LIVE_ATTEMPT_STATES:
         raise RuntimeError("recorded attempt is not live")
     if decline:
-        resumed_state = "awaiting_process_group_terminal" if state.get("direct_process_exit_code") is not None else "running"
+        if state.get("source_observation_failure") is not None:
+            resumed_state = "source_observation_failure_waiting_for_terminal"
+        elif state.get("direct_process_exit_code") is not None:
+            resumed_state = "awaiting_process_group_terminal"
+        else:
+            resumed_state = "running"
         state.update({"state": resumed_state, "termination_disposition": "declined_keep_waiting"})
     else:
         state.update({"state": "awaiting_operator_disposition", "termination_disposition": "confirmation_required"})
@@ -1924,7 +1997,12 @@ def run_governed_review(
                 "no_delta_postflight": {
                     "baseline_sha256": attempt_snapshot["sha256"],
                     "postflight_sha256": post_snapshot["sha256"] if post_snapshot is not None else None,
-                    "passed": post_snapshot is not None and not changes,
+                    "passed": (
+                        post_snapshot is not None
+                        and not changes
+                        and live_observation_failure is None
+                        and postflight_observation_failure is None
+                    ),
                     "changed_paths": changes,
                     "live_observation_failure": live_observation_failure,
                     "postflight_capture_failure": postflight_observation_failure,
@@ -1998,6 +2076,8 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
     operation = parser.add_mutually_exclusive_group()
     operation.add_argument("--auth-preflight", action="store_true")
     operation.add_argument("--review-config", type=Path)
+    operation.add_argument("--auth-preflight-fixture", action="store_true", help=argparse.SUPPRESS)
+    operation.add_argument("--review-config-fixture", type=Path, help=argparse.SUPPRESS)
     operation.add_argument("--permission-hook", type=Path)
     parser.add_argument("--permission-hook-digest")
     operation.add_argument("--request-termination", type=Path)
@@ -2028,6 +2108,14 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_arguments(argv or sys.argv[1:])
+    fixture_environment = os.environ.get("CLAUDE_REVIEW_TEST_FIXTURE") == "1"
+    requested_execution_fixture = args.auth_preflight_fixture or args.review_config_fixture is not None
+    if requested_execution_fixture and not fixture_environment:
+        raise SystemExit("test execution modes require the explicit test-fixture environment")
+    if args.auth_preflight_fixture:
+        args.auth_preflight = True
+    if args.review_config_fixture is not None:
+        args.review_config = args.review_config_fixture
     if args.permission_hook:
         return permission_hook(args.permission_hook, args.permission_hook_digest)
     if args.request_termination:
@@ -2043,7 +2131,8 @@ def main(argv: list[str] | None = None) -> int:
             force_authorized=args.force_authorized,
             grace_seconds=args.grace_seconds,
         )
-    classification_fixture = args.classification_fixture and os.environ.get("CLAUDE_REVIEW_TEST_FIXTURE") == "1"
+    classification_fixture = args.classification_fixture and fixture_environment
+    execution_fixture = classification_fixture or requested_execution_fixture
     diagnostics_destination: Path | None = None
     if not args.auth_preflight and args.review_config is None and not classification_fixture:
         raise SystemExit("substantive governed review requires --review-config")
@@ -2066,7 +2155,11 @@ def main(argv: list[str] | None = None) -> int:
         )
         return REVIEWER_FAILURE_EXIT
     try:
-        executable, execution_identity = qualified_execution(args.claude_bin, uid)
+        executable, execution_identity = qualified_execution(
+            args.claude_bin,
+            uid,
+            explicit_test_fixture=execution_fixture,
+        )
     except (OSError, ValueError) as error:
         emit_diagnostics(
             {
@@ -2117,6 +2210,9 @@ def main(argv: list[str] | None = None) -> int:
         return REVIEWER_FAILURE_EXIT
     inherited_home = os.environ.get("HOME")
     child_environment = os.environ.copy()
+    if not execution_fixture:
+        child_environment.pop("CLAUDE_REVIEW_TEST_FIXTURE", None)
+        child_environment.pop("CLAUDE_REVIEW_TEST_SCRATCH_PARENT", None)
     child_environment.update({"HOME": effective_home, "USER": user, "LOGNAME": user})
     selected_arguments = preflight_arguments(args.claude_args) if args.auth_preflight else args.claude_args
     try:

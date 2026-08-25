@@ -797,7 +797,14 @@ codex execpolicy check --pretty \
 The first check must report `allow`; the second must report `prompt`. Do not use
 shell wrappers, redirections, or pipelines for this path: they change policy
 evaluation and bypass the launcher's owned prompt/output flow. Supply the review
-prompt directly on standard input.
+prompt directly on standard input through an execution channel that remains open
+until the controller writes the exact frozen prompt bytes and then explicitly
+closes standard input. A runner that starts the launcher with standard input
+already closed delivers an empty prompt and is not a valid governed-review
+invocation; the launcher must fail it before starting a reviewer. For a
+controller API, start the direct process with writable standard input, write the
+frozen bytes exactly once, close the stream to deliver EOF, and then await that
+same process and process group through the terminal boundary.
 
 `AUTH_PREFLIGHT_OK` means authentication worked for that process context only;
 it does not guarantee that a later review cannot expire. Do not start the

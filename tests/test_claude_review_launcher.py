@@ -158,6 +158,40 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 "installed_exact_identity",
             )
 
+            inherited_fixture_diagnostics = auth_diagnostics / "inherited-fixture.json"
+            inherited_fixture_environment = environment.copy()
+            inherited_fixture_environment.update(
+                {
+                    "CLAUDE_REVIEW_TEST_FIXTURE": "1",
+                    "CLAUDE_REVIEW_TEST_SCRATCH_PARENT": str(candidate),
+                }
+            )
+            inherited_fixture = subprocess.run(
+                [
+                    str(launcher),
+                    "--auth-preflight",
+                    "--diagnostics-file",
+                    str(inherited_fixture_diagnostics),
+                ],
+                check=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=inherited_fixture_environment,
+            )
+            self.assertEqual(inherited_fixture.returncode, 0)
+            inherited_fixture_record = json.loads(
+                inherited_fixture_diagnostics.read_text(encoding="utf-8")
+            )
+            self.assertNotEqual(
+                inherited_fixture_record["attempt_scratch"]["projection"],
+                "test_fixture_explicit_parent",
+            )
+            self.assertNotEqual(
+                Path(inherited_fixture_record["attempt_scratch"]["path"]).parent,
+                candidate,
+            )
+
             outside_diagnostics = root / "outside.json"
             outside = subprocess.run(
                 [str(launcher), "--auth-preflight", "--diagnostics-file", str(outside_diagnostics)],
@@ -169,7 +203,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             )
             self.assertEqual(outside.returncode, 70)
             self.assertFalse(outside_diagnostics.exists())
-            self.assertEqual(count.read_text(encoding="utf-8"), "run\n")
+            self.assertEqual(count.read_text(encoding="utf-8"), "run\nrun\n")
 
             launcher.chmod(0o700)
             launcher.write_bytes(launcher_bytes + b"\n")
@@ -184,7 +218,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             )
             self.assertEqual(drifted.returncode, 70)
             self.assertFalse(drifted_diagnostics.exists())
-            self.assertEqual(count.read_text(encoding="utf-8"), "run\n")
+            self.assertEqual(count.read_text(encoding="utf-8"), "run\nrun\n")
 
             launcher.chmod(0o700)
             launcher.write_bytes(launcher_bytes)
@@ -206,7 +240,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             )
             self.assertEqual(arbitrary.returncode, 70)
             self.assertFalse(arbitrary_diagnostics.exists())
-            self.assertEqual(count.read_text(encoding="utf-8"), "run\n")
+            self.assertEqual(count.read_text(encoding="utf-8"), "run\nrun\n")
 
             manifest["claude_selector"] = str(shadow)
             manifest["claude_identity"] = self.launcher.executable_identity(shadow, os.geteuid())
@@ -221,7 +255,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             )
             self.assertEqual(forbidden.returncode, 70)
             self.assertFalse(forbidden_diagnostics.exists())
-            self.assertEqual(count.read_text(encoding="utf-8"), "run\n")
+            self.assertEqual(count.read_text(encoding="utf-8"), "run\nrun\n")
 
     def test_exact_git_grammar_accepts_only_qualifying_review_forms(self):
         root = "/tmp/declared-candidate"
@@ -332,6 +366,32 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertFalse(diagnostics.exists())
         self.assertIn('"failure_classification": "reviewer_executable_not_authorized"', completed.stderr)
 
+    def test_fixture_environment_alone_cannot_bypass_installed_identity(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            marker = root / "executed"
+            fake_claude = root / "claude"
+            fake_claude.write_text(
+                "#!/bin/sh\ntouch \"$FIXTURE_MARKER\"\necho CLAUDE_AUTH_OK\n",
+                encoding="utf-8",
+            )
+            fake_claude.chmod(0o755)
+            completed = subprocess.run(
+                [str(LAUNCHER), "--auth-preflight", "--claude-bin", str(fake_claude)],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env={
+                    **os.environ,
+                    "CLAUDE_REVIEW_TEST_FIXTURE": "1",
+                    "FIXTURE_MARKER": str(marker),
+                },
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 70)
+            self.assertFalse(marker.exists())
+            self.assertIn('"failure_classification": "reviewer_executable_not_authorized"', completed.stderr)
+
     def run_launcher(
         self,
         fake_body: str,
@@ -367,7 +427,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 str(diagnostics),
             ]
             if auth_preflight:
-                command.append("--auth-preflight")
+                command.append("--auth-preflight-fixture")
             effective_environment = (environment or os.environ.copy()).copy()
             effective_environment["CLAUDE_REVIEW_TEST_FIXTURE"] = "1"
             effective_environment["CLAUDE_REVIEW_TEST_SCRATCH_PARENT"] = str(temporary)
@@ -698,7 +758,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             )
             fake_claude.chmod(0o755)
             completed = subprocess.run(
-                [str(LAUNCHER), "--claude-bin", str(fake_claude), "--auth-preflight", "--", "--model=opus", "--effort=high"],
+                [str(LAUNCHER), "--claude-bin", str(fake_claude), "--auth-preflight-fixture", "--", "--model=opus", "--effort=high"],
                 check=False,
                 text=True,
                 stdout=subprocess.PIPE,
@@ -832,6 +892,15 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "if scenario == 'special_object_then_wait':\n"
             "    os.mkfifo(candidate / 'reviewer.fifo')\n"
             "    time.sleep(0.08)\n"
+            "if scenario == 'transient_special_object_then_wait':\n"
+            "    fifo = candidate / 'reviewer.fifo'\n"
+            "    os.mkfifo(fifo)\n"
+            "    time.sleep(0.25)\n"
+            "    fifo.unlink()\n"
+            "    time.sleep(0.05)\n"
+            "if scenario == 'special_object_hang':\n"
+            "    os.mkfifo(candidate / 'reviewer.fifo')\n"
+            "    time.sleep(10)\n"
             "if scenario == 'escaped_output': (package / 'escaped-review.txt').write_text('escaped')\n"
             "if scenario == 'unsafe_scratch': (pathlib.Path(os.environ['TMPDIR']) / 'escape').symlink_to(candidate)\n"
             "if scenario == 'silent': time.sleep(0.08)\n"
@@ -950,7 +1019,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 str(self.fake),
                 "--diagnostics-file",
                 str(diagnostics),
-                "--review-config",
+                "--review-config-fixture",
                 str(config),
                 "--",
                 "--model",
@@ -1236,7 +1305,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         config = self.write_config()
         diagnostics = self.evidence / "overall.json"
         process = subprocess.Popen(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config-fixture", str(config), "--", "--model", "opus", "--effort", "high"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -1326,7 +1395,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         config.write_text(json.dumps(body), encoding="utf-8")
         diagnostics = auth_root / "overall.json"
         completed = subprocess.run(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config-fixture", str(config), "--", "--model", "opus", "--effort", "high"],
             input="prompt\n",
             text=True,
             stdout=subprocess.PIPE,
@@ -1356,7 +1425,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         diagnostics = self.evidence / "overall.json"
         diagnostics.write_text("operator-owned\n", encoding="utf-8")
         completed = subprocess.run(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config-fixture", str(config), "--", "--model", "opus", "--effort", "high"],
             input="prompt\n",
             text=True,
             stdout=subprocess.PIPE,
@@ -1372,7 +1441,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         preflight_receipt = self.evidence / "preflight-receipt.json"
         preflight_receipt.write_text("operator-owned-preflight\n", encoding="utf-8")
         completed = subprocess.run(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config-fixture", str(config), "--", "--model", "opus", "--effort", "high"],
             input="prompt\n",
             text=True,
             stdout=subprocess.PIPE,
@@ -1398,7 +1467,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 str(self.fake),
                 "--diagnostics-file",
                 str(outside),
-                "--review-config",
+                "--review-config-fixture",
                 str(config),
                 "--",
                 "--model",
@@ -1506,7 +1575,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         config = self.write_config()
         diagnostics = self.evidence / "overall.json"
         process = subprocess.Popen(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config-fixture", str(config), "--", "--model", "opus", "--effort", "high"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -1544,7 +1613,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         config = self.write_config()
         diagnostics = self.evidence / "overall.json"
         process = subprocess.Popen(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config-fixture", str(config), "--", "--model", "opus", "--effort", "high"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -1586,7 +1655,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         config = self.write_config()
         diagnostics = self.evidence / "overall.json"
         process = subprocess.Popen(
-            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config", str(config), "--", "--model", "opus", "--effort", "high"],
+            [str(LAUNCHER), "--claude-bin", str(self.fake), "--diagnostics-file", str(diagnostics), "--review-config-fixture", str(config), "--", "--model", "opus", "--effort", "high"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -1693,6 +1762,48 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         replaced = module.source_snapshot([self.candidate], self.candidate, environment)
         self.assertIn("git-admin", module.snapshot_delta(baseline, replaced))
 
+    def test_linked_worktree_common_git_admin_locks_are_detected(self):
+        module = load_script("claude_review_linked_worktree_locks", LAUNCHER)
+        environment = os.environ.copy()
+        linked = self.root / "linked-candidate"
+        subprocess.run(
+            ["git", "-C", str(self.candidate), "worktree", "add", "-q", "-b", "fixture-linked", str(linked)],
+            check=True,
+        )
+        common_result = subprocess.run(
+            ["git", "-C", str(linked), "rev-parse", "--git-common-dir"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        common_directory = Path(common_result)
+        if not common_directory.is_absolute():
+            common_directory = linked / common_directory
+        common_directory = common_directory.resolve()
+        for lock in (
+            common_directory / "config.lock",
+            common_directory / "packed-refs.lock",
+            common_directory / "refs" / "heads" / "fixture.lock",
+        ):
+            with self.subTest(lock=lock.name):
+                baseline = module.source_snapshot([linked], linked, environment)
+                lock.parent.mkdir(parents=True, exist_ok=True)
+                lock.write_text("created\n", encoding="utf-8")
+                changed = module.source_snapshot([linked], linked, environment)
+                self.assertIn("git-admin", module.snapshot_delta(baseline, changed))
+                lock.unlink()
+
+    def test_additional_guarded_repository_admin_delta_is_detected(self):
+        module = load_script("claude_review_additional_repository", LAUNCHER)
+        environment = os.environ.copy()
+        additional = self.root / "additional-repository"
+        subprocess.run(["git", "init", "-q", str(additional)], check=True)
+        baseline = module.source_snapshot([self.candidate, additional], self.candidate, environment)
+        lock = additional / ".git" / "config.lock"
+        lock.write_text("created\n", encoding="utf-8")
+        changed = module.source_snapshot([self.candidate, additional], self.candidate, environment)
+        self.assertIn(f"git-admin:{additional.resolve()}", module.snapshot_delta(baseline, changed))
+
     def test_snapshot_records_a_lock_that_vanishes_during_identity_capture(self):
         module = load_script("claude_review_vanishing_lock", LAUNCHER)
         root = self.root / "vanishing-lock-root"
@@ -1760,6 +1871,34 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertFalse(receipt["no_delta_postflight"]["passed"])
         self.assertEqual(receipt["no_delta_postflight"]["changed_paths"], ["source-snapshot-unavailable"])
         self.assertIsNotNone(receipt["no_delta_postflight"]["postflight_capture_failure"])
+
+    def test_live_only_snapshot_failure_cannot_pass_no_delta(self):
+        completed, diagnostic = self.run_governed("transient_special_object_then_wait")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "source_observation_failure")
+        receipt = self.receipts()[0]
+        self.assertFalse(receipt["no_delta_postflight"]["passed"])
+        self.assertIsNotNone(receipt["no_delta_postflight"]["live_observation_failure"])
+        self.assertIsNone(receipt["no_delta_postflight"]["postflight_capture_failure"])
+        self.assertEqual(receipt["no_delta_postflight"]["changed_paths"], [])
+
+    def test_source_observation_failure_state_remains_operator_addressable(self):
+        module = load_script("claude_review_observation_control", LAUNCHER)
+        live = self.root / "observation-live-state.json"
+        module.replace_live_state(
+            live,
+            {
+                "state": "source_observation_failure_waiting_for_terminal",
+                "source_observation_failure": "fixture observation failure",
+            },
+        )
+        self.assertIn("source_observation_failure_waiting_for_terminal", module.LIVE_ATTEMPT_STATES)
+        self.assertEqual(module.request_or_decline_termination(live, decline=False), 0)
+        self.assertEqual(json.loads(live.read_text())["state"], "awaiting_operator_disposition")
+        self.assertEqual(module.request_or_decline_termination(live, decline=True), 0)
+        resumed = json.loads(live.read_text())
+        self.assertEqual(resumed["state"], "source_observation_failure_waiting_for_terminal")
+        self.assertEqual(resumed["termination_disposition"], "declined_keep_waiting")
 
     def test_interrupted_attempt_performs_lock_sensitive_terminal_postflight(self):
         completed, diagnostic = self.run_governed("git_lock_then_wait")
