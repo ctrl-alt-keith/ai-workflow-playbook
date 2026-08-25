@@ -441,6 +441,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "if '--version' in sys.argv:\n"
             "    print('fake-claude 2.1.241')\n"
             "    raise SystemExit(0)\n"
+            "prompt = sys.stdin.read()\n"
             "count = pathlib.Path(os.environ['FAKE_COUNT'])\n"
             "attempt = int(count.read_text()) + 1 if count.exists() else 1\n"
             "count.write_text(str(attempt))\n"
@@ -448,8 +449,11 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "candidate = pathlib.Path(os.environ['FAKE_CANDIDATE'])\n"
             "package = pathlib.Path(os.environ['FAKE_PACKAGE'])\n"
             "tools = ['Bash','Glob','Grep'] if scenario == 'tool_mismatch' else ['Bash','Glob','Grep','Read']\n"
-            "print(json.dumps({'type':'system','subtype':'init','session_id':f's{attempt}','model':'fake-opus','tools':tools,'mcp_servers':[]} ), flush=True)\n"
+            "cwd = str(candidate) if scenario == 'cwd_mismatch' else os.getcwd()\n"
+            "print(json.dumps({'type':'system','subtype':'init','session_id':f's{attempt}','model':'fake-opus','tools':tools,'mcp_servers':[],'permissionMode':'dontAsk','plugins':[],'skills':[],'slash_commands':[],'cwd':cwd} ), flush=True)\n"
             "if scenario == 'tool_mismatch': time.sleep(0.08)\n"
+            "if scenario == 'cwd_mismatch': time.sleep(0.08)\n"
+            "if scenario == 'provider_bootstrap': (pathlib.Path.cwd() / '.claude' / '.cc-writes').mkdir(parents=True)\n"
             "if scenario == 'mutate_tracked': (candidate / 'tracked.txt').write_text('changed\\n')\n"
             "if scenario == 'new_ignored': (candidate / 'generated.cache').write_text('cache')\n"
             "if scenario == 'remove_untracked': (candidate / 'preexisting.txt').unlink()\n"
@@ -595,6 +599,13 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(diagnostic["preflight"]["status"], "passed")
         preflight = json.loads((self.evidence / "preflight-receipt.json").read_text(encoding="utf-8"))
         self.assertEqual(preflight["kind"], "claude_governed_review_preflight_receipt")
+        receipt = self.receipts()[0]
+        requested = receipt["runtime"]["requested_argv"]
+        add_directories = [requested[index + 1] for index, value in enumerate(requested) if value == "--add-dir"]
+        self.assertEqual(add_directories, [str(self.root.resolve())])
+        self.assertEqual(receipt["runtime"]["effective_init"]["cwd"], receipt["runtime"]["provider_runtime_cwd"])
+        self.assertNotEqual(receipt["runtime"]["provider_runtime_cwd"], str(self.root.resolve()))
+        self.assertIsInstance(receipt["process"]["process_start_identity"], str)
 
         self.count.unlink()
         for path in self.evidence.glob("CAK-155-fixture-*"):
@@ -603,6 +614,44 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         added, added_diagnostic = self.run_governed(body=additional_body)
         self.assertEqual(added.returncode, 0)
         self.assertEqual(added_diagnostic["preflight"]["additional_directories"], [str(self.candidate.resolve())])
+        added_requested = self.receipts()[0]["runtime"]["requested_argv"]
+        added_directories = [
+            added_requested[index + 1]
+            for index, value in enumerate(added_requested)
+            if value == "--add-dir"
+        ]
+        self.assertEqual(added_directories, [str(self.package.resolve()), str(self.candidate.resolve())])
+
+    def test_provider_bootstrap_writes_are_contained_in_attempt_scratch(self):
+        completed, diagnostic = self.run_governed("provider_bootstrap")
+        self.assertEqual(completed.returncode, 0)
+        receipt = self.receipts()[0]
+        self.assertTrue(receipt["attempt_scratch"]["cleanup"]["passed"])
+        self.assertTrue(receipt["no_delta_postflight"]["passed"])
+        self.assertFalse((self.candidate / ".claude").exists())
+        self.assertFalse((self.package / ".claude").exists())
+        self.assertFalse(Path(receipt["runtime"]["provider_runtime_cwd"]).exists())
+
+    def test_safe_environment_disables_claude_instruction_and_auto_memory_loading(self):
+        import importlib.machinery
+        import importlib.util
+
+        loader = importlib.machinery.SourceFileLoader("claude_review_memory", str(LAUNCHER))
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[loader.name] = module
+        loader.exec_module(module)
+        scratch = self.root / "environment-scratch"
+        scratch.mkdir(mode=0o700)
+        environment = module.safe_command_environment(os.environ.copy(), scratch)
+        self.assertEqual(environment["CLAUDE_CODE_DISABLE_AUTO_MEMORY"], "1")
+        self.assertEqual(environment["CLAUDE_CODE_DISABLE_CLAUDE_MDS"], "1")
+
+    def test_effective_runtime_cwd_mismatch_stops_the_live_attempt(self):
+        completed, diagnostic = self.run_governed("cwd_mismatch")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "effective_runtime_cwd_mismatch")
+        self.assertEqual(self.receipts()[0]["lifecycle"]["capability_failure"], "effective_runtime_cwd_mismatch")
 
     def test_narrow_package_root_fails_before_substantive_review(self):
         body = self.config_body(launch_root=self.package)

@@ -80,12 +80,15 @@ whose loss cannot impair recovery. See
 
 ### Governed read-only reviewer launch
 
-Claude Code treats the invocation working directory as its project root;
-`--add-dir` makes other declared directories available but does not replace the
-root. For governed review, launch from the common owning root of the complete
-source graph when practical, or pass each additional source root exactly. Read
-a representative object from every root before review. Do not infer candidate
-reachability from a prompt-package launch directory.
+Claude Code treats the invocation working directory as its project root and
+may create project-local startup mechanics before any model tool call.
+`--add-dir` makes each declared source directory available. The governed
+launcher therefore treats the configured launch root as the logical source
+anchor, passes that root and every additional source root exactly through
+`--add-dir`, and runs the provider from fresh qualified attempt-local scratch.
+This contains provider bootstrap state without excluding any reviewed source.
+Read a representative object from every root before review. Do not infer
+candidate reachability from a prompt-package launch directory.
 
 The CLI controls have different effects:
 
@@ -120,20 +123,31 @@ The generated `PreToolUse` hook permits `Read`, `Grep`, and `Glob`, and permits
 configured argv vector. The controller independently executes each configured
 command before review under a safe environment that disables system Git
 and user Git configuration, repository hooks and filesystem monitors, external
-diffs, optional Git locks, pagers, and Python bytecode writes, with temporary
-state redirected to fresh attempt-local scratch through the qualified macOS or
-Linux route in [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
+diffs, optional Git locks, pagers, Python bytecode writes, Claude instruction
+memory loading, and Claude auto memory, with the provider working directory and
+temporary state redirected to fresh attempt-local scratch through the qualified
+macOS or Linux route in
+[`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 It rejects
 non-observational Git operations and commands whose result could invoke shell,
 text-conversion, external-diff, or interpreter side effects.
 
 Use `--output-format stream-json --verbose` initialization as effective runtime
 evidence. The first `system/init` record must report exactly `Bash`, `Glob`,
-`Grep`, and `Read`, no MCP servers, and no capability-startup error. Stop the
-process on a mismatch and reject any eventual output. The launcher still
+`Grep`, and `Read`; no MCP servers, plugins, skills, slash commands, or
+capability-startup error; `dontAsk` permission mode; the requested model family;
+and the exact attempt-scratch runtime directory. Stop the process on a mismatch
+and reject any eventual output. The launcher still
 performs whole-source and Git-index no-delta checks because provider flags,
 hooks, sandbox controls, and initialization metadata are defense in depth, not
 a proof that no effect occurred.
+
+Anthropic documents `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` and
+`CLAUDE_CODE_DISABLE_CLAUDE_MDS=1` in its
+[environment-variable reference](https://code.claude.com/docs/en/env-vars).
+They suppress memory loading and writes; attempt-scratch runtime placement and
+whole-source no-delta checks remain required controls rather than assumptions
+about undocumented provider internals.
 
 Claude's structured `system/api_retry` event is an in-process provider retry
 inside the same attempt. Only a terminal `overloaded` or `server_error` result

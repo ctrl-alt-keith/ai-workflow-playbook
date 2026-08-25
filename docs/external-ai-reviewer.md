@@ -80,13 +80,15 @@ candidate evidence or grounds to substitute another reviewer.
 
 A governed review begins with a controller-owned launch contract, not with a
 provider command assembled ad hoc. The contract must bind the exact prompt and
-configuration identities, candidate worktree and commit, complete source graph, launch
-root, additional readable directories, guarded roots, exact observational
+configuration identities, candidate worktree and commit, complete source graph,
+logical launch root, additional readable directories, guarded roots, exact observational
 commands, evidence destination, retry bound, and cancellation policy. Choose a
-launch root that commonly owns the source graph when practical; otherwise
+logical launch root that commonly owns the source graph when practical; otherwise
 declare every additional directory explicitly. A narrow package-directory
 launch that cannot reach the candidate is a contract failure, not a partially
-qualified review.
+qualified review. A provider may run from fresh attempt-local scratch to contain
+its own startup mechanics only when the launcher exposes every logical source
+root explicitly and verifies the effective runtime directory during initialization.
 
 Bind an exact immutable stream and terminal-receipt path for every permitted
 attempt and a distinct exact path for successful final reviewer output. Keep
@@ -104,8 +106,8 @@ Before accepting substantive review, the controller must:
   grant;
 - verify that the evidence destination is writable and disjoint from guarded
   sources;
-- record the requested launch root, additional directories, tools, commands,
-  and permission posture; and
+- record the requested logical launch root, actual provider runtime directory,
+  additional directories, tools, commands, and permission posture; and
 - inspect provider initialization evidence and stop if the effective tools,
   connectors, startup capabilities, or source reachability differ from the
   contract.

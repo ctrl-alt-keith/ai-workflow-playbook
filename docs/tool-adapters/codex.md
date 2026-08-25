@@ -750,6 +750,13 @@ requires a disposition, use the launcher's request, decline, or authority-bound
 termination control against the exact live-state path; force escalation requires
 separate authorization.
 
+The configured launch root is the logical source-graph anchor, not Claude's
+process directory. The launcher passes it and every additional source root
+through exact `--add-dir` arguments, then runs Claude from fresh qualified
+attempt-local scratch on macOS or Linux so provider bootstrap writes cannot
+enter the candidate. Effective initialization must report that exact scratch
+directory before output can qualify.
+
 The launcher performs representative access and command-effect preflight,
 validates Claude's effective initialization metadata, snapshots all guarded
 source bytes and the Git index, and requires a positive no-delta postflight.

@@ -579,6 +579,8 @@ def safe_command_environment(base: dict[str, str], scratch: Path) -> dict[str, s
             "PYTHONDONTWRITEBYTECODE": "1",
             "PYTHONPYCACHEPREFIX": str(scratch / "python-cache"),
             "TMPDIR": str(scratch),
+            "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
+            "CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1",
         }
     )
     return environment
@@ -1005,7 +1007,7 @@ def governed_claude_arguments(config: GovernedReviewConfig, model_arguments: lis
         "--append-system-prompt",
         system_prompt,
     ]
-    for directory in config.additional_directories:
+    for directory in (config.launch_root, *config.additional_directories):
         arguments.extend(("--add-dir", str(directory)))
     return arguments, system_prompt
 
@@ -1030,19 +1032,60 @@ class PipeCollector:
 
 
 def process_start_identity(pid: int) -> str | None:
-    try:
-        result = subprocess.run(
-            ["ps", "-o", "lstart=", "-p", str(pid)],
-            check=False,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            text=True,
-            timeout=2,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    return result.stdout.strip() or None
+    if sys.platform == "darwin":
+        import ctypes
+
+        class ProcBsdInfo(ctypes.Structure):
+            _fields_ = [
+                ("pbi_flags", ctypes.c_uint32),
+                ("pbi_status", ctypes.c_uint32),
+                ("pbi_xstatus", ctypes.c_uint32),
+                ("pbi_pid", ctypes.c_uint32),
+                ("pbi_ppid", ctypes.c_uint32),
+                ("pbi_uid", ctypes.c_uint32),
+                ("pbi_gid", ctypes.c_uint32),
+                ("pbi_ruid", ctypes.c_uint32),
+                ("pbi_rgid", ctypes.c_uint32),
+                ("pbi_svuid", ctypes.c_uint32),
+                ("pbi_svgid", ctypes.c_uint32),
+                ("rfu_1", ctypes.c_uint32),
+                ("pbi_comm", ctypes.c_char * 16),
+                ("pbi_name", ctypes.c_char * 32),
+                ("pbi_nfiles", ctypes.c_uint32),
+                ("pbi_pgid", ctypes.c_uint32),
+                ("pbi_pjobc", ctypes.c_uint32),
+                ("e_tdev", ctypes.c_uint32),
+                ("e_tpgid", ctypes.c_uint32),
+                ("pbi_nice", ctypes.c_int32),
+                ("pbi_start_tvsec", ctypes.c_uint64),
+                ("pbi_start_tvusec", ctypes.c_uint64),
+            ]
+
+        try:
+            libproc = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
+            proc_pidinfo = libproc.proc_pidinfo
+            proc_pidinfo.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_uint64, ctypes.c_void_p, ctypes.c_int]
+            proc_pidinfo.restype = ctypes.c_int
+            info = ProcBsdInfo()
+            copied = proc_pidinfo(pid, 3, 0, ctypes.byref(info), ctypes.sizeof(info))
+        except (AttributeError, OSError):
+            return None
+        if copied != ctypes.sizeof(info) or info.pbi_pid != pid:
+            return None
+        return f"darwin-proc-bsdinfo:{info.pbi_start_tvsec}:{info.pbi_start_tvusec}"
+    if sys.platform.startswith("linux"):
+        try:
+            encoded = (Path("/proc") / str(pid) / "stat").read_text(encoding="utf-8")
+            closing = encoded.rfind(")")
+            if closing < 0 or int(encoded[: encoded.find(" ")]) != pid:
+                return None
+            fields_after_command = encoded[closing + 2 :].split()
+            start_ticks = fields_after_command[19]
+            boot_id = Path("/proc/sys/kernel/random/boot_id").read_text(encoding="ascii").strip()
+        except (IndexError, OSError, ValueError):
+            return None
+        return f"linux-proc-stat:{boot_id}:{start_ticks}"
+    return None
 
 
 def parse_stream(records: bytes) -> dict[str, object]:
@@ -1067,7 +1110,12 @@ def parse_stream(records: bytes) -> dict[str, object]:
     return {"init": init, "result": result, "retry_events": retry_events, "malformed_records": malformed}
 
 
-def init_capability_failure(parsed: dict[str, object]) -> str | None:
+def init_capability_failure(
+    parsed: dict[str, object],
+    *,
+    expected_cwd: Path,
+    model_arguments: list[str],
+) -> str | None:
     init = parsed.get("init")
     if not isinstance(init, dict):
         return "missing_system_init"
@@ -1079,6 +1127,30 @@ def init_capability_failure(parsed: dict[str, object]) -> str | None:
         return "effective_mcp_set_not_empty"
     if init.get("mcp_server_errors") or init.get("plugin_errors"):
         return "startup_capability_error"
+    if init.get("permissionMode") != "dontAsk":
+        return "effective_permission_mode_mismatch"
+    for key in ("plugins", "skills", "slash_commands"):
+        if init.get(key, []):
+            return f"effective_{key}_not_empty"
+    cwd = init.get("cwd")
+    if not isinstance(cwd, str):
+        return "missing_effective_runtime_cwd"
+    try:
+        effective_cwd = Path(cwd).resolve(strict=True)
+    except (OSError, RuntimeError):
+        return "invalid_effective_runtime_cwd"
+    if effective_cwd != expected_cwd.resolve(strict=True):
+        return "effective_runtime_cwd_mismatch"
+    requested_model = None
+    for index, argument in enumerate(model_arguments):
+        if argument == "--model" and index + 1 < len(model_arguments):
+            requested_model = model_arguments[index + 1]
+        elif argument.startswith("--model="):
+            requested_model = argument.split("=", 1)[1]
+    if requested_model and requested_model.lower() in {"opus", "sonnet", "haiku"}:
+        effective_model = init.get("model")
+        if not isinstance(effective_model, str) or requested_model.lower() not in effective_model.lower():
+            return "effective_model_mismatch"
     return None
 
 
@@ -1106,8 +1178,9 @@ def terminate_recorded_group(live_state_path: Path, authority: str, *, force_aut
     pgid = state.get("process_group_id")
     if not isinstance(pid, int) or not isinstance(pgid, int) or os.getpgid(pid) != pgid:
         raise RuntimeError("recorded process identity is no longer exact")
+    recorded_start = state.get("process_start_identity")
     observed_start = process_start_identity(pid)
-    if state.get("process_start_identity") and observed_start != state["process_start_identity"]:
+    if not isinstance(recorded_start, str) or not recorded_start or observed_start != recorded_start:
         raise RuntimeError("recorded process start identity no longer matches")
     state.update({"state": "termination_authorized", "termination_authority": authority, "graceful_signal": "SIGTERM"})
     replace_live_state(live_state_path, state)
@@ -1171,7 +1244,8 @@ def run_governed_review(
         "prompt_size": len(prompt),
         "system_prompt_sha256": sha256_bytes(system_prompt.encode("utf-8")),
         "requested_model_arguments": model_arguments,
-        "launch_root": str(config.launch_root),
+        "logical_launch_root": str(config.launch_root),
+        "provider_runtime_cwd": "qualified_attempt_local_scratch",
         "additional_directories": [str(path) for path in config.additional_directories],
         "allowed_commands": [list(argv) for argv in config.allowed_commands],
         "cancellation_policy": config.body["cancellation_policy"],
@@ -1231,7 +1305,7 @@ def run_governed_review(
             started = time.time()
             process = subprocess.Popen(
                 command,
-                cwd=config.launch_root,
+                cwd=attempt_scratch.path,
                 env=environment,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
@@ -1250,6 +1324,7 @@ def run_governed_review(
                 "pid": process.pid,
                 "process_group_id": pgid,
                 "process_start_identity": process_start_identity(process.pid),
+                "provider_runtime_cwd": str(attempt_scratch.path),
                 "started_at_epoch": started,
                 "last_supported_evidence_at_epoch": started,
                 "partial_output_exists": False,
@@ -1276,7 +1351,11 @@ def run_governed_review(
                     live_parsed = parse_stream(stdout_collector.bytes())
                     if live_parsed.get("init") is not None:
                         initialization_checked = True
-                        live_capability_failure = init_capability_failure(live_parsed)
+                        live_capability_failure = init_capability_failure(
+                            live_parsed,
+                            expected_cwd=attempt_scratch.path,
+                            model_arguments=model_arguments,
+                        )
                         live_state["effective_initialization_checked"] = True
                         if live_capability_failure:
                             live_state.update(
@@ -1333,7 +1412,11 @@ def run_governed_review(
             stderr = stderr_collector.bytes()
             exclusive_write(output_path, stdout)
             parsed = parse_stream(stdout)
-            capability_failure = init_capability_failure(parsed)
+            capability_failure = init_capability_failure(
+                parsed,
+                expected_cwd=attempt_scratch.path,
+                model_arguments=model_arguments,
+            )
             classification, retryable = retry_classification(parsed, process.returncode)
             auth_failure = classify_failure(
                 stderr.decode("utf-8", errors="replace"),
@@ -1354,7 +1437,7 @@ def run_governed_review(
             if changes:
                 classification = "reviewer_side_effect_failure"
                 retryable = False
-            claude_version = version_of(executable, environment, cwd=str(config.launch_root))
+            claude_version = version_of(executable, environment, cwd=str(attempt_scratch.path))
             scratch_record = attempt_scratch.record()
             try:
                 attempt_scratch.cleanup()
@@ -1397,6 +1480,8 @@ def run_governed_review(
                     "claude_executable": executable,
                     "claude_version": claude_version,
                     "requested_argv": redacted_argv(command),
+                    "logical_launch_root": str(config.launch_root),
+                    "provider_runtime_cwd": str(attempt_scratch.path),
                     "effective_init": parsed.get("init"),
                 },
                 "attempt_scratch": {**scratch_record, "cleanup": scratch_cleanup},
