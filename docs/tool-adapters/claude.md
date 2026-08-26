@@ -188,6 +188,15 @@ direct provider pid exits while another recorded group member remains live.
 Do not infer a portable SIGTERM result or exit-code mapping from Claude Code;
 record the observed local process outcome.
 
+Keep routine commands, provider retries, stream details, and successful
+per-step results in the governed stream and attempt evidence instead of
+duplicating them as operator narration. Authentication or execution-context
+mismatch, a failed capability canary, unauthorized mutation, source delta,
+terminal collection failure, or postflight failure remains an immediate
+material blocker. Treat product-rendered traces as runtime behavior unless
+current official evidence establishes control; do not claim provider or client
+trace suppression.
+
 ## Worktrees And Subagents
 
 Apply the one-repository, one-branch, one-worktree, one-PR rule and

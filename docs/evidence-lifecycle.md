@@ -127,7 +127,10 @@ storage-contract evidence, not universal producing-receipt fields.
 Reserve *producing receipt* for the selected durable append-only receipt
 surface. Conversation is a compact summary or compact delivery surface, not a
 durable producing-receipt surface. Do not reproduce the complete durable
-artifact in chat merely for transport.
+artifact in chat merely for transport. Consistent with
+[`Operator Observability`](core-model.md#operator-observability), compact
+delivery does not require routine item-level success narration when the owning
+durable evidence preserves the complete item results.
 
 When evidence has a distinct identity, describe the operation as `evidenced
 separately`; do not imply an independent actor merely because the evidence is

@@ -78,6 +78,16 @@ logging style, narrate hidden deliberation, or expose or request private
 chain-of-thought. Operator observability reports execution state and its
 behavioral consequence; it does not report internal reasoning.
 
+Routine successful item operations are not operator-observability events.
+During bounded bulk or connector-heavy work, prefer aggregate milestones and a
+compact final result. Surface material state transitions promptly, including
+blockers, authority or scope mismatches, drift, privacy or retention issues,
+collision or overwrite risk, validation failures, and permission, approval,
+destructive, or other safety boundaries. Preserve complete item-level evidence
+outside the conversation. Honor an operator's mid-run request for quieter or
+more verbose progress when the active runtime supports it, and report
+client-forced output as a limitation rather than claiming it was suppressed.
+
 ## Authority Follows The Question
 
 Do not select one universal system of record for a workflow. Classify the
