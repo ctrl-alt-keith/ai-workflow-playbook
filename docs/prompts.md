@@ -354,6 +354,7 @@ Reason:
 - [Repository Implementation Task](#repository-implementation-task)
 - [Parallel Batch Add-On](#parallel-batch-add-on)
 - [Orchestration Handoff](#orchestration-handoff)
+- [Operator-Visible Progress Add-On](#operator-visible-progress-add-on)
 - [Governed Artifact Capture Add-On](#governed-artifact-capture-add-on)
 - [Issue-Owned Durable Prompt Delivery Envelope Add-On](#issue-owned-durable-prompt-delivery-envelope-add-on)
 - [Implementation Delivery Add-On](#implementation-delivery-add-on)
@@ -594,6 +595,18 @@ Stop rules:
 - Ask for human input when required evidence is unavailable or the next step
   depends on a human judgment call.
 ```
+
+## Operator-Visible Progress Add-On
+
+Append this only when the task needs an explicit progress-presentation
+contract. Apply the shared
+[`Operator Observability`](core-model.md#operator-observability) rule without
+copying its material-event taxonomy. Resolve the task-specific aggregate
+milestones, durable item-evidence location, supported mid-run presentation
+preferences, and any client-forced output limitation. This add-on changes
+presentation only; it does not weaken approval, permission, destructive,
+collision, overwrite, drift, privacy, retention, authority, scope, blocker, or
+validation boundaries.
 
 ## Governed Artifact Capture Add-On
 

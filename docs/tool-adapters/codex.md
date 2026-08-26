@@ -612,6 +612,14 @@ the current boundary:
 - unmet transition criteria; and
 - the exact next permitted action or stop condition.
 
+For bounded bulk work, aggregate routine successful operations instead of
+narrating each item, and keep complete item results in the owning durable
+evidence. Surface blockers and human gates promptly. Honor a mid-run
+presentation preference without restarting when the active runtime supports
+it. When the client displays tool output that Codex cannot suppress, avoid
+duplicating it in model-authored updates and report the limitation without
+claiming control.
+
 Successful tool calls, model output, validation, and progress text are evidence
 of activity, not proof of completion or authority. Re-read current sources at
 source-first and post-merge boundaries rather than rendering stale planned

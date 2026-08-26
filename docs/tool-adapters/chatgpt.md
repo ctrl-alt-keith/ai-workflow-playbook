@@ -162,6 +162,19 @@ authority, decision-boundary, and re-observation rules remain in
 [`core-model.md`](../core-model.md), while connector availability is governed
 by [`start-here.md`](../start-here.md#connector-availability-is-runtime-evidence).
 
+For routine connected-app create or write operations, invoke only the write
+and the minimum verification required by the owning evidence contract. Do not
+invoke preview, thumbnail, open-in-provider, or share-link actions merely to
+confirm success. Preview remains appropriate when the operator explicitly
+requests visual inspection, rendered correctness requires it, or a narrower
+owning workflow requires it. If the client renders a card from the write action
+itself, classify that as client-enforced UI, avoid redundant preview calls or
+model narration, and report the limitation when material rather than claiming
+the card was suppressed. Current
+[OpenAI Apps guidance](https://help.openai.com/en/articles/11487775-connectors-in)
+documents rich in-chat app experiences and write confirmations, but does not
+establish a universal per-action client-rendering suppression control.
+
 ### Issue-Owned Durable Prompt Capture And Handoff
 
 Apply the shared
