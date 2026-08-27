@@ -332,11 +332,11 @@ interpreted as inline HTML by Markdown tooling.
 
 ## Complete Prompt Shape
 
-For a complete generated prompt, emit one shared operator-metadata block and
-one complete executable block consecutively. The executable block must remain
-complete and actionable without the metadata, so the operator can copy only
-that block. Matching executor adapters own concrete metadata fields and client
-presentation mechanics.
+When inline presentation is selected for a complete generated prompt, emit one
+shared operator-metadata block and one complete executable block consecutively.
+The executable block must remain complete and actionable without the metadata,
+so the operator can copy only that block. Matching executor adapters own
+concrete metadata fields and client presentation mechanics.
 
 ```text
 Operator metadata (do not include in prompt)
@@ -350,9 +350,8 @@ Reason:
 
 ## Cross-Executor Prompt Presentation
 
-For a complete prompt intended for another machine, agent, thread, or system,
-select presentation by currently qualified recipient capability, independently
-of prompt materiality:
+For any complete prompt, select presentation by the recipient's currently
+qualified capability, independently of prompt materiality:
 
 - When the recipient has a qualified Dropbox retrieval route and the current
   storage contract supplies a permitted destination, place the prompt in a

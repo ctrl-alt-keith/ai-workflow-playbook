@@ -282,7 +282,8 @@ the applicable prompt and downstream-context contract.
 
 ### Prompt presentation
 
-For a complete, copy-ready prompt or downstream handoff prepared in ChatGPT,
+When the shared recipient-capability selector chooses inline presentation for
+a complete, copy-ready prompt or downstream handoff prepared in ChatGPT,
 present the shared operator-metadata block followed immediately by the complete
 executable block as consecutive copyable code blocks, with no intervening
 prose. Immediately after the executable block, outside both code blocks, emit
