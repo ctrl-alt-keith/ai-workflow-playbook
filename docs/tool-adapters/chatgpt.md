@@ -123,7 +123,7 @@ These shapes project the shared owner in
 they do not redefine its package, authority, source-refresh, or failure
 semantics.
 
-#### Examples
+#### Prompt handoff examples
 
 1. **Difficult architecture discussion remains in Chat.** The human and Chat
    are still comparing authority boundaries and tradeoffs. No bounded
@@ -189,6 +189,108 @@ before reporting `PRESERVED`. When the provider does not expose revision
 metadata, record that unavailability explicitly and never fabricate a revision.
 Overwrite, autorename, a destination collision, or an identity mismatch fails
 closed. Extracted text alone is not exact-byte readback.
+
+For an admitted material cross-executor prompt, project the default
+presentation sequence in
+[`prompts.md`](../prompts.md#material-cross-executor-prompt-presentation):
+
+```text
+render -> admit -> absent-create -> raw verify -> Dropbox preview ->
+explicit approval -> fresh executor download -> thin bootstrap ->
+executor exact verification -> execution
+```
+
+Do not present preview before raw verification, and do not mint the executor's
+bounded download before explicit approval. The write response, metadata,
+provider content hash, extracted text, and preview are useful evidence at
+their own boundaries, but none substitutes for raw provider bytes and a
+whole-file SHA-256 exact match.
+
+#### Dropbox preview and operator approval
+
+After raw verification, use the connected Dropbox file-preview widget as the
+intentional human review surface. Present the file object with compact
+operator metadata: semantic filename, issue-owned path, exact size and
+whole-file SHA-256, file ID and revision when exposed, downstream executor or
+prompt role, and an explicit `Approve`, `Revise`, or `Reject` request. Do not
+also print the full executable prompt unless the operator asks for it or the
+safe fallback below applies.
+
+The current connected preview action returns an in-chat preview/open surface
+and states that it always generates a private shared link. That link creation
+or reuse is a provider-side preview effect, not universal Dropbox behavior and
+not the executor-delivery identity. Before treating the route as qualified,
+inspect the effective audience, view or edit access, download setting,
+expiration, password setting, persistence or reuse behavior, and any
+visibility or retention consequence. Bracket the preview with provider
+metadata and revision inspection when the workflow must establish whether the
+preview changed file bytes or revision. If link creation requires a separate
+confirmation, or its visibility, retention, mutation, or cleanup boundary is
+unclear, stop before preview rather than weakening the gate.
+
+On one exercised current route, the private preview link was observed with
+`audience=no_one`, view access, and downloads permitted. Treat that as
+product-dependent runtime evidence to revalidate, not as a provider guarantee.
+Dropbox's
+[file-access documentation](https://developers.dropbox.com/dbx-file-access-guide)
+separately establishes file IDs, revisions, content hashes, and provider
+preview endpoints; it does not establish this ChatGPT widget or its
+private-link effect. The current OpenAI apps guidance linked above documents
+rich in-chat experiences and confirmation behavior for consequential actions,
+but not a universal Dropbox preview implementation.
+
+Preview remains convenience only. It does not prove exact bytes, size,
+SHA-256, Dropbox content hash, revision, or equality; is not approval,
+delivery, acknowledgement, execution start, or completion; creates no new
+coordination state; and transfers zero authority. Opening the preview, elapsed
+time, upload success, validation, review, issue status, a hash match, or prior
+approval of another version never implies approval.
+
+If the operator requests changed wording, leave the previewed version
+immutable and unsent. Create a unique successor with predecessor lineage,
+repeat raw verification and preview, and require fresh explicit approval. The
+eventual bootstrap names only the approved version.
+
+#### Approved delivery and safe fallback
+
+Only after approval, create a fresh bounded executor-consumable download and
+emit the Codex-, Work-, Claude-, or other target-shaped bootstrap without the
+full prompt body. Include the approved durable path, file ID, revision when
+available, expected size and whole-file SHA-256, Dropbox content hash when
+available and applicable, retrieval mechanism, lifetime, observed consumption
+behavior, and a fail-closed exact-verification instruction. Keep the durable
+prompt, preview operation, human approval, delivery operation, executor
+acknowledgement, attempt, receipt, output, and human disposition as separate
+identities.
+
+The currently exposed temporary-download action accepts a requested lifetime
+from 60 through 900 seconds and states that the first HTTP request of any
+method, including `HEAD` or a range request, consumes the URL. This is a
+current connected-action contract, not a universal Dropbox API guarantee.
+Preview, unfurlers, scanners, and preflight requests must never receive that
+URL. Expiry, prior consumption, or failed retrieval requires a fresh link for
+the same durable object and a new delivery-operation identity; it does not
+create a prompt version.
+
+When absent-create, raw readback, preview, private-link effects, or downstream
+delivery cannot be qualified, name the exact gap. Use the shared complete
+inline fallback only when every prompt byte is safe to display and review
+before manual send, with operator metadata outside the executable prompt;
+otherwise stop. Do not claim preservation, raw verification, preview,
+approval, or delivery that did not occur.
+
+#### Examples
+
+| Case | ChatGPT projection |
+| --- | --- |
+| Material ChatGPT to Codex prompt | Preserve and raw-verify the admitted prompt, show the Dropbox preview, obtain explicit approval, then issue a new bounded URL and a thin bootstrap. Codex performs one intended download, exact-verifies it, and executes only from the verified bytes. |
+| Revision after preview | Rejected v1 remains immutable and unsent. Absent-create and raw-verify v2, preview it, obtain fresh approval, and name only v2 in the bootstrap. |
+| Preview and delivery separation | Preview uses the provider-backed file widget before any executor URL exists. The post-approval URL is newly minted and is never exposed to preview or unfurling. |
+| Expired or consumed URL | Mint a replacement for the same durable file and record a new delivery operation; do not create a prompt version. |
+| Preview or raw readback unavailable | Do not claim the gate passed. Show the complete safe prompt inline for operator review or stop with the exact non-authorizing blocker. |
+| Routine or same-thread prompt | Keep a routine short prompt or ordinary same-thread delta inline; do not add durable capture or preview ceremony. |
+| Admission failure | Stop before Dropbox creation on a secret, retention, ownership, visibility, or identity failure. |
+| Claude or another executor | Preserve the same durable, preview, approval, and delivery identities, but use only that executor's currently qualified retrieval and verification route. |
 
 Prefer a receiving executor's qualified direct retrieval of that durable object.
 When the receiver cannot directly retrieve and verify it, ChatGPT may coordinate

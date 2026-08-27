@@ -314,6 +314,31 @@ consumed local bytes and declared text format before acceptance. Do not use a
 locally synchronized provider mount as provider identity, treat the local
 retrieval as durable, or create an exchange root.
 
+For a bounded single-use URL, allocate one fresh private executor-owned
+attempt-local destination through the currently qualified OS-managed scratch
+projection. Perform exactly one intended `GET`; do not send `HEAD`, range
+probes, previews, unfurlers, scanners, or other preflight traffic that could
+spend the route. Follow redirects only when the qualified delivery contract
+permits them. Before reading or executing the prompt, verify the expected byte
+size and whole-file SHA-256, UTF-8, no BOM, LF-only line endings, and the
+declared final-newline rule. Verify the Dropbox content hash when the delivery
+contract requires it and the attempt has a qualified computation or exact
+comparison route.
+
+Fail closed before prompt interpretation on expiry, prior consumption, network
+failure, redirect ambiguity, inaccessible identity, size or digest mismatch,
+required content-hash mismatch, encoding or newline mismatch, or ambiguous
+bytes. Never reconstruct the payload from bootstrap text, conversation
+history, or memory. A replacement URL is a new delivery operation for the same
+durable prompt, not a new prompt version.
+
+The current connected Dropbox download action states that the first HTTP
+request of any method consumes its URL and that requested lifetimes range from
+60 through 900 seconds. Treat those values as a product-dependent action
+contract to revalidate for the attempt, not a universal Dropbox guarantee.
+The bootstrap must omit the full prompt body and bind only the exact approved
+durable identity and verification requirements.
+
 Record the delivery operation and Codex attempt separately from the durable
 prompt. Distinguish `DELIVERED`, `ACCEPTED`, `STARTED`, and the terminal
 attempt outcome rather than inferring one from another. Preserve required
