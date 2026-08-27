@@ -1,5 +1,4 @@
 from pathlib import Path
-import json
 import re
 import unittest
 
@@ -30,11 +29,6 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         cls.codex = normalized(DOCS / "tool-adapters" / "codex.md")
         cls.claude = normalized(DOCS / "tool-adapters" / "claude.md")
         cls.chatgpt = normalized(DOCS / "tool-adapters" / "chatgpt.md")
-        cls.anchor = json.loads(
-            (DOCS / "prompt-contract-semantic-anchors-v2.json").read_text(
-                encoding="utf-8"
-            )
-        )
         cls.adapter_profiles = (
             markdown_section(
                 DOCS / "tool-adapters" / "codex.md",
@@ -55,7 +49,11 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         )
         cls.presentation = markdown_section(
             DOCS / "prompts.md",
-            "## Material Cross-Executor Prompt Presentation",
+            "## Cross-Executor Prompt Presentation",
+        )
+        cls.chatgpt_presentation = markdown_section(
+            DOCS / "tool-adapters" / "chatgpt.md",
+            "### Recipient-Capability Prompt Presentation",
         )
 
     def test_prompt_contract_is_the_profile_owner(self):
@@ -231,130 +229,34 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         for phrase in ("Overwrite", "autorename", "destination collision", "fails closed"):
             self.assertIn(phrase, self.chatgpt)
 
-    def test_material_prompt_presentation_order_is_mechanically_explicit(self):
-        order = (
-            "render -> admit -> absent-create -> raw verify -> operator preview -> "
-            "explicit approval -> fresh delivery route -> thin bootstrap -> "
-            "executor exact verification -> execution"
-        )
-        self.assertIn(order, " ".join(self.presentation.split()))
-        for phrase in (
-            "Raw provider readback and exact identity verification must finish before the preview",
-            "preview route and the executor-delivery route are distinct operations",
-            "executor route is not minted until explicit approval",
-        ):
-            self.assertIn(phrase, " ".join(self.presentation.split()))
-
-    def test_preview_is_convenience_not_evidence_approval_or_state(self):
-        for phrase in (
-            "human-readable convenience surface",
-            "not raw-byte verification",
-            "does not prove size, SHA-256, provider content hash, revision, or equality",
-            "does not imply approval",
-            "is not delivery, acknowledgement, execution start, or attempt completion",
-            "creates no coordination state",
-            "transfers zero authority",
-        ):
-            self.assertIn(phrase, " ".join(self.presentation.split()))
-
-    def test_preview_revision_and_delivery_retry_preserve_identities(self):
+    def test_qualified_machine_recipient_uses_file_first_presentation(self):
         presentation = " ".join(self.presentation.split())
-        for phrase in (
-            "previewed version immutable and unsent",
-            "rejected v1 is followed by approved v2",
-            "bootstrap names only v2",
-            "Never overwrite or silently reuse v1",
-            "new delivery operation for the same durable prompt, not a new prompt version",
-            "mutable `latest`, `current`, or `final` locator",
-        ):
-            self.assertIn(phrase, presentation)
+        route = presentation.index("qualified Dropbox retrieval route")
+        file = presentation.index("Dropbox-backed file")
+        handoff = presentation.index("target-shaped retrieval handoff")
+        self.assertLess(route, file)
+        self.assertLess(file, handoff)
 
-    def test_default_omits_prompt_body_but_routine_and_fallback_stay_inline(self):
+    def test_preview_does_not_gate_machine_handoff(self):
         presentation = " ".join(self.presentation.split())
-        for phrase in (
-            "Do not print the full executable prompt inline by default",
-            "thin target-shaped bootstrap that omits the full prompt body",
-            "Routine short prompts, brainstorming, incomplete fragments, and ordinary same-thread deltas remain lightweight and inline",
-            "complete inline presentation only when the prompt is safe to display",
-            "keep operator metadata outside that executable prompt",
-            "stop before provider creation when admission has not passed",
-        ):
-            self.assertIn(phrase, presentation)
+        chatgpt_presentation = " ".join(self.chatgpt_presentation.split())
+        self.assertIn("does not block the handoff or require prompt approval", presentation)
+        self.assertNotIn("explicit approval", presentation)
+        self.assertIn("Do not wait for prompt approval", chatgpt_presentation)
 
-    def test_chatgpt_examples_cover_default_revision_retry_and_fallback(self):
-        for phrase in (
-            "Material ChatGPT to Codex prompt",
-            "Rejected v1 remains immutable and unsent",
-            "before any executor URL exists",
-            "replacement for the same durable file",
-            "Preview or raw readback unavailable",
-            "Routine or same-thread prompt",
-            "Stop before Dropbox creation",
-            "Claude or another executor",
-        ):
-            self.assertIn(phrase, self.chatgpt)
-
-    def test_chatgpt_preview_link_effect_is_bounded_and_product_dependent(self):
-        for phrase in (
-            "always generates a private shared link",
-            "provider-side preview effect",
-            "not universal Dropbox behavior",
-            "effective audience",
-            "view or edit access",
-            "download setting",
-            "persistence or reuse behavior",
-            "preview changed file bytes or revision",
-            "`audience=no_one`, view access, and downloads permitted",
-            "product-dependent runtime evidence to revalidate",
-        ):
-            self.assertIn(phrase, self.chatgpt)
-
-    def test_approval_and_thin_bootstrap_remain_separate_identities(self):
-        for phrase in (
-            "Only after approval",
-            "without the full prompt body",
-            "approved durable path",
-            "file ID",
-            "whole-file SHA-256",
-            "Dropbox content hash",
-            "preview operation, human approval, delivery operation",
-            "executor acknowledgement, attempt, receipt, output, and human disposition",
-        ):
-            self.assertIn(phrase, self.chatgpt)
-
-    def test_codex_single_use_retrieval_verifies_before_interpretation(self):
-        for phrase in (
-            "Perform exactly one intended `GET`",
-            "do not send `HEAD`, range probes, previews, unfurlers, scanners",
-            "Before reading or executing the prompt",
-            "expected byte size and whole-file SHA-256",
-            "UTF-8, no BOM, LF-only line endings",
-            "Verify the Dropbox content hash when",
-            "Fail closed before prompt interpretation",
-            "Never reconstruct the payload",
-            "replacement URL is a new delivery operation for the same durable prompt",
-        ):
-            self.assertIn(phrase, self.codex)
-
-    def test_provider_action_contracts_are_not_universal_guarantees(self):
-        for adapter in (self.chatgpt, self.codex):
-            self.assertIn("60 through 900 seconds", adapter)
-            self.assertIn("first HTTP request of any method", adapter)
-            self.assertIn("not a universal Dropbox", adapter)
-
-    def test_presentation_does_not_take_cak_168_or_semantic_anchor_ownership(self):
+    def test_human_or_unqualified_recipient_uses_inline_presentation(self):
         presentation = " ".join(self.presentation.split())
-        for cak_168_term in (
-            "current receiving surface",
-            "first downstream deliverable",
-        ):
-            self.assertNotIn(cak_168_term, presentation.lower())
-        self.assertNotIn(
-            "## Material Cross-Executor Prompt Presentation",
-            self.contract,
-        )
-        self.assertNotIn("operator_preview", self.anchor)
-        self.assertNotIn("operator_approval", self.anchor)
+        self.assertIn("For a human recipient", presentation)
+        self.assertIn("no qualified Dropbox route", presentation)
+        self.assertIn("present the complete prompt inline", presentation)
+        self.assertIn("consecutive copyable code blocks", self.chatgpt)
+
+    def test_material_governance_layers_without_capturing_routine_prompts(self):
+        presentation = " ".join(self.presentation.split())
+        self.assertIn("issue-owned durable rendered-prompt handoff profile", presentation)
+        self.assertIn("A routine prompt delivered through a file does not", presentation)
+        self.assertIn("use inline presentation rather than inventing a storage surface", presentation)
+        self.assertIn("two-block inline presentation", self.chatgpt_presentation)
 
 
 if __name__ == "__main__":

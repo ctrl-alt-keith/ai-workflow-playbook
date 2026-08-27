@@ -348,77 +348,40 @@ Reason:
 [one concise task-specific explanation]
 ```
 
-## Material Cross-Executor Prompt Presentation
+## Cross-Executor Prompt Presentation
 
-Use this presentation sequence when the output is one complete prompt or task
-envelope for a different thread, child task, or execution surface; exact
-identity, operator review, recovery, citation, or replay materially matters;
-the six-condition issue-owned durable-prompt admission test passes; ownership,
-privacy, visibility, retention, and destination are unambiguous; and currently
-qualified absent-create, raw-readback, operator-preview, and downstream-
-delivery routes are available. Routine short prompts, brainstorming,
-incomplete fragments, and ordinary same-thread deltas remain lightweight and
-inline.
+For a complete prompt intended for another machine, agent, thread, or system,
+select presentation by currently qualified recipient capability, independently
+of prompt materiality:
 
-The required order is:
+- When the recipient has a qualified Dropbox retrieval route and the current
+  storage contract supplies a permitted destination, place the prompt in a
+  Dropbox-backed file, present its file card or preview, and immediately provide
+  the target-shaped retrieval handoff. Preview is optional and does not block
+  the handoff or require prompt approval.
+- For a human recipient, or when the receiving system has no qualified Dropbox
+  route, present the complete prompt inline through the matching client
+  adapter. When access is unknown, inspect or attempt the route before choosing
+  this fallback; do not claim unavailability from memory.
 
-```text
-render -> admit -> absent-create -> raw verify -> operator preview ->
-explicit approval -> fresh delivery route -> thin bootstrap ->
-executor exact verification -> execution
-```
+Preview is not raw-byte verification, approval, a send gate, delivery evidence,
+executor acknowledgement, a coordination state, or authority. A connector
+confirmation needed to create or preview the file authorizes only that
+connector operation, not a separate prompt-approval workflow.
 
-Raw provider readback and exact identity verification must finish before the
-preview is presented. The preview route and the executor-delivery route are
-distinct operations: preview must not prefetch, unfurl, scan, or consume a
-bounded delivery URL, and the executor route is not minted until explicit
-approval.
-
-After raw verification, normally present compact removable operator metadata,
-the provider-backed preview or file object, the semantic filename and
-issue-owned path, exact byte size and whole-file SHA-256, provider object ID
-and revision when available, the downstream executor or prompt role, and one
-explicit `Approve`, `Revise`, or `Reject` boundary. Do not print the full
-executable prompt inline by default after this path succeeds. The operator may
-request the complete prompt inline without changing the durable identity, and
-removing the operator metadata must still leave the executable prompt
-complete.
-
-Preview is a human-readable convenience surface. It is not raw-byte
-verification; does not prove size, SHA-256, provider content hash, revision,
-or equality; does not imply approval; is not delivery, acknowledgement,
-execution start, or attempt completion; creates no coordination state; and
-transfers zero authority.
-
-An operator revision leaves the previewed version immutable and unsent. Record
-predecessor lineage, absent-create the next semantic version at a unique
-immutable identity, repeat raw verification and preview, and obtain fresh
-explicit approval. If rejected v1 is followed by approved v2, the eventual
-bootstrap names only v2. Never overwrite or silently reuse v1, and never add a
-mutable `latest`, `current`, or `final` locator.
-
-Only after approval, mint a fresh bounded delivery route and emit a thin
-target-shaped bootstrap that omits the full prompt body. Name the approved
-durable path, provider object ID and revision when available, expected byte
-size and whole-file SHA-256, provider content hash when available and
-applicable, retrieval mechanism, lifetime, consumption behavior, and the
-requirement to verify exact bytes before reading or execution. Expiry, prior
-consumption, or failed retrieval requires a new delivery operation for the
-same durable prompt, not a new prompt version. Never reconstruct missing bytes
-from the bootstrap, conversation history, or memory.
-
-If any required capability or admission condition is unavailable or
-unqualified, stop before provider creation when admission has not passed, name
-the precise gap, and make no capture, readback, preview, approval, or delivery
-claim. Use the complete inline presentation only when the prompt is safe to
-display and the operator can review every byte before manual send; keep
-operator metadata outside that executable prompt. Otherwise stop with a
-non-authorizing capability blocker.
+Prompt governance is a separate selection. A material prompt that passes its
+admission test additionally applies the
+[`issue-owned durable rendered-prompt handoff profile`](prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile).
+Complete that profile before reporting preservation or providing an
+exact-identity handoff. A routine prompt delivered through a file does not
+thereby acquire its durable capture, recovery, replay, receipt,
+immutable-version, or governance ceremony. When no permitted file destination
+exists, use inline presentation rather than inventing a storage surface.
 
 ## Quick Navigation
 
 - [Task-Shape Surface Selection And Thin Handoffs](#task-shape-surface-selection-and-thin-handoffs)
-- [Material Cross-Executor Prompt Presentation](#material-cross-executor-prompt-presentation)
+- [Cross-Executor Prompt Presentation](#cross-executor-prompt-presentation)
 - [Repository Implementation Task](#repository-implementation-task)
 - [Parallel Batch Add-On](#parallel-batch-add-on)
 - [Orchestration Handoff](#orchestration-handoff)
