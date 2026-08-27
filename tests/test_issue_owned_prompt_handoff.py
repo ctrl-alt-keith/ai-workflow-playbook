@@ -65,7 +65,7 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         )
         cls.chatgpt_dropbox_bootstrap = markdown_section(
             DOCS / "tool-adapters" / "chatgpt.md",
-            "### Dropbox Widget Preview And Compact Executor Bootstrap",
+            "### Dropbox Preview And Minimal Executor Handoff",
         )
 
     def test_prompt_contract_is_the_profile_owner(self):
@@ -289,153 +289,43 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         self.assertIn("use inline presentation rather than inventing a storage surface", presentation)
         self.assertIn("two-block inline presentation", self.chatgpt_presentation)
 
-    def test_chatgpt_write_metadata_does_not_claim_a_visible_preview(self):
+    def test_chatgpt_preview_prefers_the_returned_file_id(self):
         preview = " ".join(self.chatgpt_dropbox_bootstrap.split())
-        self.assertIn(
-            "A successful `create_file` result is write-produced file metadata, "
-            "not evidence that an operator-visible preview rendered",
-            preview,
-        )
-        self.assertIn(
-            "Connector success or returned preview metadata does not prove that "
-            "the active ChatGPT client displayed the widget",
-            preview,
-        )
-        self.assertIn("Claim visible rendering only when the active client visibly rendered it", preview)
-        self.assertIn("do not call the preview successful", preview)
-        self.assertIn(
-            "Selecting the exact returned `file_id` qualifies the connector input only; "
-            "it is not evidence that the client visibly rendered the widget",
-            preview,
-        )
-
-    def test_chatgpt_file_preview_uses_qualified_locator_precedence(self):
-        preview = " ".join(self.chatgpt_dropbox_bootstrap.split())
-        self.assertIn("Invoke Dropbox `file_preview` with `file_paths`", preview)
-        file_id = preview.index("exact returned Dropbox `file_id` first")
-        namespace = preview.index("exact returned namespace path only when `file_id` is unavailable")
-        display = preview.index("human display path only when neither qualified identifier is available")
+        self.assertIn("Dropbox `file_preview` with `file_paths`", preview)
+        file_id = preview.index("`file_id` returned by the write")
+        namespace = preview.index("returned namespace path only when no file ID")
         self.assertLess(file_id, namespace)
-        self.assertLess(namespace, display)
-        self.assertIn("Never truncate or convert a namespace path", preview)
-        self.assertIn("stripping its `ns:[id]//` prefix", preview)
+        self.assertIn("before minting the single-use download link", preview)
 
-    def test_chatgpt_preview_widget_precedes_single_use_download_link(self):
-        preview = self.chatgpt_dropbox_bootstrap
-        create = preview.index("1. Create the file.")
-        verify = preview.index("2. Exact-verify the durable object")
-        widget = preview.index("3. Invoke Dropbox `file_preview`")
-        render = preview.index("4. Let the tool result render as the file surface.")
-        download = preview.index("5. Mint the fresh single-use raw-download URL")
-        bootstrap = preview.index("6. Emit the compact executor bootstrap.")
-        self.assertEqual(sorted((create, verify, widget, render, download, bootstrap)), [
-            create,
-            verify,
-            widget,
-            render,
-            download,
-            bootstrap,
-        ])
-        normalized_preview = " ".join(preview.split())
-        self.assertIn("Preview uses the durable file identity", normalized_preview)
-        self.assertIn("never the executor's single-use raw-download URL", normalized_preview)
-
-    def test_chatgpt_uses_the_tool_widget_without_manual_link_substitution(self):
+    def test_chatgpt_connector_results_are_not_the_visible_widget(self):
         preview = " ".join(self.chatgpt_dropbox_bootstrap.split())
-        self.assertIn("Use the tool-produced preview widget itself as the preview surface", preview)
+        self.assertIn("connector metadata are not a visibly rendered preview", preview)
         for substitute in (
             "`open_in_dropbox_url`",
-            "`copy_link_url`",
-            "`thumbnail_url`",
-            'an "Open in Dropbox" substitute',
+            "copy or share links",
+            "thumbnail URLs",
+            "metadata for the widget",
         ):
             self.assertIn(substitute, preview)
-        self.assertIn("Do not replace or narrate it", preview)
+        self.assertIn("only when the operator actually sees it", preview)
+        self.assertIn("Preview remains optional and does not gate the handoff", preview)
 
-    def test_chatgpt_preview_remains_optional_and_non_blocking(self):
-        preview = " ".join(self.chatgpt_dropbox_bootstrap.split())
-        self.assertIn(
-            "Preview remains optional, non-authorizing, non-verifying, and non-gating",
-            preview,
-        )
-        self.assertIn("does not block the machine-recipient handoff", preview)
-        for gate_phrase in ("Approve", "Revise", "Reject preview", "before sending"):
-            self.assertNotIn(gate_phrase, preview)
-
-    def test_chatgpt_bootstrap_is_one_allowlisted_eight_line_code_block(self):
+    def test_chatgpt_example_is_two_operator_fields_and_one_minimal_bootstrap(self):
         section = self.chatgpt_dropbox_bootstrap
+        self.assertEqual(
+            re.findall(r"^(Recommended [^:]+):", section, re.MULTILINE),
+            ["Recommended model", "Recommended reasoning level"],
+        )
+
         blocks = re.findall(r"```[^\n]*\n(.*?)\n```", section, re.DOTALL)
         self.assertEqual(len(blocks), 1)
-        lines = [line for line in blocks[0].splitlines() if line.strip()]
-        self.assertLessEqual(len(lines), 8)
-        self.assertEqual(
-            [line.split(":", 1)[0] for line in lines],
-            [
-                "Download",
-                "Dropbox ID",
-                "Prompt",
-                "Expected bytes",
-                "Expected SHA-256",
-                "Execute",
-                "Stop",
-            ],
-        )
-        self.assertNotRegex(blocks[0], re.compile(r"\]\(https?://"))
-        for forbidden_heading in (
-            "Role:",
-            "Goal:",
-            "Context:",
-            "Tasks:",
-            "Constraints:",
-            "Validation:",
-            "Delivery:",
-        ):
-            self.assertNotIn(forbidden_heading, blocks[0])
-
-    def test_chatgpt_operator_preamble_is_only_two_fields_and_outside_bootstrap(self):
-        section = self.chatgpt_dropbox_bootstrap
-        preamble_fields = re.findall(
-            r"^(Recommended (?:model|reasoning level): .+)$",
-            section,
-            re.MULTILINE,
-        )
-        self.assertEqual(
-            preamble_fields,
-            [
-                "Recommended model: `[model]`",
-                "Recommended reasoning level: `[level]`",
-            ],
-        )
-        bootstrap = re.findall(r"```[^\n]*\n(.*?)\n```", section, re.DOTALL)[0]
-        for field in preamble_fields:
-            self.assertNotIn(field, bootstrap)
-        normalized_section = " ".join(section.split())
-        self.assertIn("contains exactly these two fields and no others", normalized_section)
-        self.assertIn("outside the executable bootstrap", normalized_section)
-        self.assertIn("excluded from that code block's eight-line ceiling", normalized_section)
-        self.assertIn("strict field allowlist is unchanged by the operator preamble", normalized_section)
-        for excluded in ("thread routing", "a reason", "rationale", "task content"):
-            self.assertIn(excluded, normalized_section)
-
-    def test_chatgpt_bootstrap_rejects_prompt_restatement_and_url_unfurling(self):
-        bootstrap = " ".join(self.chatgpt_dropbox_bootstrap.split())
-        self.assertIn("Selecting the Dropbox-backed prompt route is a conversation-minimization boundary", bootstrap)
-        self.assertIn("The complete prompt remains in Dropbox", bootstrap)
-        self.assertIn("The bootstrap is not a task summary", bootstrap)
-        self.assertIn("exceeds the field allowlist or line ceiling", bootstrap)
-        for forbidden_heading in (
-            "`Role:`",
-            "`Goal:`",
-            "`Context:`",
-            "`Tasks:`",
-            "`Constraints:`",
-            "`Validation:`",
-            "`Delivery:`",
-        ):
-            self.assertIn(forbidden_heading, bootstrap)
-        self.assertIn("a wall-of-text bootstrap is noncompliant", bootstrap)
-        self.assertIn("literal text inside the code block", bootstrap)
-        self.assertIn("do not intentionally unfurl, preview, scan, or preflight it", bootstrap)
+        bootstrap = blocks[0]
+        self.assertLessEqual(len([line for line in bootstrap.splitlines() if line]), 8)
+        for field in ("Download:", "Expected SHA-256:", "Execute:"):
+            self.assertIn(field, bootstrap)
+        self.assertNotIn("Recommended ", bootstrap)
+        self.assertIn("Keep the complete prompt in Dropbox", section)
+        self.assertIn("do not summarize or reproduce the prompt", section)
 
 
 if __name__ == "__main__":

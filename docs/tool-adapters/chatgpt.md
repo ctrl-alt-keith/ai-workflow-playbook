@@ -193,90 +193,35 @@ existing [two-block inline presentation](#prompt-presentation). If access is
 unknown, inspect or attempt it before falling back. Material prompts also apply
 the durable profile below; routine prompts do not inherit it from transport.
 
-### Dropbox Widget Preview And Compact Executor Bootstrap
+### Dropbox Preview And Minimal Executor Handoff
 
-Selecting the Dropbox-backed prompt route is a conversation-minimization
-boundary. The complete prompt remains in Dropbox; the operator-facing
-conversation carries only a tiny operator-configuration preamble plus
-retrieval, exact-verification, and execution bootstrap data. It may contain
-only the tool-produced `file_preview` widget when a separate preview is
-intentionally selected, the two-field operator preamble below, one compact
-executor-bootstrap code block, and, when necessary, one short factual
-diagnostic that the requested widget did not visibly render.
+When optional operator preview is selected, exact-verify the durable prompt,
+then call Dropbox `file_preview` with `file_paths` containing the exact
+`file_id` returned by the write. Use the exact returned namespace path only
+when no file ID is available; never strip its namespace prefix. Present the
+tool-produced widget before minting the single-use download link.
 
-A successful `create_file` result is write-produced file metadata, not evidence
-that an operator-visible preview rendered. When a separate preview is
-intentionally selected, preserve this operation order:
+The preview call and connector metadata are not a visibly rendered preview.
+Do not substitute `open_in_dropbox_url`, copy or share links, thumbnail URLs,
+or metadata for the widget, and claim visible rendering only when the operator
+actually sees it. Preview remains optional and does not gate the handoff.
 
-1. Create the file.
-2. Exact-verify the durable object under its owning evidence contract.
-3. Invoke Dropbox `file_preview` with `file_paths` containing the exact
-   qualified locator returned by the write.
-4. Let the tool result render as the file surface.
-5. Mint the fresh single-use raw-download URL with `download_link`.
-6. Emit the compact executor bootstrap.
-
-Choose the `file_preview` locator deterministically: use the exact returned
-Dropbox `file_id` first, the exact returned namespace path only when `file_id`
-is unavailable, and the human display path only when neither qualified
-identifier is available. Never truncate or convert a namespace path by
-stripping its `ns:[id]//` prefix.
-
-Use the tool-produced preview widget itself as the preview surface. Do not
-replace or narrate it with `open_in_dropbox_url`, `copy_link_url`,
-`thumbnail_url`, a manually authored Markdown link, or an "Open in Dropbox"
-substitute. Connector success or returned preview metadata does not prove that
-the active ChatGPT client displayed the widget. Claim visible rendering only
-when the active client visibly rendered it; if preview metadata exists but no
-widget is visible, report only that observed limitation and do not call the
-preview successful. Selecting the exact returned `file_id` qualifies the
-connector input only; it is not evidence that the client visibly rendered the
-widget.
-
-Preview uses the durable file identity, never the executor's single-use
-raw-download URL. It must not mint, consume, prefetch, expose, or depend on that
-URL. Preview remains optional, non-authorizing, non-verifying, and non-gating;
-its absence does not block the machine-recipient handoff unless a narrower
-current human instruction explicitly requires visible inspection.
-
-The optional operator-only preamble contains exactly these two fields and no
-others. It is outside the executable bootstrap and is excluded from that code
-block's eight-line ceiling and strict field allowlist. Do not add thread
-routing, a reason, rationale, task content, or other operator metadata.
+Keep the complete prompt in Dropbox. Outside the optional widget, emit only the
+two operator fields and one compact retrieval, verification, and execution
+bootstrap shown below; do not summarize or reproduce the prompt.
 
 Recommended model: `[model]`
 
 Recommended reasoning level: `[level]`
 
-Emit the executor bootstrap as one code block with no more than eight non-empty
-lines. Its strict field allowlist is unchanged by the operator preamble. Use
-only these bootstrap fields: the fresh single-use raw-download URL; the exact
-Dropbox file identity and human locator where needed to disambiguate the
-object; expected byte size and SHA-256; one instruction to download, verify,
-and execute the complete prompt file; and one fail-closed instruction for a
-retrieval, identity, size, or digest mismatch. Keep the raw URL as literal text
-inside the code block, not a Markdown link or previewable card, and do not
-intentionally unfurl, preview, scan, or preflight it.
-
 ```text
 Download: [fresh single-use raw-download URL]
 Dropbox ID: [exact returned file ID]
-Prompt: [immutable human locator]
 Expected bytes: [byte count]
 Expected SHA-256: [digest]
 Execute: Download once, verify the exact identity, byte count, and SHA-256, then execute the complete prompt file.
 Stop: Fail closed on retrieval, identity, size, or digest mismatch; do not reconstruct the prompt from chat.
 ```
-
-The bootstrap is not a task summary. Reject and reduce any candidate that
-exceeds the field allowlist or line ceiling, repeats the complete prompt,
-adds `Role:`, `Goal:`, `Context:`, `Tasks:`, `Constraints:`, `Validation:`, or
-`Delivery:` headings or equivalent prose, summarizes rationale or workflow
-doctrine, adds delivery instructions beyond executing the downloaded complete
-prompt, includes operator, model, or reasoning metadata, includes preview
-metadata, or adds manually authored Dropbox open or share links. Accuracy does
-not excuse duplication: a wall-of-text bootstrap is noncompliant even when
-every repeated statement is correct.
 
 ### Issue-Owned Durable Prompt Capture And Handoff
 
