@@ -112,9 +112,13 @@ The repository [`claude-review`](../../scripts/claude-review) source composes
 these controls for governed review. Production auth and review run only through
 the exact machine-local installation rendered by
 [`install-claude-review`](../../scripts/install-claude-review). That installed
-launcher verifies its reviewed bytes, active Codex rule, and the exact absolute
-Claude selector plus resolved user-owned, non-writable executable identity; it
-does not select `claude` from inherited `PATH`. A versioned JSON review config binds the
+launcher verifies its reviewed bytes, immutable schema-v2 entry contract,
+active Codex rule, singular current qualification receipt, and the exact
+absolute Claude selector plus resolved user-owned, non-writable executable
+identity; it does not select `claude` from inherited `PATH`. Before provider
+process creation it rechecks the canonical path, ownership, mode, executable
+status, device, inode, size, digest, and version against the current receipt.
+A versioned JSON review config binds the
 source graph, launch root and exact additional directories, guard roots,
 candidate and exact `HEAD`, disjoint evidence directory, immutable
 preflight-receipt and final-output paths, exact stream and terminal-receipt
@@ -124,6 +128,18 @@ live-state mechanics remain in private controller attempt-local scratch. The
 launcher accepts
 only model and supported effort selection after `--`; it owns the tool,
 permission, MCP, settings, hook, output, and persistence flags.
+
+A selector advance is capability drift, not a candidate finding. Ordinary auth
+and review fail closed before Claude receives substantive input and expose only
+the exact launcher's prompt-gated identity-qualification transition. The
+transition derives and re-observes the configured selector from the immutable
+entry contract, requires the expected current receipt and expected observed
+identity, writes one immutable predecessor-linked receipt, and atomically
+replaces the singular current selection under a private lock. It cannot accept
+an arbitrary executable or selector. Unchanged execution never rewrites this
+state. Historical receipts do not silently reauthorize rollback; returning to
+older bytes is a new transition. Qualification is evidence and capability
+gating only and grants no review, candidate, merge, or other task authority.
 
 The generated `PreToolUse` hook permits `Read`, `Grep`, and `Glob`, and permits
 `Bash` only when its command text exactly equals the shell rendering of one

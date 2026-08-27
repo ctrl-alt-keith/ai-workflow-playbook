@@ -16,6 +16,9 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_LAUNCHER = ROOT / "scripts" / "claude-review"
 RULE_TEMPLATE = ROOT / ".codex" / "rule-templates" / "claude-review.rules"
+INSTALLATION_SCHEMA_VERSION = 2
+QUALIFICATION_SCHEMA_VERSION = 1
+ENTRY_CONTRACT_SCHEMA_VERSION = 1
 
 
 def digest(payload: bytes) -> str:
@@ -24,6 +27,11 @@ def digest(payload: bytes) -> str:
 
 def canonical(value: object) -> bytes:
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+
+
+def entry_contract_identity(contract: dict[str, object]) -> str:
+    """Return the content identity of execution-relevant immutable inputs."""
+    return f"sha256:{digest(canonical(contract))}"
 
 
 def git(*arguments: str) -> str:
@@ -62,7 +70,7 @@ def exact_executable_identity(selector: Path) -> dict[str, object]:
     )
     if version.returncode != 0 or not (version.stdout or version.stderr).strip():
         raise ValueError("Claude target did not provide an exact version identity")
-    return {
+    identity = {
         "requested_selector": str(selector),
         "selector_kind": "symlink" if stat.S_ISLNK(selector_metadata.st_mode) else "file",
         "selector_target": os.readlink(selector) if stat.S_ISLNK(selector_metadata.st_mode) else None,
@@ -77,6 +85,23 @@ def exact_executable_identity(selector: Path) -> dict[str, object]:
         "resolved_sha256": digest(resolved.read_bytes()),
         "version": (version.stdout or version.stderr).strip()[:1000],
     }
+    final_metadata = resolved.stat()
+    if (
+        final_metadata.st_dev != metadata.st_dev
+        or final_metadata.st_ino != metadata.st_ino
+        or final_metadata.st_size != metadata.st_size
+        or digest(resolved.read_bytes()) != identity["resolved_sha256"]
+        or any(
+            getattr(selector.lstat(), field) != getattr(selector_metadata, field)
+            for field in ("st_dev", "st_ino", "st_uid", "st_mode", "st_size")
+        )
+        or (
+            stat.S_ISLNK(selector_metadata.st_mode)
+            and os.readlink(selector) != identity["selector_target"]
+        )
+    ):
+        raise ValueError("Claude selector or target changed during identity observation")
+    return identity
 
 
 def contained(path: Path, root: Path) -> bool:
@@ -158,6 +183,11 @@ def parse_arguments() -> argparse.Namespace:
         default=Path.home() / ".codex" / "rules" / "claude-review.rules",
     )
     parser.add_argument("--activation-receipt", required=True, type=Path)
+    parser.add_argument(
+        "--qualification-root",
+        type=Path,
+        default=Path.home() / ".local" / "state" / "ai-workflow-playbook" / "claude-review",
+    )
     parser.add_argument("--expected-existing-rule-sha256")
     parser.add_argument("--forbidden-root", action="append", default=[], type=Path)
     return parser.parse_args()
@@ -170,6 +200,7 @@ def main() -> int:
     args.activation_receipt = (
         args.activation_receipt.parent.resolve(strict=False) / args.activation_receipt.name
     )
+    args.qualification_root = args.qualification_root.resolve(strict=False)
     if args.activation_receipt.exists() or args.activation_receipt.is_symlink():
         raise ValueError("activation receipt destination must be absent")
     status = git("status", "--porcelain=v1", "--untracked-files=all")
@@ -184,6 +215,7 @@ def main() -> int:
     validate_destination(args.install_root, forbidden)
     validate_destination(args.active_rule, forbidden)
     validate_destination(args.activation_receipt, forbidden)
+    validate_destination(args.qualification_root, forbidden)
     auth_diagnostics_directory = args.activation_receipt.parent
     auth_diagnostics_directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     auth_diagnostics_metadata = auth_diagnostics_directory.lstat()
@@ -200,7 +232,20 @@ def main() -> int:
     for root in forbidden:
         if contained(Path(claude_identity["resolved_path"]), root) or contained(selector_location, root):
             raise ValueError("Claude selector and target must be outside every forbidden writable root")
-    version_directory = args.install_root / f"{commit}-{launcher_sha256[:16]}"
+    immutable_contract = {
+        "entry_contract_schema_version": ENTRY_CONTRACT_SCHEMA_VERSION,
+        "installation_schema_version": INSTALLATION_SCHEMA_VERSION,
+        "qualification_schema_version": QUALIFICATION_SCHEMA_VERSION,
+        "launcher_sha256": launcher_sha256,
+        "rule_template_sha256": source_rule_sha256,
+        "claude_selector": str(args.claude_bin),
+        "active_rule_path": str(args.active_rule),
+        "forbidden_roots": [str(root) for root in forbidden],
+        "auth_diagnostics_directory": str(auth_diagnostics_directory),
+        "qualification_root": str(args.qualification_root),
+    }
+    contract_id = entry_contract_identity(immutable_contract)
+    version_directory = args.install_root / f"entry-{contract_id.removeprefix('sha256:')}"
     version_directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     version_metadata = version_directory.lstat()
     if (
@@ -209,14 +254,53 @@ def main() -> int:
         or version_metadata.st_uid != os.geteuid()
         or stat.S_IMODE(version_metadata.st_mode) & 0o022
     ):
-        raise ValueError("versioned installation directory is not operator-controlled")
+        raise ValueError("content-addressed entry directory is not operator-controlled")
     installed_launcher = version_directory / "claude-review"
     rendered_rule = RULE_TEMPLATE.read_text(encoding="utf-8").replace(
         "__CLAUDE_REVIEW_LAUNCHER__", str(installed_launcher)
     ).encode("utf-8")
     active_rule_sha256 = digest(rendered_rule)
+    qualification_directory = args.qualification_root / contract_id.removeprefix("sha256:")
+    receipts_directory = qualification_directory / "receipts"
+    qualification_directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    receipts_directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    for directory in (qualification_directory, receipts_directory):
+        metadata = directory.lstat()
+        if (
+            directory.is_symlink()
+            or not stat.S_ISDIR(metadata.st_mode)
+            or metadata.st_uid != os.geteuid()
+            or stat.S_IMODE(metadata.st_mode) & 0o077
+            or directory.resolve(strict=True) != directory
+        ):
+            raise ValueError("qualification state directory is not exact private operator-controlled state")
+    current_selection = qualification_directory / "current-selection.json"
+    qualification_lock = qualification_directory / "qualification.lock"
     manifest = {
+        "schema_version": INSTALLATION_SCHEMA_VERSION,
+        "entry_contract_id": contract_id,
+        "entry_contract": immutable_contract,
+        "installed_launcher_path": str(installed_launcher),
+        "installed_launcher_sha256": launcher_sha256,
+        "active_rule_path": str(args.active_rule),
+        "active_rule_sha256": active_rule_sha256,
+        "claude_selector": str(args.claude_bin),
+        "forbidden_roots": [str(root) for root in forbidden],
+        "auth_diagnostics_directory": str(auth_diagnostics_directory),
+        "qualification_schema_version": QUALIFICATION_SCHEMA_VERSION,
+        "qualification_directory": str(qualification_directory),
+        "qualification_receipts_directory": str(receipts_directory),
+        "current_selection_path": str(current_selection),
+        "qualification_lock_path": str(qualification_lock),
+    }
+    launcher_result = exclusive_or_identical(installed_launcher, launcher_bytes, 0o500)
+    manifest_path = version_directory / "claude-review-installation.json"
+    manifest_bytes = canonical(manifest)
+    manifest_result = exclusive_or_identical(manifest_path, manifest_bytes, 0o400)
+    source_provenance = {
+        "kind": "claude_review_source_provenance",
         "schema_version": 1,
+        "entry_contract_id": contract_id,
         "source_repository": str(ROOT),
         "source_remote": source_remote,
         "source_commit": commit,
@@ -224,28 +308,56 @@ def main() -> int:
         "source_launcher_sha256": launcher_sha256,
         "source_rule_template_path": str(RULE_TEMPLATE),
         "source_rule_template_sha256": source_rule_sha256,
-        "installed_launcher_path": str(installed_launcher),
-        "installed_launcher_sha256": launcher_sha256,
-        "active_rule_path": str(args.active_rule),
-        "active_rule_sha256": active_rule_sha256,
-        "claude_selector": str(args.claude_bin),
-        "claude_identity": claude_identity,
-        "forbidden_roots": [str(root) for root in forbidden],
-        "auth_diagnostics_directory": str(auth_diagnostics_directory),
     }
-    launcher_result = exclusive_or_identical(installed_launcher, launcher_bytes, 0o500)
-    manifest_path = version_directory / "claude-review-installation.json"
-    manifest_bytes = canonical(manifest)
-    manifest_result = exclusive_or_identical(manifest_path, manifest_bytes, 0o400)
+    provenance_path = version_directory / f"source-provenance-{commit}.json"
+    provenance_result = exclusive_or_identical(provenance_path, canonical(source_provenance), 0o400)
+    exclusive_or_identical(qualification_lock, b"claude-review qualification lock\n", 0o600)
+    initial_receipt = {
+        "kind": "claude_reviewer_qualification_receipt",
+        "schema_version": QUALIFICATION_SCHEMA_VERSION,
+        "entry_contract_id": contract_id,
+        "claude_selector": str(args.claude_bin),
+        "observed_identity": claude_identity,
+        "predecessor_receipt_sha256": None,
+        "predecessor_receipt_path": None,
+        "producing_launcher_path": str(installed_launcher),
+        "producing_launcher_sha256": launcher_sha256,
+        "qualification_event": "initial_installation",
+        "authority_semantics": "capability qualification only; grants zero task or review authority",
+    }
+    initial_receipt_bytes = canonical(initial_receipt)
+    initial_receipt_sha256 = digest(initial_receipt_bytes)
+    initial_receipt_path = receipts_directory / f"{initial_receipt_sha256}.json"
+    if current_selection.exists() or current_selection.is_symlink():
+        current_record = json.loads(current_selection.read_text(encoding="utf-8"))
+        if current_record.get("receipt_sha256") != initial_receipt_sha256:
+            raise ValueError("existing current qualification does not match the installation identity")
+    else:
+        exclusive_or_identical(initial_receipt_path, initial_receipt_bytes, 0o400)
+        current_record = {
+            "kind": "claude_reviewer_current_selection",
+            "schema_version": QUALIFICATION_SCHEMA_VERSION,
+            "entry_contract_id": contract_id,
+            "claude_selector": str(args.claude_bin),
+            "receipt_path": str(initial_receipt_path),
+            "receipt_sha256": initial_receipt_sha256,
+        }
+        exclusive_or_identical(current_selection, canonical(current_record), 0o600)
     rule_result = replace_expected(args.active_rule, rendered_rule, args.expected_existing_rule_sha256)
     receipt = {
         "kind": "claude_review_activation_receipt",
         **manifest,
+        "source_commit": commit,
+        "source_remote": source_remote,
+        "source_provenance_path": str(provenance_path),
+        "source_provenance_result": provenance_result,
         "installation_manifest_path": str(manifest_path),
         "installation_manifest_sha256": digest(manifest_bytes),
         "launcher_result": launcher_result,
         "manifest_result": manifest_result,
         "active_rule_result": rule_result,
+        "qualification_receipt_path": current_record["receipt_path"],
+        "qualification_receipt_sha256": current_record["receipt_sha256"],
     }
     args.activation_receipt.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     exclusive_or_identical(args.activation_receipt, canonical(receipt), 0o600)
