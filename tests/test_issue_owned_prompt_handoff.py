@@ -303,6 +303,11 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         )
         self.assertIn("Claim visible rendering only when the active client visibly rendered it", preview)
         self.assertIn("do not call the preview successful", preview)
+        self.assertIn(
+            "Selecting the exact returned `file_id` qualifies the connector input only; "
+            "it is not evidence that the client visibly rendered the widget",
+            preview,
+        )
 
     def test_chatgpt_file_preview_uses_qualified_locator_precedence(self):
         preview = " ".join(self.chatgpt_dropbox_bootstrap.split())
@@ -386,6 +391,31 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             "Delivery:",
         ):
             self.assertNotIn(forbidden_heading, blocks[0])
+
+    def test_chatgpt_operator_preamble_is_only_two_fields_and_outside_bootstrap(self):
+        section = self.chatgpt_dropbox_bootstrap
+        preamble_fields = re.findall(
+            r"^(Recommended (?:model|reasoning level): .+)$",
+            section,
+            re.MULTILINE,
+        )
+        self.assertEqual(
+            preamble_fields,
+            [
+                "Recommended model: `[model]`",
+                "Recommended reasoning level: `[level]`",
+            ],
+        )
+        bootstrap = re.findall(r"```[^\n]*\n(.*?)\n```", section, re.DOTALL)[0]
+        for field in preamble_fields:
+            self.assertNotIn(field, bootstrap)
+        normalized_section = " ".join(section.split())
+        self.assertIn("contains exactly these two fields and no others", normalized_section)
+        self.assertIn("outside the executable bootstrap", normalized_section)
+        self.assertIn("excluded from that code block's eight-line ceiling", normalized_section)
+        self.assertIn("strict field allowlist is unchanged by the operator preamble", normalized_section)
+        for excluded in ("thread routing", "a reason", "rationale", "task content"):
+            self.assertIn(excluded, normalized_section)
 
     def test_chatgpt_bootstrap_rejects_prompt_restatement_and_url_unfurling(self):
         bootstrap = " ".join(self.chatgpt_dropbox_bootstrap.split())

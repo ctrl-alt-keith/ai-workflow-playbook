@@ -197,11 +197,12 @@ the durable profile below; routine prompts do not inherit it from transport.
 
 Selecting the Dropbox-backed prompt route is a conversation-minimization
 boundary. The complete prompt remains in Dropbox; the operator-facing
-conversation carries only retrieval, exact-verification, and execution
-bootstrap data. It may contain only the tool-produced `file_preview` widget
-when a separate preview is intentionally selected, one compact executor
-bootstrap code block, and, when necessary, one short factual diagnostic that
-the requested widget did not visibly render.
+conversation carries only a tiny operator-configuration preamble plus
+retrieval, exact-verification, and execution bootstrap data. It may contain
+only the tool-produced `file_preview` widget when a separate preview is
+intentionally selected, the two-field operator preamble below, one compact
+executor-bootstrap code block, and, when necessary, one short factual
+diagnostic that the requested widget did not visibly render.
 
 A successful `create_file` result is write-produced file metadata, not evidence
 that an operator-visible preview rendered. When a separate preview is
@@ -228,7 +229,9 @@ substitute. Connector success or returned preview metadata does not prove that
 the active ChatGPT client displayed the widget. Claim visible rendering only
 when the active client visibly rendered it; if preview metadata exists but no
 widget is visible, report only that observed limitation and do not call the
-preview successful.
+preview successful. Selecting the exact returned `file_id` qualifies the
+connector input only; it is not evidence that the client visibly rendered the
+widget.
 
 Preview uses the durable file identity, never the executor's single-use
 raw-download URL. It must not mint, consume, prefetch, expose, or depend on that
@@ -236,10 +239,19 @@ URL. Preview remains optional, non-authorizing, non-verifying, and non-gating;
 its absence does not block the machine-recipient handoff unless a narrower
 current human instruction explicitly requires visible inspection.
 
+The optional operator-only preamble contains exactly these two fields and no
+others. It is outside the executable bootstrap and is excluded from that code
+block's eight-line ceiling and strict field allowlist. Do not add thread
+routing, a reason, rationale, task content, or other operator metadata.
+
+Recommended model: `[model]`
+
+Recommended reasoning level: `[level]`
+
 Emit the executor bootstrap as one code block with no more than eight non-empty
-lines and no surrounding explanation except the one permitted rendering
-diagnostic. Use only these fields: the fresh single-use raw-download URL; the
-exact Dropbox file identity and human locator where needed to disambiguate the
+lines. Its strict field allowlist is unchanged by the operator preamble. Use
+only these bootstrap fields: the fresh single-use raw-download URL; the exact
+Dropbox file identity and human locator where needed to disambiguate the
 object; expected byte size and SHA-256; one instruction to download, verify,
 and execute the complete prompt file; and one fail-closed instruction for a
 retrieval, identity, size, or digest mismatch. Keep the raw URL as literal text
