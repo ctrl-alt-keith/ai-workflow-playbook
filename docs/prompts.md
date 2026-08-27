@@ -8,20 +8,21 @@ Prompts should remain routing and execution envelopes, not duplicated workflow
 doctrine. For the rationale, see
 [`sparse-rehydration-and-source-grounding.md`](sparse-rehydration-and-source-grounding.md).
 
-For a fresh repository-scoped thread, explicitly route through current
+For repository-scoped prompts, route through current
 [`start-here.md`](start-here.md) and hydrate established state from
-authoritative Repository or History artifacts instead of replaying it in the
-prompt. The prompt carries the current delta: goal, governing authority or
-issue, authoritative artifact references, authorization, constraints,
-completion boundary, and stop rules.
-Self-contained means complete routing and authorization, not embedding every
-referenced artifact.
+authoritative Repository or History artifacts instead of copying doctrine into
+the prompt. Every generated prompt or handoff is a complete drop-in artifact:
+it is self-contained for its intended receiving context and directly usable.
+Thread routing and still-current context may reduce duplicated background, but
+never produce a partial executable artifact. Apply the governing
+[complete-prompt rule](repo-readiness.md#interaction-mode-preflight) rather
+than reconstructing the requested action from conversation history or another
+prompt.
 
-A same-thread continuation may carry only the changed delta while established
-source state remains current. Keep exact values prompt-local when required for
-identity, authority, safety, validation, or unambiguous retrieval. Reducing
-redundant context is execution engineering, not methodology or architecture
-evidence.
+Keep exact values prompt-local when identity, authority, safety, validation, or
+unambiguous retrieval requires them. Complete does not mean reproducing all
+doctrine, history, or durable state. Reducing redundant context is execution
+engineering, not methodology or architecture evidence.
 
 ## Task-Shape Surface Selection And Thin Handoffs
 
@@ -72,8 +73,8 @@ change does not require blanket rehydration or replay of unchanged doctrine.
 ### Thin semantic handoff envelope
 
 When complete recoverable state is held outside the conversation, a thin
-role-specific envelope carries only the current routing delta. Include, as
-applicable:
+role-specific envelope remains a complete current handoff while pointing to
+that state instead of reproducing it. Include, as applicable:
 
 - target surface or executor role;
 - bounded requested outcome;
@@ -181,6 +182,18 @@ separate decisions. Declare one of these routing values in operator metadata:
 - `CHILD TASK`: select the lowest-cost sufficient configuration for the bounded
   child, and preserve its model/configuration, inputs, execution identity,
   durable result, and authority boundary where the workflow requires it.
+
+Thread routing never relaxes prompt completeness:
+
+- A `FRESH THREAD` receives a complete prompt suitable for its fresh receiving
+  context.
+- A `SAME THREAD` receives the complete instruction for its next bounded
+  action. It may reference still-current established state available to that
+  thread, but remains directly usable without another prompt.
+- A `CHILD TASK` receives a complete bounded child prompt.
+
+The [recipient-capability selector](#cross-executor-prompt-presentation)
+applies to every complete prompt across these routing modes.
 
 Use the executor adapter for vendor-specific routing. For an existing task that
 exceeds its assigned capability, prefer a bounded stronger child or an explicit
