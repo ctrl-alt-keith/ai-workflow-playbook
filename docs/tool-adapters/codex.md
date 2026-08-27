@@ -767,7 +767,11 @@ creates the initial exact Claude qualification receipt and singular current
 selection in separate private state, and renders the user rule with the exact
 installed absolute path. It refuses a different existing installed object and
 requires the caller to name the expected digest before replacing an existing
-active rule. Schema-v1 installations remain historical state; do not reinterpret
+active rule. An identical-contract rerun securely validates and preserves any
+valid current receipt, including upgrade and rollback lineage, and appends only
+the new source provenance and requested activation evidence. Selector drift on
+a rerun is qualification-required and occurs before rule or activation-receipt
+mutation. Schema-v1 installations remain historical state; do not reinterpret
 or migrate them automatically. Supply every
 candidate, evidence, workspace, and attempt-scratch root as a forbidden root.
 The activation receipt's exact operator-controlled parent is also recorded as
@@ -792,20 +796,30 @@ prefixes for that installed path. The exact
 `--qualify-claude-identity` prefix is `prompt`, as are lifecycle and
 permission-hook controls; repository-relative, alternate-path, arbitrary
 Claude-selection, and shell-wrapped forms are not allowed. The installed
-launcher verifies its own bytes, immutable entry contract, active-rule hash,
+entry and rule are a one-time setup while their contract remains unchanged;
+a routine Claude update uses only the bounded qualification command emitted by
+the drift diagnostic, not another install, rule rewrite, or Codex restart. The
+installed launcher verifies its own bytes, immutable entry contract,
+active-rule hash,
 private current-selection record, immutable qualification receipt, and the
-selector's exact resolved executable identity before either allowed operation.
-It never resolves `claude` through inherited `PATH`.
+selector's exact non-executing file identity before either allowed operation.
+Only matching already-qualified bytes may be queried for their recorded version,
+followed by a repeated file observation. It never resolves `claude` through
+inherited `PATH`.
 
 When the configured selector resolves to a legitimate new identity, ordinary
 auth and review fail before provider launch with
 `reviewer_identity_qualification_required`. The bounded diagnostic names the
-current receipt digest, observed canonical path, version and digest, and the
-exact qualification command. That command accepts only the expected current
-receipt digest and expected observed-identity digest; it derives the selector
-from the immutable entry manifest, recomputes the target, serializes the
-transition under the entry's exact lock, creates one no-overwrite lineage
-receipt, and atomically compare-and-swap replaces the singular current record.
+current receipt digest, observed canonical path and file digest, the exact
+non-executing observation and its digest, and the exact qualification command;
+it does not claim a version for unqualified bytes. That command accepts only the
+expected current receipt digest and expected observed file-identity digest; it
+derives the selector from the immutable entry manifest, recomputes the target,
+serializes the transition under the entry's exact lock, rejects no-op requests,
+then performs the first permitted version query. After another exact file
+observation it creates one no-overwrite lineage receipt and atomically
+compare-and-swap replaces the singular current record through a private flushed
+temporary file.
 It cannot select another executable or change the selector. After the operator
 approves and the transition succeeds, rerun the unchanged auth or review
 command through the unchanged rule. Historical receipts are provenance, not an
@@ -831,7 +845,7 @@ codex execpolicy check --pretty \
   --rules /ABSOLUTE/PATH/TO/ACTIVE/claude-review.rules \
   -- /ABSOLUTE/INSTALLED/PATH/claude-review --qualify-claude-identity \
   --expected-current-receipt-sha256 EXPECTED_RECEIPT_SHA256 \
-  --expected-observed-identity-sha256 EXPECTED_IDENTITY_SHA256
+  --expected-observed-file-identity-sha256 EXPECTED_FILE_IDENTITY_SHA256
 ```
 
 The first check must report `allow`; the lifecycle and qualification checks

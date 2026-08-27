@@ -1,3 +1,5 @@
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
@@ -10,6 +12,7 @@ import textwrap
 import time
 import unittest
 from unittest import mock
+from types import SimpleNamespace
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -59,10 +62,10 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 "#!/usr/bin/env python3\n"
                 "import os, pathlib, sys\n"
                 f"VERSION = 'fixture-claude {number}'\n"
+                "pathlib.Path(os.environ['FIXTURE_PROVIDER_RUNS']).open('a').write(VERSION + (':version\\n' if '--version' in sys.argv else ':run\\n'))\n"
                 "if '--version' in sys.argv:\n"
                 "    print(VERSION)\n"
                 "    raise SystemExit(0)\n"
-                "pathlib.Path(os.environ['FIXTURE_PROVIDER_RUNS']).open('a').write(VERSION + '\\n')\n"
                 "print('CLAUDE_AUTH_OK')\n",
                 encoding="utf-8",
             )
@@ -70,12 +73,16 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             versions.append(version)
         selector = root / "claude"
         selector.symlink_to(versions[0])
-        identity = self.launcher.executable_identity(selector, os.geteuid())
+        with mock.patch.dict(os.environ, {"FIXTURE_PROVIDER_RUNS": str(marker)}):
+            qualified_identity = self.launcher.qualified_executable_identity(
+                selector, os.geteuid(), [candidate]
+            )
+        marker.unlink()
         qualification_root = root / "qualification-root"
         entry_contract = {
             "entry_contract_schema_version": 1,
             "installation_schema_version": 2,
-            "qualification_schema_version": 1,
+            "qualification_schema_version": 2,
             "launcher_sha256": self.launcher.sha256_bytes(launcher_bytes),
             "rule_template_sha256": "fixture-rule-template",
             "claude_selector": str(selector),
@@ -107,7 +114,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             "claude_selector": str(selector),
             "forbidden_roots": [str(candidate)],
             "auth_diagnostics_directory": str(auth_diagnostics),
-            "qualification_schema_version": 1,
+            "qualification_schema_version": 2,
             "qualification_directory": str(qualification),
             "qualification_receipts_directory": str(receipts),
             "current_selection_path": str(qualification / "current-selection.json"),
@@ -115,10 +122,11 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         }
         receipt = {
             "kind": "claude_reviewer_qualification_receipt",
-            "schema_version": 1,
+            "schema_version": 2,
             "entry_contract_id": entry_contract_id,
             "claude_selector": str(selector),
-            "observed_identity": identity,
+            "file_identity": qualified_identity["file_identity"],
+            "version": qualified_identity["version"],
             "predecessor_receipt_sha256": None,
             "predecessor_receipt_path": None,
             "producing_launcher_path": str(launcher),
@@ -132,7 +140,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         receipt_path.chmod(0o400)
         current = {
             "kind": "claude_reviewer_current_selection",
-            "schema_version": 1,
+            "schema_version": 2,
             "entry_contract_id": entry_contract_id,
             "claude_selector": str(selector),
             "receipt_path": str(receipt_path),
@@ -174,6 +182,49 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         )
         return completed, diagnostics
 
+    def run_installer(self, root: Path, selector: Path, activation_name: str, commit: str):
+        activation_receipt = root / "activation" / activation_name
+        arguments = SimpleNamespace(
+            claude_bin=selector,
+            install_root=root / "install-root",
+            active_rule=root / "active.rules",
+            activation_receipt=activation_receipt,
+            qualification_root=root / "qualification-root",
+            expected_existing_rule_sha256=None,
+            forbidden_root=[],
+        )
+
+        def fake_git(*git_arguments):
+            if git_arguments[0] == "status":
+                return ""
+            if git_arguments == ("rev-parse", "HEAD"):
+                return commit
+            if git_arguments == ("remote", "get-url", "origin"):
+                return "git@github.com:ctrl-alt-keith/ai-workflow-playbook.git"
+            raise AssertionError(git_arguments)
+
+        output = io.StringIO()
+        with mock.patch.object(self.installer, "parse_arguments", return_value=arguments), mock.patch.object(
+            self.installer, "git", side_effect=fake_git
+        ), contextlib.redirect_stdout(output):
+            self.assertEqual(self.installer.main(), 0)
+        return json.loads(output.getvalue()), activation_receipt
+
+    def create_installer_targets(self, root: Path):
+        targets = []
+        for number in (1, 2, 3):
+            target = root / f"installer-claude-{number}"
+            target.write_text(
+                "#!/bin/sh\n"
+                f"printf 'installer-claude {number}\\n'\n",
+                encoding="utf-8",
+            )
+            target.chmod(0o755)
+            targets.append(target)
+        selector = root / "installer-claude"
+        selector.symlink_to(targets[0])
+        return selector, targets
+
     def test_project_rule_never_allows_repository_relative_launcher(self):
         rule = CODEX_RULE.read_text(encoding="utf-8")
         self.assertNotIn('decision="allow"', rule)
@@ -194,7 +245,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             "launcher_sha256": "a" * 64,
             "rule_template_sha256": "b" * 64,
             "installation_schema_version": 2,
-            "qualification_schema_version": 1,
+            "qualification_schema_version": 2,
         }
         first = self.installer.entry_contract_identity(contract)
         second = self.installer.entry_contract_identity({**contract})
@@ -206,7 +257,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         )
         self.assertNotEqual(
             first,
-            self.installer.entry_contract_identity({**contract, "qualification_schema_version": 2}),
+            self.installer.entry_contract_identity({**contract, "qualification_schema_version": 3}),
         )
 
     def test_managed_selector_advance_uses_prompted_qualification_without_entry_or_rule_change(self):
@@ -231,27 +282,33 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             self.assertEqual(rejected.returncode, 70)
             self.assertIn('"failure_classification": "reviewer_identity_qualification_required"', rejected.stderr)
             self.assertIn("--qualify-claude-identity", rejected.stderr)
-            self.assertEqual(fixture["marker"].read_text(encoding="utf-8"), "fixture-claude 1\n")
+            self.assertEqual(
+                fixture["marker"].read_text(encoding="utf-8"),
+                "fixture-claude 1:version\n" * 3 + "fixture-claude 1:run\n",
+            )
 
-            observed = self.launcher.executable_identity(fixture["selector"], os.geteuid())
-            observed_digest = self.launcher.observed_identity_digest(observed)
+            observed = self.launcher.executable_file_identity(
+                fixture["selector"], os.geteuid(), [fixture["candidate"]]
+            )
+            observed_digest = self.launcher.file_identity_digest(observed)
             qualify = subprocess.run(
                 [
                     str(fixture["launcher"]),
                     "--qualify-claude-identity",
                     "--expected-current-receipt-sha256",
                     fixture["current"]["receipt_sha256"],
-                    "--expected-observed-identity-sha256",
+                    "--expected-observed-file-identity-sha256",
                     observed_digest,
                 ],
                 check=False,
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                env={**os.environ, "FIXTURE_PROVIDER_RUNS": str(fixture["marker"])},
             )
             self.assertEqual(qualify.returncode, 0, qualify.stderr)
             qualification_result = json.loads(qualify.stdout)
-            self.assertEqual(qualification_result["observed_identity"]["resolved_path"], str(fixture["versions"][1]))
+            self.assertEqual(qualification_result["file_identity"]["resolved_path"], str(fixture["versions"][1]))
             self.assertEqual(self.launcher.sha256_bytes(fixture["launcher"].read_bytes()), launcher_sha256)
             self.assertEqual(fixture["active_rule"].read_bytes(), rule_bytes)
             self.assertEqual(fixture["manifest_path"].read_bytes(), self.launcher.canonical_json_bytes(fixture["manifest"]))
@@ -264,6 +321,173 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             self.assertEqual(execution_identity["version"], "fixture-claude 2")
             self.assertEqual(execution_identity["qualification_receipt_sha256"], qualification_result["qualification_receipt_sha256"])
 
+    def test_unqualified_malicious_version_is_never_invoked_by_auth_or_review(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_installed_fixture(Path(temporary_directory).resolve())
+            malicious_marker = Path(temporary_directory) / "malicious-version"
+            malicious = Path(temporary_directory) / "malicious-claude"
+            malicious.write_text(
+                "#!/usr/bin/env python3\n"
+                "import pathlib, sys\n"
+                f"marker = pathlib.Path({str(malicious_marker)!r})\n"
+                "marker.open('a').write('version-side-effect\\n' if '--version' in sys.argv else 'run-side-effect\\n')\n"
+                "print('malicious-claude 2' if '--version' in sys.argv else 'CLAUDE_AUTH_OK')\n",
+                encoding="utf-8",
+            )
+            malicious.chmod(0o755)
+            fixture["selector"].unlink()
+            fixture["selector"].symlink_to(malicious)
+            current_bytes = fixture["current_path"].read_bytes()
+            receipt_names = {path.name for path in fixture["receipts"].iterdir()}
+
+            for arguments in (
+                ["--auth-preflight", "--diagnostics-file", str(fixture["auth_diagnostics"] / "drift-auth.json")],
+                ["--review-config", str(Path(temporary_directory) / "unread-review-config.json")],
+            ):
+                completed = subprocess.run(
+                    [str(fixture["launcher"]), *arguments],
+                    check=False,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                self.assertEqual(completed.returncode, 70, completed.stderr)
+                self.assertIn("reviewer_identity_qualification_required", completed.stderr)
+                self.assertIn("observed_file_identity_sha256", completed.stderr)
+                self.assertIn("--expected-observed-file-identity-sha256", completed.stderr)
+                self.assertNotIn("observed_version", completed.stderr)
+                self.assertFalse(malicious_marker.exists())
+                self.assertEqual(fixture["current_path"].read_bytes(), current_bytes)
+                self.assertEqual({path.name for path in fixture["receipts"].iterdir()}, receipt_names)
+
+            observed = self.launcher.executable_file_identity(
+                fixture["selector"], os.geteuid(), [fixture["candidate"]]
+            )
+            qualified = subprocess.run(
+                [
+                    str(fixture["launcher"]),
+                    "--qualify-claude-identity",
+                    "--expected-current-receipt-sha256",
+                    fixture["current"]["receipt_sha256"],
+                    "--expected-observed-file-identity-sha256",
+                    self.launcher.file_identity_digest(observed),
+                ],
+                check=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            self.assertEqual(qualified.returncode, 0, qualified.stderr)
+            self.assertEqual(malicious_marker.read_text(encoding="utf-8"), "version-side-effect\n")
+            result = json.loads(qualified.stdout)
+            receipt = json.loads(Path(result["qualification_receipt_path"]).read_text(encoding="utf-8"))
+            self.assertEqual(receipt["file_identity"], observed)
+            self.assertEqual(receipt["version"], "malicious-claude 2")
+
+    def test_noop_qualification_is_rejected_without_execution_or_state_change(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_installed_fixture(Path(temporary_directory).resolve())
+            installed_module = load_script("claude_review_noop_qualification", fixture["launcher"])
+            observed = installed_module.executable_file_identity(
+                fixture["selector"], os.geteuid(), [fixture["candidate"]]
+            )
+            before_current = fixture["current_path"].read_bytes()
+            before_receipts = {path.name for path in fixture["receipts"].iterdir()}
+            with self.assertRaisesRegex(ValueError, "no-op"):
+                installed_module.qualify_claude_identity(
+                    os.geteuid(),
+                    expected_current_receipt_sha256=fixture["current"]["receipt_sha256"],
+                    expected_observed_file_identity_sha256=installed_module.file_identity_digest(observed),
+                )
+            self.assertFalse(fixture["marker"].exists())
+            self.assertEqual(fixture["current_path"].read_bytes(), before_current)
+            self.assertEqual({path.name for path in fixture["receipts"].iterdir()}, before_receipts)
+
+    def test_qualification_races_never_replace_current_selection(self):
+        scenarios = ("before_lock", "before_version", "during_version", "after_version")
+        for scenario in scenarios:
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as temporary_directory:
+                fixture = self.create_installed_fixture(Path(temporary_directory).resolve())
+                installed_module = load_script(f"claude_review_race_{scenario}", fixture["launcher"])
+                fixture["selector"].unlink()
+                fixture["selector"].symlink_to(fixture["versions"][1])
+                observed = installed_module.executable_file_identity(
+                    fixture["selector"], os.geteuid(), [fixture["candidate"]]
+                )
+                before_current = fixture["current_path"].read_bytes()
+                before_receipts = {path.name for path in fixture["receipts"].iterdir()}
+
+                if scenario == "before_lock":
+                    fixture["selector"].unlink()
+                    fixture["selector"].symlink_to(fixture["versions"][2])
+                    patches = contextlib.nullcontext()
+                elif scenario in {"before_version", "during_version"}:
+                    original_version = installed_module.version_of
+
+                    def move_before_version(executable, environment, *, cwd):
+                        if scenario == "before_version":
+                            fixture["selector"].unlink()
+                            fixture["selector"].symlink_to(fixture["versions"][2])
+                        result = original_version(executable, environment, cwd=cwd)
+                        if scenario == "during_version":
+                            fixture["selector"].unlink()
+                            fixture["selector"].symlink_to(fixture["versions"][2])
+                        return result
+
+                    patches = mock.patch.object(installed_module, "version_of", move_before_version)
+                else:
+                    original_observation = installed_module.executable_file_identity
+                    observations = 0
+
+                    def move_on_final_observation(path, effective_uid, forbidden_roots=None):
+                        nonlocal observations
+                        observations += 1
+                        if observations == 3:
+                            fixture["selector"].unlink()
+                            fixture["selector"].symlink_to(fixture["versions"][2])
+                        return original_observation(path, effective_uid, forbidden_roots)
+
+                    patches = mock.patch.object(
+                        installed_module, "executable_file_identity", move_on_final_observation
+                    )
+                with patches, mock.patch.dict(
+                    os.environ, {"FIXTURE_PROVIDER_RUNS": str(fixture["marker"])}
+                ), self.assertRaises(ValueError):
+                    installed_module.qualify_claude_identity(
+                        os.geteuid(),
+                        expected_current_receipt_sha256=fixture["current"]["receipt_sha256"],
+                        expected_observed_file_identity_sha256=installed_module.file_identity_digest(observed),
+                    )
+                self.assertEqual(fixture["current_path"].read_bytes(), before_current)
+                self.assertEqual({path.name for path in fixture["receipts"].iterdir()}, before_receipts)
+
+    def test_atomic_current_selection_cleanup_and_ambiguous_residue(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            current = root / "current-selection.json"
+            current.write_bytes(b"prior\n")
+            current.chmod(0o600)
+            with self.assertRaisesRegex(ValueError, "compare-and-swap"):
+                self.launcher.atomic_replace_current_selection(
+                    current, {"next": True}, b"stale\n", os.geteuid()
+                )
+            self.assertEqual(current.read_bytes(), b"prior\n")
+            self.assertEqual(list(root.glob(".current-selection.json.*.tmp")), [])
+
+            def contaminate_then_fail(source, destination):
+                Path(source).chmod(0o644)
+                raise OSError("fixture replacement failure")
+
+            with mock.patch.object(self.launcher.os, "replace", contaminate_then_fail), self.assertRaisesRegex(
+                RuntimeError, "residue preserved"
+            ):
+                self.launcher.atomic_replace_current_selection(
+                    current, {"next": True}, b"prior\n", os.geteuid()
+                )
+            residue = list(root.glob(".current-selection.json.*.tmp"))
+            self.assertEqual(len(residue), 1)
+            self.assertEqual(current.read_bytes(), b"prior\n")
+
     def test_consecutive_upgrades_and_rollback_require_singular_lineage_transitions(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             fixture = self.create_installed_fixture(Path(temporary_directory).resolve())
@@ -274,20 +498,23 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 fixture["selector"].symlink_to(target)
                 rejected, _ = self.run_production_preflight(fixture, f"reject-{target.name}")
                 self.assertEqual(rejected.returncode, 70)
-                observed = self.launcher.executable_identity(fixture["selector"], os.geteuid())
+                observed = self.launcher.executable_file_identity(
+                    fixture["selector"], os.geteuid(), [fixture["candidate"]]
+                )
                 qualified = subprocess.run(
                     [
                         str(fixture["launcher"]),
                         "--qualify-claude-identity",
                         "--expected-current-receipt-sha256",
                         predecessor,
-                        "--expected-observed-identity-sha256",
-                        self.launcher.observed_identity_digest(observed),
+                        "--expected-observed-file-identity-sha256",
+                        self.launcher.file_identity_digest(observed),
                     ],
                     check=False,
                     text=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
+                    env={**os.environ, "FIXTURE_PROVIDER_RUNS": str(fixture["marker"])},
                 )
                 self.assertEqual(qualified.returncode, 0, qualified.stderr)
                 result = json.loads(qualified.stdout)
@@ -305,15 +532,17 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             fixture = self.create_installed_fixture(Path(temporary_directory).resolve())
             fixture["selector"].unlink()
             fixture["selector"].symlink_to(fixture["versions"][1])
-            observed = self.launcher.executable_identity(fixture["selector"], os.geteuid())
+            observed = self.launcher.executable_file_identity(
+                fixture["selector"], os.geteuid(), [fixture["candidate"]]
+            )
             base = [str(fixture["launcher"]), "--qualify-claude-identity"]
             stale = subprocess.run(
                 [
                     *base,
                     "--expected-current-receipt-sha256",
                     "0" * 64,
-                    "--expected-observed-identity-sha256",
-                    self.launcher.observed_identity_digest(observed),
+                    "--expected-observed-file-identity-sha256",
+                    self.launcher.file_identity_digest(observed),
                 ],
                 check=False,
                 text=True,
@@ -329,8 +558,8 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                     "/bin/echo",
                     "--expected-current-receipt-sha256",
                     fixture["current"]["receipt_sha256"],
-                    "--expected-observed-identity-sha256",
-                    self.launcher.observed_identity_digest(observed),
+                    "--expected-observed-file-identity-sha256",
+                    self.launcher.file_identity_digest(observed),
                 ],
                 check=False,
                 text=True,
@@ -346,26 +575,30 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             fixture["selector"].unlink()
             fixture["selector"].symlink_to(fixture["versions"][1])
             installed_module = load_script("claude_review_qualification_race", fixture["launcher"])
-            expected = installed_module.executable_identity(fixture["selector"], os.geteuid())
-            expected_digest = installed_module.observed_identity_digest(expected)
-            original = installed_module.executable_identity
+            expected = installed_module.executable_file_identity(
+                fixture["selector"], os.geteuid(), [fixture["candidate"]]
+            )
+            expected_digest = installed_module.file_identity_digest(expected)
+            original = installed_module.executable_file_identity
             observations = 0
 
-            def move_after_first_observation(path, effective_uid):
+            def move_after_first_observation(path, effective_uid, forbidden_roots=None):
                 nonlocal observations
                 observations += 1
                 if observations == 2:
                     fixture["selector"].unlink()
                     fixture["selector"].symlink_to(fixture["versions"][2])
-                return original(path, effective_uid)
+                return original(path, effective_uid, forbidden_roots)
 
-            installed_module.executable_identity = move_after_first_observation
+            installed_module.executable_file_identity = move_after_first_observation
             current_bytes = fixture["current_path"].read_bytes()
-            with self.assertRaisesRegex(ValueError, "changed during qualification"):
+            with mock.patch.dict(
+                os.environ, {"FIXTURE_PROVIDER_RUNS": str(fixture["marker"])}
+            ), self.assertRaisesRegex(ValueError, "changed during qualification"):
                 installed_module.qualify_claude_identity(
                     os.geteuid(),
                     expected_current_receipt_sha256=fixture["current"]["receipt_sha256"],
-                    expected_observed_identity_sha256=expected_digest,
+                    expected_observed_file_identity_sha256=expected_digest,
                 )
             self.assertEqual(fixture["current_path"].read_bytes(), current_bytes)
 
@@ -373,7 +606,12 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary_directory:
             fixture = self.create_installed_fixture(Path(temporary_directory).resolve())
             installed_module = load_script("claude_review_execution_race", fixture["launcher"])
-            executable, execution_identity = installed_module.qualified_execution(None, os.geteuid())
+            with mock.patch.dict(
+                os.environ, {"FIXTURE_PROVIDER_RUNS": str(fixture["marker"])}
+            ):
+                executable, execution_identity = installed_module.qualified_execution(
+                    None, os.geteuid()
+                )
             fixture["selector"].unlink()
             fixture["selector"].symlink_to(fixture["versions"][1])
             with self.assertRaisesRegex(
@@ -421,7 +659,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                     receipt_bytes = b"{malformed\n"
                 else:
                     if scenario == "schema":
-                        receipt["schema_version"] = 2
+                        receipt["schema_version"] = 1
                     elif scenario == "entry_contract":
                         receipt["entry_contract_id"] = "sha256:" + "0" * 64
                     elif scenario == "selector":
@@ -476,13 +714,13 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             selector = root / "claude-directory"
             selector.symlink_to(non_regular)
             with self.assertRaisesRegex(ValueError, "regular file"):
-                self.launcher.executable_identity(selector, os.geteuid())
+                self.launcher.executable_file_identity(selector, os.geteuid())
 
             invalid_version = root / "invalid-version"
             invalid_version.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
             invalid_version.chmod(0o755)
             with self.assertRaisesRegex(ValueError, "version identity"):
-                self.launcher.executable_identity(invalid_version, os.geteuid())
+                self.launcher.qualified_executable_identity(invalid_version, os.geteuid())
 
             owned = root / "foreign-owned"
             owned.write_text("#!/bin/sh\necho fixture-claude\n", encoding="utf-8")
@@ -499,7 +737,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
 
             with mock.patch.object(path_type, "stat", foreign_target_owner):
                 with self.assertRaisesRegex(ValueError, "user-owned regular file"):
-                    self.launcher.executable_identity(owned, os.geteuid())
+                    self.launcher.executable_file_identity(owned, os.geteuid())
 
         with tempfile.TemporaryDirectory() as temporary_directory:
             fixture = self.create_installed_fixture(Path(temporary_directory).resolve())
@@ -514,11 +752,14 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 '"failure_classification": "reviewer_identity_qualification_required"',
                 rejected.stderr,
             )
-            self.assertEqual(fixture["marker"].read_text(encoding="utf-8"), "fixture-claude 1\n")
+            self.assertEqual(
+                fixture["marker"].read_text(encoding="utf-8"),
+                "fixture-claude 1:version\n" * 3 + "fixture-claude 1:run\n",
+            )
 
     def test_production_selector_never_uses_inherited_path(self):
         with self.assertRaisesRegex(ValueError, "absolute path"):
-            self.launcher.executable_identity(Path("claude"), os.geteuid())
+            self.launcher.executable_file_identity(Path("claude"), os.geteuid())
 
     def test_installer_rule_replacement_requires_exact_prior_identity(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -542,19 +783,262 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             target.chmod(0o755)
             selector = root / "claude"
             selector.symlink_to(target.name)
-            identity = self.installer.exact_executable_identity(selector)
+            identity = self.installer.exact_executable_file_identity(selector)
             self.assertEqual(identity["requested_selector"], str(selector))
             self.assertEqual(identity["resolved_path"], str(target.resolve()))
             self.assertEqual(identity["selector_kind"], "symlink")
             target.chmod(0o775)
             with self.assertRaisesRegex(ValueError, "group/world-writable"):
-                self.installer.exact_executable_identity(selector)
+                self.installer.exact_executable_file_identity(selector)
 
     def test_installer_rejects_destinations_overlapping_forbidden_writable_roots(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory).resolve()
             with self.assertRaisesRegex(ValueError, "forbidden writable root"):
                 self.installer.validate_destination(root / "installed" / "claude-review", [root])
+
+    def test_installer_reruns_preserve_upgrade_and_rollback_lineage(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            selector, targets = self.create_installer_targets(root)
+            initial, _ = self.run_installer(root, selector, "activation-1.json", "1" * 40)
+            launcher = Path(initial["installed_launcher_path"])
+            manifest_path = Path(initial["installation_manifest_path"])
+            current_path = Path(initial["current_selection_path"])
+            receipts = Path(initial["qualification_receipts_directory"])
+            active_rule = Path(initial["active_rule_path"])
+            immutable = {
+                "launcher": launcher.read_bytes(),
+                "manifest": manifest_path.read_bytes(),
+                "active_rule": active_rule.read_bytes(),
+                "entry": initial["entry_contract_id"],
+            }
+            installed_module = load_script("claude_review_installer_rerun", launcher)
+            initial_current = current_path.read_bytes()
+            initial_receipts = {path.name for path in receipts.iterdir()}
+            self.assertEqual(len(initial_receipts), 1)
+            initial_rerun, _ = self.run_installer(
+                root, selector, "activation-initial-rerun.json", "2" * 40
+            )
+            self.assertEqual(initial_rerun["entry_contract_id"], immutable["entry"])
+            self.assertEqual(current_path.read_bytes(), initial_current)
+            self.assertEqual({path.name for path in receipts.iterdir()}, initial_receipts)
+
+            for index, target in enumerate((targets[1], targets[2], targets[0]), start=3):
+                selector.unlink()
+                selector.symlink_to(target)
+                current = json.loads(current_path.read_text(encoding="utf-8"))
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                forbidden = [Path(value) for value in manifest["forbidden_roots"]]
+                observed = installed_module.executable_file_identity(
+                    selector, os.geteuid(), forbidden
+                )
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(
+                        installed_module.qualify_claude_identity(
+                            os.geteuid(),
+                            expected_current_receipt_sha256=current["receipt_sha256"],
+                            expected_observed_file_identity_sha256=installed_module.file_identity_digest(observed),
+                        ),
+                        0,
+                    )
+                before_current = current_path.read_bytes()
+                before_receipts = {path.name for path in receipts.iterdir()}
+                rerun, activation = self.run_installer(
+                    root, selector, f"activation-{index}.json", f"{index}" * 40
+                )
+                self.assertEqual(rerun["entry_contract_id"], immutable["entry"])
+                self.assertEqual(launcher.read_bytes(), immutable["launcher"])
+                self.assertEqual(manifest_path.read_bytes(), immutable["manifest"])
+                self.assertEqual(active_rule.read_bytes(), immutable["active_rule"])
+                self.assertEqual(current_path.read_bytes(), before_current)
+                self.assertEqual({path.name for path in receipts.iterdir()}, before_receipts)
+                self.assertEqual(
+                    rerun["qualification_receipt_sha256"],
+                    json.loads(before_current)["receipt_sha256"],
+                )
+                self.assertTrue(activation.exists())
+                provenance = launcher.parent / f"source-provenance-{str(index) * 40}.json"
+                self.assertTrue(provenance.exists())
+
+    def test_installer_selector_drift_is_qualification_required_before_rule_or_receipt(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            marker = root / "unqualified-version-marker"
+            selector, targets = self.create_installer_targets(root)
+            initial, _ = self.run_installer(root, selector, "activation-1.json", "1" * 40)
+            malicious = targets[1]
+            malicious.write_text(
+                "#!/bin/sh\n"
+                f"touch {shlex.quote(str(marker))}\n"
+                "printf 'malicious 2\\n'\n",
+                encoding="utf-8",
+            )
+            malicious.chmod(0o755)
+            selector.unlink()
+            selector.symlink_to(malicious)
+            current_path = Path(initial["current_selection_path"])
+            receipts = Path(initial["qualification_receipts_directory"])
+            active_rule = Path(initial["active_rule_path"])
+            before_current = current_path.read_bytes()
+            before_receipts = {path.name for path in receipts.iterdir()}
+            active_rule.write_bytes(b"operator-prior-rule\n")
+            active_rule.chmod(0o600)
+            before_rule = active_rule.read_bytes()
+            activation = root / "activation" / "drift-rerun.json"
+            with self.assertRaisesRegex(self.installer.QualificationRequiredError, "qualification required"):
+                self.run_installer(root, selector, activation.name, "2" * 40)
+            self.assertFalse(marker.exists())
+            self.assertEqual(current_path.read_bytes(), before_current)
+            self.assertEqual({path.name for path in receipts.iterdir()}, before_receipts)
+            self.assertEqual(active_rule.read_bytes(), before_rule)
+            self.assertFalse(activation.exists())
+
+    def test_installer_and_launcher_share_the_full_invalid_state_matrix(self):
+        scenarios = (
+            "current_symlink", "receipt_symlink", "current_mode", "receipt_mode",
+            "foreign_owner", "malformed_current", "nonobject_current", "malformed_receipt",
+            "current_wrong_kind", "current_wrong_schema", "current_wrong_entry",
+            "current_wrong_selector", "wrong_kind", "wrong_schema", "wrong_entry",
+            "wrong_selector", "wrong_producer", "wrong_authority", "wrong_file_identity",
+            "missing_receipt",
+            "receipt_digest", "escaped_receipt", "ambiguous_predecessor",
+            "self_predecessor", "predecessor_digest",
+        )
+        for scenario in scenarios:
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as temporary_directory:
+                fixture = self.create_installed_fixture(Path(temporary_directory).resolve())
+                current = dict(fixture["current"])
+                receipt = json.loads(fixture["receipt_path"].read_text(encoding="utf-8"))
+
+                def write_current(record):
+                    fixture["current_path"].write_bytes(self.launcher.canonical_json_bytes(record))
+                    fixture["current_path"].chmod(0o600)
+
+                def select_receipt(payload, *, path=None):
+                    receipt_bytes = payload if isinstance(payload, bytes) else self.launcher.canonical_json_bytes(payload)
+                    receipt_sha256 = self.launcher.sha256_bytes(receipt_bytes)
+                    selected = path or fixture["receipts"] / f"{receipt_sha256}.json"
+                    selected.parent.mkdir(parents=True, exist_ok=True)
+                    selected.write_bytes(receipt_bytes)
+                    selected.chmod(0o400)
+                    write_current({**current, "receipt_path": str(selected), "receipt_sha256": receipt_sha256})
+                    return selected
+
+                if scenario == "current_symlink":
+                    replacement = fixture["qualification"] / "replacement-current.json"
+                    replacement.write_bytes(fixture["current_path"].read_bytes())
+                    replacement.chmod(0o600)
+                    fixture["current_path"].unlink()
+                    fixture["current_path"].symlink_to(replacement)
+                elif scenario == "receipt_symlink":
+                    replacement = fixture["receipts"] / "replacement.json"
+                    replacement.write_bytes(fixture["receipt_path"].read_bytes())
+                    replacement.chmod(0o400)
+                    fixture["receipt_path"].unlink()
+                    fixture["receipt_path"].symlink_to(replacement)
+                elif scenario == "current_mode":
+                    fixture["current_path"].chmod(0o644)
+                elif scenario == "receipt_mode":
+                    fixture["receipt_path"].chmod(0o600)
+                elif scenario == "malformed_current":
+                    fixture["current_path"].write_bytes(b"{malformed\n")
+                elif scenario == "nonobject_current":
+                    fixture["current_path"].write_bytes(b"[]\n")
+                elif scenario.startswith("current_wrong_"):
+                    field, value = {
+                        "current_wrong_kind": ("kind", "wrong"),
+                        "current_wrong_schema": ("schema_version", 1),
+                        "current_wrong_entry": ("entry_contract_id", "sha256:" + "0" * 64),
+                        "current_wrong_selector": ("claude_selector", "/bin/echo"),
+                    }[scenario]
+                    write_current({**current, field: value})
+                elif scenario == "malformed_receipt":
+                    select_receipt(b"{malformed\n")
+                elif scenario in {
+                    "wrong_kind", "wrong_schema", "wrong_entry", "wrong_selector",
+                    "wrong_producer", "wrong_authority",
+                }:
+                    field, value = {
+                        "wrong_kind": ("kind", "wrong"),
+                        "wrong_schema": ("schema_version", 1),
+                        "wrong_entry": ("entry_contract_id", "sha256:" + "0" * 64),
+                        "wrong_selector": ("claude_selector", "/bin/echo"),
+                        "wrong_producer": ("producing_launcher_sha256", "0" * 64),
+                        "wrong_authority": ("authority_semantics", "approval proof"),
+                    }[scenario]
+                    select_receipt({**receipt, field: value})
+                elif scenario == "wrong_file_identity":
+                    select_receipt({
+                        **receipt,
+                        "file_identity": {
+                            **receipt["file_identity"],
+                            "resolved_sha256": "not-a-digest",
+                        },
+                    })
+                elif scenario == "missing_receipt":
+                    missing_sha = "a" * 64
+                    write_current({
+                        **current,
+                        "receipt_path": str(fixture["receipts"] / f"{missing_sha}.json"),
+                        "receipt_sha256": missing_sha,
+                    })
+                elif scenario == "receipt_digest":
+                    wrong_sha = "b" * 64
+                    wrong_path = fixture["receipts"] / f"{wrong_sha}.json"
+                    wrong_path.write_bytes(fixture["receipt_path"].read_bytes())
+                    wrong_path.chmod(0o400)
+                    write_current({**current, "receipt_path": str(wrong_path), "receipt_sha256": wrong_sha})
+                elif scenario == "escaped_receipt":
+                    select_receipt(receipt, path=Path(temporary_directory) / "escaped" / "receipt.json")
+                elif scenario == "ambiguous_predecessor":
+                    select_receipt({**receipt, "predecessor_receipt_sha256": "c" * 64})
+                elif scenario == "predecessor_digest":
+                    predecessor_sha = "d" * 64
+                    predecessor_path = fixture["receipts"] / f"{predecessor_sha}.json"
+                    predecessor_path.write_bytes(b"not-the-declared-digest\n")
+                    predecessor_path.chmod(0o400)
+                    select_receipt({
+                        **receipt,
+                        "predecessor_receipt_sha256": predecessor_sha,
+                        "predecessor_receipt_path": str(predecessor_path),
+                    })
+
+                if scenario == "foreign_owner":
+                    path_type = type(fixture["receipt_path"])
+                    original_lstat = path_type.lstat
+
+                    def foreign_lstat(path):
+                        metadata = original_lstat(path)
+                        if path == fixture["receipt_path"]:
+                            fields = list(metadata)
+                            fields[4] = metadata.st_uid + 1
+                            return os.stat_result(fields)
+                        return metadata
+
+                    context = mock.patch.object(path_type, "lstat", foreign_lstat)
+                elif scenario == "self_predecessor":
+                    self_sha = "e" * 64
+                    self_path = fixture["receipts"] / f"{self_sha}.json"
+                    self_receipt = {
+                        **receipt,
+                        "predecessor_receipt_sha256": self_sha,
+                        "predecessor_receipt_path": str(self_path),
+                    }
+                    self_path.write_bytes(self.launcher.canonical_json_bytes(self_receipt))
+                    self_path.chmod(0o400)
+                    write_current({**current, "receipt_path": str(self_path), "receipt_sha256": self_sha})
+                    context = contextlib.ExitStack()
+                    context.enter_context(mock.patch.object(self.installer, "digest", return_value=self_sha))
+                    context.enter_context(mock.patch.object(self.launcher, "sha256_bytes", return_value=self_sha))
+                else:
+                    context = contextlib.nullcontext()
+
+                with context:
+                    with self.assertRaises((OSError, ValueError)):
+                        self.installer.validated_existing_qualification(fixture["manifest"])
+                    with self.assertRaises((OSError, ValueError)):
+                        self.launcher.current_qualification(fixture["manifest"], os.geteuid())
 
     def test_temporary_production_install_binds_launcher_rule_and_claude_identity(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -589,11 +1073,15 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             selector.symlink_to(qualified)
             shadow.write_text(fake_body.replace("fixture-claude 1", "shadow-claude 1"), encoding="utf-8")
             shadow.chmod(0o755)
-            identity = self.launcher.executable_identity(selector, os.geteuid())
+            with mock.patch.dict(os.environ, {"FIXTURE_COUNT": str(count)}):
+                qualified_identity = self.launcher.qualified_executable_identity(
+                    selector, os.geteuid(), [candidate]
+                )
+            count.unlink(missing_ok=True)
             entry_contract = {
                 "entry_contract_schema_version": 1,
                 "installation_schema_version": 2,
-                "qualification_schema_version": 1,
+                "qualification_schema_version": 2,
                 "launcher_sha256": self.launcher.sha256_bytes(launcher_bytes),
                 "rule_template_sha256": "fixture-rule-template",
                 "claude_selector": str(selector),
@@ -624,7 +1112,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 "claude_selector": str(selector),
                 "forbidden_roots": [str(candidate)],
                 "auth_diagnostics_directory": str(auth_diagnostics),
-                "qualification_schema_version": 1,
+                "qualification_schema_version": 2,
                 "qualification_directory": str(qualification),
                 "qualification_receipts_directory": str(receipts),
                 "current_selection_path": str(qualification / "current-selection.json"),
@@ -632,10 +1120,11 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             }
             receipt = {
                 "kind": "claude_reviewer_qualification_receipt",
-                "schema_version": 1,
+                "schema_version": 2,
                 "entry_contract_id": entry_contract_id,
                 "claude_selector": str(selector),
-                "observed_identity": identity,
+                "file_identity": qualified_identity["file_identity"],
+                "version": qualified_identity["version"],
                 "predecessor_receipt_sha256": None,
                 "predecessor_receipt_path": None,
                 "producing_launcher_path": str(launcher),
@@ -649,7 +1138,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             receipt_path.chmod(0o400)
             current = {
                 "kind": "claude_reviewer_current_selection",
-                "schema_version": 1,
+                "schema_version": 2,
                 "entry_contract_id": entry_contract_id,
                 "claude_selector": str(selector),
                 "receipt_path": str(receipt_path),
