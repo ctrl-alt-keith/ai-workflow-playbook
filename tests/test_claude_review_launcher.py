@@ -284,7 +284,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             self.assertIn("--qualify-claude-identity", rejected.stderr)
             self.assertEqual(
                 fixture["marker"].read_text(encoding="utf-8"),
-                "fixture-claude 1:version\n" * 3 + "fixture-claude 1:run\n",
+                "fixture-claude 1:version\n" * 2 + "fixture-claude 1:run\n",
             )
 
             observed = self.launcher.executable_file_identity(
@@ -478,12 +478,13 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 Path(source).chmod(0o644)
                 raise OSError("fixture replacement failure")
 
-            with mock.patch.object(self.launcher.os, "replace", contaminate_then_fail), self.assertRaisesRegex(
-                RuntimeError, "residue preserved"
-            ):
-                self.launcher.atomic_replace_current_selection(
-                    current, {"next": True}, b"prior\n", os.geteuid()
-                )
+            with mock.patch.object(self.launcher.os, "replace", contaminate_then_fail):
+                with self.assertRaisesRegex(RuntimeError, "residue preserved") as raised:
+                    self.launcher.atomic_replace_current_selection(
+                        current, {"next": True}, b"prior\n", os.geteuid()
+                    )
+            self.assertIsInstance(raised.exception.__cause__, OSError)
+            self.assertEqual(str(raised.exception.__cause__), "fixture replacement failure")
             residue = list(root.glob(".current-selection.json.*.tmp"))
             self.assertEqual(len(residue), 1)
             self.assertEqual(current.read_bytes(), b"prior\n")
@@ -754,7 +755,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             )
             self.assertEqual(
                 fixture["marker"].read_text(encoding="utf-8"),
-                "fixture-claude 1:version\n" * 3 + "fixture-claude 1:run\n",
+                "fixture-claude 1:version\n" * 2 + "fixture-claude 1:run\n",
             )
 
     def test_production_selector_never_uses_inherited_path(self):
@@ -790,6 +791,73 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             target.chmod(0o775)
             with self.assertRaisesRegex(ValueError, "group/world-writable"):
                 self.installer.exact_executable_file_identity(selector)
+
+    def test_installer_version_observation_matches_launcher_context_and_redaction(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            target = root / "claude-version"
+            target.write_text(
+                "#!/bin/sh\nprintf 'cwd=%s token=secret-value\\n' \"$PWD\"\n",
+                encoding="utf-8",
+            )
+            target.chmod(0o755)
+            selector = root / "claude"
+            selector.symlink_to(target.name)
+
+            installer_identity = self.installer.qualified_executable_identity(selector)
+            launcher_identity = self.launcher.qualified_executable_identity(
+                selector, os.geteuid()
+            )
+
+            self.assertEqual(installer_identity["version"], launcher_identity["version"])
+            self.assertIn(str(root), installer_identity["version"])
+            self.assertIn("[REDACTED]", installer_identity["version"])
+            self.assertNotIn("secret-value", installer_identity["version"])
+
+    def test_installer_rejects_nonprivate_existing_state_directories(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            selector, _ = self.create_installer_targets(root)
+            activation = root / "activation"
+            activation.mkdir(mode=0o755)
+
+            with self.assertRaisesRegex(ValueError, "private operator-controlled"):
+                self.run_installer(root, selector, "receipt.json", "1" * 40)
+
+            activation.chmod(0o700)
+            contract_id = "sha256:" + "a" * 64
+            entry_directory = root / "install-root" / f"entry-{contract_id.removeprefix('sha256:')}"
+            entry_directory.mkdir(parents=True, mode=0o755)
+            with mock.patch.object(
+                self.installer, "entry_contract_identity", return_value=contract_id
+            ), self.assertRaisesRegex(ValueError, "private operator-controlled"):
+                self.run_installer(root, selector, "receipt-2.json", "2" * 40)
+
+    def test_drift_action_quotes_launcher_path(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve() / "review root"
+            root.mkdir()
+            fixture = self.create_installed_fixture(root)
+            fixture["selector"].unlink()
+            fixture["selector"].symlink_to(fixture["versions"][1])
+
+            rejected, _ = self.run_production_preflight(fixture, "quoted-action")
+
+            self.assertEqual(rejected.returncode, 70)
+            encoded = rejected.stderr.split("claude-review diagnostics: ", 1)[1].strip()
+            diagnostic = json.loads(encoded)
+            action = diagnostic["qualification_transition"]["next_qualification_action"]
+            self.assertEqual(
+                shlex.split(action),
+                [
+                    str(fixture["launcher"]),
+                    "--qualify-claude-identity",
+                    "--expected-current-receipt-sha256",
+                    fixture["current"]["receipt_sha256"],
+                    "--expected-observed-file-identity-sha256",
+                    diagnostic["qualification_transition"]["observed_file_identity_sha256"],
+                ],
+            )
 
     def test_installer_rejects_destinations_overlapping_forbidden_writable_roots(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

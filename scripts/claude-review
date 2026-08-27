@@ -734,10 +734,15 @@ def qualified_execution(
     recorded = receipt["file_identity"]
     if recorded != file_identity:
         observed_digest = file_identity_digest(file_identity)
-        action = (
-            f"{launcher} --qualify-claude-identity "
-            f"--expected-current-receipt-sha256 {current['receipt_sha256']} "
-            f"--expected-observed-file-identity-sha256 {observed_digest}"
+        action = shlex.join(
+            [
+                str(launcher),
+                "--qualify-claude-identity",
+                "--expected-current-receipt-sha256",
+                current["receipt_sha256"],
+                "--expected-observed-file-identity-sha256",
+                observed_digest,
+            ]
         )
         raise QualificationRequiredError(
             "the configured Claude selector resolved to a new exact identity",
@@ -1120,6 +1125,7 @@ def atomic_replace_current_selection(
         finally:
             os.close(directory_descriptor)
     finally:
+        original_error = sys.exc_info()[1]
         if created:
             try:
                 metadata = temporary.lstat()
@@ -1132,9 +1138,12 @@ def atomic_replace_current_selection(
                 ):
                     temporary.unlink()
                 else:
-                    raise RuntimeError(
+                    cleanup_error = RuntimeError(
                         f"qualification temporary cleanup identity is ambiguous; residue preserved: {temporary}"
                     )
+                    if original_error is not None:
+                        raise cleanup_error from original_error
+                    raise cleanup_error
             except FileNotFoundError:
                 pass
 
@@ -2811,7 +2820,7 @@ def main(argv: list[str] | None = None) -> int:
     runtime = {
         "claude_executable": executable,
         "reviewer_execution_identity": execution_identity,
-        "claude_version": version_of(executable, child_environment, cwd=execution_cwd) if executable else None,
+        "claude_version": execution_identity.get("version") if executable else None,
         "argv": redacted_argv(command) if command else None,
         "requested_argv": redacted_argv([executable, "-p", *args.claude_args]) if executable else None,
         "effective_uid": uid,
