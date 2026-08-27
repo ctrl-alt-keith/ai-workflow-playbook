@@ -399,7 +399,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             "changed delta",
             "routing delta",
         ):
-            self.assertNotIn(partial_prompt_phrase, prompts)
+            self.assertNotIn(partial_prompt_phrase, normalized_prompts)
 
         self.assertIn(
             "Every generated prompt or handoff is a complete drop-in artifact",
