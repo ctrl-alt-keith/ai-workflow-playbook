@@ -310,12 +310,13 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         self.assertIn("only when the operator actually sees it", preview)
         self.assertIn("Preview remains optional and does not gate the handoff", preview)
 
-    def test_chatgpt_example_is_two_operator_fields_and_one_minimal_bootstrap(self):
+    def test_chatgpt_example_has_normal_metadata_and_one_minimal_bootstrap(self):
         section = self.chatgpt_dropbox_bootstrap
         self.assertEqual(
             re.findall(r"^(Recommended [^:]+):", section, re.MULTILINE),
             ["Recommended model", "Recommended reasoning level"],
         )
+        self.assertLess(section.index("Reason:"), section.index("```text"))
 
         blocks = re.findall(r"```[^\n]*\n(.*?)\n```", section, re.DOTALL)
         self.assertEqual(len(blocks), 1)
@@ -324,6 +325,7 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         for field in ("Download:", "Expected SHA-256:", "Execute:"):
             self.assertIn(field, bootstrap)
         self.assertNotIn("Recommended ", bootstrap)
+        self.assertNotIn("Reason:", bootstrap)
         self.assertIn("Keep the complete prompt in Dropbox", section)
         self.assertIn("do not summarize or reproduce the prompt", section)
 

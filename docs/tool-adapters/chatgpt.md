@@ -207,12 +207,15 @@ or metadata for the widget, and claim visible rendering only when the operator
 actually sees it. Preview remains optional and does not gate the handoff.
 
 Keep the complete prompt in Dropbox. Outside the optional widget, emit only the
-two operator fields and one compact retrieval, verification, and execution
-bootstrap shown below; do not summarize or reproduce the prompt.
+normal concise operator metadata and one compact retrieval, verification, and
+execution bootstrap shown below; do not summarize or reproduce the prompt.
 
 Recommended model: `[model]`
 
 Recommended reasoning level: `[level]`
+
+Reason:
+`[one concise task-specific explanation]`
 
 ```text
 Download: [fresh single-use raw-download URL]
