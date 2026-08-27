@@ -47,6 +47,22 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             DOCS / "prompts.md",
             "## Issue-Owned Durable Prompt Delivery Envelope Add-On",
         )
+        cls.complete_prompt_shape = markdown_section(
+            DOCS / "prompts.md",
+            "## Complete Prompt Shape",
+        )
+        cls.presentation = markdown_section(
+            DOCS / "prompts.md",
+            "## Cross-Executor Prompt Presentation",
+        )
+        cls.chatgpt_prompt_presentation = markdown_section(
+            DOCS / "tool-adapters" / "chatgpt.md",
+            "### Prompt presentation",
+        )
+        cls.chatgpt_presentation = markdown_section(
+            DOCS / "tool-adapters" / "chatgpt.md",
+            "### Recipient-Capability Prompt Presentation",
+        )
 
     def test_prompt_contract_is_the_profile_owner(self):
         heading = "## Issue-Owned Durable Rendered-Prompt Handoff Profile"
@@ -220,6 +236,54 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
     def test_chatgpt_creation_fails_closed_on_collision(self):
         for phrase in ("Overwrite", "autorename", "destination collision", "fails closed"):
             self.assertIn(phrase, self.chatgpt)
+
+    def test_qualified_machine_recipient_uses_file_first_presentation(self):
+        presentation = " ".join(self.presentation.split())
+        self.assertIn(
+            "For any complete prompt, select presentation by the recipient's "
+            "currently qualified capability, independently of prompt materiality",
+            presentation,
+        )
+        route = presentation.index("qualified Dropbox retrieval route")
+        file = presentation.index("Dropbox-backed file")
+        handoff = presentation.index("target-shaped retrieval handoff")
+        self.assertLess(route, file)
+        self.assertLess(file, handoff)
+
+    def test_two_block_format_is_conditional_on_inline_presentation(self):
+        complete_shape = " ".join(self.complete_prompt_shape.split())
+        chatgpt_prompt = " ".join(self.chatgpt_prompt_presentation.split())
+        self.assertIn(
+            "When inline presentation is selected for a complete generated prompt",
+            complete_shape,
+        )
+        self.assertIn(
+            "When the shared recipient-capability selector chooses inline "
+            "presentation for a complete, copy-ready prompt or downstream handoff",
+            chatgpt_prompt,
+        )
+
+    def test_preview_does_not_gate_machine_handoff(self):
+        presentation = " ".join(self.presentation.split())
+        chatgpt_presentation = " ".join(self.chatgpt_presentation.split())
+        self.assertIn("does not block the handoff or require prompt approval", presentation)
+        for gate_phrase in ("Approve", "Revise", "Reject", "explicit approval", "before sending"):
+            self.assertNotIn(gate_phrase, presentation)
+        self.assertIn("Do not wait for prompt approval", chatgpt_presentation)
+
+    def test_human_or_unqualified_recipient_uses_inline_presentation(self):
+        presentation = " ".join(self.presentation.split())
+        self.assertIn("For a human recipient", presentation)
+        self.assertIn("no qualified Dropbox route", presentation)
+        self.assertIn("present the complete prompt inline", presentation)
+        self.assertIn("consecutive copyable code blocks", self.chatgpt)
+
+    def test_material_governance_layers_without_capturing_routine_prompts(self):
+        presentation = " ".join(self.presentation.split())
+        self.assertIn("issue-owned durable rendered-prompt handoff profile", presentation)
+        self.assertIn("A routine prompt delivered through a file does not", presentation)
+        self.assertIn("use inline presentation rather than inventing a storage surface", presentation)
+        self.assertIn("two-block inline presentation", self.chatgpt_presentation)
 
 
 if __name__ == "__main__":

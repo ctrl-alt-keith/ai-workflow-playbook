@@ -8,20 +8,21 @@ Prompts should remain routing and execution envelopes, not duplicated workflow
 doctrine. For the rationale, see
 [`sparse-rehydration-and-source-grounding.md`](sparse-rehydration-and-source-grounding.md).
 
-For a fresh repository-scoped thread, explicitly route through current
+For repository-scoped prompts, route through current
 [`start-here.md`](start-here.md) and hydrate established state from
-authoritative Repository or History artifacts instead of replaying it in the
-prompt. The prompt carries the current delta: goal, governing authority or
-issue, authoritative artifact references, authorization, constraints,
-completion boundary, and stop rules.
-Self-contained means complete routing and authorization, not embedding every
-referenced artifact.
+authoritative Repository or History artifacts instead of copying doctrine into
+the prompt. Every generated prompt or handoff is a complete drop-in artifact:
+it is self-contained for its intended receiving context and directly usable.
+Thread routing and still-current context may reduce duplicated background, but
+never produce a partial executable artifact. Apply the governing
+[complete-prompt rule](repo-readiness.md#interaction-mode-preflight) rather
+than reconstructing the requested action from conversation history or another
+prompt.
 
-A same-thread continuation may carry only the changed delta while established
-source state remains current. Keep exact values prompt-local when required for
-identity, authority, safety, validation, or unambiguous retrieval. Reducing
-redundant context is execution engineering, not methodology or architecture
-evidence.
+Keep exact values prompt-local when identity, authority, safety, validation, or
+unambiguous retrieval requires them. Complete does not mean reproducing all
+doctrine, history, or durable state. Reducing redundant context is execution
+engineering, not methodology or architecture evidence.
 
 ## Task-Shape Surface Selection And Thin Handoffs
 
@@ -72,8 +73,8 @@ change does not require blanket rehydration or replay of unchanged doctrine.
 ### Thin semantic handoff envelope
 
 When complete recoverable state is held outside the conversation, a thin
-role-specific envelope carries only the current routing delta. Include, as
-applicable:
+role-specific envelope remains a complete current handoff while pointing to
+that state instead of reproducing it. Include, as applicable:
 
 - target surface or executor role;
 - bounded requested outcome;
@@ -181,6 +182,18 @@ separate decisions. Declare one of these routing values in operator metadata:
 - `CHILD TASK`: select the lowest-cost sufficient configuration for the bounded
   child, and preserve its model/configuration, inputs, execution identity,
   durable result, and authority boundary where the workflow requires it.
+
+Thread routing never relaxes prompt completeness:
+
+- A `FRESH THREAD` receives a complete prompt suitable for its fresh receiving
+  context.
+- A `SAME THREAD` receives the complete instruction for its next bounded
+  action. It may reference still-current established state available to that
+  thread, but remains directly usable without another prompt.
+- A `CHILD TASK` receives a complete bounded child prompt.
+
+The [recipient-capability selector](#cross-executor-prompt-presentation)
+applies to every complete prompt across these routing modes.
 
 Use the executor adapter for vendor-specific routing. For an existing task that
 exceeds its assigned capability, prefer a bounded stronger child or an explicit
@@ -332,11 +345,11 @@ interpreted as inline HTML by Markdown tooling.
 
 ## Complete Prompt Shape
 
-For a complete generated prompt, emit one shared operator-metadata block and
-one complete executable block consecutively. The executable block must remain
-complete and actionable without the metadata, so the operator can copy only
-that block. Matching executor adapters own concrete metadata fields and client
-presentation mechanics.
+When inline presentation is selected for a complete generated prompt, emit one
+shared operator-metadata block and one complete executable block consecutively.
+The executable block must remain complete and actionable without the metadata,
+so the operator can copy only that block. Matching executor adapters own
+concrete metadata fields and client presentation mechanics.
 
 ```text
 Operator metadata (do not include in prompt)
@@ -348,9 +361,41 @@ Reason:
 [one concise task-specific explanation]
 ```
 
+## Cross-Executor Prompt Presentation
+
+For any complete prompt, select presentation by the recipient's currently
+qualified capability, independently of prompt materiality:
+
+- When the recipient has a qualified Dropbox retrieval route and the current
+  storage contract supplies a permitted destination, place the prompt in a
+  Dropbox-backed file, present the file surface produced by that operation, and
+  immediately provide the target-shaped retrieval handoff. A separate preview
+  or open action is optional under the matching client adapter and does not
+  block the handoff or require prompt approval.
+- For a human recipient, or when the receiving system has no qualified Dropbox
+  route, present the complete prompt inline through the matching client
+  adapter. When access is unknown, apply the
+  [connector-availability rule](start-here.md#connector-availability-is-runtime-evidence)
+  before choosing this fallback.
+
+Preview is not raw-byte verification, approval, a send gate, delivery evidence,
+executor acknowledgement, a coordination state, or authority. A connector
+confirmation needed to create or preview the file authorizes only that
+connector operation, not a separate prompt-approval workflow.
+
+Prompt governance is a separate selection. A material prompt that passes its
+admission test additionally applies the
+[`issue-owned durable rendered-prompt handoff profile`](prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile).
+Complete that profile before reporting preservation or providing an
+exact-identity handoff. A routine prompt delivered through a file does not
+thereby acquire its durable capture, recovery, replay, receipt,
+immutable-version, or governance ceremony. When no permitted file destination
+exists, use inline presentation rather than inventing a storage surface.
+
 ## Quick Navigation
 
 - [Task-Shape Surface Selection And Thin Handoffs](#task-shape-surface-selection-and-thin-handoffs)
+- [Cross-Executor Prompt Presentation](#cross-executor-prompt-presentation)
 - [Repository Implementation Task](#repository-implementation-task)
 - [Parallel Batch Add-On](#parallel-batch-add-on)
 - [Orchestration Handoff](#orchestration-handoff)

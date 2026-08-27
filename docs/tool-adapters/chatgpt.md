@@ -175,6 +175,24 @@ the card was suppressed. Current
 documents rich in-chat app experiences and write confirmations, but does not
 establish a universal per-action client-rendering suppression control.
 
+### Recipient-Capability Prompt Presentation
+
+Apply the shared
+[`cross-executor prompt presentation`](../prompts.md#cross-executor-prompt-presentation)
+selector. For a machine recipient with qualified Dropbox retrieval and a
+permitted destination, use the authorized file route, present the card produced
+by the write when available, and immediately provide the target-shaped handoff.
+A separate preview or open action remains optional under the connected-app
+rules above. Do not wait for prompt approval or require the operator to open a
+preview; connector confirmation authorizes only its file operation. File-card
+and preview behavior is product-dependent runtime evidence, so recheck the
+relevant action.
+
+For a human recipient or a system without a qualified Dropbox route, use the
+existing [two-block inline presentation](#prompt-presentation). If access is
+unknown, inspect or attempt it before falling back. Material prompts also apply
+the durable profile below; routine prompts do not inherit it from transport.
+
 ### Issue-Owned Durable Prompt Capture And Handoff
 
 Apply the shared
@@ -264,7 +282,8 @@ the applicable prompt and downstream-context contract.
 
 ### Prompt presentation
 
-For a complete, copy-ready prompt or downstream handoff prepared in ChatGPT,
+When the shared recipient-capability selector chooses inline presentation for
+a complete, copy-ready prompt or downstream handoff prepared in ChatGPT,
 present the shared operator-metadata block followed immediately by the complete
 executable block as consecutive copyable code blocks, with no intervening
 prose. Immediately after the executable block, outside both code blocks, emit

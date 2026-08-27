@@ -388,6 +388,71 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertIn("A child task spawned by the reviewed party", reviewer)
         self.assertIn("the external-review role", reviewer)
 
+    def test_generated_prompts_remain_complete_across_thread_routing(self):
+        prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
+        readiness = (DOCS / "repo-readiness.md").read_text(encoding="utf-8")
+        normalized_prompts = " ".join(prompts.split())
+        normalized_readiness = " ".join(readiness.split())
+
+        for partial_prompt_phrase in (
+            "current delta",
+            "changed delta",
+            "routing delta",
+        ):
+            self.assertNotIn(partial_prompt_phrase, normalized_prompts)
+
+        self.assertIn(
+            "Every generated prompt or handoff is a complete drop-in artifact",
+            normalized_prompts,
+        )
+        self.assertIn(
+            "self-contained for its intended receiving context and directly usable",
+            normalized_prompts,
+        )
+        self.assertIn(
+            "Thread routing never relaxes prompt completeness",
+            normalized_prompts,
+        )
+        self.assertIn(
+            "A `FRESH THREAD` receives a complete prompt",
+            normalized_prompts,
+        )
+        self.assertIn(
+            "A `SAME THREAD` receives the complete instruction for its next bounded action",
+            normalized_prompts,
+        )
+        self.assertIn(
+            "reference still-current established state",
+            normalized_prompts,
+        )
+        self.assertIn(
+            "A `CHILD TASK` receives a complete bounded child prompt",
+            normalized_prompts,
+        )
+        self.assertIn(
+            "a thin role-specific envelope remains a complete current handoff while "
+            "pointing to that state instead of reproducing it",
+            normalized_prompts,
+        )
+        self.assertIn(
+            "Do not produce partial prompts, continuation fragments",
+            normalized_readiness,
+        )
+        self.assertIn(
+            'or "change X to Y" pseudo-prompts unless the human explicitly requested',
+            normalized_readiness,
+        )
+        self.assertIn(
+            "The [recipient-capability selector](#cross-executor-prompt-presentation) "
+            "applies to every complete prompt",
+            normalized_prompts,
+        )
+        self.assertIn(
+            "For any complete prompt, select presentation by the recipient's "
+            "currently qualified capability",
+            normalized_prompts,
+        )
+
     def test_operator_metadata_stays_outside_complete_executable_prompts(self):
         prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
         codex = (DOCS / "tool-adapters/codex.md").read_text(encoding="utf-8")
