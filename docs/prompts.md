@@ -356,13 +356,15 @@ of prompt materiality:
 
 - When the recipient has a qualified Dropbox retrieval route and the current
   storage contract supplies a permitted destination, place the prompt in a
-  Dropbox-backed file, present its file card or preview, and immediately provide
-  the target-shaped retrieval handoff. Preview is optional and does not block
-  the handoff or require prompt approval.
+  Dropbox-backed file, present the file surface produced by that operation, and
+  immediately provide the target-shaped retrieval handoff. A separate preview
+  or open action is optional under the matching client adapter and does not
+  block the handoff or require prompt approval.
 - For a human recipient, or when the receiving system has no qualified Dropbox
   route, present the complete prompt inline through the matching client
-  adapter. When access is unknown, inspect or attempt the route before choosing
-  this fallback; do not claim unavailability from memory.
+  adapter. When access is unknown, apply the
+  [connector-availability rule](start-here.md#connector-availability-is-runtime-evidence)
+  before choosing this fallback.
 
 Preview is not raw-byte verification, approval, a send gate, delivery evidence,
 executor acknowledgement, a coordination state, or authority. A connector

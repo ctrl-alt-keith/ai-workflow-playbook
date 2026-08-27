@@ -241,7 +241,8 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         presentation = " ".join(self.presentation.split())
         chatgpt_presentation = " ".join(self.chatgpt_presentation.split())
         self.assertIn("does not block the handoff or require prompt approval", presentation)
-        self.assertNotIn("explicit approval", presentation)
+        for gate_phrase in ("Approve", "Revise", "Reject", "explicit approval", "before sending"):
+            self.assertNotIn(gate_phrase, presentation)
         self.assertIn("Do not wait for prompt approval", chatgpt_presentation)
 
     def test_human_or_unqualified_recipient_uses_inline_presentation(self):
