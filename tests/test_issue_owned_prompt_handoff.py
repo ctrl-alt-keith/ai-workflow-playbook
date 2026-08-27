@@ -63,6 +63,10 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             DOCS / "tool-adapters" / "chatgpt.md",
             "### Recipient-Capability Prompt Presentation",
         )
+        cls.chatgpt_dropbox_bootstrap = markdown_section(
+            DOCS / "tool-adapters" / "chatgpt.md",
+            "### Dropbox Preview And Minimal Executor Handoff",
+        )
 
     def test_prompt_contract_is_the_profile_owner(self):
         heading = "## Issue-Owned Durable Rendered-Prompt Handoff Profile"
@@ -284,6 +288,48 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         self.assertIn("A routine prompt delivered through a file does not", presentation)
         self.assertIn("use inline presentation rather than inventing a storage surface", presentation)
         self.assertIn("two-block inline presentation", self.chatgpt_presentation)
+
+    def test_chatgpt_preview_prefers_the_returned_file_id(self):
+        preview = " ".join(self.chatgpt_dropbox_bootstrap.split())
+        self.assertIn("Dropbox `file_preview` with `file_paths`", preview)
+        file_id = preview.index("`file_id` returned by the write")
+        namespace = preview.index("returned namespace path only when no file ID")
+        self.assertLess(file_id, namespace)
+        self.assertIn("before minting the single-use download link", preview)
+
+    def test_chatgpt_connector_results_are_not_the_visible_widget(self):
+        preview = " ".join(self.chatgpt_dropbox_bootstrap.split())
+        self.assertIn("connector metadata are not a visibly rendered preview", preview)
+        for substitute in (
+            "`open_in_dropbox_url`",
+            "copy or share links",
+            "thumbnail URLs",
+            "metadata for the widget",
+        ):
+            self.assertIn(substitute, preview)
+        self.assertIn("only when the operator actually sees it", preview)
+        self.assertIn("Preview remains optional and does not gate the handoff", preview)
+
+    def test_chatgpt_example_has_normal_metadata_and_one_minimal_bootstrap(self):
+        section = self.chatgpt_dropbox_bootstrap
+        block_start = section.index("```text")
+        metadata = section[:block_start]
+        blocks = re.findall(r"```[^\n]*\n(.*?)\n```", section, re.DOTALL)
+        self.assertEqual(len(blocks), 1)
+        bootstrap = blocks[0]
+        for field in (
+            "Thread routing:",
+            "Recommended model:",
+            "Recommended reasoning level:",
+            "Reason:",
+        ):
+            self.assertIn(field, metadata)
+            self.assertNotIn(field, bootstrap)
+        self.assertLessEqual(len([line for line in bootstrap.splitlines() if line]), 8)
+        for field in ("Download:", "Expected SHA-256:", "Execute:"):
+            self.assertIn(field, bootstrap)
+        self.assertIn("Keep the complete prompt in Dropbox", section)
+        self.assertIn("do not summarize or reproduce the prompt", section)
 
 
 if __name__ == "__main__":

@@ -193,6 +193,41 @@ existing [two-block inline presentation](#prompt-presentation). If access is
 unknown, inspect or attempt it before falling back. Material prompts also apply
 the durable profile below; routine prompts do not inherit it from transport.
 
+### Dropbox Preview And Minimal Executor Handoff
+
+When optional operator preview is selected, exact-verify the durable prompt,
+then call Dropbox `file_preview` with `file_paths` containing the exact
+`file_id` returned by the write. Use the exact returned namespace path only
+when no file ID is available; never strip its namespace prefix. Present the
+tool-produced widget before minting the single-use download link.
+
+The preview call and connector metadata are not a visibly rendered preview.
+Do not substitute `open_in_dropbox_url`, copy or share links, thumbnail URLs,
+or metadata for the widget, and claim visible rendering only when the operator
+actually sees it. Preview remains optional and does not gate the handoff.
+
+Keep the complete prompt in Dropbox. Outside the optional widget, emit only the
+normal concise operator metadata and one compact retrieval, verification, and
+execution bootstrap shown below; do not summarize or reproduce the prompt.
+
+Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
+
+Recommended model: [model]
+
+Recommended reasoning level: [level]
+
+Reason:
+[one concise task-specific explanation]
+
+```text
+Download: [fresh single-use raw-download URL]
+Dropbox ID: [exact returned file ID]
+Expected bytes: [byte count]
+Expected SHA-256: [digest]
+Execute: Download once, verify the exact identity, byte count, and SHA-256, then execute the complete prompt file.
+Stop: Fail closed on retrieval, identity, size, or digest mismatch; do not reconstruct the prompt from chat.
+```
+
 ### Issue-Owned Durable Prompt Capture And Handoff
 
 Apply the shared
