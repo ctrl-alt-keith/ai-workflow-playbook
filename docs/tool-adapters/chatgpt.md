@@ -210,12 +210,14 @@ Keep the complete prompt in Dropbox. Outside the optional widget, emit only the
 normal concise operator metadata and one compact retrieval, verification, and
 execution bootstrap shown below; do not summarize or reproduce the prompt.
 
-Recommended model: `[model]`
+Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
 
-Recommended reasoning level: `[level]`
+Recommended model: [model]
+
+Recommended reasoning level: [level]
 
 Reason:
-`[one concise task-specific explanation]`
+[one concise task-specific explanation]
 
 ```text
 Download: [fresh single-use raw-download URL]

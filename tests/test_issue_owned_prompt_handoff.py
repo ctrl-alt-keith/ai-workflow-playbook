@@ -312,20 +312,22 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
 
     def test_chatgpt_example_has_normal_metadata_and_one_minimal_bootstrap(self):
         section = self.chatgpt_dropbox_bootstrap
-        self.assertEqual(
-            re.findall(r"^(Recommended [^:]+):", section, re.MULTILINE),
-            ["Recommended model", "Recommended reasoning level"],
-        )
-        self.assertLess(section.index("Reason:"), section.index("```text"))
-
+        block_start = section.index("```text")
+        metadata = section[:block_start]
         blocks = re.findall(r"```[^\n]*\n(.*?)\n```", section, re.DOTALL)
         self.assertEqual(len(blocks), 1)
         bootstrap = blocks[0]
+        for field in (
+            "Thread routing:",
+            "Recommended model:",
+            "Recommended reasoning level:",
+            "Reason:",
+        ):
+            self.assertIn(field, metadata)
+            self.assertNotIn(field, bootstrap)
         self.assertLessEqual(len([line for line in bootstrap.splitlines() if line]), 8)
         for field in ("Download:", "Expected SHA-256:", "Execute:"):
             self.assertIn(field, bootstrap)
-        self.assertNotIn("Recommended ", bootstrap)
-        self.assertNotIn("Reason:", bootstrap)
         self.assertIn("Keep the complete prompt in Dropbox", section)
         self.assertIn("do not summarize or reproduce the prompt", section)
 
