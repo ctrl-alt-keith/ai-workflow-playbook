@@ -157,9 +157,26 @@ An automation that needs broader authority must stop and return evidence for a
 separate human-authorized action.
 
 Evidence should live in the owning repository's normal review surface when a
-repository change is proposed. Report-only or cross-repository runs should use
-the workspace's designated durable operational-record location. Runtime output
-paths and notification routing remain local configuration.
+repository change is proposed. Report-only and cross-repository runs have no
+such surface, so they use a **durable operational-record location** declared in
+advance by the owning workspace or local operational contract. An automation
+does not select or invent that location per run.
+
+A durable operational-record location must provide immutable dated or versioned
+artifact identities, exclusive no-overwrite creation, a producing receipt, and a
+stated retention or rotation rule. It is distinct from issue-owned
+governed-artifact storage: issue-owned storage carries bounded, human-governed
+work that reaches a disposition and closes, while operational records accrue on
+a recurring cadence and are not scoped to a single issue. Do not open an issue
+solely to obtain a destination for recurring automation output, and do not route
+issue-bounded work into the operational-record location.
+
+An automation whose declared destination is unavailable fails closed and reports
+the blocker. It does not fall back to a repository, a workspace root, a retired
+storage root, or the current working directory. Concrete locators, runtime
+output paths, retention windows, and notification routing remain local
+configuration; see
+[Architecture Versus Local Configuration](#architecture-versus-local-configuration).
 
 ## Execution Locality
 
@@ -274,6 +291,7 @@ Canonical playbook doctrine owns:
 - the existence and purpose of the autonomous maintenance layer
 - its responsibility and non-responsibility boundaries
 - its authority classes, stop conditions, and evidence contract
+- the required properties of a durable operational-record location
 - its execution-locality classes and classification invariants
 - its relationship to doctrine, executors, repositories, contracts, and human
   approval
@@ -285,6 +303,7 @@ a detail:
 - exact execution times and weekdays
 - scheduler product and execution runtime
 - workstation paths and machine-specific credentials
+- the concrete durable operational-record locator and its retention window
 - local automation identifiers
 - notification routing
 - per-machine concurrency settings
@@ -308,6 +327,7 @@ periodic review. Inspect for:
 - recurring findings that indicate a missing canonical contract
 - automations that repeatedly edit the same surfaces or undo one another
 - capability gaps that leave important doctrine or repository risks unchecked
+- automation definitions that still target a retired or superseded destination
 
 Preserve intentional differences between read-only inspection, proposal work,
 bounded hygiene, and repository-specific validation. The goal is coherent
