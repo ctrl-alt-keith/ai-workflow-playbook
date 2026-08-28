@@ -141,13 +141,53 @@ Read-only completion requires a positive whole-source no-delta postflight. The
 baseline must accept deliberately dirty, staged, untracked, and ignored source
 state without cleaning or normalizing it, then detect content creation,
 modification, removal, mode or symlink changes, Git-index changes, and writes
-to the candidate-specific and shared Git administration directories—including lock-file
-creation, removal, replacement, mode, symlink, and content changes—and writes that escape
-the candidate into another guarded source. Apply the same index and administration
-coverage to another guarded source that is itself a repository. Repository status alone is
-insufficient. Reviewer output and receipts belong only in the declared,
-disjoint evidence destination after its retention and visibility rules admit
-those bytes.
+to the candidate-specific and shared Git administration directories—including
+lock-file creation, removal, replacement, mode, symlink, and content changes—and
+writes that escape the candidate into another guarded source. Treat the
+candidate worktree Git directory separately from the shared common Git
+directory. Model the primary worktree explicitly alongside every linked
+worktree, including each worktree's exact `HEAD`, `index`, `logs/HEAD`,
+`COMMIT_EDITMSG`, and `ORIG_HEAD` administration paths. A change to one of
+those paths is attributable to another worktree only when its observed HEAD
+transition and, when symbolic, exact branch-ref transition agree. Any other
+path beneath a known worktree Git directory, or any unknown common-root path,
+remains blocking. Positively protect the candidate index, HEAD and symbolic identity,
+selected commit, candidate branch ref and reflog, every ref or revision used by
+an admitted review command, command-semantic configuration and administration,
+and the resolution and reachable-object closure of those protected revisions.
+Apply equivalent index and administration coverage to another guarded source
+that is itself a repository. Repository status alone is insufficient. Reviewer
+output and receipts belong only in the declared, disjoint evidence destination
+after its retention and visibility rules admit those bytes.
+
+A changed common-Git object is not automatically candidate contamination, but
+it is never ignored. Tolerate it only when current linked-worktree and ref
+evidence identifies the change as other-worktree administration, an unrelated
+ref or reflog, or shared object-storage activity; every protected ref,
+revision, HEAD, and reachable object still resolves to the exact baseline
+identity; and the changed object has an ordinary file or directory identity
+with no lock, symlink, special-object, vanished-path, or mode ambiguity. Object
+additions, packing, and storage-layout changes use this same positive
+resolution-and-reachability proof. Candidate administration, protected refs or
+reflogs, replacement refs, alternates, shallow or graft state, attributes,
+configuration, packed-ref ambiguity, unknown shared administration, and any
+inconsistent observation remain blocking. This worktree-aware proof permits
+unrelated commits and pushes without requiring a clone or serialization while
+remaining fail-closed when attribution is ambiguous.
+
+Bind every attempt to the configured candidate commit again immediately before
+capturing its attempt baseline and immediately before creating the reviewer
+process. Apply both checks to the first attempt and every retry, and record the
+observed commit and symbolic-ref identity. Drift at either boundary stops before
+that attempt can start; it never becomes a new governed baseline.
+
+During live monitoring, an object-only shared-Git change or a change to one of
+the exact other-worktree administration paths can appear just before the
+HEAD/ref transition that proves its owner. Admit only a bounded stabilization
+interval for that provisional state. If the proof does not arrive, or any
+candidate, protected-ref, lock, unknown administration, or other change
+accompanies it, apply the blocking classification and emergency stop. Terminal
+postflight does not admit provisional attribution.
 
 Do not broadly exclude `.lock` paths from the decisive baseline-to-terminal
 comparison. An unchanged pre-existing lock may remain when its exact identity
@@ -156,6 +196,16 @@ produce no qualifying verdict, do not reset it automatically, and stop until it
 is corrected and dispositioned. Any live-monitor exception must identify one
 controller-owned transient lock by exact path, actor, and lifetime and must not
 apply to terminal postflight.
+
+Keep raw observation separate from candidate-integrity disposition. Preflight,
+live monitoring, emergency-stop decisions, terminal postflight, retry
+eligibility, and receipts must use the same classification semantics. Record
+each changed Git-administration object by normalized path relative to its owning
+Git directory, owner scope, change type, before and after identities,
+classification evidence, and blocking or tolerated disposition. A review may
+pass with proven-unrelated raw changes, but its receipt must retain those raw
+and tolerated paths rather than claim that no change occurred. Only blocking or
+ambiguous changes qualify as unauthorized mutation for emergency stopping.
 
 An attempt is complete only after the exact reviewer process group is terminal,
 all output collectors reach end-of-stream, its output is captured, its terminal
