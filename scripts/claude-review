@@ -875,6 +875,7 @@ def qualify_claude_identity(
         receipt_path = Path(str(manifest["qualification_receipts_directory"])) / f"{receipt_sha256}.json"
         exclusive_write(receipt_path, receipt_bytes)
         os.chmod(receipt_path, 0o400)
+        fsync_directory(receipt_path.parent)
         current_path = Path(str(manifest["current_selection_path"]))
         if secure_regular_bytes(current_path, effective_uid, modes={0o600}) != predecessor_current_bytes:
             raise ValueError("the current qualification changed before compare-and-swap")
@@ -1098,6 +1099,14 @@ def exclusive_write(path: Path, payload: bytes) -> None:
         except OSError:
             pass
         raise
+
+
+def fsync_directory(path: Path) -> None:
+    descriptor = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
 
 
 def atomic_replace_current_selection(
@@ -2208,7 +2217,10 @@ def run_governed_review(
                         "contract_identity": contract_identity,
                         "failure_classification": "reviewer_identity_changed_before_execution",
                         "candidate_verdict": "not_produced",
-                        "substantive_review_started": False,
+                        "attempts": attempt_summaries,
+                        "attempt_number": attempt_number,
+                        "substantive_review_started": bool(attempt_summaries),
+                        "automated_retry_attempted": attempt_number > 1,
                         "no_delta_postflight": {"passed": not changes, "changed_paths": changes},
                         "attempt_scratch": {**scratch_record, "cleanup": {"passed": True}},
                         "error": bounded_redacted(str(error)),

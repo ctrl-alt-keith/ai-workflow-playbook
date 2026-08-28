@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import pwd
 import shlex
+import stat
 import subprocess
 import sys
 import tempfile
@@ -461,6 +462,66 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 self.assertEqual(fixture["current_path"].read_bytes(), before_current)
                 self.assertEqual({path.name for path in fixture["receipts"].iterdir()}, before_receipts)
 
+    def test_runtime_qualification_fsyncs_receipt_directory_before_current_selection(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_installed_fixture(Path(temporary_directory).resolve())
+            installed_module = load_script("claude_review_receipt_durability", fixture["launcher"])
+            fixture["selector"].unlink()
+            fixture["selector"].symlink_to(fixture["versions"][1])
+            observed = installed_module.executable_file_identity(
+                fixture["selector"], os.geteuid(), [fixture["candidate"]]
+            )
+            events = []
+            original_replace = installed_module.atomic_replace_current_selection
+
+            def record_fsync(path):
+                events.append(("fsync", path))
+
+            def record_replace(*arguments):
+                events.append(("replace", arguments[0]))
+                return original_replace(*arguments)
+
+            with mock.patch.object(installed_module, "fsync_directory", record_fsync), mock.patch.object(
+                installed_module, "atomic_replace_current_selection", record_replace
+            ), mock.patch.dict(os.environ, {"FIXTURE_PROVIDER_RUNS": str(fixture["marker"])}):
+                installed_module.qualify_claude_identity(
+                    os.geteuid(),
+                    expected_current_receipt_sha256=fixture["current"]["receipt_sha256"],
+                    expected_observed_file_identity_sha256=installed_module.file_identity_digest(observed),
+                )
+
+            receipt_fsync = events.index(("fsync", fixture["receipts"]))
+            current_replace = next(
+                index for index, event in enumerate(events) if event == ("replace", fixture["current_path"])
+            )
+            self.assertLess(receipt_fsync, current_replace)
+
+    def test_runtime_receipt_directory_fsync_failure_preserves_current_selection(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_installed_fixture(Path(temporary_directory).resolve())
+            installed_module = load_script("claude_review_receipt_fsync_failure", fixture["launcher"])
+            fixture["selector"].unlink()
+            fixture["selector"].symlink_to(fixture["versions"][1])
+            observed = installed_module.executable_file_identity(
+                fixture["selector"], os.geteuid(), [fixture["candidate"]]
+            )
+            before_current = fixture["current_path"].read_bytes()
+
+            with mock.patch.object(
+                installed_module,
+                "fsync_directory",
+                side_effect=OSError("fixture receipt-directory fsync failure"),
+            ), mock.patch.dict(os.environ, {"FIXTURE_PROVIDER_RUNS": str(fixture["marker"])}), self.assertRaisesRegex(
+                OSError, "receipt-directory fsync failure"
+            ):
+                installed_module.qualify_claude_identity(
+                    os.geteuid(),
+                    expected_current_receipt_sha256=fixture["current"]["receipt_sha256"],
+                    expected_observed_file_identity_sha256=installed_module.file_identity_digest(observed),
+                )
+
+            self.assertEqual(fixture["current_path"].read_bytes(), before_current)
+
     def test_atomic_current_selection_cleanup_and_ambiguous_residue(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory).resolve()
@@ -690,6 +751,31 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                     completed.stderr,
                 )
 
+    def test_installed_manifest_schema_and_contract_divergence_fail_closed(self):
+        scenarios = ("schema_v1", "wrong_entry_contract_id", "selector_contract_divergence")
+        for scenario in scenarios:
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as temporary_directory:
+                fixture = self.create_installed_fixture(Path(temporary_directory).resolve())
+                manifest = json.loads(json.dumps(fixture["manifest"]))
+                if scenario == "schema_v1":
+                    manifest["schema_version"] = 1
+                elif scenario == "wrong_entry_contract_id":
+                    manifest["entry_contract_id"] = "sha256:" + "0" * 64
+                else:
+                    manifest["claude_selector"] = "/bin/echo"
+
+                fixture["manifest_path"].chmod(0o600)
+                fixture["manifest_path"].write_bytes(self.launcher.canonical_json_bytes(manifest))
+                fixture["manifest_path"].chmod(0o400)
+                self.assertEqual(stat.S_IMODE(fixture["manifest_path"].stat().st_mode), 0o400)
+
+                completed, _ = self.run_production_preflight(fixture, f"manifest-{scenario}")
+                self.assertEqual(completed.returncode, 70)
+                self.assertIn(
+                    '"failure_classification": "reviewer_executable_not_authorized"',
+                    completed.stderr,
+                )
+
     def test_foreign_owned_qualification_receipt_fails_closed(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             fixture = self.create_installed_fixture(Path(temporary_directory).resolve())
@@ -775,6 +861,82 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             )
             self.assertEqual(result["result"], "replaced")
             self.assertEqual(rule.read_bytes(), b"replacement\n")
+
+    def test_installer_existing_identical_rule_requires_safe_exact_file(self):
+        scenarios = ("safe", "group_writable", "world_writable", "foreign_owned", "symlink", "nonregular")
+        for scenario in scenarios:
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as temporary_directory:
+                root = Path(temporary_directory).resolve()
+                selector, _ = self.create_installer_targets(root)
+                initial, _ = self.run_installer(root, selector, "initial.json", "1" * 40)
+                active_rule = Path(initial["active_rule_path"])
+                active_rule_bytes = active_rule.read_bytes()
+                next_activation = root / "activation" / f"{scenario}.json"
+                context = contextlib.nullcontext()
+
+                if scenario == "group_writable":
+                    active_rule.chmod(0o620)
+                elif scenario == "world_writable":
+                    active_rule.chmod(0o602)
+                elif scenario == "foreign_owned":
+                    path_type = type(active_rule)
+                    original_lstat = path_type.lstat
+
+                    def foreign_lstat(path):
+                        metadata = original_lstat(path)
+                        if path == active_rule:
+                            fields = list(metadata)
+                            fields[4] = metadata.st_uid + 1
+                            return os.stat_result(fields)
+                        return metadata
+
+                    context = mock.patch.object(path_type, "lstat", foreign_lstat)
+                elif scenario == "symlink":
+                    target = root / "identical-rule-target"
+                    target.write_bytes(active_rule_bytes)
+                    target.chmod(0o600)
+                    active_rule.unlink()
+                    active_rule.symlink_to(target)
+                elif scenario == "nonregular":
+                    active_rule.unlink()
+                    active_rule.mkdir(mode=0o700)
+
+                with context:
+                    if scenario == "safe":
+                        rerun, receipt = self.run_installer(root, selector, next_activation.name, "2" * 40)
+                        self.assertEqual(rerun["active_rule_result"]["result"], "existing_identical")
+                        self.assertTrue(receipt.exists())
+                    else:
+                        with self.assertRaises((OSError, ValueError)):
+                            self.run_installer(root, selector, next_activation.name, "2" * 40)
+                        self.assertFalse(next_activation.exists())
+
+    def test_initial_installation_fsyncs_receipt_directory_before_current_selection(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            selector, _ = self.create_installer_targets(root)
+            events = []
+            original_exclusive = self.installer.exclusive_or_identical
+
+            def record_fsync(path):
+                events.append(("fsync", path))
+
+            def record_exclusive(path, payload, mode):
+                if path.name == "current-selection.json":
+                    events.append(("current", path))
+                return original_exclusive(path, payload, mode)
+
+            with mock.patch.object(self.installer, "fsync_directory", record_fsync), mock.patch.object(
+                self.installer, "exclusive_or_identical", record_exclusive
+            ):
+                installed, _ = self.run_installer(root, selector, "initial.json", "1" * 40)
+
+            receipt_directory = Path(installed["qualification_receipt_path"]).parent
+            current_selection = receipt_directory.parent / "current-selection.json"
+            self.assertLess(
+                events.index(("fsync", receipt_directory)),
+                events.index(("current", current_selection)),
+            )
 
     def test_installer_qualifies_exact_selector_target_and_rejects_writable_target(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -1999,9 +2161,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':'server_error'}), flush=True)\n"
             "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}'}), flush=True)\n"
             "    time.sleep(10)\n"
-            "if scenario in {'transient_once','transient_always','transient_with_lingering_child'} and (scenario == 'transient_always' or attempt == 1):\n"
+            "if scenario in {'transient_once','transient_always','transient_with_lingering_child','transient_then_executable_drift'} and (scenario == 'transient_always' or attempt == 1):\n"
             "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':'server_error'}), flush=True)\n"
             "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}'}), flush=True)\n"
+            "    if scenario == 'transient_then_executable_drift': pathlib.Path(sys.argv[0]).write_text(pathlib.Path(sys.argv[0]).read_text() + '# drift\\n')\n"
             "    raise SystemExit(1)\n"
             "if scenario == 'auth':\n"
             "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':'authentication_failed'}), flush=True)\n"
@@ -2439,6 +2602,23 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(len(set(scratch_paths)), 2)
         self.assertTrue(all(receipt["attempt_scratch"]["cleanup"]["passed"] for receipt in receipts))
         self.assertTrue(all(not Path(path).exists() for path in scratch_paths))
+
+    def test_retry_identity_drift_preserves_prior_attempt_evidence_and_stops_before_second_spawn(self):
+        completed, diagnostic = self.run_governed("transient_then_executable_drift")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(self.count.read_text(encoding="utf-8"), "1")
+        self.assertEqual(diagnostic["failure_classification"], "reviewer_identity_changed_before_execution")
+        self.assertEqual(diagnostic["candidate_verdict"], "not_produced")
+        self.assertEqual(diagnostic["attempt_number"], 2)
+        self.assertTrue(diagnostic["substantive_review_started"])
+        self.assertTrue(diagnostic["automated_retry_attempted"])
+        self.assertEqual(len(diagnostic["attempts"]), 1)
+        prior_attempt = diagnostic["attempts"][0]
+        self.assertTrue(Path(prior_attempt["receipt"]).exists())
+        receipt = json.loads(Path(prior_attempt["receipt"]).read_text(encoding="utf-8"))
+        self.assertEqual(receipt["attempt_number"], 1)
+        self.assertTrue(Path(receipt["raw_output"]["path"]).exists())
+        self.assertEqual(len(self.receipts()), 1)
 
     def test_lingering_process_group_blocks_retry_until_terminal(self):
         completed, diagnostic = self.run_governed("transient_with_lingering_child")
