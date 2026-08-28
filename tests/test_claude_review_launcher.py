@@ -937,6 +937,10 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 events.index(("fsync", receipt_directory)),
                 events.index(("current", current_selection)),
             )
+            self.assertLess(
+                events.index(("current", current_selection)),
+                events.index(("fsync", receipt_directory.parent)),
+            )
 
     def test_installer_qualifies_exact_selector_target_and_rejects_writable_target(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -2093,6 +2097,9 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "#!/usr/bin/env python3\n"
             "import json, os, pathlib, signal, subprocess, sys, time\n"
             "if '--version' in sys.argv:\n"
+            "    version_count = pathlib.Path(os.environ['FAKE_VERSION_COUNT'])\n"
+            "    count = int(version_count.read_text()) + 1 if version_count.exists() else 1\n"
+            "    version_count.write_text(str(count))\n"
             "    print('fake-claude 2.1.241')\n"
             "    raise SystemExit(0)\n"
             "prompt = sys.stdin.read()\n"
@@ -2232,6 +2239,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             {
                 "FAKE_SCENARIO": scenario,
                 "FAKE_COUNT": str(self.count),
+                "FAKE_VERSION_COUNT": str(self.root / "version-count"),
                 "FAKE_CANDIDATE": str(self.candidate),
                 "FAKE_PACKAGE": str(self.package),
                 "CLAUDE_REVIEW_TEST_FIXTURE": "1",
@@ -2612,6 +2620,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(diagnostic["attempt_number"], 2)
         self.assertTrue(diagnostic["substantive_review_started"])
         self.assertTrue(diagnostic["automated_retry_attempted"])
+        self.assertEqual((self.root / "version-count").read_text(encoding="utf-8"), "2")
         self.assertEqual(len(diagnostic["attempts"]), 1)
         prior_attempt = diagnostic["attempts"][0]
         self.assertTrue(Path(prior_attempt["receipt"]).exists())

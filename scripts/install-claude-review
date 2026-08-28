@@ -590,6 +590,7 @@ def main() -> int:
             "receipt_sha256": initial_receipt_sha256,
         }
         exclusive_or_identical(current_selection, canonical(current_record), 0o600)
+        fsync_directory(qualification_directory)
     source_provenance = {
         "kind": "claude_review_source_provenance",
         "schema_version": 1,

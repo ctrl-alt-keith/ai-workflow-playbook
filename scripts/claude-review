@@ -793,15 +793,18 @@ def revalidate_execution_identity(
 ) -> None:
     """Recheck the selected bytes immediately before provider process creation."""
     if execution_identity.get("qualification") == "explicit_test_fixture":
-        qualified = qualified_executable_identity(
-            Path(str(execution_identity["requested_selector"])), effective_uid
-        )
-        observed = {**qualified["file_identity"], "version": qualified["version"]}
+        selector = Path(str(execution_identity["requested_selector"]))
+        observed = executable_file_identity(selector, effective_uid)
         for key, value in observed.items():
             if execution_identity.get(key) != value:
                 raise ValueError(f"the fixture Claude identity changed before execution at {key}")
         if observed["resolved_path"] != executable:
             raise ValueError("the fixture Claude canonical path changed before execution")
+        version = version_of(executable, os.environ.copy(), cwd=str(Path(executable).parent))
+        if version != execution_identity.get("version"):
+            raise ValueError("the fixture Claude version changed before execution")
+        if executable_file_identity(selector, effective_uid) != observed:
+            raise ValueError("the fixture Claude identity changed during version observation")
         return
     observed_executable, observed_identity = qualified_execution(None, effective_uid)
     if observed_executable != executable:
@@ -2450,7 +2453,7 @@ def run_governed_review(
             elif changes:
                 classification = "reviewer_side_effect_failure"
                 retryable = False
-            claude_version = version_of(executable, environment, cwd=str(attempt_scratch.path))
+            claude_version = execution_identity.get("version")
             scratch_record = attempt_scratch.record()
             try:
                 attempt_scratch.cleanup()
