@@ -3242,7 +3242,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
 
     def test_live_primary_worktree_commit_passes_for_a_linked_candidate(self):
         self.use_linked_candidate("fixture-live-primary")
-        completed, diagnostic = self.run_governed("primary_worktree_commit_then_wait", body=self.config_body(max_attempts=1))
+        body = self.config_body(max_attempts=1)
+        # Observe the completed Git operation, not its deliberately blocking transient lock.
+        body["observation_interval_seconds"] = 0.5
+        completed, diagnostic = self.run_governed("primary_worktree_commit_then_wait", body=body)
         self.assertEqual(completed.returncode, 0, diagnostic)
         receipt = self.receipts()[0]
         self.assertTrue(receipt["no_delta_postflight"]["passed"])
