@@ -2146,6 +2146,15 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "        (candidate / 'tracked.txt').write_text('candidate mutation\\n')\n"
             "        time.sleep(10)\n"
             "    time.sleep(0.08)\n"
+            "if scenario in {'primary_worktree_commit_then_wait','primary_worktree_and_candidate_mutation'}:\n"
+            "    primary = pathlib.Path(os.environ['FAKE_PRIMARY_WORKTREE'])\n"
+            "    (primary / 'tracked.txt').write_text(f'primary unrelated {attempt}\\n')\n"
+            "    subprocess.run(['git','-C',str(primary),'add','tracked.txt'], check=True)\n"
+            "    subprocess.run(['git','-C',str(primary),'-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm',f'primary unrelated {attempt}'], check=True)\n"
+            "    if scenario == 'primary_worktree_and_candidate_mutation':\n"
+            "        (candidate / 'tracked.txt').write_text('candidate mutation\\n')\n"
+            "        time.sleep(10)\n"
+            "    time.sleep(0.08)\n"
             "if scenario == 'unattributed_object_then_wait':\n"
             "    subprocess.run(['git','-C',str(candidate),'hash-object','-w','--stdin'], input=b'unattached reviewer object\\n', check=True)\n"
             "    time.sleep(10)\n"
@@ -2261,8 +2270,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         )
         if hasattr(self, "other_worktree"):
             environment["FAKE_OTHER_WORKTREE"] = str(self.other_worktree)
+        if hasattr(self, "primary_worktree"):
+            environment["FAKE_PRIMARY_WORKTREE"] = str(self.primary_worktree)
         if hasattr(self, "isolated_home"):
-            environment["HOME"] = str(self.isolated_home)
+            environment["CLAUDE_REVIEW_TEST_EFFECTIVE_HOME"] = str(self.isolated_home)
         return environment
 
     def run_governed(self, scenario="success", *, body=None, model="opus"):
@@ -2313,6 +2324,85 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
 
     def receipts(self):
         return [json.loads(path.read_text(encoding="utf-8")) for path in sorted(self.evidence.glob("*-terminal-receipt.json"))]
+
+    def use_linked_candidate(self, branch="fixture-linked-candidate"):
+        self.primary_worktree = self.candidate
+        linked = self.root / branch
+        subprocess.run(
+            ["git", "-C", str(self.primary_worktree), "worktree", "add", "-q", "-b", branch, str(linked)],
+            check=True,
+        )
+        self.candidate = linked
+        return self.primary_worktree, linked
+
+    def commit_tracked(self, worktree, content, message):
+        (worktree / "tracked.txt").write_text(content, encoding="utf-8")
+        subprocess.run(["git", "-C", str(worktree), "add", "tracked.txt"], check=True)
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(worktree),
+                "-c",
+                "user.name=Fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "commit",
+                "-qm",
+                message,
+            ],
+            check=True,
+        )
+
+    def run_governed_with_head_mutation(
+        self,
+        *,
+        verification_call,
+        scenario="success",
+        max_attempts=1,
+        symbolic_ref_only=False,
+    ):
+        module = load_script(f"claude_review_head_drift_{verification_call}_{scenario}", LAUNCHER)
+        body = self.config_body(max_attempts=max_attempts)
+        config = module.load_governed_config(self.write_config(body))
+        diagnostics = self.evidence / "overall.json"
+        environment = self.environment(scenario)
+        original_verifier = module.verified_candidate_head
+        calls = 0
+
+        def mutate_at_boundary(candidate, expected_head, command_environment, **verification_options):
+            nonlocal calls
+            calls += 1
+            if calls == verification_call:
+                if symbolic_ref_only:
+                    subprocess.run(
+                        ["git", "-C", str(self.candidate), "switch", "-q", "-c", f"fixture-symbolic-drift-{calls}"],
+                        check=True,
+                    )
+                else:
+                    self.commit_tracked(self.candidate, f"head drift {calls}\n", f"head drift {calls}")
+            return original_verifier(candidate, expected_head, command_environment, **verification_options)
+
+        with mock.patch.dict(os.environ, environment), mock.patch.object(
+            module,
+            "verified_candidate_head",
+            side_effect=mutate_at_boundary,
+        ), contextlib.redirect_stderr(io.StringIO()):
+            executable, execution_identity = module.qualified_execution(
+                str(self.fake),
+                os.geteuid(),
+                explicit_test_fixture=True,
+            )
+            result = module.run_governed_review(
+                config,
+                executable,
+                execution_identity,
+                environment,
+                ["--model", "opus", "--effort", "high"],
+                b"exact review prompt\n",
+                diagnostics,
+            )
+        return result, json.loads(diagnostics.read_text(encoding="utf-8"))
 
     def test_common_root_and_exact_additional_directory_cover_source_graph(self):
         common, diagnostic = self.run_governed()
@@ -2379,6 +2469,61 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         mismatch, diagnostic = self.run_governed("model_mismatch", model="fake-opus")
         self.assertEqual(mismatch.returncode, 70)
         self.assertEqual(diagnostic["failure_classification"], "effective_model_mismatch")
+
+    def test_candidate_head_drift_before_first_attempt_baseline_stops_without_provider_spawn(self):
+        result, diagnostic = self.run_governed_with_head_mutation(verification_call=2)
+        self.assertEqual(result, 70)
+        self.assertEqual(diagnostic["failure_classification"], "candidate_identity_changed_before_attempt")
+        self.assertEqual(diagnostic["candidate_identity_stage"], "before_attempt_baseline")
+        self.assertFalse(self.count.exists())
+        self.assertTrue(diagnostic["no_delta_postflight"]["changed_paths"])
+
+    def test_candidate_symbolic_ref_drift_before_spawn_stops_without_provider_spawn(self):
+        result, diagnostic = self.run_governed_with_head_mutation(
+            verification_call=3,
+            symbolic_ref_only=True,
+        )
+        self.assertEqual(result, 70)
+        self.assertEqual(diagnostic["failure_classification"], "candidate_identity_changed_before_execution")
+        self.assertEqual(diagnostic["candidate_identity_stage"], "immediately_before_provider_spawn")
+        self.assertFalse(self.count.exists())
+        self.assertEqual(
+            diagnostic["candidate_identity_observation"]["observed_commit"],
+            diagnostic["candidate_identity_observation"]["expected_commit"],
+        )
+        self.assertNotEqual(
+            diagnostic["candidate_identity_observation"]["symbolic_ref"],
+            diagnostic["candidate_identity_observation"]["expected_symbolic_ref"],
+        )
+        self.assertTrue(
+            any(
+                record["classification"] == "blocking_candidate_worktree_administration"
+                for record in diagnostic["no_delta_postflight"]["git_admin_changes"]
+            )
+        )
+
+    def test_candidate_head_drift_before_retry_preserves_first_attempt_and_stops_second_spawn(self):
+        result, diagnostic = self.run_governed_with_head_mutation(
+            verification_call=4,
+            scenario="transient_once",
+            max_attempts=2,
+        )
+        self.assertEqual(result, 70)
+        self.assertEqual(diagnostic["failure_classification"], "candidate_identity_changed_before_attempt")
+        self.assertEqual(self.count.read_text(encoding="utf-8"), "1")
+        self.assertEqual(len(diagnostic["attempts"]), 1)
+        self.assertTrue((self.evidence / "attempt-1-terminal-receipt.json").exists())
+        self.assertFalse((self.evidence / "attempt-2-terminal-receipt.json").exists())
+
+    def test_detached_candidate_remains_bound_to_configured_commit(self):
+        subprocess.run(["git", "-C", str(self.candidate), "checkout", "--detach", "-q", "HEAD"], check=True)
+        completed, diagnostic = self.run_governed("success", body=self.config_body(max_attempts=1))
+        self.assertEqual(completed.returncode, 0, diagnostic)
+        self.assertEqual(diagnostic["preflight"]["candidate_identity"]["symbolic_ref"], None)
+        self.assertEqual(
+            diagnostic["preflight"]["candidate_identity"]["observed_commit"],
+            diagnostic["preflight"]["candidate_identity"]["expected_commit"],
+        )
 
     def test_safe_environment_disables_claude_instruction_and_auto_memory_loading(self):
         import importlib.machinery
@@ -3054,6 +3199,72 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertTrue(all(record["disposition"] == "tolerated" for record in comparison["git_admin_changes"]))
         self.assertNotIn("git-admin", comparison["raw_changed_paths"])
 
+    def test_primary_worktree_commit_is_tolerated_for_a_linked_candidate(self):
+        module = load_script("claude_review_primary_worktree", LAUNCHER)
+        environment = os.environ.copy()
+        primary, linked = self.use_linked_candidate("fixture-primary-unrelated")
+        baseline = module.source_snapshot([linked], linked, environment)
+        self.commit_tracked(primary, "primary commit\n", "primary unrelated")
+        changed = module.source_snapshot([linked], linked, environment)
+        comparison = module.snapshot_comparison(baseline, changed)
+        self.assertTrue(comparison["passed"], comparison)
+        scopes = {record["owner_scope"] for record in comparison["git_admin_changes"]}
+        self.assertTrue({"other_primary_worktree", "unrelated_ref", "shared_object_storage"} <= scopes)
+        primary_records = [
+            record for record in comparison["git_admin_changes"] if record["owner_scope"] == "other_primary_worktree"
+        ]
+        self.assertTrue(primary_records)
+        self.assertTrue(all(record["disposition"] == "tolerated" for record in primary_records))
+        self.assertTrue(
+            all(record["evidence"]["worktree_kind"] == "primary" for record in primary_records)
+        )
+
+    def test_unknown_common_root_file_is_not_primary_worktree_administration(self):
+        module = load_script("claude_review_primary_unknown", LAUNCHER)
+        environment = os.environ.copy()
+        _, linked = self.use_linked_candidate("fixture-primary-unknown")
+        common = Path(
+            subprocess.run(
+                ["git", "-C", str(linked), "rev-parse", "--git-common-dir"],
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+            ).stdout.strip()
+        ).resolve()
+        baseline = module.source_snapshot([linked], linked, environment)
+        unknown = common / "fixture-primary-observation"
+        unknown.write_text("not Git-managed primary state\n", encoding="utf-8")
+        changed = module.source_snapshot([linked], linked, environment)
+        comparison = module.snapshot_comparison(baseline, changed)
+        self.assertFalse(comparison["passed"])
+        record = next(record for record in comparison["git_admin_changes"] if record["path"] == unknown.name)
+        self.assertEqual(record["classification"], "blocking_ambiguous_shared_administration")
+
+    def test_live_primary_worktree_commit_passes_for_a_linked_candidate(self):
+        self.use_linked_candidate("fixture-live-primary")
+        completed, diagnostic = self.run_governed("primary_worktree_commit_then_wait", body=self.config_body(max_attempts=1))
+        self.assertEqual(completed.returncode, 0, diagnostic)
+        receipt = self.receipts()[0]
+        self.assertTrue(receipt["no_delta_postflight"]["passed"])
+        self.assertTrue(
+            any(
+                record["owner_scope"] == "other_primary_worktree" and record["disposition"] == "tolerated"
+                for record in receipt["no_delta_postflight"]["git_admin_changes"]
+            )
+        )
+
+    def test_primary_worktree_activity_does_not_hide_linked_candidate_mutation(self):
+        self.use_linked_candidate("fixture-primary-mixed")
+        completed, diagnostic = self.run_governed(
+            "primary_worktree_and_candidate_mutation",
+            body=self.config_body(max_attempts=1),
+        )
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
+        receipt = self.receipts()[0]
+        self.assertEqual(receipt["lifecycle"]["emergency_condition"], "unauthorized_mutation")
+        self.assertTrue(any(path.endswith(":tracked.txt") for path in receipt["no_delta_postflight"]["changed_paths"]))
+
     def test_network_free_unrelated_push_activity_is_tolerated(self):
         module = load_script("claude_review_unrelated_push", LAUNCHER)
         environment = os.environ.copy()
@@ -3105,7 +3316,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertFalse(comparison["passed"])
         self.assertIn(f"git-admin:objects/{object_id[:2]}/{object_id[2:]}", comparison["blocking_paths"])
 
-    def test_other_linked_worktree_administration_is_tolerated(self):
+    def test_arbitrary_other_linked_worktree_administration_is_blocking(self):
         module = load_script("claude_review_other_worktree_admin", LAUNCHER)
         environment = os.environ.copy()
         linked = self.root / "admin-worktree"
@@ -3134,10 +3345,106 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         (gitdir / "fixture-observation").write_text("other worktree\n", encoding="utf-8")
         changed = module.source_snapshot([self.candidate], self.candidate, environment)
         comparison = module.snapshot_comparison(baseline, changed)
-        self.assertTrue(comparison["passed"])
+        self.assertFalse(comparison["passed"])
         record = next(record for record in comparison["git_admin_changes"] if record["path"].endswith("fixture-observation"))
         self.assertEqual(record["owner_scope"], "other_linked_worktree")
-        self.assertEqual(record["disposition"], "tolerated")
+        self.assertEqual(record["classification"], "blocking_unknown_other_worktree_administration")
+        self.assertEqual(record["disposition"], "blocking")
+
+    def test_unrelated_linked_commit_with_arbitrary_admin_contamination_is_blocking(self):
+        module = load_script("claude_review_other_worktree_mixed_admin", LAUNCHER)
+        environment = os.environ.copy()
+        linked = self.root / "mixed-admin-worktree"
+        subprocess.run(
+            ["git", "-C", str(self.candidate), "worktree", "add", "-q", "-b", "fixture-mixed-admin", str(linked)],
+            check=True,
+        )
+        gitdir = Path(
+            subprocess.run(
+                ["git", "-C", str(linked), "rev-parse", "--absolute-git-dir"],
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+            ).stdout.strip()
+        ).resolve()
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        self.commit_tracked(linked, "unrelated plus contamination\n", "mixed admin")
+        contamination = gitdir / "fixture-contamination"
+        contamination.write_text("reviewer contamination\n", encoding="utf-8")
+        changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        comparison = module.snapshot_comparison(baseline, changed)
+        self.assertFalse(comparison["passed"])
+        contamination_record = next(
+            record for record in comparison["git_admin_changes"] if record["path"].endswith(contamination.name)
+        )
+        self.assertEqual(contamination_record["classification"], "blocking_unknown_other_worktree_administration")
+        self.assertTrue(any(record["disposition"] == "tolerated" for record in comparison["git_admin_changes"]))
+
+    def test_unknown_other_worktree_path_identity_changes_remain_blocking(self):
+        module = load_script("claude_review_other_worktree_identity_shapes", LAUNCHER)
+        environment = os.environ.copy()
+        linked = self.root / "identity-shape-worktree"
+        subprocess.run(
+            ["git", "-C", str(self.candidate), "worktree", "add", "-q", "-b", "fixture-admin-shapes", str(linked)],
+            check=True,
+        )
+        gitdir = Path(
+            subprocess.run(
+                ["git", "-C", str(linked), "rev-parse", "--absolute-git-dir"],
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+            ).stdout.strip()
+        ).resolve()
+        path = gitdir / "fixture-unknown"
+
+        def assert_blocking(baseline):
+            changed = module.source_snapshot([self.candidate], self.candidate, environment)
+            record = next(
+                record
+                for record in module.snapshot_comparison(baseline, changed)["git_admin_changes"]
+                if record["path"].endswith(path.name)
+            )
+            self.assertEqual(record["classification"], "blocking_unknown_other_worktree_administration")
+            self.assertEqual(record["disposition"], "blocking")
+
+        with self.subTest(change="addition"):
+            baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+            path.write_text("added\n", encoding="utf-8")
+            assert_blocking(baseline)
+            path.unlink()
+        with self.subTest(change="removal"):
+            path.write_text("remove\n", encoding="utf-8")
+            baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+            path.unlink()
+            assert_blocking(baseline)
+        with self.subTest(change="content"):
+            path.write_text("before\n", encoding="utf-8")
+            baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+            path.write_text("after\n", encoding="utf-8")
+            assert_blocking(baseline)
+            path.unlink()
+        with self.subTest(change="mode"):
+            path.write_text("mode\n", encoding="utf-8")
+            path.chmod(0o600)
+            baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+            path.chmod(0o644)
+            assert_blocking(baseline)
+            path.unlink()
+        with self.subTest(change="replacement"):
+            path.write_text("file\n", encoding="utf-8")
+            baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+            path.unlink()
+            path.mkdir()
+            assert_blocking(baseline)
+            path.rmdir()
+        with self.subTest(change="symlink"):
+            path.write_text("file\n", encoding="utf-8")
+            baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+            path.unlink()
+            path.symlink_to(gitdir / "HEAD")
+            assert_blocking(baseline)
+            path.unlink()
 
     def test_protected_remote_ref_and_candidate_branch_reflog_remain_blocking(self):
         module = load_script("claude_review_protected_refs", LAUNCHER)
@@ -3406,9 +3713,23 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         completed, diagnostic = self.run_governed("success", body=self.config_body(max_attempts=1))
         self.assertEqual(completed.returncode, 0)
         self.assertIsNone(diagnostic["failure_classification"])
+        receipt = self.receipts()[0]
+        self.assertEqual(receipt["runtime"]["HOME"], str(self.isolated_home.resolve()))
         self.assertFalse((self.isolated_home / ".local").exists())
         self.assertFalse((self.isolated_home / ".cache").exists())
         self.assertFalse((self.isolated_home / ".config").exists())
+
+    def test_fixture_effective_home_override_is_ignored_outside_explicit_fixture_execution(self):
+        module = load_script("claude_review_fixture_home_boundary", LAUNCHER)
+        self.isolated_home = self.root / "isolated-home-negative"
+        self.isolated_home.mkdir()
+        account_home = pwd.getpwuid(os.geteuid()).pw_dir
+        selected = module.effective_home_for_execution(
+            account_home,
+            {"CLAUDE_REVIEW_TEST_EFFECTIVE_HOME": str(self.isolated_home)},
+            explicit_test_fixture=False,
+        )
+        self.assertEqual(selected, account_home)
 
     def test_unrelated_activity_does_not_hide_simultaneous_candidate_mutation(self):
         self.other_worktree = self.root / "mixed-mutation-worktree"

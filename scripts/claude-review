@@ -42,9 +42,16 @@ INSTALLATION_SCHEMA_VERSION = 2
 QUALIFICATION_SCHEMA_VERSION = 2
 REVISION_ATOM = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64}|HEAD|origin/main)")
 REQUIRED_TOOLS = {"Bash", "Glob", "Grep", "Read"}
+WORKTREE_ADMIN_PATHS = ("HEAD", "index", "logs/HEAD", "COMMIT_EDITMSG", "ORIG_HEAD")
 OAUTH_REAUTHENTICATION_DISPOSITION = (
     "REVIEWER INFRASTRUCTURE FAILURE — OPERATOR REAUTHENTICATION REQUIRED"
 )
+
+
+class CandidateIdentityMismatch(RuntimeError):
+    def __init__(self, message: str, observation: dict[str, object]):
+        super().__init__(message)
+        self.observation = observation
 OAUTH_REAUTHENTICATION_MESSAGE = (
     "Claude reviewer authentication has expired. The validated user-context invocation "
     "is already in effect, so this is not an environment-context mismatch. Please "
@@ -943,6 +950,25 @@ def effective_identity() -> tuple[int, str, str]:
     return uid, account.pw_name, account.pw_dir
 
 
+def effective_home_for_execution(
+    account_home: str,
+    environment: dict[str, str],
+    *,
+    explicit_test_fixture: bool,
+) -> str:
+    override = environment.get("CLAUDE_REVIEW_TEST_EFFECTIVE_HOME")
+    if override is None or not explicit_test_fixture:
+        return account_home
+    requested = Path(override)
+    if not requested.is_absolute() or requested.is_symlink():
+        raise RuntimeError("test effective-home override must be an absolute non-symlink directory")
+    resolved = requested.resolve(strict=True)
+    metadata = resolved.lstat()
+    if not stat.S_ISDIR(metadata.st_mode) or metadata.st_uid != os.geteuid():
+        raise RuntimeError("test effective-home override must be an effective-user-owned directory")
+    return str(resolved)
+
+
 def version_of(executable: str, environment: dict[str, str], *, cwd: str) -> str | None:
     try:
         result = subprocess.run(
@@ -1299,6 +1325,47 @@ def git_output(candidate: Path, environment: dict[str, str], *arguments: str) ->
     return result.stdout
 
 
+def verified_candidate_head(
+    candidate: Path,
+    expected_head: str,
+    environment: dict[str, str],
+    *,
+    expected_symbolic_ref: str | None = None,
+    enforce_symbolic_ref: bool = False,
+) -> dict[str, object]:
+    effective_head = git_output(candidate, environment, "rev-parse", "--verify", "HEAD").strip().lower()
+    symbolic_result = subprocess.run(
+        ["git", "-C", str(candidate), "symbolic-ref", "-q", "HEAD"],
+        check=False,
+        env=environment,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if symbolic_result.returncode not in {0, 1}:
+        raise RuntimeError(f"candidate symbolic HEAD is unreadable: {bounded_redacted(symbolic_result.stderr)}")
+    observation = {
+        "expected_commit": expected_head,
+        "observed_commit": effective_head,
+        "expected_symbolic_ref": expected_symbolic_ref if enforce_symbolic_ref else None,
+        "symbolic_ref": symbolic_result.stdout.strip() or None,
+    }
+    if effective_head != expected_head:
+        raise CandidateIdentityMismatch(
+            "candidate HEAD does not match the exact governed review identity: "
+            f"expected {expected_head}, observed {effective_head}",
+            observation,
+        )
+    if enforce_symbolic_ref and observation["symbolic_ref"] != expected_symbolic_ref:
+        raise CandidateIdentityMismatch(
+            "candidate symbolic HEAD does not match the governed baseline identity: "
+            f"expected {expected_symbolic_ref!r}, observed {observation['symbolic_ref']!r}",
+            observation,
+        )
+    return observation
+
+
 def revision_atoms_for_root(
     root: Path,
     allowed_commands: tuple[tuple[str, ...], ...],
@@ -1364,6 +1431,32 @@ def protected_revision_identity(
     return revisions
 
 
+def worktree_admin_identity(
+    worktree: Path,
+    common_directory: Path,
+    environment: dict[str, str],
+) -> dict[str, object]:
+    paths: dict[str, object] = {}
+    for git_path in WORKTREE_ADMIN_PATHS:
+        observed = Path(git_output(worktree, environment, "rev-parse", "--git-path", git_path).strip())
+        if not observed.is_absolute():
+            observed = worktree / observed
+        observed = observed.absolute()
+        try:
+            relative = str(observed.relative_to(common_directory))
+        except ValueError as error:
+            raise RuntimeError(f"worktree administration path escaped the common Git directory: {observed}") from error
+        if not observed.exists() and not observed.is_symlink():
+            identity: object | None = None
+        else:
+            try:
+                identity = file_identity(observed)
+            except FileNotFoundError:
+                identity = {"kind": "vanished_during_snapshot"}
+        paths[relative] = identity
+    return paths
+
+
 def linked_worktree_identities(
     candidate: Path,
     common_directory: Path,
@@ -1388,21 +1481,37 @@ def linked_worktree_identities(
             continue
         worktree = Path(record["worktree"]).resolve(strict=True)
         git_directory = resolved_git_directory(worktree, "--absolute-git-dir", environment)
-        try:
-            identifier = git_directory.relative_to(common_directory / "worktrees").parts[0]
-        except (ValueError, IndexError):
-            continue
-        pointer = git_directory / "gitdir"
-        pointer_target = Path(pointer.read_text(encoding="utf-8").strip()).resolve(strict=True)
-        if pointer_target != worktree / ".git":
-            raise RuntimeError(f"linked-worktree backpointer is inconsistent: {git_directory}")
+        if git_directory == common_directory:
+            identifier = "primary"
+            kind = "primary"
+        else:
+            try:
+                linked_identifier = git_directory.relative_to(common_directory / "worktrees").parts[0]
+            except (ValueError, IndexError) as error:
+                raise RuntimeError(f"worktree Git directory has an unsupported topology: {git_directory}") from error
+            identifier = f"linked:{linked_identifier}"
+            kind = "linked"
+            pointer = git_directory / "gitdir"
+            pointer_target = Path(pointer.read_text(encoding="utf-8").strip()).resolve(strict=True)
+            if pointer_target != worktree / ".git":
+                raise RuntimeError(f"linked-worktree backpointer is inconsistent: {git_directory}")
+        if identifier in identities:
+            raise RuntimeError(f"duplicate worktree identity observed: {identifier}")
+        recorded_head = record.get("HEAD")
+        if isinstance(recorded_head, str) and set(recorded_head) == {"0"}:
+            recorded_head = None
         identities[identifier] = {
+            "kind": kind,
             "worktree": str(worktree),
             "git_directory": str(git_directory),
-            "head": record.get("HEAD"),
+            "head": recorded_head,
             "branch": record.get("branch"),
             "detached": "detached" in record,
+            "admin_paths": worktree_admin_identity(worktree, common_directory, environment),
         }
+    primary = identities.get("primary")
+    if not isinstance(primary, dict) or primary.get("git_directory") != str(common_directory):
+        raise RuntimeError("primary worktree identity is missing or inconsistent")
     return identities
 
 
@@ -1491,12 +1600,17 @@ def git_admin_identity(
         atoms = tuple(atom for atom in atoms if atom != "HEAD")
     else:
         head_commit = head_result.stdout.strip().lower()
-    candidate_worktree_id = None
-    try:
-        candidate_worktree_id = git_directory.relative_to(common_directory / "worktrees").parts[0]
-    except (ValueError, IndexError):
-        pass
+    if git_directory == common_directory:
+        candidate_worktree_id = "primary"
+    else:
+        try:
+            candidate_worktree_id = f"linked:{git_directory.relative_to(common_directory / 'worktrees').parts[0]}"
+        except (ValueError, IndexError) as error:
+            raise RuntimeError(f"candidate worktree Git directory has an unsupported topology: {git_directory}") from error
     linked_worktrees = linked_worktree_identities(resolved_candidate, common_directory, environment)
+    candidate_worktree = linked_worktrees.get(candidate_worktree_id)
+    if not isinstance(candidate_worktree, dict) or candidate_worktree.get("worktree") != str(resolved_candidate):
+        raise RuntimeError("candidate worktree identity is missing or inconsistent")
     shared_refs, shared_reachable_objects = shared_reference_and_reachability_identity(
         resolved_candidate, environment, linked_worktrees
     )
@@ -1508,6 +1622,8 @@ def git_admin_identity(
         "shared_refs": shared_refs,
         "shared_reachable_objects": shared_reachable_objects,
         "head": {"commit": head_commit, "symbolic_ref": head_symbolic or None},
+        "expected_candidate_head": candidate_head,
+        "candidate_head_matches_expected": candidate_head is None or head_commit == candidate_head,
         "protected_revisions": protected_revision_identity(resolved_candidate, environment, atoms),
     }
     if common_directory == git_directory:
@@ -1653,6 +1769,9 @@ def classify_git_admin_changes(before: dict[str, object], after: dict[str, objec
         before.get("head") == after.get("head")
         and before.get("protected_revisions") == after.get("protected_revisions")
         and before.get("candidate_worktree_id") == after.get("candidate_worktree_id")
+        and before.get("expected_candidate_head") == after.get("expected_candidate_head")
+        and before.get("candidate_head_matches_expected") is True
+        and after.get("candidate_head_matches_expected") is True
     )
     protected_refs = {
         str(identity["symbolic_ref"])
@@ -1681,6 +1800,80 @@ def classify_git_admin_changes(before: dict[str, object], after: dict[str, objec
     after_shared_reachable = set(after.get("shared_reachable_objects", []))
     shared_activity_changed = bool(changed_unprotected_refs or changed_other_worktrees)
     records: list[dict[str, object]] = []
+
+    def worktree_transition_evidence(identifier: str) -> dict[str, object] | None:
+        old_identity = before.get("linked_worktrees", {}).get(identifier)
+        new_identity = after.get("linked_worktrees", {}).get(identifier)
+        if not isinstance(old_identity, dict) or not isinstance(new_identity, dict):
+            return None
+        old_head = old_identity.get("head")
+        new_head = new_identity.get("head")
+        if not old_head or not new_head or old_head == new_head:
+            return None
+        old_branch = old_identity.get("branch")
+        new_branch = new_identity.get("branch")
+        if old_branch == new_branch and isinstance(new_branch, str):
+            if (
+                new_branch not in changed_unprotected_refs
+                or before_refs.get(new_branch) != str(old_head).lower()
+                or after_refs.get(new_branch) != str(new_head).lower()
+            ):
+                return None
+        elif isinstance(new_branch, str) and after_refs.get(new_branch) != str(new_head).lower():
+            return None
+        return {
+            "worktree_id": identifier,
+            "worktree_kind": new_identity.get("kind"),
+            "before_head": old_head,
+            "after_head": new_head,
+            "before_branch": old_branch,
+            "after_branch": new_branch,
+            "protected_candidate_evidence_unchanged": True,
+        }
+
+    def exact_other_worktree_admin(
+        relative: str,
+        old_identity: object | None,
+        new_identity: object | None,
+    ) -> tuple[str, dict[str, object]] | None:
+        candidate_ids = {before.get("candidate_worktree_id"), after.get("candidate_worktree_id")}
+        for identifier in sorted(known_other_worktrees):
+            old_worktree = before.get("linked_worktrees", {}).get(identifier)
+            new_worktree = after.get("linked_worktrees", {}).get(identifier)
+            if not isinstance(old_worktree, dict) or not isinstance(new_worktree, dict):
+                continue
+            old_paths = old_worktree.get("admin_paths", {})
+            new_paths = new_worktree.get("admin_paths", {})
+            if relative not in set(old_paths) | set(new_paths):
+                continue
+            if identifier in candidate_ids or old_paths.get(relative) != old_identity or new_paths.get(relative) != new_identity:
+                return None
+            return identifier, new_worktree
+        return None
+
+    def admitted_other_worktree_change(
+        relative: str,
+        old_identity: object | None,
+        new_identity: object | None,
+    ) -> tuple[str, dict[str, object]] | None:
+        exact_admin = exact_other_worktree_admin(relative, old_identity, new_identity)
+        if exact_admin is not None:
+            identifier, _ = exact_admin
+            transition = worktree_transition_evidence(identifier)
+            if transition is None or not safely_tolerable_identity_change(old_identity, new_identity):
+                return None
+            return identifier, transition
+        return None
+
+    def candidate_worktree_admin_path(relative: str) -> bool:
+        for identity, candidate_identifier in (
+            (before, before.get("candidate_worktree_id")),
+            (after, after.get("candidate_worktree_id")),
+        ):
+            worktree = identity.get("linked_worktrees", {}).get(candidate_identifier)
+            if isinstance(worktree, dict) and relative in worktree.get("admin_paths", {}):
+                return True
+        return False
 
     def compare_directory(owner: str, old: dict[str, object], new: dict[str, object]) -> None:
         old_entries = old.get("entries", {})
@@ -1716,26 +1909,53 @@ def classify_git_admin_changes(before: dict[str, object], after: dict[str, objec
             evidence: dict[str, object] = {}
             ref = ref_for_admin_path(relative)
             parts = Path(relative).parts
+            exact_other_admin = exact_other_worktree_admin(relative, old_identity, new_identity)
+            admitted_worktree = admitted_other_worktree_change(relative, old_identity, new_identity)
             if lock_path(relative):
                 scope = "lock"
                 classification = "blocking_lock_change"
             elif owner == "candidate_worktree":
                 scope = "candidate_worktree"
                 classification = "blocking_candidate_worktree_administration"
-            elif len(parts) >= 2 and parts[0] == "worktrees" and parts[1] == before.get("candidate_worktree_id"):
+            elif candidate_worktree_admin_path(relative):
                 scope = "candidate_worktree"
                 classification = "blocking_candidate_worktree_administration"
-            elif len(parts) >= 2 and parts[0] == "worktrees" and parts[1] in known_other_worktrees:
-                if protected_evidence_unchanged and safely_tolerable_identity_change(old_identity, new_identity):
+            elif admitted_worktree is not None and protected_evidence_unchanged:
+                worktree_identifier, transition = admitted_worktree
+                worktree_kind = transition["worktree_kind"]
+                if worktree_kind == "primary":
+                    scope = "other_primary_worktree"
+                    classification = "tolerated_other_primary_worktree_administration"
+                else:
                     scope = "other_linked_worktree"
                     classification = "tolerated_other_linked_worktree_administration"
-                    disposition = "tolerated"
-                    evidence = {
-                        "linked_worktree_id": parts[1],
-                        "before_worktree_identity": before.get("linked_worktrees", {}).get(parts[1]),
-                        "after_worktree_identity": after.get("linked_worktrees", {}).get(parts[1]),
-                        "protected_candidate_evidence_unchanged": True,
-                    }
+                disposition = "tolerated"
+                evidence = transition
+                evidence["admitted_git_managed_path"] = relative
+            elif (
+                exact_other_admin is not None
+                and protected_evidence_unchanged
+                and safely_tolerable_identity_change(old_identity, new_identity)
+            ):
+                worktree_identifier, worktree_identity = exact_other_admin
+                scope = (
+                    "other_primary_worktree"
+                    if worktree_identity.get("kind") == "primary"
+                    else "other_linked_worktree"
+                )
+                classification = "blocking_unattributed_other_worktree_administration"
+                evidence = {
+                    "worktree_id": worktree_identifier,
+                    "admitted_git_managed_path": relative,
+                    "provisional_attribution": "worktree_transition_not_yet_observed",
+                    "protected_candidate_evidence_unchanged": True,
+                }
+            elif len(parts) >= 2 and parts[0] == "worktrees":
+                linked_identifier = f"linked:{parts[1]}"
+                if linked_identifier in known_other_worktrees:
+                    scope = "other_linked_worktree"
+                    classification = "blocking_unknown_other_worktree_administration"
+                    evidence = {"linked_worktree_id": linked_identifier}
             elif ref is not None:
                 if ref in protected_refs or ref.startswith("refs/replace/"):
                     scope = "candidate_relevant_shared_state"
@@ -1852,8 +2072,8 @@ def snapshot_comparison(before: dict[str, object], after: dict[str, object]) -> 
     }
 
 
-def provisional_shared_object_only(comparison: dict[str, object]) -> bool:
-    """Identify a live Git write that may precede its unrelated ref update."""
+def provisional_attribution_only(comparison: dict[str, object]) -> bool:
+    """Identify live Git writes that may precede their attribution transition."""
     blocking_paths = set(comparison["blocking_paths"])
     if not blocking_paths:
         return False
@@ -1862,11 +2082,16 @@ def provisional_shared_object_only(comparison: dict[str, object]) -> bool:
         if record["disposition"] == "tolerated":
             continue
         evidence = record.get("evidence", {})
-        if (
-            record["classification"] != "blocking_ambiguous_shared_administration"
-            or not object_storage_path(str(record["path"]))
-            or evidence.get("provisional_attribution") != "shared_object_activity_not_yet_attributable"
-        ):
+        shared_object_provisional = (
+            record["classification"] == "blocking_ambiguous_shared_administration"
+            and object_storage_path(str(record["path"]))
+            and evidence.get("provisional_attribution") == "shared_object_activity_not_yet_attributable"
+        )
+        worktree_admin_provisional = (
+            record["classification"] == "blocking_unattributed_other_worktree_administration"
+            and evidence.get("provisional_attribution") == "worktree_transition_not_yet_observed"
+        )
+        if not shared_object_provisional and not worktree_admin_provisional:
             return False
         repository_root = record.get("repository_root")
         prefix = f"git-admin:{repository_root}:" if repository_root else "git-admin:"
@@ -2196,20 +2421,7 @@ def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) 
                 stream.read(1)
         path_results.append({"root": str(root), "representative": str(representative), "status": "readable"})
     command_results: list[dict[str, object]] = []
-    git_executable = trusted_system_executable("git", environment)
-    head_result = subprocess.run(
-        [str(git_executable), "-C", str(config.candidate), "rev-parse", "HEAD"],
-        check=False,
-        cwd=config.launch_root,
-        env=environment,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    effective_head = head_result.stdout.strip().lower()
-    if head_result.returncode != 0 or effective_head != config.candidate_head:
-        raise RuntimeError("candidate HEAD does not match the exact governed review identity")
+    candidate_identity = verified_candidate_head(config.candidate, config.candidate_head, environment)
     for argv in config.allowed_commands:
         executable_path = trusted_system_executable(argv[0], environment)
         result = subprocess.run(
@@ -2241,7 +2453,8 @@ def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) 
         "status": "passed",
         "configured_logical_launch_root": str(config.launch_root),
         "provider_runtime_cwd": "not_observed_until_attempt_init",
-        "candidate_head": effective_head,
+        "candidate_head": candidate_identity["observed_commit"],
+        "candidate_identity": candidate_identity,
         "additional_directories": [str(path) for path in config.additional_directories],
         "paths": path_results,
         "commands": command_results,
@@ -2656,7 +2869,8 @@ def run_governed_review(
     }
     controller_id = uuid.uuid4().hex
     with AttemptScratch.allocate(child_environment, "claude-review-controller-") as scratch:
-        environment = safe_command_environment(child_environment, scratch)
+        controller_environment = safe_command_environment(child_environment, scratch)
+        environment = controller_environment
         initial_snapshot = source_snapshot(
             list(config.guard_roots), config.candidate, environment, config.allowed_commands, config.candidate_head
         )
@@ -2704,9 +2918,58 @@ def run_governed_review(
 
         command = [executable, "-p", *arguments]
         attempt_summaries: list[dict[str, object]] = []
+        candidate_identity_checks: list[dict[str, object]] = []
         final_output: str | None = None
         final_exit = REVIEWER_FAILURE_EXIT
+        last_verified_snapshot = post_preflight_snapshot
+        expected_symbolic_ref = preflight["candidate_identity"]["symbolic_ref"]
         for attempt_number in range(1, config.max_attempts + 1):
+            try:
+                candidate_identity = verified_candidate_head(
+                    config.candidate,
+                    config.candidate_head,
+                    controller_environment,
+                    expected_symbolic_ref=expected_symbolic_ref,
+                    enforce_symbolic_ref=True,
+                )
+                candidate_identity_checks.append(
+                    {
+                        "attempt_number": attempt_number,
+                        "stage": "before_attempt_baseline",
+                        **candidate_identity,
+                    }
+                )
+            except (OSError, RuntimeError, ValueError) as error:
+                drift_snapshot = source_snapshot(
+                    list(config.guard_roots),
+                    config.candidate,
+                    controller_environment,
+                    config.allowed_commands,
+                    config.candidate_head,
+                )
+                emit_diagnostics(
+                    {
+                        "kind": "claude_governed_review",
+                        "review_id": config.body["review_id"],
+                        "contract_id": config.body["contract_id"],
+                        "controller_id": controller_id,
+                        "contract_identity": contract_identity,
+                        "preflight": preflight,
+                        "attempts": attempt_summaries,
+                        "attempt_number": attempt_number,
+                        "failure_classification": "candidate_identity_changed_before_attempt",
+                        "candidate_verdict": "not_produced",
+                        "substantive_review_started": bool(attempt_summaries),
+                        "automated_retry_attempted": attempt_number > 1,
+                        "candidate_identity_stage": "before_attempt_baseline",
+                        "candidate_identity_checks": candidate_identity_checks,
+                        "candidate_identity_observation": getattr(error, "observation", None),
+                        "no_delta_postflight": no_delta_evidence(last_verified_snapshot, drift_snapshot),
+                        "error": bounded_redacted(str(error)),
+                    },
+                    diagnostics_destination,
+                )
+                return REVIEWER_FAILURE_EXIT
             attempt_scratch = AttemptScratch.allocate(child_environment, "claude-review-attempt-")
             environment = safe_command_environment(child_environment, attempt_scratch.path)
             attempt_id = f"{config.body['review_id']}-{attempt_number}-{uuid.uuid4().hex}"
@@ -2751,6 +3014,56 @@ def run_governed_review(
                     diagnostics_destination,
                 )
                 return REVIEWER_FAILURE_EXIT
+            try:
+                candidate_identity = verified_candidate_head(
+                    config.candidate,
+                    config.candidate_head,
+                    environment,
+                    expected_symbolic_ref=expected_symbolic_ref,
+                    enforce_symbolic_ref=True,
+                )
+                candidate_identity_checks.append(
+                    {
+                        "attempt_number": attempt_number,
+                        "stage": "immediately_before_provider_spawn",
+                        **candidate_identity,
+                    }
+                )
+            except (OSError, RuntimeError, ValueError) as error:
+                post_snapshot = source_snapshot(
+                    list(config.guard_roots),
+                    config.candidate,
+                    environment,
+                    config.allowed_commands,
+                    config.candidate_head,
+                )
+                comparison = no_delta_evidence(attempt_snapshot, post_snapshot)
+                scratch_record = attempt_scratch.record()
+                attempt_scratch.cleanup()
+                emit_diagnostics(
+                    {
+                        "kind": "claude_governed_review",
+                        "review_id": config.body["review_id"],
+                        "contract_id": config.body["contract_id"],
+                        "controller_id": controller_id,
+                        "contract_identity": contract_identity,
+                        "preflight": preflight,
+                        "attempts": attempt_summaries,
+                        "attempt_number": attempt_number,
+                        "failure_classification": "candidate_identity_changed_before_execution",
+                        "candidate_verdict": "not_produced",
+                        "substantive_review_started": bool(attempt_summaries),
+                        "automated_retry_attempted": attempt_number > 1,
+                        "candidate_identity_stage": "immediately_before_provider_spawn",
+                        "candidate_identity_checks": candidate_identity_checks,
+                        "candidate_identity_observation": getattr(error, "observation", None),
+                        "no_delta_postflight": comparison,
+                        "attempt_scratch": {**scratch_record, "cleanup": {"passed": True}},
+                        "error": bounded_redacted(str(error)),
+                    },
+                    diagnostics_destination,
+                )
+                return REVIEWER_FAILURE_EXIT
             process = subprocess.Popen(
                 command,
                 cwd=attempt_scratch.path,
@@ -2784,7 +3097,8 @@ def run_governed_review(
             stderr_collector = PipeCollector(process.stderr)
             process.stdin.write(prompt)
             process.stdin.close()
-            next_soft = time.monotonic() + config.soft_liveness_threshold
+            process_started_monotonic = time.monotonic()
+            next_soft = process_started_monotonic + config.soft_liveness_threshold
             emergency_signal_sent = False
             capability_signal_sent = False
             initialization_checked = False
@@ -2861,7 +3175,7 @@ def run_governed_review(
                             live_observed_git_admin_changes[
                                 canonical_json_bytes(record).decode("utf-8")
                             ] = record
-                        if live_changes and provisional_shared_object_only(live_comparison):
+                        if live_changes and provisional_attribution_only(live_comparison):
                             if provisional_object_change_since is None:
                                 provisional_object_change_since = time.monotonic()
                             if (
@@ -2946,7 +3260,7 @@ def run_governed_review(
                             live_observed_git_admin_changes[
                                 canonical_json_bytes(record).decode("utf-8")
                             ] = record
-                        if live_changes and provisional_shared_object_only(live_comparison):
+                        if live_changes and provisional_attribution_only(live_comparison):
                             if provisional_object_change_since is None:
                                 provisional_object_change_since = time.monotonic()
                             if (
@@ -2985,6 +3299,12 @@ def run_governed_review(
                 if key in external_state:
                     live_state[key] = external_state[key]
             live_state["process_group_terminal"] = True
+            if time.monotonic() - process_started_monotonic >= config.soft_liveness_threshold:
+                live_state.setdefault("soft_liveness_threshold_crossed", True)
+                live_state.setdefault(
+                    "soft_liveness_observation",
+                    "process_reached_terminal_after_threshold; continuing_same_attempt",
+                )
             live_state["state"] = "collecting_terminal_stream"
             replace_live_state(live_state_path, live_state)
             stdout_collector.thread.join()
@@ -3068,6 +3388,7 @@ def run_governed_review(
                 "attempt_number": attempt_number,
                 "execution_kind": "fresh_execution_exact_input_repeat" if attempt_number > 1 else "fresh_execution",
                 "contract_identity": contract_identity,
+                "candidate_identity_checks": list(candidate_identity_checks),
                 "preflight": preflight,
                 "process": {
                     "pid": process.pid,
@@ -3083,6 +3404,7 @@ def run_governed_review(
                     "requested_argv": redacted_argv(command),
                     "logical_launch_root": str(config.launch_root),
                     "provider_runtime_cwd": str(attempt_scratch.path),
+                    "HOME": environment["HOME"],
                     "effective_init": parsed.get("init"),
                 },
                 "attempt_scratch": {**scratch_record, "cleanup": scratch_cleanup},
@@ -3184,6 +3506,8 @@ def run_governed_review(
                     "live_state": str(live_state_path),
                 }
             )
+            if retryable and post_snapshot is not None and not changes:
+                last_verified_snapshot = post_snapshot
             if classification == "success" or not retryable or attempt_number == config.max_attempts:
                 break
 
@@ -3341,6 +3665,25 @@ def main(argv: list[str] | None = None) -> int:
         )
         return REVIEWER_FAILURE_EXIT
     try:
+        effective_home = effective_home_for_execution(
+            effective_home,
+            os.environ,
+            explicit_test_fixture=execution_fixture,
+        )
+    except RuntimeError as error:
+        emit_diagnostics(
+            {
+                "kind": "claude_reviewer_attempt",
+                "runtime": {"effective_uid": uid, "effective_user": user, "cwd": os.getcwd()},
+                "failure_classification": "test_effective_home_invalid",
+                "candidate_verdict": "not_produced",
+                "substantive_review_output": False,
+                "error": bounded_redacted(str(error)),
+            },
+            None,
+        )
+        return REVIEWER_FAILURE_EXIT
+    try:
         executable, execution_identity = qualified_execution(
             args.claude_bin,
             uid,
@@ -3414,6 +3757,7 @@ def main(argv: list[str] | None = None) -> int:
         return REVIEWER_FAILURE_EXIT
     inherited_home = os.environ.get("HOME")
     child_environment = os.environ.copy()
+    child_environment.pop("CLAUDE_REVIEW_TEST_EFFECTIVE_HOME", None)
     if not execution_fixture:
         child_environment.pop("CLAUDE_REVIEW_TEST_FIXTURE", None)
         child_environment.pop("CLAUDE_REVIEW_TEST_SCRATCH_PARENT", None)
