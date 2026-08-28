@@ -4,6 +4,7 @@ prefix_rule(
     pattern=[
         "__CLAUDE_REVIEW_LAUNCHER__",
         [
+            "--qualify-claude-identity",
             "--permission-hook",
             "--request-termination",
             "--decline-termination",
@@ -11,7 +12,7 @@ prefix_rule(
         ],
     ],
     decision="prompt",
-    justification="Claude reviewer lifecycle and permission-hook controls require separate authority.",
+    justification="Claude identity qualification, lifecycle, and permission-hook controls require separate authority.",
 )
 
 prefix_rule(

@@ -5,6 +5,7 @@ prefix_rule(
     pattern=[
         "./scripts/claude-review",
         [
+            "--qualify-claude-identity",
             "--permission-hook",
             "--auth-preflight",
             "--review-config",

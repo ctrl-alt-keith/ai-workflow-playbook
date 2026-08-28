@@ -756,12 +756,23 @@ Never copy that template unchanged into the user layer: its placeholder is not
 an executable identity, and a relative allow prefix can match writable bytes in
 more than one repository.
 
-The installer verifies a clean exact source commit, copies the launcher to a
-commit-and-digest-qualified directory under an operator-controlled non-workspace
-root, records the source and installed hashes, exact Claude selector and resolved
-file identity, and renders the user rule with the exact installed absolute path.
-It refuses a different existing installed object and requires the caller to name
-the expected digest before replacing an existing active rule. Supply every
+The installer verifies a clean exact source commit and derives one immutable,
+content-addressed entry contract from the launcher bytes, installation and
+qualification schemas, Codex rule-template bytes, configured Claude selector,
+active-rule path, forbidden roots, and private state destinations. An unrelated
+source commit remains provenance and does not change the entry path when those
+execution-contract inputs are identical. The installer copies the launcher and
+immutable schema-v2 manifest under an operator-controlled non-workspace root,
+creates the initial exact Claude qualification receipt and singular current
+selection in separate private state, and renders the user rule with the exact
+installed absolute path. It refuses a different existing installed object and
+requires the caller to name the expected digest before replacing an existing
+active rule. An identical-contract rerun securely validates and preserves any
+valid current receipt, including upgrade and rollback lineage, and appends only
+the new source provenance and requested activation evidence. Selector drift on
+a rerun is qualification-required and occurs before rule or activation-receipt
+mutation. Schema-v1 installations remain historical state; do not reinterpret
+or migrate them automatically. Supply every
 candidate, evidence, workspace, and attempt-scratch root as a forbidden root.
 The activation receipt's exact operator-controlled parent is also recorded as
 the auth-preflight diagnostics directory. An auto-approved auth preflight may
@@ -781,15 +792,44 @@ For example, using operator-selected absolute paths:
 ```
 
 The generated user rule allows only direct auth-preflight and governed-review
-prefixes for that installed path. Lifecycle and permission-hook prefixes remain
-`prompt`; repository-relative, alternate-path, and shell-wrapped forms are not
-allowed. The installed launcher verifies its own bytes, the active-rule hash,
-and the recorded Claude selector and resolved executable identity before either
-allowed operation. It never resolves `claude` through inherited `PATH`.
+prefixes for that installed path. The exact
+`--qualify-claude-identity` prefix is `prompt`, as are lifecycle and
+permission-hook controls; repository-relative, alternate-path, arbitrary
+Claude-selection, and shell-wrapped forms are not allowed. The installed
+entry and rule are a one-time setup while their contract remains unchanged;
+a routine Claude update uses only the bounded qualification command emitted by
+the drift diagnostic, not another install, rule rewrite, or Codex restart. The
+installed launcher verifies its own bytes, immutable entry contract,
+active-rule hash,
+private current-selection record, immutable qualification receipt, and the
+selector's exact non-executing file identity before either allowed operation.
+Only matching already-qualified bytes may be queried for their recorded version,
+followed by a repeated file observation. It never resolves `claude` through
+inherited `PATH`.
 
-Codex loads rules at startup. After each explicit install or update, validate
-the rendered rule without launching Claude, then restart Codex before relying
-on it:
+When the configured selector resolves to a legitimate new identity, ordinary
+auth and review fail before provider launch with
+`reviewer_identity_qualification_required`. The bounded diagnostic names the
+current receipt digest, observed canonical path and file digest, the exact
+non-executing observation and its digest, and the exact qualification command;
+it does not claim a version for unqualified bytes. That command accepts only the
+expected current receipt digest and expected observed file-identity digest; it
+derives the selector from the immutable entry manifest, recomputes the target,
+serializes the transition under the entry's exact lock, rejects no-op requests,
+then performs the first permitted version query. After another exact file
+observation it creates one no-overwrite lineage receipt and atomically
+compare-and-swap replaces the singular current record through a private flushed
+temporary file.
+It cannot select another executable or change the selector. After the operator
+approves and the transition succeeds, rerun the unchanged auth or review
+command through the unchanged rule. Historical receipts are provenance, not an
+allowlist: an upgrade, consecutive upgrade, or rollback each requires a new
+transition from the current receipt.
+
+Codex loads rules at startup. After a genuine entry-contract install or rule
+update, validate the rendered rule without launching Claude, then restart Codex
+before relying on it. A qualification-only transition does not edit the rule or
+launcher and does not require a restart:
 
 ```sh
 codex execpolicy check --pretty \
@@ -800,9 +840,16 @@ codex execpolicy check --pretty \
   --rules /ABSOLUTE/PATH/TO/ACTIVE/claude-review.rules \
   -- /ABSOLUTE/INSTALLED/PATH/claude-review --terminate /tmp/live-state.json \
   --termination-authority operator-approved
+
+codex execpolicy check --pretty \
+  --rules /ABSOLUTE/PATH/TO/ACTIVE/claude-review.rules \
+  -- /ABSOLUTE/INSTALLED/PATH/claude-review --qualify-claude-identity \
+  --expected-current-receipt-sha256 EXPECTED_RECEIPT_SHA256 \
+  --expected-observed-file-identity-sha256 EXPECTED_FILE_IDENTITY_SHA256
 ```
 
-The first check must report `allow`; the second must report `prompt`. Do not use
+The first check must report `allow`; the lifecycle and qualification checks
+must report `prompt`. Do not use
 shell wrappers, redirections, or pipelines for this path: they change policy
 evaluation and bypass the launcher's owned prompt/output flow. Supply the review
 prompt directly on standard input through an execution channel that remains open
