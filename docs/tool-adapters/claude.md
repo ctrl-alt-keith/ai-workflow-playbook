@@ -184,13 +184,39 @@ evidence. The first `system/init` record must report exactly `Bash`, `Glob`,
 `Grep`, and `Read`; no MCP servers, plugins, skills, slash commands, or
 capability-startup error; `dontAsk` permission mode; the requested model family;
 and the exact attempt-scratch runtime directory. Stop the process on a mismatch
-and reject any eventual output. The launcher still
-performs whole-source, Git-index, and Git-administration no-delta checks because provider flags,
+and reject any eventual output. The launcher still performs whole-source,
+Git-index, and Git-administration integrity checks because provider flags,
 hooks, command-canary evidence, and initialization metadata are defense in
-depth, not a proof that no effect occurred. Git-administration lock files remain
-in the decisive baseline and terminal snapshot. New, removed, replaced, or
-changed locks contaminate the attempt; an exact unchanged pre-existing lock is
-distinguished from reviewer-attributable delta.
+depth, not proof that no effect occurred. It snapshots candidate-worktree and
+shared Git administration separately, protects candidate HEAD, branch/ref logs,
+admitted command revisions, semantic Git controls, and candidate-reachable
+objects, then classifies every raw administration change. Only another linked
+worktree's administration, unprotected ref/reflog activity, or shared
+object-storage layout may be tolerated, and only while protected resolution
+and reachability exact-match the baseline and the changed identities contain no
+lock, symlink, mode, vanished, special-object, or other ambiguity. Git
+configuration, packed refs, replacement, alternate, shallow, graft, attribute,
+candidate-specific, and unknown shared changes remain blocking.
+
+Git may write a commit object milliseconds before updating the unrelated ref
+that attributes it. Live monitoring may defer an object-only ambiguous change
+for one bounded stabilization interval, then reclassify from a fresh complete
+snapshot. Candidate, protected-ref, lock, mixed, and persistent unattached
+object changes do not gain that exception, and terminal postflight remains
+fully fail-closed.
+
+Use that classification unchanged in preflight, live monitoring, emergency
+stopping, terminal postflight, retry eligibility, and receipts. Receipts retain
+exact Git-directory-relative paths, owner scope, change type, before/after
+identities, proof, and blocking or tolerated disposition. Proven-unrelated raw
+change can coexist with a passing candidate-integrity result; it must not be
+reported as an aggregate `git-admin` delta or as no observed change. Only a
+blocking or ambiguous classification triggers the unauthorized-mutation stop,
+so independent linked-worktree commits and pushes require neither a clone nor
+serialization. Git-administration lock files remain in the decisive baseline
+and terminal snapshot. New, removed, replaced, or changed locks contaminate the
+attempt; an exact unchanged pre-existing lock is distinguished from
+reviewer-attributable delta.
 
 Anthropic documents `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` and
 `CLAUDE_CODE_DISABLE_CLAUDE_MDS=1` in its

@@ -1700,7 +1700,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         environment.pop("USER", None)
         completed, diagnostic = self.run_launcher("print('ACCEPT')\n", environment=environment)
 
-        self.assertEqual(completed.returncode, 0)
+        self.assertEqual(completed.returncode, 0, diagnostic)
         self.assertEqual(completed.stdout, "ACCEPT\n")
         self.assertEqual(diagnostic["runtime"]["effective_user"], effective.pw_name)
         self.assertEqual(diagnostic["runtime"]["USER"], effective.pw_name)
@@ -2137,12 +2137,24 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "if scenario == 'index_mutation':\n"
             "    (candidate / 'tracked.txt').write_text('staged\\n')\n"
             "    subprocess.run(['git','-C',str(candidate),'add','tracked.txt'], check=True)\n"
+            "if scenario in {'unrelated_worktree_commit_then_wait','unrelated_worktree_and_candidate_mutation'}:\n"
+            "    other = pathlib.Path(os.environ['FAKE_OTHER_WORKTREE'])\n"
+            "    (other / 'tracked.txt').write_text(f'unrelated {attempt}\\n')\n"
+            "    subprocess.run(['git','-C',str(other),'add','tracked.txt'], check=True)\n"
+            "    subprocess.run(['git','-C',str(other),'-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm',f'unrelated {attempt}'], check=True)\n"
+            "    if scenario == 'unrelated_worktree_and_candidate_mutation':\n"
+            "        (candidate / 'tracked.txt').write_text('candidate mutation\\n')\n"
+            "        time.sleep(10)\n"
+            "    time.sleep(0.08)\n"
+            "if scenario == 'unattributed_object_then_wait':\n"
+            "    subprocess.run(['git','-C',str(candidate),'hash-object','-w','--stdin'], input=b'unattached reviewer object\\n', check=True)\n"
+            "    time.sleep(10)\n"
             "if scenario == 'git_lock_then_wait':\n"
             "    (candidate / '.git' / 'index.lock').write_text('reviewer lock\\n')\n"
             "    time.sleep(10)\n"
             "if scenario == 'special_object_then_wait':\n"
             "    os.mkfifo(candidate / 'reviewer.fifo')\n"
-            "    time.sleep(0.08)\n"
+            "    time.sleep(0.5)\n"
             "if scenario == 'transient_special_object_then_wait':\n"
             "    fifo = candidate / 'reviewer.fifo'\n"
             "    os.mkfifo(fifo)\n"
@@ -2247,6 +2259,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 "FAKE_LINGER_MARKER": str(self.root / "lingering-child-terminal"),
             }
         )
+        if hasattr(self, "other_worktree"):
+            environment["FAKE_OTHER_WORKTREE"] = str(self.other_worktree)
+        if hasattr(self, "isolated_home"):
+            environment["HOME"] = str(self.isolated_home)
         return environment
 
     def run_governed(self, scenario="success", *, body=None, model="opus"):
@@ -2949,7 +2965,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         subprocess.run([str(LAUNCHER), "--request-termination", str(live)], check=True)
         subprocess.run([str(LAUNCHER), "--decline-termination", str(live)], check=True)
         terminated = subprocess.run(
-            [str(LAUNCHER), "--terminate", str(live), "--termination-authority", "fixture post-exit group authority", "--grace-seconds", "0.2"],
+            [str(LAUNCHER), "--terminate", str(live), "--termination-authority", "fixture post-exit group authority", "--grace-seconds", "1.0"],
             check=False,
         )
         self.assertEqual(terminated.returncode, 0)
@@ -3000,7 +3016,425 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         baseline = module.source_snapshot([self.candidate], self.candidate, environment)
         subprocess.run(["git", "-C", str(self.candidate), "config", "fixture.probe", "changed"], check=True)
         changed = module.source_snapshot([self.candidate], self.candidate, environment)
-        self.assertIn("git-admin", module.snapshot_delta(baseline, changed))
+        self.assertIn("git-admin:config", module.snapshot_delta(baseline, changed))
+
+    def test_unrelated_linked_worktree_commit_is_tolerated_with_structured_evidence(self):
+        module = load_script("claude_review_unrelated_worktree", LAUNCHER)
+        environment = os.environ.copy()
+        linked = self.root / "unrelated-worktree"
+        subprocess.run(
+            ["git", "-C", str(self.candidate), "worktree", "add", "-q", "-b", "fixture-unrelated", str(linked)],
+            check=True,
+        )
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        (linked / "tracked.txt").write_text("unrelated commit\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(linked), "add", "tracked.txt"], check=True)
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(linked),
+                "-c",
+                "user.name=Fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "commit",
+                "-qm",
+                "unrelated",
+            ],
+            check=True,
+        )
+        changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        comparison = module.snapshot_comparison(baseline, changed)
+        self.assertTrue(comparison["passed"], comparison)
+        self.assertEqual(comparison["blocking_paths"], [])
+        self.assertTrue(comparison["raw_changed_paths"])
+        scopes = {record["owner_scope"] for record in comparison["git_admin_changes"]}
+        self.assertTrue({"other_linked_worktree", "unrelated_ref", "shared_object_storage"} <= scopes)
+        self.assertTrue(all(record["disposition"] == "tolerated" for record in comparison["git_admin_changes"]))
+        self.assertNotIn("git-admin", comparison["raw_changed_paths"])
+
+    def test_network_free_unrelated_push_activity_is_tolerated(self):
+        module = load_script("claude_review_unrelated_push", LAUNCHER)
+        environment = os.environ.copy()
+        remote = self.root / "remote.git"
+        linked = self.root / "push-worktree"
+        subprocess.run(["git", "init", "--bare", "-q", str(remote)], check=True)
+        subprocess.run(["git", "-C", str(self.candidate), "remote", "add", "fixture", str(remote)], check=True)
+        subprocess.run(
+            ["git", "-C", str(self.candidate), "worktree", "add", "-q", "-b", "fixture-push", str(linked)],
+            check=True,
+        )
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        (linked / "tracked.txt").write_text("pushed commit\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(linked), "add", "tracked.txt"], check=True)
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(linked),
+                "-c",
+                "user.name=Fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "commit",
+                "-qm",
+                "push fixture",
+            ],
+            check=True,
+        )
+        subprocess.run(["git", "-C", str(linked), "push", "-q", "fixture", "HEAD:refs/heads/fixture-push"], check=True)
+        changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        comparison = module.snapshot_comparison(baseline, changed)
+        self.assertTrue(comparison["passed"], comparison)
+        self.assertTrue(comparison["tolerated_paths"])
+
+    def test_unattributed_object_write_remains_blocking(self):
+        module = load_script("claude_review_unattributed_object", LAUNCHER)
+        environment = os.environ.copy()
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        object_id = subprocess.run(
+            ["git", "-C", str(self.candidate), "hash-object", "-w", "--stdin"],
+            input="reviewer-originated unattached object\n",
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        comparison = module.snapshot_comparison(baseline, changed)
+        self.assertFalse(comparison["passed"])
+        self.assertIn(f"git-admin:objects/{object_id[:2]}/{object_id[2:]}", comparison["blocking_paths"])
+
+    def test_other_linked_worktree_administration_is_tolerated(self):
+        module = load_script("claude_review_other_worktree_admin", LAUNCHER)
+        environment = os.environ.copy()
+        linked = self.root / "admin-worktree"
+        subprocess.run(
+            ["git", "-C", str(self.candidate), "worktree", "add", "-q", "-b", "fixture-admin", str(linked)],
+            check=True,
+        )
+        common = Path(
+            subprocess.run(
+                ["git", "-C", str(linked), "rev-parse", "--git-common-dir"],
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+            ).stdout.strip()
+        ).resolve()
+        gitdir = Path(
+            subprocess.run(
+                ["git", "-C", str(linked), "rev-parse", "--absolute-git-dir"],
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+            ).stdout.strip()
+        ).resolve()
+        self.assertTrue(gitdir.is_relative_to(common / "worktrees"))
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        (gitdir / "fixture-observation").write_text("other worktree\n", encoding="utf-8")
+        changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        comparison = module.snapshot_comparison(baseline, changed)
+        self.assertTrue(comparison["passed"])
+        record = next(record for record in comparison["git_admin_changes"] if record["path"].endswith("fixture-observation"))
+        self.assertEqual(record["owner_scope"], "other_linked_worktree")
+        self.assertEqual(record["disposition"], "tolerated")
+
+    def test_protected_remote_ref_and_candidate_branch_reflog_remain_blocking(self):
+        module = load_script("claude_review_protected_refs", LAUNCHER)
+        environment = os.environ.copy()
+        linked = self.root / "protected-ref-worktree"
+        subprocess.run(
+            ["git", "-C", str(self.candidate), "worktree", "add", "-q", "-b", "fixture-ref-source", str(linked)],
+            check=True,
+        )
+        subprocess.run(["git", "-C", str(self.candidate), "update-ref", "refs/remotes/origin/main", "HEAD"], check=True)
+        commands = (
+            (
+                "git",
+                "-C",
+                str(self.candidate),
+                "diff",
+                "--no-ext-diff",
+                "--no-textconv",
+                "origin/main...HEAD",
+            ),
+        )
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment, commands)
+        (linked / "tracked.txt").write_text("new protected target\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(linked), "add", "tracked.txt"], check=True)
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(linked),
+                "-c",
+                "user.name=Fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "commit",
+                "-qm",
+                "new target",
+            ],
+            check=True,
+        )
+        linked_head = subprocess.run(
+            ["git", "-C", str(linked), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        subprocess.run(
+            ["git", "-C", str(self.candidate), "update-ref", "refs/remotes/origin/main", linked_head], check=True
+        )
+        changed = module.source_snapshot([self.candidate], self.candidate, environment, commands)
+        comparison = module.snapshot_comparison(baseline, changed)
+        self.assertFalse(comparison["passed"])
+        remote_record = next(
+            record for record in comparison["git_admin_changes"] if record["path"] == "refs/remotes/origin/main"
+        )
+        self.assertEqual(remote_record["classification"], "blocking_protected_ref_or_reflog")
+
+        branch = subprocess.run(
+            ["git", "-C", str(self.candidate), "symbolic-ref", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        subprocess.run(["git", "-C", str(self.candidate), "update-ref", branch, linked_head], check=True)
+        branch_changed = module.source_snapshot([self.candidate], self.candidate, environment, commands)
+        branch_comparison = module.snapshot_comparison(baseline, branch_changed)
+        self.assertFalse(branch_comparison["passed"])
+        self.assertTrue(
+            any(
+                record["path"] in {branch, f"logs/{branch}"}
+                and record["classification"] == "blocking_protected_ref_or_reflog"
+                for record in branch_comparison["git_admin_changes"]
+            )
+        )
+
+    def test_semantic_object_lookup_controls_remain_fail_closed(self):
+        module = load_script("claude_review_object_controls", LAUNCHER)
+        environment = os.environ.copy()
+        alternate = self.root / "alternate.git"
+        subprocess.run(["git", "init", "--bare", "-q", str(alternate)], check=True)
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        alternates = self.candidate / ".git" / "objects" / "info" / "alternates"
+        alternates.write_text(f"{alternate / 'objects'}\n", encoding="utf-8")
+        changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        comparison = module.snapshot_comparison(baseline, changed)
+        self.assertFalse(comparison["passed"])
+        record = next(record for record in comparison["git_admin_changes"] if record["path"] == "objects/info/alternates")
+        self.assertEqual(record["owner_scope"], "ambiguous_shared_administration")
+        self.assertEqual(record["disposition"], "blocking")
+
+        alternates.unlink()
+        for relative, content in (
+            ("info/grafts", f"{subprocess.run(['git', '-C', str(self.candidate), 'rev-parse', 'HEAD'], check=True, text=True, stdout=subprocess.PIPE).stdout.strip()}\n"),
+            ("shallow", f"{subprocess.run(['git', '-C', str(self.candidate), 'rev-parse', 'HEAD'], check=True, text=True, stdout=subprocess.PIPE).stdout.strip()}\n"),
+        ):
+            with self.subTest(control=relative):
+                control_baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+                control = self.candidate / ".git" / relative
+                control.parent.mkdir(parents=True, exist_ok=True)
+                control.write_text(content, encoding="utf-8")
+                control_changed = module.source_snapshot([self.candidate], self.candidate, environment)
+                control_comparison = module.snapshot_comparison(control_baseline, control_changed)
+                self.assertFalse(control_comparison["passed"])
+                self.assertIn(f"git-admin:{relative}", control_comparison["blocking_paths"])
+                control.unlink()
+
+        head = subprocess.run(
+            ["git", "-C", str(self.candidate), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        object_path = self.candidate / ".git" / "objects" / head[:2] / head[2:]
+        object_bytes = object_path.read_bytes()
+        object_mode = object_path.stat().st_mode
+        object_path.unlink()
+        try:
+            with self.assertRaisesRegex(
+                RuntimeError,
+                "Git identity observation|protected Git object observation|shared Git reachability observation",
+            ):
+                module.source_snapshot([self.candidate], self.candidate, environment)
+        finally:
+            object_path.write_bytes(object_bytes)
+            object_path.chmod(object_mode)
+
+    def test_candidate_head_mode_and_symlink_identity_remain_blocking(self):
+        module = load_script("claude_review_candidate_identity", LAUNCHER)
+        environment = os.environ.copy()
+        branch = subprocess.run(
+            ["git", "-C", str(self.candidate), "symbolic-ref", "--short", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        subprocess.run(["git", "-C", str(self.candidate), "checkout", "-q", "--detach"], check=True)
+        detached = module.source_snapshot([self.candidate], self.candidate, environment)
+        head_comparison = module.snapshot_comparison(baseline, detached)
+        self.assertFalse(head_comparison["passed"])
+        self.assertIn("git-admin:HEAD", head_comparison["blocking_paths"])
+
+        subprocess.run(["git", "-C", str(self.candidate), "checkout", "-q", branch], check=True)
+        mode_baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        tracked = self.candidate / "tracked.txt"
+        tracked.chmod(0o755)
+        mode_changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        self.assertIn(f"{self.candidate}:tracked.txt", module.snapshot_delta(mode_baseline, mode_changed))
+
+        tracked.chmod(0o644)
+        symlink = self.candidate / "candidate-link"
+        symlink.symlink_to("tracked.txt")
+        symlink_baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        symlink.unlink()
+        symlink.symlink_to(".gitignore")
+        symlink_changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        self.assertIn(f"{self.candidate}:candidate-link", module.snapshot_delta(symlink_baseline, symlink_changed))
+
+    def test_replacement_ref_contamination_is_blocking(self):
+        module = load_script("claude_review_replace_ref", LAUNCHER)
+        environment = os.environ.copy()
+        linked = self.root / "replace-worktree"
+        subprocess.run(
+            ["git", "-C", str(self.candidate), "worktree", "add", "-q", "-b", "fixture-replace", str(linked)],
+            check=True,
+        )
+        (linked / "tracked.txt").write_text("replacement object\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(linked), "add", "tracked.txt"], check=True)
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(linked),
+                "-c",
+                "user.name=Fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "commit",
+                "-qm",
+                "replacement object",
+            ],
+            check=True,
+        )
+        replacement = subprocess.run(
+            ["git", "-C", str(linked), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        head = subprocess.run(
+            ["git", "-C", str(self.candidate), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        subprocess.run(["git", "-C", str(self.candidate), "replace", head, replacement], check=True)
+        changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        comparison = module.snapshot_comparison(baseline, changed)
+        self.assertFalse(comparison["passed"])
+        record = next(
+            record for record in comparison["git_admin_changes"] if record["path"] == f"refs/replace/{head}"
+        )
+        self.assertEqual(record["classification"], "blocking_protected_ref_or_reflog")
+
+    def test_live_unrelated_worktree_commit_passes_and_records_tolerated_changes(self):
+        self.other_worktree = self.root / "live-unrelated-worktree"
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(self.candidate),
+                "worktree",
+                "add",
+                "-q",
+                "-b",
+                "fixture-live-unrelated",
+                str(self.other_worktree),
+            ],
+            check=True,
+        )
+        completed, diagnostic = self.run_governed("unrelated_worktree_commit_then_wait", body=self.config_body(max_attempts=1))
+        self.assertEqual(completed.returncode, 0, diagnostic)
+        self.assertIsNone(diagnostic["failure_classification"])
+        receipt = self.receipts()[0]
+        self.assertTrue(receipt["no_delta_postflight"]["passed"])
+        self.assertEqual(receipt["no_delta_postflight"]["changed_paths"], [])
+        self.assertTrue(receipt["no_delta_postflight"]["raw_changed_paths"])
+        self.assertTrue(receipt["no_delta_postflight"]["tolerated_changed_paths"])
+        self.assertTrue(receipt["no_delta_postflight"]["live_observed_tolerated_changed_paths"])
+        self.assertTrue(receipt["no_delta_postflight"]["git_admin_changes"])
+        for record in receipt["no_delta_postflight"]["git_admin_changes"]:
+            self.assertTrue(
+                {
+                    "path",
+                    "git_directory",
+                    "owner_scope",
+                    "change_type",
+                    "before",
+                    "after",
+                    "classification",
+                    "evidence",
+                    "disposition",
+                }
+                <= set(record)
+            )
+            self.assertFalse(record["path"].startswith("git-admin"))
+        self.assertNotIn("emergency_condition", receipt["lifecycle"])
+
+    def test_live_unattributed_object_write_remains_fail_closed_after_stabilization(self):
+        completed, diagnostic = self.run_governed("unattributed_object_then_wait", body=self.config_body(max_attempts=1))
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
+        receipt = self.receipts()[0]
+        self.assertEqual(receipt["lifecycle"]["emergency_condition"], "unauthorized_mutation")
+        self.assertTrue(
+            any(
+                record["classification"] == "blocking_ambiguous_shared_administration"
+                and record["path"].startswith("objects/")
+                for record in receipt["no_delta_postflight"]["git_admin_changes"]
+            )
+        )
+
+    def test_governed_review_creates_no_local_or_cross_attempt_state(self):
+        self.isolated_home = self.root / "isolated-home"
+        self.isolated_home.mkdir()
+        completed, diagnostic = self.run_governed("success", body=self.config_body(max_attempts=1))
+        self.assertEqual(completed.returncode, 0)
+        self.assertIsNone(diagnostic["failure_classification"])
+        self.assertFalse((self.isolated_home / ".local").exists())
+        self.assertFalse((self.isolated_home / ".cache").exists())
+        self.assertFalse((self.isolated_home / ".config").exists())
+
+    def test_unrelated_activity_does_not_hide_simultaneous_candidate_mutation(self):
+        self.other_worktree = self.root / "mixed-mutation-worktree"
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(self.candidate),
+                "worktree",
+                "add",
+                "-q",
+                "-b",
+                "fixture-mixed-mutation",
+                str(self.other_worktree),
+            ],
+            check=True,
+        )
+        completed, diagnostic = self.run_governed(
+            "unrelated_worktree_and_candidate_mutation", body=self.config_body(max_attempts=1)
+        )
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
+        receipt = self.receipts()[0]
+        self.assertFalse(receipt["no_delta_postflight"]["passed"])
+        self.assertTrue(any(path.endswith(":tracked.txt") for path in receipt["no_delta_postflight"]["changed_paths"]))
+        self.assertEqual(receipt["lifecycle"]["emergency_condition"], "unauthorized_mutation")
 
     def test_git_admin_lock_creation_removal_replacement_and_unchanged_baseline(self):
         module = load_script("claude_review_git_locks", LAUNCHER)
@@ -3018,7 +3452,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 lock.parent.mkdir(parents=True, exist_ok=True)
                 lock.write_text("created\n", encoding="utf-8")
                 changed = module.source_snapshot([self.candidate], self.candidate, environment)
-                self.assertIn("git-admin", module.snapshot_delta(baseline, changed))
+                self.assertIn(f"git-admin:{lock.relative_to(git_directory)}", module.snapshot_delta(baseline, changed))
                 lock.unlink()
 
         preexisting = git_directory / "preexisting.lock"
@@ -3028,10 +3462,35 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(module.snapshot_delta(baseline, unchanged), [])
         preexisting.unlink()
         removed = module.source_snapshot([self.candidate], self.candidate, environment)
-        self.assertIn("git-admin", module.snapshot_delta(baseline, removed))
+        self.assertIn("git-admin:preexisting.lock", module.snapshot_delta(baseline, removed))
         preexisting.write_text("replacement\n", encoding="utf-8")
         replaced = module.source_snapshot([self.candidate], self.candidate, environment)
-        self.assertIn("git-admin", module.snapshot_delta(baseline, replaced))
+        self.assertIn("git-admin:preexisting.lock", module.snapshot_delta(baseline, replaced))
+
+        preexisting.write_text("original\n", encoding="utf-8")
+        preexisting.chmod(0o600)
+        mode_baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        preexisting.chmod(0o644)
+        mode_changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        mode_record = next(
+            record
+            for record in module.snapshot_comparison(mode_baseline, mode_changed)["git_admin_changes"]
+            if record["path"] == "preexisting.lock"
+        )
+        self.assertEqual(mode_record["change_type"], "mode_changed")
+        self.assertEqual(mode_record["disposition"], "blocking")
+
+        preexisting.unlink()
+        symlink_baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        preexisting.symlink_to(self.candidate / "tracked.txt")
+        symlink_changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        symlink_record = next(
+            record
+            for record in module.snapshot_comparison(symlink_baseline, symlink_changed)["git_admin_changes"]
+            if record["path"] == "preexisting.lock"
+        )
+        self.assertEqual(symlink_record["change_type"], "added")
+        self.assertEqual(symlink_record["classification"], "blocking_lock_change")
 
     def test_linked_worktree_common_git_admin_locks_are_detected(self):
         module = load_script("claude_review_linked_worktree_locks", LAUNCHER)
@@ -3061,7 +3520,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 lock.parent.mkdir(parents=True, exist_ok=True)
                 lock.write_text("created\n", encoding="utf-8")
                 changed = module.source_snapshot([linked], linked, environment)
-                self.assertIn("git-admin", module.snapshot_delta(baseline, changed))
+                self.assertIn(f"git-admin:{lock.relative_to(common_directory)}", module.snapshot_delta(baseline, changed))
                 lock.unlink()
 
     def test_additional_guarded_repository_admin_delta_is_detected(self):
@@ -3073,7 +3532,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         lock = additional / ".git" / "config.lock"
         lock.write_text("created\n", encoding="utf-8")
         changed = module.source_snapshot([self.candidate, additional], self.candidate, environment)
-        self.assertIn(f"git-admin:{additional.resolve()}", module.snapshot_delta(baseline, changed))
+        self.assertIn(
+            f"git-admin:{additional.resolve()}:config.lock",
+            module.snapshot_delta(baseline, changed),
+        )
 
     def test_snapshot_records_a_lock_that_vanishes_during_identity_capture(self):
         module = load_script("claude_review_vanishing_lock", LAUNCHER)
@@ -3177,7 +3639,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
         receipt = self.receipts()[0]
         self.assertFalse(receipt["no_delta_postflight"]["passed"])
-        self.assertIn("git-admin", receipt["no_delta_postflight"]["changed_paths"])
+        self.assertIn("git-admin:index.lock", receipt["no_delta_postflight"]["changed_paths"])
 
     def test_attempt_scratch_cleanup_fails_closed_on_symlink_residue(self):
         import importlib.machinery
