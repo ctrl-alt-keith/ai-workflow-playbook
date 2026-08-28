@@ -112,12 +112,12 @@ The repository [`claude-review`](../../scripts/claude-review) source composes
 these controls for governed review. Production auth and review run only through
 the exact machine-local installation rendered by
 [`install-claude-review`](../../scripts/install-claude-review). That installed
-launcher verifies its reviewed bytes, immutable schema-v2 entry contract,
-active Codex rule, singular current qualification receipt, and the exact
+launcher verifies its reviewed bytes, immutable schema-v3 entry contract,
+active Codex rule, singular flat current qualification receipt, and the exact
 absolute Claude selector plus resolved user-owned, non-writable executable
 file identity without starting unqualified bytes; it does not select `claude`
 from inherited `PATH`. Only after that non-executing identity matches the
-schema-v2 qualification receipt may it query the recorded version. It then
+schema-v3 qualification receipt may it query the recorded version. It then
 re-observes the file identity. Before provider process creation it repeats that
 ordering and compares the current receipt, entry contract, canonical path,
 ownership, mode, executable status, device, inode, size, digest, and version.

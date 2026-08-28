@@ -526,7 +526,7 @@ hard-code a workstation username into reusable commands or configuration, and
 do not force this normalization on child CLIs without evidence that their
 behavior depends on login identity.
 
-### Enforcement-Backed Recursive Cleanup
+### Playbook-Managed Recursive Cleanup
 
 Direct `rm` and `rm -rf` remain approval-gated. When recursive cleanup is
 appropriate and every target is already known to be a disposable directory
@@ -534,16 +534,24 @@ beneath the current repository worktree, prefer the reviewed enforcement
 control:
 
 ```sh
-/Users/keith/.local/bin/codex-safe-rm -rf -- TARGET [TARGET ...]
+~/.local/bin/codex-safe-rm -rf -- TARGET [TARGET ...]
 ```
+
+The reusable `~` spelling above denotes the fixed location under the effective
+operator's account home. The installer exposes no alternate production
+destination. Enforcement's generated active rule must render and bind the
+exact resolved absolute executable path; it must not use `~`, `$HOME`, or
+`PATH` as runtime authority.
 
 The control validates the fixed invocation grammar and every operand, enforces
 containment beneath the invocation working directory, rejects `.git`, prevents
 symlink escape, rejects top-level files and symlinks, and safely ignores missing
-directories. The implementation, threat model, installation and verification
-workflow, rule fixture, and tests belong to
-[`ai-workflow-enforcement`](https://github.com/ctrl-alt-keith/ai-workflow-enforcement/blob/main/docs/codex-safe-rm.md);
-do not reproduce those mechanics in the playbook.
+directories. The executable source and its install, verification, and
+source-focused tests belong to this Playbook at
+[`scripts/codex-safe-rm`](../../scripts/codex-safe-rm) and
+[`scripts/install-codex-safe-rm`](../../scripts/install-codex-safe-rm).
+Enforcement owns the consumer policy and rule surface; it must not carry a
+second executable source or installer.
 
 The control establishes invocation and containment safety. It does not decide
 whether a directory is disposable. Do not use it to bypass approval when a
@@ -759,27 +767,31 @@ more than one repository.
 The installer verifies a clean exact source commit and derives one immutable,
 content-addressed entry contract from the launcher bytes, installation and
 qualification schemas, Codex rule-template bytes, configured Claude selector,
-active-rule path, forbidden roots, and private state destinations. An unrelated
-source commit remains provenance and does not change the entry path when those
-execution-contract inputs are identical. The installer copies the launcher and
-immutable schema-v2 manifest under an operator-controlled non-workspace root,
-creates the initial exact Claude qualification receipt and singular current
-selection in separate private state, and renders the user rule with the exact
-installed absolute path. It refuses a different existing installed object and
-requires the caller to name the expected digest before replacing an existing
-active rule. An identical-contract rerun securely validates and preserves any
-valid current receipt, including upgrade and rollback lineage, and appends only
-the new source provenance and requested activation evidence. Selector drift on
-a rerun is qualification-required and occurs before rule or activation-receipt
-mutation. Schema-v1 installations remain historical state; do not reinterpret
-or migrate them automatically. Supply every
+active-rule path, forbidden roots, and the exact installation directory. An
+unrelated source commit remains activation provenance and does not change the
+entry contract when those execution-contract inputs are identical. The
+installer publishes the stable command `~/.local/bin/claude-review` with one
+combined schema-v3 installation and current-qualification record at
+`~/.local/bin/.claude-review.json`. The content digest remains in that record
+and the entry contract, not in the command name. Qualification serializes on
+the stable executable and atomically replaces the combined record. It creates
+no other sidecar, `libexec`, state, cache, log, or historical receipt tree.
+The production installer derives that directory from the effective user's
+account home and exposes no relocation flag.
+The installer renders the user rule with the exact installed absolute path,
+refuses a different existing object, and requires the caller to name the
+expected digest before replacing an existing active rule. An identical-contract
+rerun securely validates and preserves the current receipt.
+Selector drift on a rerun is qualification-required and occurs before rule or
+activation-receipt mutation. Older installation schemas remain historical
+state; do not reinterpret or migrate them automatically. Supply every
 candidate, evidence, workspace, and attempt-scratch root as a forbidden root.
-The activation receipt's exact operator-controlled parent is also recorded as
-the auth-preflight diagnostics directory. An auto-approved auth preflight may
-create only one absent, path-safe JSON diagnostics file directly in that exact
-directory. Governed-review diagnostics must remain inside the config's exact
-evidence directory. A diagnostics-path or config failure is reported on the
-launcher's standard error without falling back to an unqualified file path.
+The activation receipt is explicit operation evidence and does not become
+durable launcher state. Production auth preflight reports its bounded record on
+standard error and does not accept a diagnostics-file destination. Governed
+review diagnostics remain inside the config's exact evidence directory. A
+diagnostics-path or config failure is reported on standard error without
+falling back to an unqualified file path.
 For example, using operator-selected absolute paths:
 
 ```sh
@@ -796,12 +808,11 @@ prefixes for that installed path. The exact
 `--qualify-claude-identity` prefix is `prompt`, as are lifecycle and
 permission-hook controls; repository-relative, alternate-path, arbitrary
 Claude-selection, and shell-wrapped forms are not allowed. The installed
-entry and rule are a one-time setup while their contract remains unchanged;
+command and rule are a one-time setup while their contract remains unchanged;
 a routine Claude update uses only the bounded qualification command emitted by
 the drift diagnostic, not another install, rule rewrite, or Codex restart. The
 installed launcher verifies its own bytes, immutable entry contract,
-active-rule hash,
-private current-selection record, immutable qualification receipt, and the
+active-rule hash, singular flat qualification receipt, and the
 selector's exact non-executing file identity before either allowed operation.
 Only matching already-qualified bytes may be queried for their recorded version,
 followed by a repeated file observation. It never resolves `claude` through
@@ -817,14 +828,13 @@ expected current receipt digest and expected observed file-identity digest; it
 derives the selector from the immutable entry manifest, recomputes the target,
 serializes the transition under the entry's exact lock, rejects no-op requests,
 then performs the first permitted version query. After another exact file
-observation it creates one no-overwrite lineage receipt and atomically
-compare-and-swap replaces the singular current record through a private flushed
-temporary file.
+observation it atomically compare-and-swap replaces the one current receipt
+through a flushed sidecar temporary file. The replacement records the prior
+receipt digest without retaining an accumulating local receipt history.
 It cannot select another executable or change the selector. After the operator
 approves and the transition succeeds, rerun the unchanged auth or review
-command through the unchanged rule. Historical receipts are provenance, not an
-allowlist: an upgrade, consecutive upgrade, or rollback each requires a new
-transition from the current receipt.
+command through the unchanged rule. An upgrade, consecutive upgrade, or
+rollback each requires a new transition from the current receipt.
 
 Codex loads rules at startup. After a genuine entry-contract install or rule
 update, validate the rendered rule without launching Claude, then restart Codex
