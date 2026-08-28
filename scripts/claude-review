@@ -37,9 +37,8 @@ GOVERNED_CONFIG_VERSION = 1
 MAX_GOVERNED_ATTEMPTS = 3
 TRANSIENT_OUTER_RETRY_ERRORS = {"overloaded", "server_error"}
 SAFE_EXECUTABLES = {"git", "shasum"}
-INSTALLATION_MANIFEST_NAME = "claude-review-installation.json"
-INSTALLATION_SCHEMA_VERSION = 2
-QUALIFICATION_SCHEMA_VERSION = 2
+INSTALLATION_SCHEMA_VERSION = 3
+QUALIFICATION_SCHEMA_VERSION = 3
 REVISION_ATOM = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64}|HEAD|origin/main)")
 REQUIRED_TOOLS = {"Bash", "Glob", "Grep", "Read"}
 WORKTREE_ADMIN_PATHS = ("HEAD", "index", "logs/HEAD", "COMMIT_EDITMSG", "ORIG_HEAD")
@@ -518,6 +517,22 @@ def secure_private_directory(path: Path, effective_uid: int) -> None:
         raise ValueError(f"state directory is not exact private operator-controlled state: {path}")
 
 
+def secure_install_directory(path: Path, effective_uid: int) -> None:
+    metadata = path.lstat()
+    if (
+        path.is_symlink()
+        or not stat.S_ISDIR(metadata.st_mode)
+        or metadata.st_uid != effective_uid
+        or stat.S_IMODE(metadata.st_mode) & 0o022
+        or path.resolve(strict=True) != path
+    ):
+        raise ValueError(f"install directory is not exact operator-controlled state: {path}")
+
+
+def installation_manifest_path(launcher: Path) -> Path:
+    return launcher.with_name(f".{launcher.name}.json")
+
+
 def load_installed_entry(effective_uid: int) -> tuple[Path, Path, dict[str, object]]:
     launcher = Path(__file__).resolve(strict=True)
     launcher_metadata = launcher.lstat()
@@ -528,15 +543,15 @@ def load_installed_entry(effective_uid: int) -> tuple[Path, Path, dict[str, obje
         or stat.S_IMODE(launcher_metadata.st_mode) != 0o500
     ):
         raise ValueError("the installed launcher is not the exact private executable object")
-    secure_private_directory(launcher.parent, effective_uid)
-    manifest_path = launcher.with_name(INSTALLATION_MANIFEST_NAME)
+    secure_install_directory(launcher.parent, effective_uid)
+    manifest_path = installation_manifest_path(launcher)
     try:
         manifest_bytes = secure_regular_bytes(manifest_path, effective_uid, modes={0o400})
         manifest = json.loads(manifest_bytes)
     except (OSError, json.JSONDecodeError) as error:
-        raise ValueError("production auth/review requires the exact schema-v2 installed entry manifest") from error
+        raise ValueError("production auth/review requires the exact schema-v3 installed entry manifest") from error
     if manifest.get("schema_version") != INSTALLATION_SCHEMA_VERSION:
-        raise ValueError("installed launcher schema is not supported; schema-v1 is not reinterpreted")
+        raise ValueError("installed launcher schema is not supported; older schemas are not reinterpreted")
     if manifest.get("installed_launcher_path") != str(launcher):
         raise ValueError("the installed launcher manifest does not name this exact launcher")
     launcher_bytes = launcher.read_bytes()
@@ -556,22 +571,14 @@ def load_installed_entry(effective_uid: int) -> tuple[Path, Path, dict[str, obje
         "claude_selector",
         "active_rule_path",
         "forbidden_roots",
-        "auth_diagnostics_directory",
     ):
         if manifest.get(field) != contract.get(field):
             raise ValueError(f"the entry manifest diverges from its immutable contract at {field}")
-    qualification_root = Path(str(contract.get("qualification_root", "")))
-    expected_qualification_directory = qualification_root / str(contract_id).removeprefix("sha256:")
-    if manifest.get("qualification_directory") != str(expected_qualification_directory):
-        raise ValueError("the qualification directory diverges from the immutable entry contract")
-    expected_state_paths = {
-        "qualification_receipts_directory": expected_qualification_directory / "receipts",
-        "current_selection_path": expected_qualification_directory / "current-selection.json",
-        "qualification_lock_path": expected_qualification_directory / "qualification.lock",
-    }
-    for field, expected_path in expected_state_paths.items():
-        if manifest.get(field) != str(expected_path):
-            raise ValueError(f"the entry manifest declares an invalid {field}")
+    installation_directory = Path(str(contract.get("installation_directory", "")))
+    if manifest.get("installation_directory") != str(installation_directory):
+        raise ValueError("the installation directory diverges from the immutable entry contract")
+    if installation_directory != launcher.parent:
+        raise ValueError("the installed launcher escaped the exact installation directory")
     active_rule = Path(str(manifest.get("active_rule_path", "")))
     if not active_rule.is_absolute():
         raise ValueError("the active Codex rule path is not exact")
@@ -588,60 +595,32 @@ def load_installed_entry(effective_uid: int) -> tuple[Path, Path, dict[str, obje
     forbidden_roots = manifest.get("forbidden_roots")
     if not isinstance(forbidden_roots, list) or not all(isinstance(value, str) for value in forbidden_roots):
         raise ValueError("the installation manifest does not declare exact forbidden writable roots")
-    for field in ("auth_diagnostics_directory", "qualification_directory", "qualification_receipts_directory"):
-        value = manifest.get(field)
-        if not isinstance(value, str) or not Path(value).is_absolute():
-            raise ValueError(f"the installation manifest does not declare an exact {field}")
-        secure_private_directory(Path(value), effective_uid)
+    auth_diagnostics = manifest.get("auth_diagnostics_directory")
+    if auth_diagnostics is not None:
+        if not isinstance(auth_diagnostics, str) or not Path(auth_diagnostics).is_absolute():
+            raise ValueError("the installation manifest declares invalid auth diagnostics")
+        secure_private_directory(Path(auth_diagnostics), effective_uid)
         if any(
-            contained(Path(value), Path(root)) or contained(Path(root), Path(value))
+            contained(Path(auth_diagnostics), Path(root))
+            or contained(Path(root), Path(auth_diagnostics))
             for root in forbidden_roots
         ):
-            raise ValueError(f"{field} overlaps a forbidden writable root")
+            raise ValueError("auth diagnostics overlaps a forbidden writable root")
     return launcher, manifest_path, manifest
 
 
 def current_qualification(
     manifest: dict[str, object], effective_uid: int
 ) -> tuple[dict[str, object], dict[str, object], bytes]:
-    current_path = Path(str(manifest.get("current_selection_path", "")))
-    receipts_directory = Path(str(manifest.get("qualification_receipts_directory", "")))
-    qualification_directory = Path(str(manifest.get("qualification_directory", "")))
-    if current_path.parent != qualification_directory or current_path.name != "current-selection.json":
-        raise ValueError("the current-selection path escaped its exact qualification directory")
-    current_bytes = secure_regular_bytes(current_path, effective_uid, modes={0o600})
-    try:
-        current = json.loads(current_bytes)
-    except json.JSONDecodeError as error:
-        raise ValueError("the current-selection record is malformed") from error
-    if not isinstance(current, dict):
-        raise ValueError("the current-selection record is malformed")
-    expected = {
-        "kind": "claude_reviewer_current_selection",
-        "schema_version": QUALIFICATION_SCHEMA_VERSION,
-        "entry_contract_id": manifest.get("entry_contract_id"),
-        "claude_selector": manifest.get("claude_selector"),
-    }
-    if any(current.get(key) != value for key, value in expected.items()):
-        raise ValueError("the current-selection record does not match the immutable entry contract")
-    receipt_path = Path(str(current.get("receipt_path", "")))
-    receipt_sha256 = current.get("receipt_sha256")
-    if (
-        not isinstance(receipt_sha256, str)
-        or receipt_path.parent != receipts_directory
-        or receipt_path.name != f"{receipt_sha256}.json"
-    ):
-        raise ValueError("the current qualification receipt identity is invalid")
+    launcher = Path(__file__).resolve(strict=True)
+    receipt_path = installation_manifest_path(launcher)
     receipt_bytes = secure_regular_bytes(receipt_path, effective_uid, modes={0o400})
-    if sha256_bytes(receipt_bytes) != receipt_sha256:
-        raise ValueError("the current qualification receipt digest is invalid")
     try:
         receipt = json.loads(receipt_bytes)
     except json.JSONDecodeError as error:
-        raise ValueError("the current qualification receipt is malformed") from error
+        raise ValueError("the combined installation and qualification record is malformed") from error
     if not isinstance(receipt, dict):
         raise ValueError("the current qualification receipt is malformed")
-    launcher = Path(__file__).resolve(strict=True)
     required = {
         "kind": "claude_reviewer_qualification_receipt",
         "schema_version": QUALIFICATION_SCHEMA_VERSION,
@@ -670,42 +649,22 @@ def current_qualification(
     ):
         raise ValueError("the qualification receipt lacks an exact qualified executable identity")
     predecessor_sha256 = receipt.get("predecessor_receipt_sha256")
-    predecessor_path_value = receipt.get("predecessor_receipt_path")
-    if (predecessor_sha256 is None) != (predecessor_path_value is None):
-        raise ValueError("the qualification receipt has ambiguous predecessor lineage")
-    if predecessor_sha256 is not None:
-        predecessor_path = Path(str(predecessor_path_value))
-        if (
-            not isinstance(predecessor_sha256, str)
-            or predecessor_sha256 == receipt_sha256
-            or predecessor_path.parent != receipts_directory
-            or predecessor_path.name != f"{predecessor_sha256}.json"
-        ):
-            raise ValueError("the qualification receipt has stale or invalid predecessor lineage")
-        predecessor_bytes = secure_regular_bytes(predecessor_path, effective_uid, modes={0o400})
-        if sha256_bytes(predecessor_bytes) != predecessor_sha256:
-            raise ValueError("the qualification predecessor receipt digest is invalid")
-        try:
-            predecessor = json.loads(predecessor_bytes)
-        except json.JSONDecodeError as error:
-            raise ValueError("the predecessor qualification receipt is malformed") from error
-        if not isinstance(predecessor, dict):
-            raise ValueError("the predecessor qualification receipt is malformed")
-        validate_recorded_file_identity(
-            predecessor.get("file_identity"),
-            str(manifest.get("claude_selector")),
-            forbidden_roots,
-            effective_uid,
-        )
-        if (
-            any(predecessor.get(key) != value for key, value in required.items())
-            or not isinstance(predecessor.get("version"), str)
-            or not predecessor["version"]
-            or predecessor.get("authority_semantics")
-            != "capability qualification only; grants zero task or review authority"
-        ):
-            raise ValueError("the predecessor qualification receipt belongs to another entry contract")
-    return current, receipt, current_bytes
+    receipt_sha256 = sha256_bytes(receipt_bytes)
+    if predecessor_sha256 is not None and (
+        not isinstance(predecessor_sha256, str)
+        or re.fullmatch(r"[0-9a-f]{64}", predecessor_sha256) is None
+        or predecessor_sha256 == receipt_sha256
+    ):
+        raise ValueError("the qualification receipt has stale or invalid predecessor lineage")
+    current = {
+        "kind": "claude_reviewer_current_selection",
+        "schema_version": QUALIFICATION_SCHEMA_VERSION,
+        "entry_contract_id": manifest.get("entry_contract_id"),
+        "claude_selector": manifest.get("claude_selector"),
+        "receipt_path": str(receipt_path),
+        "receipt_sha256": receipt_sha256,
+    }
+    return current, receipt, receipt_bytes
 
 
 def file_identity_digest(identity: dict[str, object]) -> str:
@@ -723,7 +682,7 @@ def qualified_execution(
     if explicit_test_fixture:
         if selector is None:
             raise ValueError("test fixtures require an explicit absolute --claude-bin")
-        if launcher.with_name(INSTALLATION_MANIFEST_NAME).exists():
+        if installation_manifest_path(launcher).exists():
             raise ValueError("an installed production launcher cannot use test executable qualification")
         qualified = qualified_executable_identity(Path(selector), effective_uid)
         identity = {**qualified["file_identity"], "version": qualified["version"]}
@@ -789,9 +748,10 @@ def qualified_execution(
             "installation_manifest_sha256": sha256_bytes(manifest_path.read_bytes()),
             "installed_launcher_sha256": manifest.get("installed_launcher_sha256"),
             "active_rule_sha256": manifest.get("active_rule_sha256"),
-            "auth_diagnostics_directory": manifest.get("auth_diagnostics_directory"),
         }
     )
+    if manifest.get("auth_diagnostics_directory") is not None:
+        identity["auth_diagnostics_directory"] = manifest["auth_diagnostics_directory"]
     return str(Path(identity["resolved_path"])), identity
 
 
@@ -836,14 +796,13 @@ def qualify_claude_identity(
     expected_current_receipt_sha256: str,
     expected_observed_file_identity_sha256: str,
 ) -> int:
-    launcher, _, manifest = load_installed_entry(effective_uid)
-    lock_path = Path(str(manifest.get("qualification_lock_path", "")))
-    qualification_directory = Path(str(manifest.get("qualification_directory", "")))
-    if lock_path.parent != qualification_directory or lock_path.name != "qualification.lock":
-        raise ValueError("the qualification lock escaped its exact state directory")
-    secure_regular_bytes(lock_path, effective_uid, modes={0o600})
-    with lock_path.open("r+b") as lock_stream:
+    launcher, manifest_path, _ = load_installed_entry(effective_uid)
+    with launcher.open("rb") as lock_stream:
         fcntl.flock(lock_stream.fileno(), fcntl.LOCK_EX)
+        _, manifest_path, manifest = load_installed_entry(effective_uid)
+        predecessor_manifest_bytes = secure_regular_bytes(
+            manifest_path, effective_uid, modes={0o400}
+        )
         current, current_receipt, predecessor_current_bytes = current_qualification(manifest, effective_uid)
         if current["receipt_sha256"] != expected_current_receipt_sha256:
             raise ValueError("the qualification request names a stale predecessor receipt")
@@ -867,27 +826,20 @@ def qualify_claude_identity(
         if executable_file_identity(selector, effective_uid, forbidden_roots) != observed:
             raise ValueError("the Claude selector changed before qualification receipt creation")
         receipt = {
-            "kind": "claude_reviewer_qualification_receipt",
-            "schema_version": QUALIFICATION_SCHEMA_VERSION,
-            "entry_contract_id": manifest["entry_contract_id"],
-            "claude_selector": str(selector),
+            **manifest,
             "file_identity": observed,
             "version": version,
             "predecessor_receipt_sha256": current["receipt_sha256"],
-            "predecessor_receipt_path": current["receipt_path"],
             "producing_launcher_path": str(launcher),
             "producing_launcher_sha256": manifest["installed_launcher_sha256"],
+            "qualification_event": "identity_transition",
             "qualified_at_epoch": int(time.time()),
             "authority_semantics": "capability qualification only; grants zero task or review authority",
         }
         receipt_bytes = canonical_json_bytes(receipt)
         receipt_sha256 = sha256_bytes(receipt_bytes)
-        receipt_path = Path(str(manifest["qualification_receipts_directory"])) / f"{receipt_sha256}.json"
-        exclusive_write(receipt_path, receipt_bytes)
-        os.chmod(receipt_path, 0o400)
-        fsync_directory(receipt_path.parent)
-        current_path = Path(str(manifest["current_selection_path"]))
-        if secure_regular_bytes(current_path, effective_uid, modes={0o600}) != predecessor_current_bytes:
+        receipt_path = manifest_path
+        if predecessor_current_bytes != predecessor_manifest_bytes:
             raise ValueError("the current qualification changed before compare-and-swap")
         new_current = {
             "kind": "claude_reviewer_current_selection",
@@ -897,13 +849,16 @@ def qualify_claude_identity(
             "receipt_path": str(receipt_path),
             "receipt_sha256": receipt_sha256,
         }
-        atomic_replace_current_selection(
-            current_path,
-            new_current,
-            predecessor_current_bytes,
+        atomic_replace_qualification_receipt(
+            receipt_path,
+            receipt,
+            predecessor_manifest_bytes,
             effective_uid,
         )
-        validated_current, validated_receipt, _ = current_qualification(manifest, effective_uid)
+        _, _, validated_manifest = load_installed_entry(effective_uid)
+        validated_current, validated_receipt, _ = current_qualification(
+            validated_manifest, effective_uid
+        )
         if validated_current != new_current or validated_receipt != receipt:
             raise ValueError("the qualification compare-and-swap did not verify")
     print(json.dumps({"qualification_receipt_path": str(receipt_path), "qualification_receipt_sha256": receipt_sha256, "file_identity": observed, "version": version, "entry_contract_id": manifest["entry_contract_id"]}, sort_keys=True))
@@ -1138,22 +1093,23 @@ def fsync_directory(path: Path) -> None:
         os.close(descriptor)
 
 
-def atomic_replace_current_selection(
+def atomic_replace_qualification_receipt(
     path: Path,
     record: dict[str, Any],
     expected_bytes: bytes,
     effective_uid: int,
 ) -> None:
-    """Replace singular current state using an exact private compare-and-swap file."""
+    """Replace the singular current receipt using an exact compare-and-swap file."""
     temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
     created = False
     try:
         exclusive_write(temporary, canonical_json_bytes(record))
         created = True
-        temporary_bytes = secure_regular_bytes(temporary, effective_uid, modes={0o600})
+        os.chmod(temporary, 0o400)
+        temporary_bytes = secure_regular_bytes(temporary, effective_uid, modes={0o400})
         if temporary_bytes != canonical_json_bytes(record):
             raise ValueError(f"the qualification temporary state did not verify: {temporary}")
-        if secure_regular_bytes(path, effective_uid, modes={0o600}) != expected_bytes:
+        if secure_regular_bytes(path, effective_uid, modes={0o400}) != expected_bytes:
             raise ValueError("the current qualification changed before compare-and-swap")
         os.replace(temporary, path)
         created = False
@@ -1172,7 +1128,7 @@ def atomic_replace_current_selection(
                     and not temporary.is_symlink()
                     and stat.S_ISREG(metadata.st_mode)
                     and metadata.st_uid == effective_uid
-                    and stat.S_IMODE(metadata.st_mode) == 0o600
+                    and stat.S_IMODE(metadata.st_mode) == 0o400
                 ):
                     temporary.unlink()
                 else:
@@ -1912,8 +1868,40 @@ def classify_git_admin_changes(before: dict[str, object], after: dict[str, objec
             exact_other_admin = exact_other_worktree_admin(relative, old_identity, new_identity)
             admitted_worktree = admitted_other_worktree_change(relative, old_identity, new_identity)
             if lock_path(relative):
-                scope = "lock"
-                classification = "blocking_lock_change"
+                linked_identifier = (
+                    f"linked:{parts[1]}"
+                    if len(parts) >= 3 and parts[0] == "worktrees"
+                    else None
+                )
+                unlocked_ref = (
+                    ref_for_admin_path(relative.removesuffix(".lock"))
+                    if relative.endswith(".lock")
+                    else None
+                )
+                if linked_identifier in known_other_worktrees and protected_evidence_unchanged:
+                    scope = "other_linked_worktree"
+                    classification = "blocking_unattributed_other_worktree_administration"
+                    evidence = {
+                        "worktree_id": linked_identifier,
+                        "admitted_git_managed_path": relative,
+                        "provisional_attribution": "worktree_transition_not_yet_observed",
+                        "protected_candidate_evidence_unchanged": True,
+                    }
+                elif (
+                    unlocked_ref is not None
+                    and unlocked_ref not in protected_refs
+                    and protected_evidence_unchanged
+                ):
+                    scope = "unrelated_ref"
+                    classification = "blocking_unattributed_unrelated_ref_administration"
+                    evidence = {
+                        "ref": unlocked_ref,
+                        "provisional_attribution": "unrelated_ref_transition_not_yet_observed",
+                        "protected_candidate_evidence_unchanged": True,
+                    }
+                else:
+                    scope = "lock"
+                    classification = "blocking_lock_change"
             elif owner == "candidate_worktree":
                 scope = "candidate_worktree"
                 classification = "blocking_candidate_worktree_administration"
@@ -2091,7 +2079,12 @@ def provisional_attribution_only(comparison: dict[str, object]) -> bool:
             record["classification"] == "blocking_unattributed_other_worktree_administration"
             and evidence.get("provisional_attribution") == "worktree_transition_not_yet_observed"
         )
-        if not shared_object_provisional and not worktree_admin_provisional:
+        unrelated_ref_provisional = (
+            record["classification"] == "blocking_unattributed_unrelated_ref_administration"
+            and evidence.get("provisional_attribution")
+            == "unrelated_ref_transition_not_yet_observed"
+        )
+        if not shared_object_provisional and not worktree_admin_provisional and not unrelated_ref_provisional:
             return False
         repository_root = record.get("repository_root")
         prefix = f"git-admin:{repository_root}:" if repository_root else "git-admin:"
@@ -3108,7 +3101,7 @@ def run_governed_review(
             live_observed_tolerated_paths: set[str] = set()
             live_observed_git_admin_changes: dict[str, dict[str, object]] = {}
             provisional_object_change_since: float | None = None
-            provisional_object_stabilization_seconds = max(0.1, config.observation_interval * 2)
+            provisional_object_stabilization_seconds = max(1.0, config.observation_interval * 2)
             while process.poll() is None:
                 time.sleep(config.observation_interval)
                 external_state = merged_external_state(live_state_path, live_state)
@@ -3729,8 +3722,14 @@ def main(argv: list[str] | None = None) -> int:
             diagnostics_root = (
                 args.diagnostics_file.parent.resolve(strict=True)
                 if execution_identity.get("qualification") == "explicit_test_fixture"
-                else Path(str(execution_identity["auth_diagnostics_directory"]))
+                else Path(str(execution_identity.get("auth_diagnostics_directory", "")))
             )
+            if execution_identity.get("qualification") != "explicit_test_fixture" and not isinstance(
+                execution_identity.get("auth_diagnostics_directory"), str
+            ):
+                raise ValueError(
+                    "production auth diagnostics require an explicitly bound private directory"
+                )
             diagnostics_destination = qualified_diagnostics_destination(
                 args.diagnostics_file,
                 diagnostics_root,
