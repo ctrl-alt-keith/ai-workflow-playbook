@@ -3,11 +3,38 @@
 
 from __future__ import annotations
 
+import subprocess
 import unittest
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def tracked_files(search_root: Path) -> list[Path]:
+    """Return files Git tracks under ``search_root``.
+
+    The ratchet governs the repository's committed active surfaces. Walking the
+    filesystem instead would also read untracked local artifacts — editor state,
+    build output, or OS metadata such as ``.DS_Store`` — which are not part of
+    those surfaces and are not necessarily valid UTF-8.
+    """
+
+    result = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(ROOT),
+            "ls-files",
+            "-z",
+            "--",
+            search_root.relative_to(ROOT).as_posix(),
+        ],
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    return [ROOT / entry for entry in result.stdout.split("\0") if entry]
 
 # These are the reviewed active references at the CAK-178 implementation
 # baseline. New entries require an explicit ownership review rather than
@@ -51,7 +78,7 @@ class CakLocalAssetPathRatchetTests(unittest.TestCase):
         observed: set[tuple[str, str]] = set()
 
         for search_root in ACTIVE_SURFACE_ROOTS:
-            for path in search_root.rglob("*"):
+            for path in tracked_files(search_root):
                 if not path.is_file() or "__pycache__" in path.parts:
                     continue
                 relative = path.relative_to(ROOT).as_posix()
