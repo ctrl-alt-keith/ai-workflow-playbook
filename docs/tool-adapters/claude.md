@@ -9,10 +9,12 @@ canonical docs.
 
 ## Instruction Discovery And Precedence
 
-Claude Code auto-loads `CLAUDE.md` memory at session start (project `CLAUDE.md`
-or `.claude/CLAUDE.md`, user `~/.claude/CLAUDE.md`, and their imports). It does
-not guarantee that repo-local `AGENTS.md` is ingested, yet `AGENTS.md` is the
-canonical repository execution layer the startup contract requires. Therefore:
+[Claude Code's current memory guidance](https://code.claude.com/docs/en/memory)
+documents user instructions at `~/.claude/CLAUDE.md` for all projects and
+loads `CLAUDE.md` instructions at session start. It reads `CLAUDE.md`, not
+repo-local `AGENTS.md`, unless the latter is imported or explicitly read; yet
+`AGENTS.md` is the canonical repository execution layer the startup contract
+requires. Therefore:
 
 - Explicitly read the target repository's `AGENTS.md`; do not assume auto-loaded
   memory covers repo-local policy.
@@ -24,6 +26,11 @@ canonical repository execution layer the startup contract requires. Therefore:
   [Repository Instruction Hierarchy](../start-here.md#repository-instruction-hierarchy)
   governs; a user-level `~/.claude/CLAUDE.md` is operator context and does not
   override repo-local policy.
+- Use the copy-ready
+  [`Claude global router`](../../distributions/global-bootstrap/claude-CLAUDE.md)
+  in the user-level file. It applies the shared
+  [`global bootstrap persistence`](../start-here.md#global-bootstrap-persistence)
+  timing invariant across repositories; it is not a per-turn retrieval rule.
 
 ## Interaction Mode And Permission Mode
 

@@ -1,4 +1,4 @@
-.PHONY: help check check-env authoritative-source-check scanner-test
+.PHONY: help check check-env check-local-bootstrap authoritative-source-check scanner-test
 
 .DEFAULT_GOAL := check
 
@@ -29,6 +29,9 @@ check-env: ## Verify local tools needed by make check are available.
 		echo "Install markdownlint-cli2 or markdownlint to enable local validation."; \
 		exit 1; \
 	fi
+
+check-local-bootstrap: ## Compare local global routers with canonical projections.
+	PYTHONDONTWRITEBYTECODE=1 python3 scripts/check_global_bootstrap.py
 
 authoritative-source-check: ## Run advisory authoritative-source scanning.
 	python3 scripts/check_authoritative_sources.py --base-ref origin/main --head-ref HEAD

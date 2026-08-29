@@ -21,6 +21,13 @@ Playbook. After the CAK-108 project bootstrap has routed repository work to the
 current [`start-here.md`](../start-here.md), apply this adapter with the
 repository floor and the task-activated guidance.
 
+For the account-level projection, use the copy-ready
+[`ChatGPT custom-instructions router`](../../distributions/global-bootstrap/chatgpt-custom-instructions.md).
+It applies the shared
+[`global bootstrap persistence`](../start-here.md#global-bootstrap-persistence)
+timing invariant across repositories. Do not reinterpret the router as a
+per-turn retrieval requirement.
+
 ## Project and conversation context
 
 Project instructions, project or uploaded files, conversation history, memory,
