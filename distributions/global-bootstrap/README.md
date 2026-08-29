@@ -58,6 +58,13 @@ them separately; do not collapse them into one ambiguous "project/custom"
 surface. They are manual hosted projections, not prerequisites for the
 immediate Codex desktop repair.
 
+Claude Cowork Settings preferences are another hosted/manual instruction
+surface. They are not read or changed by this distribution or its local-file
+validator. If that surface contains older unconditional wording such as
+"always fetch before answering," reconcile it manually to the same
+first-action/material-change timing and fail-closed retrieval semantics; do not
+claim local validator coverage for it.
+
 Use these markers around the exact router body in the Codex and Claude local
 files:
 

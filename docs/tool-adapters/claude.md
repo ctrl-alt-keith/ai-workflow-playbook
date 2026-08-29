@@ -10,11 +10,14 @@ canonical docs.
 ## Instruction Discovery And Precedence
 
 [Claude Code's current memory guidance](https://code.claude.com/docs/en/memory)
-documents user instructions at `~/.claude/CLAUDE.md` for all projects and
-loads `CLAUDE.md` instructions at session start. It reads `CLAUDE.md`, not
-repo-local `AGENTS.md`, unless the latter is imported or explicitly read; yet
-`AGENTS.md` is the canonical repository execution layer the startup contract
-requires. Therefore:
+documents four instruction scopes in broad-to-specific load order: managed
+policy, user instructions at `~/.claude/CLAUDE.md`, project instructions at
+`./CLAUDE.md` or `./.claude/CLAUDE.md`, and personal project-local
+instructions. Project instructions appear in context after user instructions,
+and discovered files are concatenated rather than one scope overriding another.
+Claude Code reads `CLAUDE.md`, not repo-local `AGENTS.md`,
+unless the latter is imported or explicitly read; yet `AGENTS.md` is the
+canonical repository execution layer the startup contract requires. Therefore:
 
 - Explicitly read the target repository's `AGENTS.md`; do not assume auto-loaded
   memory covers repo-local policy.
@@ -25,12 +28,26 @@ requires. Therefore:
 - Memory files are a transport for instructions, not an authority layer. The
   [Repository Instruction Hierarchy](../start-here.md#repository-instruction-hierarchy)
   governs; a user-level `~/.claude/CLAUDE.md` is operator context and does not
-  override repo-local policy.
-- Use the copy-ready
+  override repo-local policy. The documented load order places project
+  instructions after user instructions, but load order is context ordering,
+  not authority transfer.
+- For the broader CAK-187 provider rollout, use the copy-ready
   [`global bootstrap router`](../../distributions/global-bootstrap/bootstrap-router.md)
-  in the user-level file. It applies the shared
+  as an inline marked block in the regular user-level file. It applies the shared
   [`global bootstrap persistence`](../start-here.md#global-bootstrap-persistence)
   timing invariant across repositories; it is not a per-turn retrieval rule.
+  Validate a completed local Claude rollout with
+  `python3 scripts/check_global_bootstrap.py --require-claude` from the Playbook
+  repository.
+- Do not implement the user-global router as an import that resolves outside a
+  Cowork session's working directory, or as a symlink or hard link. Claude Code
+  documents that Cowork desktop skips those user-scope imports and skips a
+  linked `~/.claude/CLAUDE.md`. The inline managed block remains available in
+  Cowork without either indirection.
+- Keep the managed HTML markers around the inline router. Claude Code strips
+  block-level HTML comments before injecting `CLAUDE.md` content into context,
+  so the markers remain available to the drift validator without consuming
+  model context or becoming model instructions.
 
 ## Interaction Mode And Permission Mode
 

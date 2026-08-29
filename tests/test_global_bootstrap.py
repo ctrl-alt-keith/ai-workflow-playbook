@@ -52,7 +52,7 @@ class GlobalBootstrapTests(unittest.TestCase):
         self.assertIn("do not retrieve `start-here.md` again merely", normalized)
         self.assertIn(
             "When the first-action or material-change trigger applies, "
-            "retrieving and applying `start-here.md` is the only permitted action.",
+            "retrieving and applying `start-here.md` is the only permitted action:",
             normalized,
         )
         self.assertIn(
@@ -61,10 +61,9 @@ class GlobalBootstrapTests(unittest.TestCase):
             normalized,
         )
         self.assertIn("do not proceed from memory", normalized)
-        self.assertIn("Otherwise: Do not respond", normalized)
         self.assertIn(
-            "Do not respond, reason about the task, or invoke another tool "
-            "before applying it.",
+            "the only permitted action: Do not respond, reason about the task, "
+            "or invoke another tool before applying it.",
             normalized,
         )
         for removed_copy in (
@@ -89,6 +88,21 @@ class GlobalBootstrapTests(unittest.TestCase):
         self.assertIn(
             "python3 scripts/check_global_bootstrap.py --require-claude", readme
         )
+        self.assertIn("Claude Cowork Settings preferences", readme)
+
+    def test_claude_adapter_preserves_scope_order_and_cowork_caveats(self) -> None:
+        adapter = (ROOT / "docs" / "tool-adapters" / "claude.md").read_text(
+            encoding="utf-8"
+        )
+        normalized = " ".join(adapter.split())
+        self.assertIn("managed policy, user instructions", normalized)
+        self.assertIn("Project instructions appear in context after user", normalized)
+        self.assertIn("./CLAUDE.md` or `./.claude/CLAUDE.md", normalized)
+        self.assertIn("broader CAK-187 provider rollout", normalized)
+        self.assertIn("--require-claude", normalized)
+        self.assertIn("Cowork desktop skips those user-scope imports", normalized)
+        self.assertIn("symlink or hard link", normalized)
+        self.assertIn("strips block-level HTML comments", normalized)
 
     def test_validator_accepts_exact_blocks_with_unrelated_local_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
