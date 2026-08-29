@@ -47,6 +47,12 @@ provider surfaces:
 
 - **Claude Code user-global instructions:** place it in
   `~/.claude/CLAUDE.md` between the same managed markers.
+- **Claude profile instructions:** install and verify the body through the
+  hosted profile-instructions surface when ordinary Claude Chat conversations
+  may start CAK repository work.
+- **Claude Cowork global instructions:** install and verify the body through
+  **Settings > Cowork > Global instructions** when Cowork sessions may start
+  CAK repository work.
 - **ChatGPT account custom instructions:** install and verify the body through
   the hosted Personalization surface.
 - **ChatGPT CAK project instructions:** install and verify the body through the
@@ -58,12 +64,14 @@ them separately; do not collapse them into one ambiguous "project/custom"
 surface. They are manual hosted projections, not prerequisites for the
 immediate Codex desktop repair.
 
-Claude Cowork Settings preferences are another hosted/manual instruction
-surface. They are not read or changed by this distribution or its local-file
-validator. If that surface contains older unconditional wording such as
-"always fetch before answering," reconcile it manually to the same
-first-action/material-change timing and fail-closed retrieval semantics; do not
-claim local validator coverage for it.
+Claude profile and Cowork global instructions are also distinct hosted/manual
+configuration surfaces. They are not read or changed by this distribution or
+its local-file validator. Reconcile older unconditional wording such as
+"always fetch before answering" to the canonical timing and fail-closed
+retrieval semantics; do not claim local validator coverage for either surface.
+Use Claude project or Cowork folder instructions for project-specific context,
+not as another copy of the global router when the corresponding account-level
+surface already covers the run.
 
 Use these markers around the exact router body in the Codex and Claude local
 files:
@@ -113,11 +121,12 @@ python3 scripts/check_global_bootstrap.py \
   --require-claude
 ```
 
-The ChatGPT account and CAK project instructions are each validated by direct
-comparison during manual installation because the provider does not expose
-either hosted surface as a local file. That is a capability gap, not equivalent
-to the local byte check: record the canonical router commit and verification
-time in the owning rollout issue so later drift checks have an explicit baseline.
+The Claude profile, Claude Cowork global, ChatGPT account, and ChatGPT CAK
+project instructions are each validated by direct comparison during manual
+installation because the providers do not expose those hosted surfaces as
+local files. That is a capability gap, not equivalent to the local byte check:
+record the surface, canonical router commit, and verification time in the
+owning rollout issue so later drift checks have an explicit baseline.
 
 ## Local Reconciliation
 

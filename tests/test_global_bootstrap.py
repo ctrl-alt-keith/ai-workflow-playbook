@@ -73,13 +73,15 @@ class GlobalBootstrapTests(unittest.TestCase):
         ):
             self.assertFalse((PROJECTIONS / removed_copy).exists())
 
-    def test_distribution_names_both_hosted_chatgpt_destinations(self) -> None:
+    def test_distribution_names_each_hosted_provider_destination(self) -> None:
         readme = (PROJECTIONS / "README.md").read_text(encoding="utf-8")
         normalized = " ".join(readme.split())
         self.assertIn("immediate Codex desktop repair has exactly one", readme)
         self.assertIn("does not require a Codex project setting", readme)
         self.assertIn("ChatGPT account custom instructions", readme)
         self.assertIn("ChatGPT CAK project instructions", readme)
+        self.assertIn("Claude profile instructions", readme)
+        self.assertIn("Claude Cowork global instructions", readme)
         self.assertIn("distinct hosted configuration surfaces", readme)
         self.assertIn(
             "capability gap, not equivalent to the local byte check", normalized
@@ -88,7 +90,7 @@ class GlobalBootstrapTests(unittest.TestCase):
         self.assertIn(
             "python3 scripts/check_global_bootstrap.py --require-claude", readme
         )
-        self.assertIn("Claude Cowork Settings preferences", readme)
+        self.assertIn("Settings > Cowork > Global instructions", readme)
 
     def test_claude_adapter_preserves_scope_order_and_cowork_caveats(self) -> None:
         adapter = (ROOT / "docs" / "tool-adapters" / "claude.md").read_text(
@@ -100,9 +102,30 @@ class GlobalBootstrapTests(unittest.TestCase):
         self.assertIn("./CLAUDE.md` or `./.claude/CLAUDE.md", normalized)
         self.assertIn("broader CAK-187 provider rollout", normalized)
         self.assertIn("--require-claude", normalized)
-        self.assertIn("Cowork desktop skips those user-scope imports", normalized)
+        self.assertIn("desktop Cowork sessions skip those user-scope imports", normalized)
         self.assertIn("symlink or hard link", normalized)
         self.assertIn("strips block-level HTML comments", normalized)
+
+    def test_claude_adapter_routes_chat_cowork_and_code_surfaces(self) -> None:
+        adapter = (ROOT / "docs" / "tool-adapters" / "claude.md").read_text(
+            encoding="utf-8"
+        )
+        normalized = " ".join(adapter.split())
+        for heading in (
+            "## Surface And Invocation Routing",
+            "### Claude Chat",
+            "### Claude Cowork",
+            "### Claude Code",
+        ):
+            self.assertIn(heading, adapter)
+        self.assertIn("Claude Chat** is conversational", normalized)
+        self.assertIn("Claude Cowork** is agentic-remote by default", normalized)
+        self.assertIn("active desktop-connected local folder", normalized)
+        self.assertIn("Profile instructions apply account-wide", normalized)
+        self.assertIn("Settings > Cowork > Global instructions", normalized)
+        self.assertIn("Scheduled and other unattended Cowork tasks", normalized)
+        self.assertIn("best-effort per thread", normalized)
+        self.assertNotIn("/Users/keith/", adapter)
 
     def test_validator_accepts_exact_blocks_with_unrelated_local_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
