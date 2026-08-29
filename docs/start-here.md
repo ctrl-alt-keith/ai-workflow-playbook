@@ -37,6 +37,33 @@ Apply the core model's
 an execution-state transition materially affects human review, workflow
 authority, or subsequent behavior.
 
+### Global bootstrap persistence
+
+A provider-global instruction surface may route every repository into this
+startup contract, but it must not restart the contract before every response,
+reasoning step, or tool call. Its timing invariant is:
+
+> Before the first project action, and again only when the task/repository
+> materially changes.
+
+After a successful bootstrap, reuse the still-current repository operating
+mode and verified sources across subsequent turns. A follow-up message, a new
+tool call, or the passage of another conversational turn is not by itself a
+material change. Re-run routing when the target repository changes or when the
+task materially changes the interaction mode, workflow, authoritative-source
+requirements, execution locality, or authority boundary.
+
+When that first-action or material-change trigger applies, bootstrap remains a
+hard precondition: do not respond, reason about the task, or invoke another
+tool before applying it. Persistence narrows when the precondition reactivates;
+it does not weaken the precondition itself.
+
+The copy-ready global provider projections and the read-only local drift check
+are owned by the
+[`global-bootstrap` distribution](../distributions/global-bootstrap/README.md).
+Repo-local instruction files remain independently owned execution layers; do
+not copy the global router into every repository.
+
 ### Connector availability is runtime evidence
 
 Repository hydration and connector availability answer different questions.
