@@ -85,6 +85,13 @@ reported as a skipped broader-rollout surface rather than failing the Codex
 repair. Use `--require-claude` when validating a completed broader local
 rollout.
 
+To require both default user-global locations for a completed local rollout,
+run:
+
+```text
+python3 scripts/check_global_bootstrap.py --require-claude
+```
+
 For every selected local file, the check extracts the managed body and compares
 the normalized body with [`bootstrap-router.md`](bootstrap-router.md). It does
 not create, edit, or replace local files. Missing required files, missing or
@@ -115,8 +122,9 @@ issue, PR, or chat:
    `~/.codex/AGENTS.md` with the canonical router body.
 2. When adopting the broader Claude rollout, replace only the marked block in
    `~/.claude/CLAUDE.md` with that same canonical body.
-3. Run `make check-local-bootstrap`; add `--require-claude` through the direct
-   validator command shown above when Claude is part of the completed rollout.
+3. Run `make check-local-bootstrap` for the immediate repair, or the documented
+   `python3 scripts/check_global_bootstrap.py --require-claude` command when
+   Claude is part of the completed rollout.
 
 If either local file has no managed marker pair, add the marker pair around the
 canonical body without changing unrelated personal instructions. Local

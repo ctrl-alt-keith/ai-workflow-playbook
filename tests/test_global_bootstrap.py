@@ -55,8 +55,13 @@ class GlobalBootstrapTests(unittest.TestCase):
             "retrieving and applying `start-here.md` is the only permitted action.",
             normalized,
         )
-        self.assertIn("If it cannot be retrieved or read, say so plainly", normalized)
+        self.assertIn(
+            "If it cannot be retrieved or read, the only permitted response is "
+            "to say so plainly",
+            normalized,
+        )
         self.assertIn("do not proceed from memory", normalized)
+        self.assertIn("Otherwise: Do not respond", normalized)
         self.assertIn(
             "Do not respond, reason about the task, or invoke another tool "
             "before applying it.",
@@ -81,6 +86,9 @@ class GlobalBootstrapTests(unittest.TestCase):
             "capability gap, not equivalent to the local byte check", normalized
         )
         self.assertIn("## Local Reconciliation", readme)
+        self.assertIn(
+            "python3 scripts/check_global_bootstrap.py --require-claude", readme
+        )
 
     def test_validator_accepts_exact_blocks_with_unrelated_local_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
