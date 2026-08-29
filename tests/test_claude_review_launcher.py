@@ -3358,7 +3358,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         ).resolve()
         (gitdir / "COMMIT_EDITMSG").write_text("fixture\n", encoding="utf-8")
         changed = module.source_snapshot([self.candidate], self.candidate, environment)
-        comparison = module.snapshot_comparison(baseline, changed, live_monitoring=True)
+        comparison = module.snapshot_comparison(baseline, changed)
 
         # A Git-managed per-worktree administration file cannot yet be
         # attributed to that worktree's HEAD transition. It stays blocking, but
@@ -3399,7 +3399,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         planted = next(
             record
             for record in module.snapshot_comparison(
-                baseline, contaminated, live_monitoring=True
+                baseline, contaminated
             )["git_admin_changes"]
             if record["path"].endswith("fixture-observation")
         )
@@ -3945,111 +3945,6 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         )
         self.assertEqual(symlink_record["change_type"], "added")
         self.assertEqual(symlink_record["classification"], "blocking_lock_change")
-
-    def _maintenance_lock_record(self, module, environment, mutate, *, live_monitoring):
-        """Apply one mutation under .git and return its classification record."""
-
-        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
-        mutate()
-        changed = module.source_snapshot([self.candidate], self.candidate, environment)
-        comparison = module.snapshot_comparison(baseline, changed, live_monitoring=live_monitoring)
-        record = next(
-            record
-            for record in comparison["git_admin_changes"]
-            if record["path"] == "objects/maintenance.lock"
-        )
-        return comparison, record
-
-    def test_git_background_maintenance_lock_admission_is_bounded(self):
-        module = load_script("claude_review_maintenance_lock", LAUNCHER)
-        environment = os.environ.copy()
-        objects_directory = self.candidate / ".git" / "objects"
-        objects_directory.mkdir(parents=True, exist_ok=True)
-        maintenance_lock = objects_directory / "maintenance.lock"
-
-        # Eligible for the bounded window, but never tolerated. The reviewer
-        # cannot establish the writing actor, so the observation stays blocking
-        # and only becomes deferrable; lifetime is what the window then tests.
-        comparison, record = self._maintenance_lock_record(
-            module,
-            environment,
-            lambda: maintenance_lock.write_text("", encoding="utf-8"),
-            live_monitoring=True,
-        )
-        self.assertEqual(record["classification"], "blocking_unattributed_background_maintenance_lock")
-        self.assertEqual(record["disposition"], "blocking")
-        self.assertNotEqual(record["disposition"], "tolerated")
-        self.assertEqual(record["evidence"]["admitted_observation_scope"], "live_monitoring_only")
-        self.assertEqual(record["evidence"]["observed_kind"], "file")
-        self.assertFalse(comparison["passed"])
-        self.assertTrue(module.provisional_attribution_only(comparison))
-        maintenance_lock.unlink()
-
-        # Terminal postflight never defers. The same creation must block there
-        # and must not be provisional, so a lock surviving the attempt is
-        # decided by the terminal boundary rather than masked.
-        comparison, record = self._maintenance_lock_record(
-            module,
-            environment,
-            lambda: maintenance_lock.write_text("", encoding="utf-8"),
-            live_monitoring=False,
-        )
-        self.assertEqual(record["classification"], "blocking_lock_change")
-        self.assertEqual(record["disposition"], "blocking")
-        self.assertFalse(comparison["passed"])
-        self.assertFalse(module.provisional_attribution_only(comparison))
-
-        # Mutations of a pre-existing lock are not creations and stay blocking
-        # even under live monitoring.
-        for label, mutate in (
-            ("content_changed", lambda: maintenance_lock.write_text("altered\n", encoding="utf-8")),
-            ("mode_changed", lambda: maintenance_lock.chmod(0o600)),
-            ("removed", maintenance_lock.unlink),
-        ):
-            with self.subTest(change=label):
-                comparison, record = self._maintenance_lock_record(
-                    module, environment, mutate, live_monitoring=True
-                )
-                self.assertEqual(record["disposition"], "blocking")
-                self.assertFalse(comparison["passed"])
-
-        # A symlink or directory at the admitted path is never admitted, so the
-        # exception cannot be used to reach outside the object store.
-        for label, mutate in (
-            ("symlink", lambda: maintenance_lock.symlink_to(self.candidate / "tracked.txt")),
-            ("directory", lambda: maintenance_lock.mkdir()),
-        ):
-            with self.subTest(created=label):
-                comparison, record = self._maintenance_lock_record(
-                    module, environment, mutate, live_monitoring=True
-                )
-                self.assertEqual(record["classification"], "blocking_lock_change")
-                self.assertEqual(record["disposition"], "blocking")
-                self.assertFalse(comparison["passed"])
-                if label == "symlink":
-                    maintenance_lock.unlink()
-                else:
-                    maintenance_lock.rmdir()
-
-        # The admission is exact. A neighbouring lock under the same directory
-        # must remain fail-closed so this does not become a broad objects/
-        # exclusion.
-        neighbour_lock = objects_directory / "maintenance-other.lock"
-        neighbour_baseline = module.source_snapshot([self.candidate], self.candidate, environment)
-        neighbour_lock.write_text("", encoding="utf-8")
-        neighbour_changed = module.source_snapshot([self.candidate], self.candidate, environment)
-        neighbour_comparison = module.snapshot_comparison(
-            neighbour_baseline, neighbour_changed, live_monitoring=True
-        )
-        neighbour_record = next(
-            record
-            for record in neighbour_comparison["git_admin_changes"]
-            if record["path"] == "objects/maintenance-other.lock"
-        )
-        self.assertEqual(neighbour_record["classification"], "blocking_lock_change")
-        self.assertEqual(neighbour_record["disposition"], "blocking")
-        self.assertFalse(neighbour_comparison["passed"])
-        neighbour_lock.unlink()
 
     def test_linked_worktree_common_git_admin_locks_are_detected(self):
         module = load_script("claude_review_linked_worktree_locks", LAUNCHER)
