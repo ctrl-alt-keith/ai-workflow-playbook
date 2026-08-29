@@ -37,11 +37,16 @@ def extract_managed_body(contents: str, path: Path) -> str:
     return contents[body_start:end_start].strip("\n") + "\n"
 
 
+def normalize_router(contents: str) -> str:
+    """Return router text with normalized outer newlines."""
+    return contents.strip("\n") + "\n"
+
+
 def validate(check: Check) -> str | None:
     if not check.actual.is_file():
         return f"{check.provider}: missing local instruction file {check.actual}"
 
-    expected = CANONICAL_ROUTER.read_text(encoding="utf-8")
+    expected = normalize_router(CANONICAL_ROUTER.read_text(encoding="utf-8"))
     actual_contents = check.actual.read_text(encoding="utf-8")
     try:
         actual = extract_managed_body(actual_contents, check.actual)
@@ -70,15 +75,24 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path.home() / ".claude" / "CLAUDE.md",
     )
+    parser.add_argument(
+        "--require-claude",
+        action="store_true",
+        help="Fail when the broader-rollout Claude instruction file is absent.",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    checks = (
-        Check("Codex", args.codex_file),
-        Check("Claude", args.claude_file),
-    )
+    checks = [Check("Codex", args.codex_file)]
+    if args.claude_file.is_file() or args.require_claude:
+        checks.append(Check("Claude", args.claude_file))
+    else:
+        print(
+            f"SKIP Claude: broader-rollout instruction file not installed "
+            f"at {args.claude_file}"
+        )
     failures = [failure for check in checks if (failure := validate(check))]
 
     if failures:

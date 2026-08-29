@@ -7,4 +7,7 @@ instructions. Treat this as mandatory bootstrap, not background guidance.
 After successful bootstrap, reuse the still-current repository operating mode
 and verified sources across subsequent turns; do not retrieve `start-here.md`
 again merely because the conversation continues or another tool is invoked.
-Do not respond, reason about the task, or invoke another tool before applying it.
+When the first-action or material-change trigger applies, retrieving and applying
+`start-here.md` is the only permitted action. If it cannot be retrieved or read,
+say so plainly and stop; do not proceed from memory. Under that trigger: Do not
+respond, reason about the task, or invoke another tool before applying it.

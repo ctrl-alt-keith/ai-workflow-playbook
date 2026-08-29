@@ -20,17 +20,20 @@ class GlobalBootstrapTests(unittest.TestCase):
         return f"{START_MARKER}\n{router}{END_MARKER}\n"
 
     def run_check(
-        self, codex_file: Path, claude_file: Path
+        self, codex_file: Path, claude_file: Path, *, require_claude: bool = False
     ) -> subprocess.CompletedProcess[str]:
+        command = [
+            sys.executable,
+            str(SCRIPT),
+            "--codex-file",
+            str(codex_file),
+            "--claude-file",
+            str(claude_file),
+        ]
+        if require_claude:
+            command.append("--require-claude")
         return subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPT),
-                "--codex-file",
-                str(codex_file),
-                "--claude-file",
-                str(claude_file),
-            ],
+            command,
             check=False,
             text=True,
             stdout=subprocess.PIPE,
@@ -47,11 +50,17 @@ class GlobalBootstrapTests(unittest.TestCase):
         self.assertIn(exact_boundary, normalized)
         self.assertIn("reuse the still-current repository operating mode", normalized)
         self.assertIn("do not retrieve `start-here.md` again merely", normalized)
-        self.assertTrue(
-            contents.rstrip().endswith(
-                "Do not respond, reason about the task, or invoke another tool "
-                "before applying it."
-            )
+        self.assertIn(
+            "When the first-action or material-change trigger applies, "
+            "retrieving and applying `start-here.md` is the only permitted action.",
+            normalized,
+        )
+        self.assertIn("If it cannot be retrieved or read, say so plainly", normalized)
+        self.assertIn("do not proceed from memory", normalized)
+        self.assertIn(
+            "Do not respond, reason about the task, or invoke another tool "
+            "before applying it.",
+            normalized,
         )
         for removed_copy in (
             "codex-AGENTS.md",
@@ -62,9 +71,16 @@ class GlobalBootstrapTests(unittest.TestCase):
 
     def test_distribution_names_both_hosted_chatgpt_destinations(self) -> None:
         readme = (PROJECTIONS / "README.md").read_text(encoding="utf-8")
+        normalized = " ".join(readme.split())
+        self.assertIn("immediate Codex desktop repair has exactly one", readme)
+        self.assertIn("does not require a Codex project setting", readme)
         self.assertIn("ChatGPT account custom instructions", readme)
         self.assertIn("ChatGPT CAK project instructions", readme)
         self.assertIn("distinct hosted configuration surfaces", readme)
+        self.assertIn(
+            "capability gap, not equivalent to the local byte check", normalized
+        )
+        self.assertIn("## Local Reconciliation", readme)
 
     def test_validator_accepts_exact_blocks_with_unrelated_local_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -87,6 +103,39 @@ class GlobalBootstrapTests(unittest.TestCase):
             self.assertIn("PASS Codex", result.stdout)
             self.assertIn("PASS Claude", result.stdout)
             self.assertEqual(result.stderr, "")
+
+    def test_validator_skips_absent_optional_claude_projection(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            codex_file = root / "AGENTS.md"
+            claude_file = root / "missing-CLAUDE.md"
+            codex_file.write_text(
+                self.marked(ROUTER.read_text(encoding="utf-8")), encoding="utf-8"
+            )
+
+            optional = self.run_check(codex_file, claude_file)
+            required = self.run_check(
+                codex_file, claude_file, require_claude=True
+            )
+
+            self.assertEqual(optional.returncode, 0, optional.stdout)
+            self.assertIn("SKIP Claude: broader-rollout", optional.stdout)
+            self.assertIn("PASS Codex", optional.stdout)
+            self.assertEqual(required.returncode, 1)
+            self.assertIn("FAIL Claude: missing local instruction file", required.stdout)
+
+    def test_validator_normalizes_outer_newlines_symmetrically(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            codex_file = root / "AGENTS.md"
+            claude_file = root / "CLAUDE.md"
+            router = ROUTER.read_text(encoding="utf-8").rstrip("\n") + "\n\n"
+            codex_file.write_text(self.marked(router), encoding="utf-8")
+            claude_file.write_text(self.marked(router), encoding="utf-8")
+
+            result = self.run_check(codex_file, claude_file)
+
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_validator_reports_drift_without_writing_files(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
