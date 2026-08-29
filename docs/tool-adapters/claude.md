@@ -14,12 +14,12 @@ Classify the concrete run from its observed repository locality, not only from
 the Claude product label. Apply the
 [`Surface Classes`](../core-model.md#surface-classes) vocabulary as follows:
 
-- **Claude Chat** is conversational. It has no repository filesystem. Profile
-  instructions apply account-wide, while project instructions apply only
-  inside that project. Repository files arrive through explicitly selected
-  GitHub content, project knowledge, or another currently observed retrieval
-  route, so current source retrieval is best-effort per thread rather than
-  guaranteed by the instruction surface.
+- **Claude Chat** is conversational. It has no repository filesystem.
+  **Instructions for Claude** apply account-wide to conversations, while
+  project instructions apply only inside that project. Repository files arrive
+  through explicitly selected GitHub content, project knowledge, or another
+  currently observed retrieval route, so current source retrieval is
+  best-effort per thread rather than guaranteed by the instruction surface.
 - **Claude Cowork** is agentic-remote by default because a session has no
   guaranteed repository locality. A concrete Cowork session with an active
   desktop-connected local folder has repository locality for that connected
@@ -62,7 +62,9 @@ new turn or tool call occurs. Then use these source routes:
   as independently observed runtime instruction transports until the owning
   hosted setting and precedence are established. Audit each block for stale
   unconditional hydration wording. An edit to **Instructions for Claude** does
-  not prove that a separately presented runtime block changed.
+  not prove that a separately presented runtime block changed. If its owner
+  remains unknown, record unresolved provenance, continue treating the stale
+  block as active, and do not claim reconciliation.
 - Anthropic separately documents Cowork Global instructions as standing
   instructions for every Cowork session. The published route is **Settings >
   Cowork**, then **Global instructions**; current UI exposure is runtime
@@ -104,6 +106,11 @@ filesystem locality or guarantee that the selected GitHub source is current.
   hosted/manual surface from account instructions, observed runtime account
   preferences, and `~/.claude/CLAUDE.md`. The published menu route does not
   prove that a particular account or product build currently exposes it.
+- When no verified global transport is exposed, an interactive Cowork run may
+  proceed only when its current task or a verified project/folder instruction
+  explicitly triggers hydration and the required current sources are obtained.
+  Record the global coverage gap; do not substitute a duplicate router in a
+  project or folder field.
 - Folder instructions provide project-specific context when a local folder is
   selected on desktop. Cowork project instructions and context apply only
   within that project. Keep either layer thin and point it to the repository's
@@ -145,8 +152,8 @@ triggers this hydration but does not substitute for either required source. If
 the current required sources are not readable or retrievable, report the
 capability gap and stop before repository-dependent work.
 
-The remaining execution, permission, worktree, context, connector, model, and
-delivery sections are Claude Code-specific unless a section explicitly says
+The remaining execution, permission, worktree, context, model, and delivery
+sections are Claude Code-specific unless a section explicitly says
 otherwise.
 
 ## Instruction Discovery And Precedence
@@ -484,7 +491,8 @@ file state before relying on it, per
 
 ## Connectors
 
-Claude reaches remote services, including GitHub, through MCP servers. Apply the
+This section applies across Claude surfaces that expose connectors. Claude
+reaches remote services, including GitHub, through MCP servers. Apply the
 [runtime-evidence rule](../start-here.md#connector-availability-is-runtime-evidence):
 inspect available connector actions or attempt the operation before claiming a
 capability is unavailable, and treat a successful call as evidence it remains
@@ -705,7 +713,7 @@ Behavioral claims above are grounded in official Anthropic documentation,
 including [Claude Code memory](https://code.claude.com/docs/en/memory),
 [permissions](https://code.claude.com/docs/en/permissions),
 [the tools reference](https://code.claude.com/docs/en/tools-reference),
-[subagents](https://docs.claude.com/en/docs/claude-code/sub-agents), and
+[subagents](https://code.claude.com/docs/en/sub-agents), and
 [worktrees](https://code.claude.com/docs/en/worktrees). Surface and hydration
 claims are additionally grounded in Anthropic's official
 [Cowork introduction](https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork),

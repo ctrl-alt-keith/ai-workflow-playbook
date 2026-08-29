@@ -57,7 +57,9 @@ provider surfaces:
   instruction transport until their owning hosted setting and precedence are
   established. Remove or reconcile stale CAK directives such as unconditional
   "before answering" wording; do not assume an edit to another visible field
-  changed these injected blocks.
+  changed these injected blocks. When the owner cannot be established, record
+  unresolved provenance and continue treating the stale directive as active;
+  do not claim that it was repaired.
 - **Claude Cowork global instructions:** Anthropic currently documents
   **Settings > Cowork**, then **Global instructions**, for standing Cowork
   instructions. Verify that destination in the current account and product
@@ -81,8 +83,10 @@ changed by this distribution or its local-file validator. Reconcile older
 unconditional wording such as "always fetch before answering" to the canonical
 timing and fail-closed retrieval semantics; do not claim local validator
 coverage for any hosted surface. Use Claude project or Cowork folder
-instructions for project-specific context, not as another copy of the global
-router when the corresponding account-level surface already covers the run.
+instructions for project-specific context, never as another copy of the global
+router. When no verified global transport covers a run, record the gap and use
+an explicit qualified current-source route for that run; do not fill the gap by
+duplicating the router in a project or folder field.
 
 Anthropic documents
 [**Instructions for Claude**](https://support.claude.com/en/articles/10185728-understanding-claude-s-personalization-features)

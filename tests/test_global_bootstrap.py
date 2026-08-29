@@ -112,11 +112,6 @@ class GlobalBootstrapTests(unittest.TestCase):
             encoding="utf-8"
         )
         normalized = " ".join(adapter.split())
-        chat = adapter.split("### Claude Chat", 1)[1].split("### Claude Cowork", 1)[0]
-        cowork = adapter.split("### Claude Cowork", 1)[1].split("### Claude Code", 1)[0]
-        code = adapter.split("### Claude Code", 1)[1].split(
-            "## Instruction Discovery And Precedence", 1
-        )[0]
         for heading in (
             "## Surface And Invocation Routing",
             "### Claude Chat",
@@ -124,6 +119,11 @@ class GlobalBootstrapTests(unittest.TestCase):
             "### Claude Code",
         ):
             self.assertIn(heading, adapter)
+        chat = adapter.split("### Claude Chat", 1)[1].split("### Claude Cowork", 1)[0]
+        cowork = adapter.split("### Claude Cowork", 1)[1].split("### Claude Code", 1)[0]
+        code = adapter.split("### Claude Code", 1)[1].split(
+            "## Instruction Discovery And Precedence", 1
+        )[0]
         self.assertIn("../core-model.md#surface-classes", adapter)
         self.assertIn("agentic-remote", normalized)
         self.assertIn("agentic-local", normalized)
