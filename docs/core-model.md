@@ -172,6 +172,51 @@ and current authority, refresh mutable facts from their owning sources, and
 fail closed where the applicable contract or exact recoverable state cannot be
 resolved.
 
+### Independent Review As A Third Role
+
+Independent review is a semantic role in the same sense as interactive control
+and bounded execution: it is scoped to a run rather than to a product, vendor,
+model, effort setting, or thread. A reviewer produces evidence about work it
+did not itself produce.
+
+This section establishes only that the role exists alongside interactive
+control and bounded execution.
+[`external-ai-reviewer.md`](external-ai-reviewer.md) remains the canonical
+owner of what independence requires, how a reviewer is selected, and how
+reviewer failure or substitution is handled. Do not restate those requirements
+here or in an executor adapter.
+
+### Surface Classes
+
+A surface class describes what an execution surface can structurally do,
+independent of vendor or product. It states repository locality only. It does
+not state who started the run.
+
+- **Conversational** — no filesystem and no repository locality. Context
+  arrives per thread, and any startup contract that depends on reading
+  repository files is best-effort rather than guaranteed.
+- **Agentic-local** — filesystem and repository locality. A startup contract
+  that reads repository and repo-local instruction files genuinely runs.
+- **Agentic-remote** — agentic execution without guaranteed local repository
+  locality. Sources are reached through a connector or another retrieval
+  route rather than through the filesystem.
+
+Initiation is a separate property rather than a fourth class. A run is either
+human-initiated or unattended, and either may occur on any class. An
+unattended run on an agentic-local surface remains agentic-local; what
+changes is that no human is present to resolve an ambiguity, which the owning
+workflow handles rather than the class.
+
+Surface class does not assign a role and does not rank surfaces. Any actor may
+occupy any role its surface class can structurally support.
+
+Executor adapters own the mapping from their concrete products onto these
+classes; this document enumerates no products. Until an adapter declares the
+class for a surface, that surface has no class under this vocabulary and this
+section places no obligation on it. Where an adapter has declared a class and
+a required contract depends on a capability that class lacks, fail closed and
+report the capability gap rather than substituting a weaker route.
+
 ## Kickoff Mutation Boundaries
 
 Kickoff is neither a universally read-only phase nor permission to begin every

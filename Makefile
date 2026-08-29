@@ -8,10 +8,10 @@ help: ## List available repo-local Makefile targets with short descriptions.
 check: ## Run canonical local validation for local work and CI.
 	@if command -v markdownlint-cli2 >/dev/null 2>&1; then \
 		echo "Running markdownlint-cli2"; \
-		markdownlint-cli2 "**/*.md"; \
+		markdownlint-cli2 "**/*.md" "!.worktrees/**"; \
 	elif command -v markdownlint >/dev/null 2>&1; then \
 		echo "Running markdownlint"; \
-		markdownlint "**/*.md"; \
+		markdownlint --ignore ".worktrees" "**/*.md"; \
 	else \
 		echo "markdownlint is not installed."; \
 		echo "Install markdownlint-cli2 or markdownlint, then rerun 'make check'."; \

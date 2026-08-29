@@ -1942,8 +1942,36 @@ def classify_git_admin_changes(before: dict[str, object], after: dict[str, objec
                 linked_identifier = f"linked:{parts[1]}"
                 if linked_identifier in known_other_worktrees:
                     scope = "other_linked_worktree"
-                    classification = "blocking_unknown_other_worktree_administration"
-                    evidence = {"linked_worktree_id": linked_identifier}
+                    if (
+                        "/".join(parts[2:]) in WORKTREE_ADMIN_PATHS
+                        and protected_evidence_unchanged
+                        and safely_tolerable_identity_change(old_identity, new_identity)
+                    ):
+                        # Git writes another worktree's administration before the
+                        # HEAD/ref transition that attributes it becomes observable,
+                        # and a file created mid-attempt is absent from the recorded
+                        # admin_paths that exact_other_worktree_admin matches against.
+                        # Such a change remains blocking, but is eligible for one
+                        # bounded stabilization interval so live monitoring
+                        # reclassifies from a fresh complete snapshot instead of
+                        # emergency-stopping on an intermediate observation. If the
+                        # transition never becomes observable it still blocks, and
+                        # terminal postflight is unaffected.
+                        #
+                        # Restricted to the exact Git-managed per-worktree
+                        # administration files. Any other path under another
+                        # worktree's Git directory stays non-deferrable, so an
+                        # arbitrary planted file cannot buy itself a window.
+                        classification = "blocking_unattributed_other_worktree_administration"
+                        evidence = {
+                            "worktree_id": linked_identifier,
+                            "admitted_git_managed_path": relative,
+                            "provisional_attribution": "worktree_transition_not_yet_observed",
+                            "protected_candidate_evidence_unchanged": True,
+                        }
+                    else:
+                        classification = "blocking_unknown_other_worktree_administration"
+                        evidence = {"linked_worktree_id": linked_identifier}
             elif ref is not None:
                 if ref in protected_refs or ref.startswith("refs/replace/"):
                     scope = "candidate_relevant_shared_state"
