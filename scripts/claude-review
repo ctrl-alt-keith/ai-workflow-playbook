@@ -2146,13 +2146,23 @@ def safe_command_environment(base: dict[str, str], scratch: Path) -> dict[str, s
             "GIT_ATTR_NOSYSTEM": "1",
             "GIT_CONFIG_GLOBAL": "/dev/null",
             "GIT_CONFIG_NOSYSTEM": "1",
-            "GIT_CONFIG_COUNT": "3",
+            "GIT_CONFIG_COUNT": "5",
             "GIT_CONFIG_KEY_0": "core.hooksPath",
             "GIT_CONFIG_VALUE_0": str(hooks),
             "GIT_CONFIG_KEY_1": "core.fsmonitor",
             "GIT_CONFIG_VALUE_1": "false",
             "GIT_CONFIG_KEY_2": "core.untrackedCache",
             "GIT_CONFIG_VALUE_2": "false",
+            # Background auto-maintenance writes objects/maintenance.lock into the
+            # candidate repository, which the classifier then correctly reports as
+            # lock contamination. Disabling it here removes the controller as a
+            # source of that contamination. It cannot remove another operator's
+            # Git, which does not share this environment; that case still fails
+            # closed, which is the contract in external-ai-reviewer.md.
+            "GIT_CONFIG_KEY_3": "maintenance.auto",
+            "GIT_CONFIG_VALUE_3": "false",
+            "GIT_CONFIG_KEY_4": "gc.auto",
+            "GIT_CONFIG_VALUE_4": "0",
             "GIT_EXTERNAL_DIFF": "/usr/bin/false",
             "GIT_OPTIONAL_LOCKS": "0",
             "GIT_PAGER": "cat",
@@ -2424,6 +2434,43 @@ def trusted_system_executable(name: str, environment: dict[str, str]) -> Path:
     if not stat.S_ISREG(metadata.st_mode) or metadata.st_uid != 0 or stat.S_IMODE(metadata.st_mode) & 0o022:
         raise RuntimeError(f"observational command executable is not trusted system code: {path}")
     return path
+
+
+GIT_MINIMUM_VERSION_FOR_WORKTREE_NUL = "2.36.0"
+
+
+def git_worktree_capability_error(candidate: Path, environment: dict[str, str]) -> str | None:
+    """Return a named cause when Git cannot support linked-worktree modelling.
+
+    Attribution depends on ``git worktree list --porcelain -z``, which Git
+    introduced in 2.36.0. Without this probe the unsupported switch surfaces
+    from inside snapshot collection, and the attempt is reported as a review
+    contract failure that names neither Git nor the version requirement.
+    """
+
+    try:
+        executable = trusted_system_executable("git", environment)
+    except (OSError, RuntimeError) as error:
+        return f"git is unavailable or is not trusted system code: {error}"
+    try:
+        result = subprocess.run(
+            [str(executable), "-C", str(candidate), "worktree", "list", "--porcelain", "-z"],
+            check=False,
+            env=environment,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except OSError as error:
+        return f"git could not be executed: {error}"
+    if result.returncode == 0:
+        return None
+    observed = version_of(str(executable), environment, cwd=str(candidate))
+    return (
+        "git does not support 'worktree list --porcelain -z', which governed review "
+        f"requires for linked-worktree attribution: minimum "
+        f"{GIT_MINIMUM_VERSION_FOR_WORKTREE_NUL}, observed {observed or 'unknown'}"
+    )
 
 
 def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) -> dict[str, object]:
@@ -2892,6 +2939,21 @@ def run_governed_review(
     with AttemptScratch.allocate(child_environment, "claude-review-controller-") as scratch:
         controller_environment = safe_command_environment(child_environment, scratch)
         environment = controller_environment
+        git_capability_error = git_worktree_capability_error(config.candidate, environment)
+        if git_capability_error is not None:
+            record = {
+                "kind": "claude_governed_review",
+                "review_id": config.body["review_id"],
+                "contract_id": config.body["contract_id"],
+                "controller_id": controller_id,
+                "contract_identity": contract_identity,
+                "failure_classification": "git_capability_preflight_failure",
+                "candidate_verdict": "not_produced",
+                "substantive_review_started": False,
+                "error": git_capability_error,
+            }
+            emit_diagnostics(record, diagnostics_destination)
+            return REVIEWER_FAILURE_EXIT
         initial_snapshot = source_snapshot(
             list(config.guard_roots), config.candidate, environment, config.allowed_commands, config.candidate_head
         )

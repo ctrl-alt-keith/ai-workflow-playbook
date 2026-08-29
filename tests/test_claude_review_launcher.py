@@ -3297,6 +3297,38 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertFalse(comparison["passed"])
         self.assertIn(f"git-admin:objects/{object_id[:2]}/{object_id[2:]}", comparison["blocking_paths"])
 
+    def test_safe_command_environment_disables_background_maintenance(self):
+        module = load_script("claude_review_maintenance_env", LAUNCHER)
+        environment = module.safe_command_environment(os.environ.copy(), self.root)
+        declared = int(environment["GIT_CONFIG_COUNT"])
+        pairs = {
+            environment[f"GIT_CONFIG_KEY_{index}"]: environment[f"GIT_CONFIG_VALUE_{index}"]
+            for index in range(declared)
+        }
+        # Git silently ignores pairs beyond GIT_CONFIG_COUNT, so a stale count
+        # would disable these settings without producing any error.
+        self.assertEqual(len(pairs), declared)
+        self.assertEqual(pairs["maintenance.auto"], "false")
+        self.assertEqual(pairs["gc.auto"], "0")
+
+    def test_git_worktree_capability_probe_reports_named_causes(self):
+        module = load_script("claude_review_git_capability", LAUNCHER)
+        environment = os.environ.copy()
+        environment["PATH"] = "/usr/bin:/bin"
+
+        # A Git supporting the required switch clears the probe.
+        self.assertIsNone(module.git_worktree_capability_error(self.candidate, environment))
+
+        # The caller has no exception handling around this probe, so an absent
+        # or untrusted Git must return a named cause rather than raise.
+        # Reporting an unsupported Git beats a review contract failure that
+        # names neither Git nor the requirement.
+        absent = module.git_worktree_capability_error(
+            self.candidate, {"PATH": str(self.root / "absent")}
+        )
+        self.assertIsInstance(absent, str)
+        self.assertIn("git", absent)
+
     def test_arbitrary_other_linked_worktree_administration_is_blocking(self):
         module = load_script("claude_review_other_worktree_admin", LAUNCHER)
         environment = os.environ.copy()
