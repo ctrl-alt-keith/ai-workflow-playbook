@@ -3872,6 +3872,47 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(symlink_record["change_type"], "added")
         self.assertEqual(symlink_record["classification"], "blocking_lock_change")
 
+    def test_git_background_maintenance_lock_is_tolerated_and_others_stay_blocking(self):
+        module = load_script("claude_review_maintenance_lock", LAUNCHER)
+        environment = os.environ.copy()
+        git_directory = self.candidate / ".git"
+        objects_directory = git_directory / "objects"
+        objects_directory.mkdir(parents=True, exist_ok=True)
+
+        maintenance_lock = objects_directory / "maintenance.lock"
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        maintenance_lock.write_text("", encoding="utf-8")
+        changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        comparison = module.snapshot_comparison(baseline, changed)
+        record = next(
+            record
+            for record in comparison["git_admin_changes"]
+            if record["path"] == "objects/maintenance.lock"
+        )
+        self.assertEqual(record["classification"], "tolerated_git_background_maintenance_lock")
+        self.assertEqual(record["disposition"], "tolerated")
+        self.assertTrue(record["evidence"]["protected_candidate_evidence_unchanged"])
+        self.assertTrue(comparison["passed"])
+        maintenance_lock.unlink()
+
+        # The admission is exact. A neighbouring lock under the same directory
+        # must remain fail-closed so this does not become a broad objects/
+        # exclusion.
+        neighbour_lock = objects_directory / "maintenance-other.lock"
+        neighbour_baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        neighbour_lock.write_text("", encoding="utf-8")
+        neighbour_changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        neighbour_comparison = module.snapshot_comparison(neighbour_baseline, neighbour_changed)
+        neighbour_record = next(
+            record
+            for record in neighbour_comparison["git_admin_changes"]
+            if record["path"] == "objects/maintenance-other.lock"
+        )
+        self.assertEqual(neighbour_record["classification"], "blocking_lock_change")
+        self.assertEqual(neighbour_record["disposition"], "blocking")
+        self.assertFalse(neighbour_comparison["passed"])
+        neighbour_lock.unlink()
+
     def test_linked_worktree_common_git_admin_locks_are_detected(self):
         module = load_script("claude_review_linked_worktree_locks", LAUNCHER)
         environment = os.environ.copy()

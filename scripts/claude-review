@@ -1679,6 +1679,17 @@ def lock_path(relative: str) -> bool:
     return any(part.endswith(".lock") for part in Path(relative).parts)
 
 
+# Git's own background auto-maintenance creates this lock in the candidate
+# repository when any actor runs an ordinary Git command there. The reviewer
+# cannot prevent it: auto-maintenance runs under the acting process, not the
+# observing one, and an unrelated worktree's operator does not share the
+# reviewer's environment. Admitting it is therefore required for the
+# unrelated-worktree concurrency guarantee, and it is admitted only as an exact
+# path and only while protected candidate evidence is unchanged. Every other
+# lock, including any other path under objects/, remains fail-closed.
+GIT_BACKGROUND_MAINTENANCE_LOCKS = frozenset({"objects/maintenance.lock"})
+
+
 def object_storage_path(relative: str) -> bool:
     if re.fullmatch(r"objects/[0-9a-f]{2}", relative):
         return True
@@ -1897,6 +1908,17 @@ def classify_git_admin_changes(before: dict[str, object], after: dict[str, objec
                     evidence = {
                         "ref": unlocked_ref,
                         "provisional_attribution": "unrelated_ref_transition_not_yet_observed",
+                        "protected_candidate_evidence_unchanged": True,
+                    }
+                elif (
+                    relative in GIT_BACKGROUND_MAINTENANCE_LOCKS
+                    and protected_evidence_unchanged
+                ):
+                    scope = "git_background_maintenance"
+                    classification = "tolerated_git_background_maintenance_lock"
+                    disposition = "tolerated"
+                    evidence = {
+                        "admitted_git_managed_path": relative,
                         "protected_candidate_evidence_unchanged": True,
                     }
                 else:
