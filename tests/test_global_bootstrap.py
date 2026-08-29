@@ -118,14 +118,11 @@ class GlobalBootstrapTests(unittest.TestCase):
             "### Claude Code",
         ):
             self.assertIn(heading, adapter)
-        self.assertIn("Claude Chat** is conversational", normalized)
-        self.assertIn("Claude Cowork** is agentic-remote by default", normalized)
-        self.assertIn("active desktop-connected local folder", normalized)
-        self.assertIn("Profile instructions apply account-wide", normalized)
+        self.assertIn("../core-model.md#surface-classes", adapter)
+        self.assertIn("agentic-remote", normalized)
+        self.assertIn("agentic-local", normalized)
         self.assertIn("Settings > Cowork > Global instructions", normalized)
-        self.assertIn("Scheduled and other unattended Cowork tasks", normalized)
-        self.assertIn("best-effort per thread", normalized)
-        self.assertNotIn("/Users/keith/", adapter)
+        self.assertIn("#global-bootstrap-persistence", adapter)
 
     def test_validator_accepts_exact_blocks_with_unrelated_local_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

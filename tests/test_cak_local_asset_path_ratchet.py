@@ -88,6 +88,21 @@ class CakLocalAssetPathRatchetTests(unittest.TestCase):
 
         self.assertEqual(EXPECTED_LOCAL_REFERENCES, observed)
 
+    def test_active_docs_do_not_hardcode_the_operator_home(self) -> None:
+        observed: list[tuple[str, int]] = []
+
+        for path in tracked_files(ROOT / "docs"):
+            if not path.is_file():
+                continue
+            relative = path.relative_to(ROOT).as_posix()
+            for line_number, line in enumerate(
+                path.read_text(encoding="utf-8").splitlines(), start=1
+            ):
+                if "/Users/keith/" in line:
+                    observed.append((relative, line_number))
+
+        self.assertEqual([], observed)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -47,9 +47,10 @@ provider surfaces:
 
 - **Claude Code user-global instructions:** place it in
   `~/.claude/CLAUDE.md` between the same managed markers.
-- **Claude profile instructions:** install and verify the body through the
-  hosted profile-instructions surface when ordinary Claude Chat conversations
-  may start CAK repository work.
+- **Claude profile instructions:** click the account initials, open
+  **Settings**, and install and verify the body under **Instructions for
+  Claude** when ordinary Claude Chat conversations may start CAK repository
+  work.
 - **Claude Cowork global instructions:** install and verify the body through
   **Settings > Cowork > Global instructions** when Cowork sessions may start
   CAK repository work.
@@ -72,6 +73,14 @@ retrieval semantics; do not claim local validator coverage for either surface.
 Use Claude project or Cowork folder instructions for project-specific context,
 not as another copy of the global router when the corresponding account-level
 surface already covers the run.
+
+Anthropic documents **Instructions for Claude** as account-wide and Cowork
+Global instructions as applying to every Cowork session, but does not publish
+their combined precedence or deduplication behavior. Verify them separately and
+do not infer that the profile setting alone covers Cowork. If a runtime presents
+the same canonical router through both, treat the copies as one idempotent
+bootstrap trigger under the persistence rule, not as separate doctrine or a
+reason to retrieve once per copy.
 
 Use these markers around the exact router body in the Codex and Claude local
 files:

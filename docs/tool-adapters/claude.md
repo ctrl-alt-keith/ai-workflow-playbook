@@ -19,12 +19,12 @@ the Claude product label. Apply the
   inside that project. Repository files arrive through explicitly selected
   GitHub content or project knowledge, so current source retrieval is
   best-effort per thread rather than guaranteed by the instruction surface.
-- **Claude Cowork** is agentic-remote by default because its agent loop and
-  code execution run in Anthropic's cloud environment. A concrete Cowork
-  session with an active desktop-connected local folder has repository
-  locality for that connected folder and can satisfy the agentic-local startup
-  contract while the connection remains available. A cloud-only or scheduled
-  session without current repository access remains agentic-remote.
+- **Claude Cowork** is agentic-remote by default because a session has no
+  guaranteed repository locality. A concrete Cowork session with an active
+  desktop-connected local folder has repository locality for that connected
+  folder and can satisfy the agentic-local startup contract while the
+  connection remains available. A cloud-only or scheduled session without
+  current repository access remains agentic-remote.
 - **Claude Code** is agentic-local when a CLI or desktop Code session has the
   repository filesystem. A remote Code session is agentic-remote until its
   current repository source and repo-local instructions are available through
@@ -45,7 +45,11 @@ Persistent instructions trigger hydration; they do not prove that hydration
 succeeded or that a repository snapshot is current. Apply the shared
 [`global bootstrap router`](../../distributions/global-bootstrap/bootstrap-router.md)
 at each independently starting hosted surface that must enter CAK repository
-work, then use these source routes:
+work. Its
+[`global bootstrap persistence`](../start-here.md#global-bootstrap-persistence)
+boundary applies unchanged: hydrate before the first project action and again
+only when the task or repository materially changes, never merely because a
+new turn or tool call occurs. Then use these source routes:
 
 ### Claude Chat
 
@@ -55,14 +59,21 @@ work, then use these source routes:
 - Use project instructions for project-specific context; do not copy shared
   Playbook doctrine or another router body there when the account-level router
   already covers the session.
-- Retrieve repository files through explicitly selected GitHub content. In a
-  Claude project, GitHub content is a selected, synchronized knowledge source;
-  refresh it before relying on mutable repository state. A successful prior
-  sync does not prove the current branch or file version.
+- Prefer explicitly selected GitHub content for repository files. In a Claude
+  project, GitHub content is a selected, synchronized knowledge source;
+  refresh it when the task materially changes or before relying on mutable
+  repository state whose freshness has not been established. A successful
+  prior sync does not prove the current branch or file version. Another
+  currently observed retrieval route is valid when it returns the current
+  required source.
 - If the current `docs/start-here.md`, repo-local `AGENTS.md`, or another
-  required source cannot be retrieved, report the exact capability gap and
-  stop the repository-dependent task. Do not proceed from project memory,
-  chat history, or a stale synchronized copy while claiming current hydration.
+  required source cannot be retrieved after inspecting or attempting the
+  relevant route, report the exact capability gap and stop the
+  repository-dependent task. Apply the
+  [`runtime-evidence rule`](../start-here.md#connector-availability-is-runtime-evidence)
+  before claiming a connector or retrieval capability is unavailable. Do not
+  proceed from project memory, chat history, or a stale synchronized copy while
+  claiming current hydration.
 
 Chat hydration is therefore best-effort per thread. Profile or project
 instructions can reliably present the routing request, but they cannot create
@@ -80,9 +91,9 @@ filesystem locality or guarantee that the selected GitHub source is current.
   current `CLAUDE.md`/`AGENTS.md` route instead of copying shared doctrine.
 - With a connected local repository folder, read the current
   `docs/start-here.md`, root `CLAUDE.md`, and repo-local `AGENTS.md` from that
-  folder before repository work. If the desktop bridge or folder is
-  unavailable, use a currently observed connector or synchronized project
-  source and preserve its freshness limitation.
+  folder at the first-action/material-change boundary. If the desktop bridge
+  or folder is unavailable, use a currently observed connector or synchronized
+  project source and preserve its freshness limitation.
 - Scheduled and other unattended Cowork tasks run without a human available
   at startup. Their task definition must name a qualified current-source route
   and stop when it is unavailable; remembered context and a prior successful
@@ -95,12 +106,22 @@ that file is not the sole Cowork route: outside-working-directory imports and
 linked user files are skipped there, and cloud/web/mobile Cowork execution must
 not infer coverage from a workstation file.
 
+Anthropic documents **Instructions for Claude** as account-wide and Cowork
+Global instructions as applying to every Cowork session, but does not publish
+cross-surface precedence or deduplication semantics for those two settings.
+Treat them as independently verified transports and do not infer that profile
+instructions alone cover Cowork. If one runtime presents the exact canonical
+router through more than one surface, the duplicate transport is idempotent:
+apply the first-action/material-change trigger once, not once per copy.
+
 ### Claude Code
 
 Claude Code uses its file-backed `CLAUDE.md` discovery described below. Local
 file-backed hydration is deterministic when the required files are current and
-readable. Remote Code runs must establish equivalent current repository access
-before claiming the same result.
+readable. In a remote Code workspace, the repo-local root `CLAUDE.md` is the
+bootstrap route to `docs/start-here.md` and repo-local `AGENTS.md`. If neither a
+user-global projection nor those repository files are readable, report the
+capability gap and stop before repository-dependent work.
 
 The remaining execution, permission, worktree, context, connector, model, and
 delivery sections are Claude Code-specific unless a section explicitly says
@@ -667,6 +688,7 @@ including [Claude Code memory](https://code.claude.com/docs/en/memory),
 claims are additionally grounded in Anthropic's official
 [Cowork introduction](https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork),
 [Cowork surface guide](https://support.claude.com/en/articles/15520349-use-claude-cowork-on-web-desktop-and-mobile),
+[Dispatch guide](https://support.claude.com/en/articles/13947068-assign-tasks-from-anywhere-in-claude-cowork),
 [personalization guide](https://support.claude.com/en/articles/10185728-understanding-claude-s-personalization-features),
 and [GitHub integration guide](https://support.claude.com/en/articles/10167454-use-the-github-integration),
 checked 2026-08-29. Model-routing claims above are additionally derived from
