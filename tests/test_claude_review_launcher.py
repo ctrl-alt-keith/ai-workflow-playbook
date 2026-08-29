@@ -3332,6 +3332,59 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(record["classification"], "blocking_unknown_other_worktree_administration")
         self.assertEqual(record["disposition"], "blocking")
 
+    def test_other_linked_worktree_git_managed_admin_creation_is_provisional(self):
+        module = load_script("claude_review_worktree_admin_creation", LAUNCHER)
+        environment = os.environ.copy()
+        linked = self.root / "provisional-admin-worktree"
+        subprocess.run(
+            ["git", "-C", str(self.candidate), "worktree", "add", "-q", "-b", "fixture-provisional", str(linked)],
+            check=True,
+        )
+        gitdir = Path(
+            subprocess.run(
+                ["git", "-C", str(linked), "rev-parse", "--absolute-git-dir"],
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+            ).stdout.strip()
+        ).resolve()
+
+        # A Git-managed per-worktree administration file written mid-attempt is
+        # absent from the recorded admin_paths, so it cannot yet be attributed
+        # to that worktree's HEAD transition. It stays blocking, but must be
+        # eligible for the bounded stabilization window rather than triggering
+        # an immediate emergency stop on an intermediate observation.
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
+        (gitdir / "COMMIT_EDITMSG").write_text("fixture\n", encoding="utf-8")
+        changed = module.source_snapshot([self.candidate], self.candidate, environment)
+        comparison = module.snapshot_comparison(baseline, changed, live_monitoring=True)
+        record = next(
+            record
+            for record in comparison["git_admin_changes"]
+            if record["path"].endswith("COMMIT_EDITMSG")
+        )
+        self.assertEqual(record["classification"], "blocking_unattributed_other_worktree_administration")
+        self.assertEqual(record["disposition"], "blocking")
+        self.assertFalse(comparison["passed"])
+        self.assertTrue(module.provisional_attribution_only(comparison))
+
+        # An arbitrary file beside it is not Git-managed administration. Its
+        # presence must defeat the window for the whole observation, so a
+        # planted file cannot ride along with legitimate worktree activity.
+        (gitdir / "fixture-observation").write_text("planted\n", encoding="utf-8")
+        contaminated = module.source_snapshot([self.candidate], self.candidate, environment)
+        contaminated_comparison = module.snapshot_comparison(
+            baseline, contaminated, live_monitoring=True
+        )
+        planted = next(
+            record
+            for record in contaminated_comparison["git_admin_changes"]
+            if record["path"].endswith("fixture-observation")
+        )
+        self.assertEqual(planted["classification"], "blocking_unknown_other_worktree_administration")
+        self.assertEqual(planted["disposition"], "blocking")
+        self.assertFalse(module.provisional_attribution_only(contaminated_comparison))
+
     def test_other_linked_worktree_lock_is_bounded_provisional_activity(self):
         module = load_script("claude_review_other_worktree_lock", LAUNCHER)
         environment = os.environ.copy()
