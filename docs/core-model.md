@@ -172,6 +172,41 @@ and current authority, refresh mutable facts from their owning sources, and
 fail closed where the applicable contract or exact recoverable state cannot be
 resolved.
 
+### Independent Review As A Third Role
+
+Independent review is a semantic role in the same sense as interactive control
+and bounded execution: it is scoped to a run rather than to a product, vendor,
+model, effort setting, or thread. A reviewer produces evidence about work it
+did not itself produce.
+
+This section establishes only that the role exists alongside interactive
+control and bounded execution.
+[`external-ai-reviewer.md`](external-ai-reviewer.md) remains the canonical
+owner of what independence requires, how a reviewer is selected, and how
+reviewer failure or substitution is handled. Do not restate those requirements
+here or in an executor adapter.
+
+### Surface Classes
+
+A surface class describes what an execution surface can structurally do,
+independent of vendor or product. Executor adapters map their concrete
+products onto these classes; this document does not enumerate products.
+
+- **Conversational** — no filesystem and no repository locality. Context
+  arrives per thread, and any startup contract that depends on reading
+  repository files is best-effort rather than guaranteed.
+- **Agentic-local** — real filesystem and repository locality. A startup
+  contract that reads repository and repo-local instruction files genuinely
+  runs.
+- **Agentic-hosted** — agentic execution that may begin with no human present
+  and without guaranteed local filesystem locality.
+
+Surface class constrains which roles a surface can actually perform; it does
+not assign a role, and it does not rank surfaces. Any actor may occupy any
+role its surface class can structurally support. When a required contract
+depends on a capability the current surface class lacks, fail closed and
+report the capability gap rather than substituting a weaker route.
+
 ## Kickoff Mutation Boundaries
 
 Kickoff is neither a universally read-only phase nor permission to begin every
