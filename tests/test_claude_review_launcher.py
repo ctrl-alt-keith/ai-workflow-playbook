@@ -3297,6 +3297,71 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertFalse(comparison["passed"])
         self.assertIn(f"git-admin:objects/{object_id[:2]}/{object_id[2:]}", comparison["blocking_paths"])
 
+    def test_safe_command_environment_disables_background_maintenance(self):
+        module = load_script("claude_review_maintenance_env", LAUNCHER)
+        environment = module.safe_command_environment(os.environ.copy(), self.root)
+        declared = int(environment["GIT_CONFIG_COUNT"])
+        pairs = {
+            environment[f"GIT_CONFIG_KEY_{index}"]: environment[f"GIT_CONFIG_VALUE_{index}"]
+            for index in range(declared)
+        }
+        # Git silently ignores pairs beyond GIT_CONFIG_COUNT, so a stale count
+        # would disable these settings without producing any error.
+        self.assertEqual(len(pairs), declared)
+        self.assertEqual(pairs["maintenance.auto"], "false")
+        self.assertEqual(pairs["gc.auto"], "0")
+
+    def test_git_worktree_capability_probe_reports_named_causes(self):
+        module = load_script("claude_review_git_capability", LAUNCHER)
+        environment = os.environ.copy()
+        environment["PATH"] = "/usr/bin:/bin"
+
+        # A Git supporting the required switch clears the probe.
+        self.assertIsNone(module.git_worktree_capability_error(self.candidate, environment))
+
+        # The caller has no exception handling around this probe, so an absent
+        # or untrusted Git must return a named cause rather than raise. It is
+        # also not a capability gap, so it keeps the ordinary command-preflight
+        # classification.
+        absent = module.git_worktree_capability_error(
+            self.candidate, {"PATH": str(self.root / "absent")}
+        )
+        self.assertIsNotNone(absent)
+        classification, cause = absent
+        self.assertEqual(classification, "access_or_command_preflight_failure")
+        self.assertIn("git", cause)
+
+    def test_git_probe_does_not_blame_the_git_version_for_other_failures(self):
+        # A nonzero exit is not evidence of an unsupported switch. Config
+        # loading only requires the candidate to be an existing directory, so a
+        # non-repository reaches this probe and previously produced the
+        # self-contradicting claim that a supported Git was too old.
+        module = load_script("claude_review_git_non_repository", LAUNCHER)
+        environment = os.environ.copy()
+        environment["PATH"] = "/usr/bin:/bin"
+        non_repository = self.root / "not-a-repository"
+        non_repository.mkdir()
+
+        failure = module.git_worktree_capability_error(non_repository, environment)
+        self.assertIsNotNone(failure)
+        classification, cause = failure
+        self.assertEqual(classification, "access_or_command_preflight_failure")
+        self.assertNotIn("does not support", cause)
+        self.assertIn("is not a capability gap", cause)
+
+    def test_parsed_git_version_extracts_comparable_versions(self):
+        module = load_script("claude_review_git_version", LAUNCHER)
+        self.assertEqual(module.parsed_git_version("git version 2.50.1 (Apple Git-155)"), (2, 50, 1))
+        self.assertEqual(module.parsed_git_version("git version 2.36"), (2, 36, 0))
+        self.assertIsNone(module.parsed_git_version("git version unknown"))
+        self.assertIsNone(module.parsed_git_version(None))
+        # The comparison must order by component, not lexically: "2.9" is older
+        # than "2.36" but sorts after it as text.
+        self.assertLess(
+            module.parsed_git_version("git version 2.9.5"),
+            module.GIT_MINIMUM_VERSION_FOR_WORKTREE_NUL,
+        )
+
     def test_arbitrary_other_linked_worktree_administration_is_blocking(self):
         module = load_script("claude_review_other_worktree_admin", LAUNCHER)
         environment = os.environ.copy()
