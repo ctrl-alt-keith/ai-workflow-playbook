@@ -189,22 +189,32 @@ here or in an executor adapter.
 ### Surface Classes
 
 A surface class describes what an execution surface can structurally do,
-independent of vendor or product. Executor adapters map their concrete
-products onto these classes; this document does not enumerate products.
+independent of vendor or product. It states repository locality only. It does
+not state who started the run.
 
 - **Conversational** — no filesystem and no repository locality. Context
   arrives per thread, and any startup contract that depends on reading
   repository files is best-effort rather than guaranteed.
-- **Agentic-local** — real filesystem and repository locality. A startup
-  contract that reads repository and repo-local instruction files genuinely
-  runs.
-- **Agentic-hosted** — agentic execution that may begin with no human present
-  and without guaranteed local filesystem locality.
+- **Agentic-local** — filesystem and repository locality. A startup contract
+  that reads repository and repo-local instruction files genuinely runs.
+- **Agentic-remote** — agentic execution without guaranteed local repository
+  locality. Sources are reached through a connector or another retrieval
+  route rather than through the filesystem.
 
-Surface class constrains which roles a surface can actually perform; it does
-not assign a role, and it does not rank surfaces. Any actor may occupy any
-role its surface class can structurally support. When a required contract
-depends on a capability the current surface class lacks, fail closed and
+Initiation is a separate property rather than a fourth class. A run is either
+human-initiated or unattended, and either may occur on any class. An
+unattended run on an agentic-local surface remains agentic-local; what
+changes is that no human is present to resolve an ambiguity, which the owning
+workflow handles rather than the class.
+
+Surface class does not assign a role and does not rank surfaces. Any actor may
+occupy any role its surface class can structurally support.
+
+Executor adapters own the mapping from their concrete products onto these
+classes; this document enumerates no products. Until an adapter declares the
+class for a surface, that surface has no class under this vocabulary and this
+section places no obligation on it. Where an adapter has declared a class and
+a required contract depends on a capability that class lacks, fail closed and
 report the capability gap rather than substituting a weaker route.
 
 ## Kickoff Mutation Boundaries

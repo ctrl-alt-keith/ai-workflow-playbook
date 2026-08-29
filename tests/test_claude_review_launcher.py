@@ -3872,28 +3872,85 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(symlink_record["change_type"], "added")
         self.assertEqual(symlink_record["classification"], "blocking_lock_change")
 
-    def test_git_background_maintenance_lock_is_tolerated_and_others_stay_blocking(self):
-        module = load_script("claude_review_maintenance_lock", LAUNCHER)
-        environment = os.environ.copy()
-        git_directory = self.candidate / ".git"
-        objects_directory = git_directory / "objects"
-        objects_directory.mkdir(parents=True, exist_ok=True)
+    def _maintenance_lock_record(self, module, environment, mutate, *, live_monitoring):
+        """Apply one mutation under .git and return its classification record."""
 
-        maintenance_lock = objects_directory / "maintenance.lock"
         baseline = module.source_snapshot([self.candidate], self.candidate, environment)
-        maintenance_lock.write_text("", encoding="utf-8")
+        mutate()
         changed = module.source_snapshot([self.candidate], self.candidate, environment)
-        comparison = module.snapshot_comparison(baseline, changed)
+        comparison = module.snapshot_comparison(baseline, changed, live_monitoring=live_monitoring)
         record = next(
             record
             for record in comparison["git_admin_changes"]
             if record["path"] == "objects/maintenance.lock"
         )
+        return comparison, record
+
+    def test_git_background_maintenance_lock_admission_is_bounded(self):
+        module = load_script("claude_review_maintenance_lock", LAUNCHER)
+        environment = os.environ.copy()
+        objects_directory = self.candidate / ".git" / "objects"
+        objects_directory.mkdir(parents=True, exist_ok=True)
+        maintenance_lock = objects_directory / "maintenance.lock"
+
+        # Admitted: bare creation of a regular file, observed live.
+        comparison, record = self._maintenance_lock_record(
+            module,
+            environment,
+            lambda: maintenance_lock.write_text("", encoding="utf-8"),
+            live_monitoring=True,
+        )
         self.assertEqual(record["classification"], "tolerated_git_background_maintenance_lock")
         self.assertEqual(record["disposition"], "tolerated")
-        self.assertTrue(record["evidence"]["protected_candidate_evidence_unchanged"])
+        self.assertEqual(record["evidence"]["admitted_observation_scope"], "live_monitoring_only")
+        self.assertEqual(record["evidence"]["observed_kind"], "file")
         self.assertTrue(comparison["passed"])
         maintenance_lock.unlink()
+
+        # Terminal postflight is unchanged by the admission. The same creation
+        # that live monitoring tolerates must still block at the terminal
+        # boundary, so a lock surviving the attempt is never masked.
+        comparison, record = self._maintenance_lock_record(
+            module,
+            environment,
+            lambda: maintenance_lock.write_text("", encoding="utf-8"),
+            live_monitoring=False,
+        )
+        self.assertEqual(record["classification"], "blocking_lock_change")
+        self.assertEqual(record["disposition"], "blocking")
+        self.assertFalse(comparison["passed"])
+
+        # Mutations of a pre-existing lock are not creations and stay blocking
+        # even under live monitoring.
+        for label, mutate in (
+            ("content_changed", lambda: maintenance_lock.write_text("altered\n", encoding="utf-8")),
+            ("mode_changed", lambda: maintenance_lock.chmod(0o600)),
+            ("removed", maintenance_lock.unlink),
+        ):
+            with self.subTest(change=label):
+                comparison, record = self._maintenance_lock_record(
+                    module, environment, mutate, live_monitoring=True
+                )
+                self.assertEqual(record["disposition"], "blocking")
+                self.assertFalse(comparison["passed"])
+
+        # A symlink or directory at the admitted path is never admitted, so the
+        # exception cannot be used to reach outside the object store.
+        for label, mutate in (
+            ("symlink", lambda: maintenance_lock.symlink_to(self.candidate / "tracked.txt")),
+            ("directory", lambda: maintenance_lock.mkdir()),
+        ):
+            with self.subTest(created=label):
+                comparison, record = self._maintenance_lock_record(
+                    module, environment, mutate, live_monitoring=True
+                )
+                self.assertEqual(record["classification"], "blocking_lock_change")
+                self.assertEqual(record["disposition"], "blocking")
+                self.assertFalse(comparison["passed"])
+                if label == "symlink":
+                    maintenance_lock.unlink()
+                else:
+                    maintenance_lock.rmdir()
 
         # The admission is exact. A neighbouring lock under the same directory
         # must remain fail-closed so this does not become a broad objects/
@@ -3902,7 +3959,9 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         neighbour_baseline = module.source_snapshot([self.candidate], self.candidate, environment)
         neighbour_lock.write_text("", encoding="utf-8")
         neighbour_changed = module.source_snapshot([self.candidate], self.candidate, environment)
-        neighbour_comparison = module.snapshot_comparison(neighbour_baseline, neighbour_changed)
+        neighbour_comparison = module.snapshot_comparison(
+            neighbour_baseline, neighbour_changed, live_monitoring=True
+        )
         neighbour_record = next(
             record
             for record in neighbour_comparison["git_admin_changes"]

@@ -1683,11 +1683,40 @@ def lock_path(relative: str) -> bool:
 # repository when any actor runs an ordinary Git command there. The reviewer
 # cannot prevent it: auto-maintenance runs under the acting process, not the
 # observing one, and an unrelated worktree's operator does not share the
-# reviewer's environment. Admitting it is therefore required for the
-# unrelated-worktree concurrency guarantee, and it is admitted only as an exact
-# path and only while protected candidate evidence is unchanged. Every other
-# lock, including any other path under objects/, remains fail-closed.
+# reviewer's environment.
+#
+# The admission is deliberately narrower than "this path is tolerated". Four
+# conditions must hold together, and each closes a distinct masking route:
+#
+#   1. Live monitoring only. Terminal postflight remains fully fail-closed, so
+#      a lock that survives the attempt is still blocking. This preserves the
+#      external-ai-reviewer contract, which permits a live-monitor exception
+#      and prohibits extending it to terminal postflight.
+#   2. Creation only. A removal, replacement, content change, or mode change to
+#      this path is a mutation of pre-existing state and stays blocking.
+#   3. Regular file or already vanished. A symlink or directory at this path is
+#      never admitted, so it cannot be used to reach outside the object store.
+#   4. Protected candidate evidence unchanged, as for every other admission.
+#
+# Every other lock, including any other path under objects/, remains
+# fail-closed in both live monitoring and terminal postflight.
 GIT_BACKGROUND_MAINTENANCE_LOCKS = frozenset({"objects/maintenance.lock"})
+
+
+def admissible_background_maintenance_lock(
+    relative: str,
+    before: object | None,
+    after: object | None,
+) -> bool:
+    """Whether one observed change is a bare creation of a known Git maintenance lock."""
+
+    if relative not in GIT_BACKGROUND_MAINTENANCE_LOCKS:
+        return False
+    if before is not None:
+        return False
+    if not isinstance(after, dict):
+        return False
+    return after.get("kind") in {"file", "vanished_during_snapshot"}
 
 
 def object_storage_path(relative: str) -> bool:
@@ -1731,7 +1760,12 @@ def object_storage_layout_change(relative: str, before: object | None, after: ob
     )
 
 
-def classify_git_admin_changes(before: dict[str, object], after: dict[str, object]) -> list[dict[str, object]]:
+def classify_git_admin_changes(
+    before: dict[str, object],
+    after: dict[str, object],
+    *,
+    live_monitoring: bool = False,
+) -> list[dict[str, object]]:
     protected_evidence_unchanged = (
         before.get("head") == after.get("head")
         and before.get("protected_revisions") == after.get("protected_revisions")
@@ -1911,7 +1945,8 @@ def classify_git_admin_changes(before: dict[str, object], after: dict[str, objec
                         "protected_candidate_evidence_unchanged": True,
                     }
                 elif (
-                    relative in GIT_BACKGROUND_MAINTENANCE_LOCKS
+                    live_monitoring
+                    and admissible_background_maintenance_lock(relative, old_identity, new_identity)
                     and protected_evidence_unchanged
                 ):
                     scope = "git_background_maintenance"
@@ -1919,6 +1954,9 @@ def classify_git_admin_changes(before: dict[str, object], after: dict[str, objec
                     disposition = "tolerated"
                     evidence = {
                         "admitted_git_managed_path": relative,
+                        "admitted_observation_scope": "live_monitoring_only",
+                        "admitted_change_type": "added",
+                        "observed_kind": new_identity.get("kind") if isinstance(new_identity, dict) else None,
                         "protected_candidate_evidence_unchanged": True,
                     }
                 else:
@@ -2027,7 +2065,12 @@ def classify_git_admin_changes(before: dict[str, object], after: dict[str, objec
     return records
 
 
-def snapshot_comparison(before: dict[str, object], after: dict[str, object]) -> dict[str, object]:
+def snapshot_comparison(
+    before: dict[str, object],
+    after: dict[str, object],
+    *,
+    live_monitoring: bool = False,
+) -> dict[str, object]:
     before_body = before["body"]
     after_body = after["body"]
     blocking_paths: list[str] = []
@@ -2046,7 +2089,11 @@ def snapshot_comparison(before: dict[str, object], after: dict[str, object]) -> 
     if before_body["git_index"] != after_body["git_index"]:
         blocking_paths.append("git-index")
         raw_paths.append("git-index")
-    candidate_admin_changes = classify_git_admin_changes(before_body["git_admin"], after_body["git_admin"])
+    candidate_admin_changes = classify_git_admin_changes(
+        before_body["git_admin"],
+        after_body["git_admin"],
+        live_monitoring=live_monitoring,
+    )
     git_admin_changes.extend(candidate_admin_changes)
     before_repositories = before_body.get("guarded_git_repositories", {})
     after_repositories = after_body.get("guarded_git_repositories", {})
@@ -3182,7 +3229,9 @@ def run_governed_review(
                         )
                     else:
                         assert live_snapshot is not None
-                        live_comparison = snapshot_comparison(attempt_snapshot, live_snapshot)
+                        live_comparison = snapshot_comparison(
+                            attempt_snapshot, live_snapshot, live_monitoring=True
+                        )
                         live_changes = list(live_comparison["blocking_paths"])
                         live_observed_raw_paths.update(live_comparison["raw_changed_paths"])
                         live_observed_tolerated_paths.update(live_comparison["tolerated_paths"])
@@ -3267,7 +3316,9 @@ def run_governed_review(
                         )
                     else:
                         assert live_snapshot is not None
-                        live_comparison = snapshot_comparison(attempt_snapshot, live_snapshot)
+                        live_comparison = snapshot_comparison(
+                            attempt_snapshot, live_snapshot, live_monitoring=True
+                        )
                         live_changes = list(live_comparison["blocking_paths"])
                         live_observed_raw_paths.update(live_comparison["raw_changed_paths"])
                         live_observed_tolerated_paths.update(live_comparison["tolerated_paths"])
