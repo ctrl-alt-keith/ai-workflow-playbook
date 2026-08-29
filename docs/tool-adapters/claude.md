@@ -53,11 +53,27 @@ boundary applies unchanged: hydrate before the first project action and again
 only when the task or repository materially changes, never merely because a
 new turn or tool call occurs. Then use these source routes:
 
+### Account-Level Hosted Transports
+
+- Anthropic documents **Instructions for Claude** as an account-wide setting
+  that applies to conversations. Because it is account-level, do not frame it
+  as a Chat-only transport or infer that project instructions replace it.
+- When a current run exposes one or more `user_preferences` blocks, treat them
+  as independently observed runtime instruction transports until the owning
+  hosted setting and precedence are established. Audit each block for stale
+  unconditional hydration wording. An edit to **Instructions for Claude** does
+  not prove that a separately presented runtime block changed.
+- Anthropic separately documents Cowork Global instructions as standing
+  instructions for every Cowork session. The published route is **Settings >
+  Cowork**, then **Global instructions**; current UI exposure is runtime
+  evidence. If an account or build does not expose that route, record the gap
+  instead of assuming another account field owns the same transport.
+
 ### Claude Chat
 
-- Put the canonical global router in Claude profile instructions when ordinary
-  Chat conversations may start CAK work. A bare repository URL is context, not
-  an instruction to retrieve and apply it.
+- Put the canonical global router in the verified account instruction
+  transport when ordinary Chat conversations may start CAK work. A bare
+  repository URL is context, not an instruction to retrieve and apply it.
 - Use project instructions for project-specific context; do not copy shared
   Playbook doctrine or another router body there when the account-level router
   already covers the session.
@@ -77,16 +93,17 @@ new turn or tool call occurs. Then use these source routes:
   proceed from project memory, chat history, or a stale synchronized copy while
   claiming current hydration.
 
-Chat hydration is therefore best-effort per thread. Profile or project
+Chat hydration is therefore best-effort per thread. Account or project
 instructions can reliably present the routing request, but they cannot create
 filesystem locality or guarantee that the selected GitHub source is current.
 
 ### Claude Cowork
 
-- Put the canonical global router in **Settings > Cowork > Global
-  instructions** when Cowork sessions may start CAK work. This is a distinct
-  hosted/manual surface from Claude profile instructions and from
-  `~/.claude/CLAUDE.md`.
+- Put the canonical global router in the verified Cowork Global instructions
+  transport when Cowork sessions may start CAK work. This is a distinct
+  hosted/manual surface from account instructions, observed runtime account
+  preferences, and `~/.claude/CLAUDE.md`. The published menu route does not
+  prove that a particular account or product build currently exposes it.
 - Folder instructions provide project-specific context when a local folder is
   selected on desktop. Cowork project instructions and context apply only
   within that project. Keep either layer thin and point it to the repository's
@@ -108,13 +125,13 @@ that file is not the sole Cowork route: outside-working-directory imports and
 linked user files are skipped there, and cloud/web/mobile Cowork execution must
 not infer coverage from a workstation file.
 
-Anthropic documents **Instructions for Claude** as account-wide and Cowork
-Global instructions as applying to every Cowork session, but does not publish
-cross-surface precedence or deduplication semantics for those two settings.
-Treat them as independently verified transports and do not infer that profile
-instructions alone cover Cowork. If one runtime presents the exact canonical
-router through more than one surface, the duplicate transport is idempotent:
-apply the first-action/material-change trigger once, not once per copy.
+Anthropic does not publish cross-surface precedence or deduplication semantics
+for account instructions, runtime `user_preferences` blocks, and Cowork Global
+instructions. Treat them as independently verified transports and do not infer
+that account instructions alone cover Cowork. If one runtime presents the exact
+canonical router through more than one surface, the duplicate transport is
+idempotent: apply the first-action/material-change trigger once, not once per
+copy.
 
 ### Claude Code
 

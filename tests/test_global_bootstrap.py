@@ -80,7 +80,8 @@ class GlobalBootstrapTests(unittest.TestCase):
         self.assertIn("does not require a Codex project setting", readme)
         self.assertIn("ChatGPT account custom instructions", readme)
         self.assertIn("ChatGPT CAK project instructions", readme)
-        self.assertIn("Claude profile instructions", readme)
+        self.assertIn("Claude account instructions", readme)
+        self.assertIn("Claude runtime account preferences", readme)
         self.assertIn("Claude Cowork global instructions", readme)
         self.assertIn("distinct hosted configuration surfaces", readme)
         self.assertIn(
@@ -90,7 +91,6 @@ class GlobalBootstrapTests(unittest.TestCase):
         self.assertIn(
             "python3 scripts/check_global_bootstrap.py --require-claude", readme
         )
-        self.assertIn("Settings > Cowork > Global instructions", readme)
 
     def test_claude_adapter_preserves_scope_order_and_cowork_caveats(self) -> None:
         adapter = (ROOT / "docs" / "tool-adapters" / "claude.md").read_text(
@@ -127,7 +127,6 @@ class GlobalBootstrapTests(unittest.TestCase):
         self.assertIn("../core-model.md#surface-classes", adapter)
         self.assertIn("agentic-remote", normalized)
         self.assertIn("agentic-local", normalized)
-        self.assertIn("Settings > Cowork > Global instructions", normalized)
         self.assertIn("#global-bootstrap-persistence", adapter)
         self.assertIn("#connector-availability-is-runtime-evidence", chat)
         self.assertIn("new turn or tool call", normalized)
