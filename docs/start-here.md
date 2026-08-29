@@ -53,6 +53,11 @@ material change. Re-run routing when the target repository changes or when the
 task materially changes the interaction mode, workflow, authoritative-source
 requirements, execution locality, or authority boundary.
 
+When that first-action or material-change trigger applies, bootstrap remains a
+hard precondition: do not respond, reason about the task, or invoke another
+tool before applying it. Persistence narrows when the precondition reactivates;
+it does not weaken the precondition itself.
+
 The copy-ready global provider projections and the read-only local drift check
 are owned by the
 [`global-bootstrap` distribution](../distributions/global-bootstrap/README.md).

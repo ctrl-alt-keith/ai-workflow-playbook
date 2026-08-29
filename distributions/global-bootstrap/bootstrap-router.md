@@ -7,3 +7,4 @@ instructions. Treat this as mandatory bootstrap, not background guidance.
 After successful bootstrap, reuse the still-current repository operating mode
 and verified sources across subsequent turns; do not retrieve `start-here.md`
 again merely because the conversation continues or another tool is invoked.
+Do not respond, reason about the task, or invoke another tool before applying it.

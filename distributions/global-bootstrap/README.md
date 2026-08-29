@@ -17,19 +17,38 @@ The router persists after successful bootstrap. A new conversational turn,
 follow-up message, reasoning step, or tool call does not independently trigger
 another retrieval.
 
-## Provider Projections
+## Canonical Router And Destinations
 
-- [`codex-AGENTS.md`](codex-AGENTS.md) projects the router into
-  `~/.codex/AGENTS.md`.
-- [`claude-CLAUDE.md`](claude-CLAUDE.md) projects the router into
-  `~/.claude/CLAUDE.md`.
-- [`chatgpt-custom-instructions.md`](chatgpt-custom-instructions.md) is the
-  copy-ready ChatGPT custom-instructions projection.
+[`bootstrap-router.md`](bootstrap-router.md) is the one copy-ready router body.
+Do not maintain provider-specific copies of its text. Project that exact body
+into each applicable destination:
 
-The Codex and Claude files use managed markers so the read-only validator can
-compare only this distribution's block while permitting unrelated personal
-instructions before or after it. Preserve the markers when installing or
-updating those projections.
+- **Codex user-global instructions:** place it in `~/.codex/AGENTS.md` between
+  the managed markers described below.
+- **Claude Code user-global instructions:** place it in
+  `~/.claude/CLAUDE.md` between the same managed markers.
+- **ChatGPT account custom instructions:** install and verify the body through
+  the hosted Personalization surface.
+- **ChatGPT CAK project instructions:** install and verify the body through the
+  hosted project-instructions surface.
+
+The two ChatGPT destinations are distinct hosted configuration surfaces even
+when they intentionally use the same reviewed router body. Record and verify
+them separately; do not collapse them into one ambiguous "project/custom"
+surface.
+
+Use these markers around the exact router body in the Codex and Claude local
+files:
+
+```text
+<!-- ai-workflow-playbook:global-bootstrap:start -->
+[exact contents of bootstrap-router.md]
+<!-- ai-workflow-playbook:global-bootstrap:end -->
+```
+
+The read-only validator compares only the marked body, permitting unrelated
+personal instructions before or after it. Preserve the markers when installing
+or updating the router.
 
 ## Read-Only Validation
 
@@ -40,9 +59,10 @@ make check-local-bootstrap
 ```
 
 The check reads the current Codex and Claude user-global files, extracts the
-managed block, and compares it byte-for-byte with the corresponding canonical
-projection. It does not create, edit, or replace local files. Missing files,
-missing or duplicate markers, and content drift fail with a remediation path.
+managed body, and compares it byte-for-byte with
+[`bootstrap-router.md`](bootstrap-router.md). It does not create, edit, or
+replace local files. Missing files, missing or duplicate markers, and content
+drift fail with a remediation path.
 
 Use explicit paths when validating staged or fixture files:
 
@@ -52,8 +72,9 @@ python3 scripts/check_global_bootstrap.py \
   --claude-file /path/to/CLAUDE.md
 ```
 
-ChatGPT custom instructions are validated by direct comparison during manual
-installation because the provider does not expose them as a local file.
+The ChatGPT account and CAK project instructions are each validated by direct
+comparison during manual installation because the provider does not expose
+either hosted surface as a local file.
 
 ## Installation Boundary
 

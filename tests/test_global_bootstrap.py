@@ -10,9 +10,15 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "check_global_bootstrap.py"
 PROJECTIONS = ROOT / "distributions" / "global-bootstrap"
+ROUTER = PROJECTIONS / "bootstrap-router.md"
+START_MARKER = "<!-- ai-workflow-playbook:global-bootstrap:start -->"
+END_MARKER = "<!-- ai-workflow-playbook:global-bootstrap:end -->"
 
 
 class GlobalBootstrapTests(unittest.TestCase):
+    def marked(self, router: str) -> str:
+        return f"{START_MARKER}\n{router}{END_MARKER}\n"
+
     def run_check(
         self, codex_file: Path, claude_file: Path
     ) -> subprocess.CompletedProcess[str]:
@@ -31,29 +37,43 @@ class GlobalBootstrapTests(unittest.TestCase):
             stderr=subprocess.PIPE,
         )
 
-    def test_projections_encode_persistent_material_change_boundary(self) -> None:
+    def test_one_router_encodes_persistent_material_change_boundary(self) -> None:
         exact_boundary = (
             "Before the first project action, and again only when the "
             "task/repository materially changes"
         )
-        for name in (
+        contents = ROUTER.read_text(encoding="utf-8")
+        normalized = " ".join(contents.split())
+        self.assertIn(exact_boundary, normalized)
+        self.assertIn("reuse the still-current repository operating mode", normalized)
+        self.assertIn("do not retrieve `start-here.md` again merely", normalized)
+        self.assertTrue(
+            contents.rstrip().endswith(
+                "Do not respond, reason about the task, or invoke another tool "
+                "before applying it."
+            )
+        )
+        for removed_copy in (
             "codex-AGENTS.md",
             "claude-CLAUDE.md",
             "chatgpt-custom-instructions.md",
         ):
-            contents = (PROJECTIONS / name).read_text(encoding="utf-8")
-            normalized = " ".join(contents.split())
-            self.assertIn(exact_boundary, normalized)
-            self.assertIn("reuse the still-current repository operating mode", normalized)
-            self.assertIn("do not retrieve `start-here.md` again merely", normalized)
+            self.assertFalse((PROJECTIONS / removed_copy).exists())
+
+    def test_distribution_names_both_hosted_chatgpt_destinations(self) -> None:
+        readme = (PROJECTIONS / "README.md").read_text(encoding="utf-8")
+        self.assertIn("ChatGPT account custom instructions", readme)
+        self.assertIn("ChatGPT CAK project instructions", readme)
+        self.assertIn("distinct hosted configuration surfaces", readme)
 
     def test_validator_accepts_exact_blocks_with_unrelated_local_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             codex_file = root / "AGENTS.md"
             claude_file = root / "CLAUDE.md"
-            codex = (PROJECTIONS / "codex-AGENTS.md").read_text(encoding="utf-8")
-            claude = (PROJECTIONS / "claude-CLAUDE.md").read_text(encoding="utf-8")
+            router = ROUTER.read_text(encoding="utf-8")
+            codex = self.marked(router)
+            claude = self.marked(router)
             codex_file.write_text(
                 f"Personal preface.\n\n{codex}\nPersonal suffix.\n", encoding="utf-8"
             )
@@ -73,8 +93,9 @@ class GlobalBootstrapTests(unittest.TestCase):
             root = Path(temporary)
             codex_file = root / "AGENTS.md"
             claude_file = root / "CLAUDE.md"
-            codex = (PROJECTIONS / "codex-AGENTS.md").read_text(encoding="utf-8")
-            claude = (PROJECTIONS / "claude-CLAUDE.md").read_text(encoding="utf-8")
+            router = ROUTER.read_text(encoding="utf-8")
+            codex = self.marked(router)
+            claude = self.marked(router)
             codex_file.write_text(
                 codex.replace("first project action", "every action"), encoding="utf-8"
             )
@@ -84,7 +105,7 @@ class GlobalBootstrapTests(unittest.TestCase):
             result = self.run_check(codex_file, claude_file)
 
             self.assertEqual(result.returncode, 1)
-            self.assertIn("FAIL Codex: managed block differs", result.stdout)
+            self.assertIn("FAIL Codex: managed body differs", result.stdout)
             self.assertEqual(codex_file.read_bytes(), before)
             self.assertEqual(result.stderr, "")
 
@@ -93,9 +114,7 @@ class GlobalBootstrapTests(unittest.TestCase):
             root = Path(temporary)
             codex_file = root / "AGENTS.md"
             claude_file = root / "CLAUDE.md"
-            projection = (PROJECTIONS / "claude-CLAUDE.md").read_text(
-                encoding="utf-8"
-            )
+            projection = self.marked(ROUTER.read_text(encoding="utf-8"))
             codex_file.write_text("unmanaged instructions only\n", encoding="utf-8")
             claude_file.write_text(projection + projection, encoding="utf-8")
 

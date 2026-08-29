@@ -27,7 +27,7 @@ requires. Therefore:
   governs; a user-level `~/.claude/CLAUDE.md` is operator context and does not
   override repo-local policy.
 - Use the copy-ready
-  [`Claude global router`](../../distributions/global-bootstrap/claude-CLAUDE.md)
+  [`global bootstrap router`](../../distributions/global-bootstrap/bootstrap-router.md)
   in the user-level file. It applies the shared
   [`global bootstrap persistence`](../start-here.md#global-bootstrap-persistence)
   timing invariant across repositories; it is not a per-turn retrieval rule.

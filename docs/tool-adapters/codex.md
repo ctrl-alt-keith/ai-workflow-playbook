@@ -329,7 +329,7 @@ fail closed on the shared cleanup conditions in
 [OpenAI's current `AGENTS.md` guidance](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
 documents that Codex loads user-global guidance from `~/.codex/AGENTS.md` once
 per run and combines it with project guidance. Use the copy-ready
-[`Codex global router`](../../distributions/global-bootstrap/codex-AGENTS.md)
+[`global bootstrap router`](../../distributions/global-bootstrap/bootstrap-router.md)
 there. It applies the shared
 [`global bootstrap persistence`](../start-here.md#global-bootstrap-persistence)
 timing invariant across repositories; it is not a per-turn retrieval rule.
