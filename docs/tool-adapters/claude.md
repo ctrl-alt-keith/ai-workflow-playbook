@@ -1,11 +1,160 @@
 # Claude Adapter
 
-Claude Code-specific deltas on top of the core playbook. Use with
+This adapter maps Claude Chat, Claude Cowork, and Claude Code onto the shared
+Playbook. Use it with
 [`start-here.md`](../start-here.md), [`core-model.md`](../core-model.md),
 [`source-first-retrieval.md`](../source-first-retrieval.md),
 [`repo-readiness.md`](../repo-readiness.md), and the target repo's `AGENTS.md`.
-Record only what differs for Claude Code here; shared rules stay in their
-canonical docs.
+Record only Claude-specific deltas here; shared rules stay in their canonical
+docs.
+
+## Surface And Invocation Routing
+
+Classify the concrete run from its observed repository locality, not only from
+the Claude product label. Apply the
+[`Surface Classes`](../core-model.md#surface-classes) vocabulary as follows:
+
+- **Claude Chat** is conversational. It has no repository filesystem.
+  **Instructions for Claude** apply account-wide to conversations, while
+  project instructions apply only inside that project. Repository files arrive
+  through explicitly selected GitHub content, project knowledge, or another
+  currently observed retrieval route, so current source retrieval is
+  best-effort per thread rather than guaranteed by the instruction surface.
+- **Claude Cowork** is agentic-remote by default because a session has no
+  guaranteed repository locality. A concrete Cowork session with an active
+  desktop-connected local folder has repository locality for that connected
+  folder and can satisfy the agentic-local startup contract while the
+  connection remains available. A cloud-only or scheduled session without
+  current repository access remains agentic-remote.
+- **Claude Code** is agentic-local when a CLI or desktop Code session has the
+  repository filesystem. A remote Code session is agentic-remote until its
+  current repository source and repo-local instructions are available through
+  the execution environment.
+
+Initiation is a separate axis. Chat is normally human-initiated. Scheduled
+Cowork tasks are unattended; Dispatch tasks are human-initiated assignments
+whose execution does not require the initiating human to remain present.
+Claude Code can be human-interactive or controller-launched. Human-interactive
+Code uses the ordinary repository sections below. A controller-launched
+independent review additionally uses
+[`Governed read-only reviewer launch`](#governed-read-only-reviewer-launch)
+and the controller-side adapter for the invoking executor; each adapter governs
+its own run boundary.
+
+## Hydration Transport By Surface
+
+Persistent instructions trigger hydration; they do not prove that hydration
+succeeded or that a repository snapshot is current. Apply the shared
+[`global bootstrap router`](../../distributions/global-bootstrap/bootstrap-router.md)
+at each independently starting hosted surface that must enter CAK repository
+work. Its
+[`global bootstrap persistence`](../start-here.md#global-bootstrap-persistence)
+boundary applies unchanged: hydrate before the first project action and again
+only when the task or repository materially changes, never merely because a
+new turn or tool call occurs. Then use these source routes:
+
+### Account-Level Hosted Transports
+
+- Anthropic documents **Instructions for Claude** as an account-wide setting
+  that applies to conversations. Because it is account-level, do not frame it
+  as a Chat-only transport or infer that project instructions replace it.
+- When a current run exposes one or more `user_preferences` blocks, treat them
+  as independently observed runtime instruction transports until the owning
+  hosted setting and precedence are established. Audit each block for stale
+  unconditional hydration wording. An edit to **Instructions for Claude** does
+  not prove that a separately presented runtime block changed. If its owner
+  remains unknown, record unresolved provenance, continue treating the stale
+  block as active, and do not claim reconciliation.
+- Anthropic separately documents Cowork Global instructions as standing
+  instructions for every Cowork session. The published route is **Settings >
+  Cowork**, then **Global instructions**; current UI exposure is runtime
+  evidence. If an account or build does not expose that route, record the gap
+  instead of assuming another account field owns the same transport.
+
+### Claude Chat
+
+- Put the canonical global router in the verified account instruction
+  transport when ordinary Chat conversations may start CAK work. A bare
+  repository URL is context, not an instruction to retrieve and apply it.
+- Use project instructions for project-specific context; do not copy shared
+  Playbook doctrine or another router body there when the account-level router
+  already covers the session.
+- Prefer explicitly selected GitHub content for repository files. In a Claude
+  project, GitHub content is a selected, synchronized knowledge source;
+  refresh it when the task materially changes or before relying on mutable
+  repository state whose freshness has not been established. A successful
+  prior sync does not prove the current branch or file version. Another
+  currently observed retrieval route is valid when it returns the current
+  required source.
+- If the current `docs/start-here.md`, repo-local `AGENTS.md`, or another
+  required source cannot be retrieved after inspecting or attempting the
+  relevant route, report the exact capability gap and stop the
+  repository-dependent task. Apply the
+  [`runtime-evidence rule`](../start-here.md#connector-availability-is-runtime-evidence)
+  before claiming a connector or retrieval capability is unavailable. Do not
+  proceed from project memory, chat history, or a stale synchronized copy while
+  claiming current hydration.
+
+Chat hydration is therefore best-effort per thread. Account or project
+instructions can reliably present the routing request, but they cannot create
+filesystem locality or guarantee that the selected GitHub source is current.
+
+### Claude Cowork
+
+- Put the canonical global router in the verified Cowork Global instructions
+  transport when Cowork sessions may start CAK work. This is a distinct
+  hosted/manual surface from account instructions, observed runtime account
+  preferences, and `~/.claude/CLAUDE.md`. The published menu route does not
+  prove that a particular account or product build currently exposes it.
+- When no verified global transport is exposed, an interactive Cowork run may
+  proceed only when its current task or a verified project/folder instruction
+  explicitly triggers hydration and the required current sources are obtained.
+  Record the global coverage gap; do not substitute a duplicate router in a
+  project or folder field.
+- Folder instructions provide project-specific context when a local folder is
+  selected on desktop. Cowork project instructions and context apply only
+  within that project. Keep either layer thin and point it to the repository's
+  current `CLAUDE.md`/`AGENTS.md` route instead of copying shared doctrine.
+- With a connected local repository folder, read the current
+  `docs/start-here.md`, root `CLAUDE.md`, and repo-local `AGENTS.md` from that
+  folder at the first-action/material-change boundary. If the desktop bridge
+  or folder is unavailable, use a currently observed connector or synchronized
+  project source and preserve its freshness limitation.
+- Scheduled and other unattended Cowork tasks run without a human available
+  at startup. Their task definition must name a qualified current-source route
+  and stop when it is unavailable; remembered context and a prior successful
+  run are not substitutes.
+
+Cowork's product-native global and folder instructions are the portable
+instruction surfaces across Cowork sessions. Claude Code's memory guidance
+also documents `~/.claude/CLAUDE.md` behavior in desktop Cowork sessions, but
+that file is not the sole Cowork route: outside-working-directory imports and
+linked user files are skipped there, and cloud/web/mobile Cowork execution must
+not infer coverage from a workstation file.
+
+Anthropic does not publish cross-surface precedence or deduplication semantics
+for account instructions, runtime `user_preferences` blocks, and Cowork Global
+instructions. Treat them as independently verified transports and do not infer
+that account instructions alone cover Cowork. If one runtime presents the exact
+canonical router through more than one surface, the duplicate transport is
+idempotent: apply the first-action/material-change trigger once, not once per
+copy.
+
+### Claude Code
+
+Claude Code uses its file-backed `CLAUDE.md` discovery described below. Local
+file-backed hydration is deterministic when the required files are current and
+readable. In a remote Code workspace, use a repo-local root `CLAUDE.md`, when
+present, as a thin bootstrap pointer to the current `docs/start-here.md` and
+repo-local `AGENTS.md`; otherwise retrieve those two required sources directly
+through a currently observed route. User-global or project `CLAUDE.md` content
+triggers this hydration but does not substitute for either required source. If
+the current required sources are not readable or retrievable, report the
+capability gap and stop before repository-dependent work.
+
+The remaining execution, permission, worktree, context, model, and delivery
+sections are Claude Code-specific unless a section explicitly says
+otherwise.
 
 ## Instruction Discovery And Precedence
 
@@ -41,9 +190,10 @@ canonical repository execution layer the startup contract requires. Therefore:
   repository.
 - Do not implement the user-global router as an import that resolves outside a
   Cowork session's working directory, or as a symlink or hard link. Claude Code
-  documents that Cowork desktop skips those user-scope imports and skips a
-  linked `~/.claude/CLAUDE.md`. The inline managed block remains available in
-  Cowork without either indirection.
+  documents that desktop Cowork sessions skip those user-scope imports and a
+  linked `~/.claude/CLAUDE.md`. A regular inline managed block avoids those
+  two failure modes, but it does not replace Cowork Global instructions or
+  establish coverage for cloud, web, or mobile Cowork sessions.
 - Keep the managed HTML markers around the inline router. Claude Code strips
   block-level HTML comments before injecting `CLAUDE.md` content into context,
   so the markers remain available to the drift validator without consuming
@@ -341,7 +491,8 @@ file state before relying on it, per
 
 ## Connectors
 
-Claude reaches remote services, including GitHub, through MCP servers. Apply the
+This section applies across Claude surfaces that expose connectors. Claude
+reaches remote services, including GitHub, through MCP servers. Apply the
 [runtime-evidence rule](../start-here.md#connector-availability-is-runtime-evidence):
 inspect available connector actions or attempt the operation before claiming a
 capability is unavailable, and treat a successful call as evidence it remains
@@ -539,7 +690,7 @@ repository automation or worker fan-out, run it first and stop on a non-zero
 exit:
 
 ```text
-cd /Users/keith/src/ctrl-alt-keith/ai-workflow-playbook
+cd /ABSOLUTE/PATH/TO/ai-workflow-playbook
 ./scripts/codex-preflight
 ```
 
@@ -559,12 +710,19 @@ permissions-sensitive.
 ## References
 
 Behavioral claims above are grounded in official Anthropic documentation,
-including [memory](https://docs.claude.com/en/docs/claude-code/memory),
+including [Claude Code memory](https://code.claude.com/docs/en/memory),
 [permissions](https://code.claude.com/docs/en/permissions),
 [the tools reference](https://code.claude.com/docs/en/tools-reference),
-[subagents](https://docs.claude.com/en/docs/claude-code/sub-agents), and
-[worktrees](https://code.claude.com/docs/en/worktrees). Model-routing claims
-above are additionally derived from Anthropic's official [Claude Code model
+[subagents](https://code.claude.com/docs/en/sub-agents), and
+[worktrees](https://code.claude.com/docs/en/worktrees). Surface and hydration
+claims are additionally grounded in Anthropic's official
+[Cowork introduction](https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork),
+[Cowork surface guide](https://support.claude.com/en/articles/15520349-use-claude-cowork-on-web-desktop-and-mobile),
+[Dispatch guide](https://support.claude.com/en/articles/13947068-assign-tasks-from-anywhere-in-claude-cowork),
+[personalization guide](https://support.claude.com/en/articles/10185728-understanding-claude-s-personalization-features),
+and [GitHub integration guide](https://support.claude.com/en/articles/10167454-use-the-github-integration),
+checked 2026-08-29. Model-routing claims above are additionally derived from
+Anthropic's official [Claude Code model
 configuration](https://code.claude.com/docs/en/model-config), [model-selection
 guide](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model),
 [models overview](https://platform.claude.com/docs/en/about-claude/models/overview),

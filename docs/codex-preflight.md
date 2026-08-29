@@ -30,7 +30,7 @@ delegating workers or touching repositories:
 ```text
 Before starting repository work, run:
 
-cd /Users/keith/src/ctrl-alt-keith/ai-workflow-playbook
+cd /ABSOLUTE/PATH/TO/ai-workflow-playbook
 ./scripts/codex-preflight
 
 If it exits non-zero, stop and report the failing check and remediation.
