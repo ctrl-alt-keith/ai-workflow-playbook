@@ -3335,6 +3335,14 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
     def test_other_linked_worktree_git_managed_admin_creation_is_provisional(self):
         module = load_script("claude_review_worktree_admin_creation", LAUNCHER)
         environment = os.environ.copy()
+
+        # exact_other_worktree_admin resolves any worktree present in both
+        # snapshots, because worktree_admin_identity records every
+        # WORKTREE_ADMIN_PATHS key unconditionally — absent files simply carry a
+        # None identity. Reaching the fallback therefore requires a worktree
+        # that the baseline snapshot does not know about at all, which is what
+        # adding it after the baseline produces.
+        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
         linked = self.root / "provisional-admin-worktree"
         subprocess.run(
             ["git", "-C", str(self.candidate), "worktree", "add", "-q", "-b", "fixture-provisional", str(linked)],
@@ -3348,42 +3356,55 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 stdout=subprocess.PIPE,
             ).stdout.strip()
         ).resolve()
-
-        # A Git-managed per-worktree administration file written mid-attempt is
-        # absent from the recorded admin_paths, so it cannot yet be attributed
-        # to that worktree's HEAD transition. It stays blocking, but must be
-        # eligible for the bounded stabilization window rather than triggering
-        # an immediate emergency stop on an intermediate observation.
-        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
         (gitdir / "COMMIT_EDITMSG").write_text("fixture\n", encoding="utf-8")
         changed = module.source_snapshot([self.candidate], self.candidate, environment)
         comparison = module.snapshot_comparison(baseline, changed, live_monitoring=True)
-        record = next(
+
+        # A Git-managed per-worktree administration file cannot yet be
+        # attributed to that worktree's HEAD transition. It stays blocking, but
+        # is eligible for the bounded window rather than triggering an
+        # immediate emergency stop on an intermediate observation.
+        admin_record = next(
             record
             for record in comparison["git_admin_changes"]
             if record["path"].endswith("COMMIT_EDITMSG")
         )
-        self.assertEqual(record["classification"], "blocking_unattributed_other_worktree_administration")
-        self.assertEqual(record["disposition"], "blocking")
-        self.assertFalse(comparison["passed"])
-        self.assertTrue(module.provisional_attribution_only(comparison))
+        self.assertEqual(
+            admin_record["classification"], "blocking_unattributed_other_worktree_administration"
+        )
+        self.assertEqual(admin_record["disposition"], "blocking")
+        self.assertEqual(
+            admin_record["evidence"]["provisional_attribution"],
+            "worktree_transition_not_yet_observed",
+        )
 
-        # An arbitrary file beside it is not Git-managed administration. Its
-        # presence must defeat the window for the whole observation, so a
-        # planted file cannot ride along with legitimate worktree activity.
+        # Adding a worktree also writes files that are not Git-managed
+        # per-worktree administration, such as gitdir and commondir. Those are
+        # not eligible, which both proves the predicate is exact and means this
+        # observation as a whole is not deferrable.
+        non_admin = [
+            record
+            for record in comparison["git_admin_changes"]
+            if record["path"].startswith("worktrees/")
+            and record["classification"] == "blocking_unknown_other_worktree_administration"
+        ]
+        self.assertTrue(non_admin)
+        self.assertFalse(module.provisional_attribution_only(comparison))
+        self.assertFalse(comparison["passed"])
+
+        # An arbitrary planted file under the same worktree is likewise never
+        # eligible, so it cannot buy itself a window.
         (gitdir / "fixture-observation").write_text("planted\n", encoding="utf-8")
         contaminated = module.source_snapshot([self.candidate], self.candidate, environment)
-        contaminated_comparison = module.snapshot_comparison(
-            baseline, contaminated, live_monitoring=True
-        )
         planted = next(
             record
-            for record in contaminated_comparison["git_admin_changes"]
+            for record in module.snapshot_comparison(
+                baseline, contaminated, live_monitoring=True
+            )["git_admin_changes"]
             if record["path"].endswith("fixture-observation")
         )
         self.assertEqual(planted["classification"], "blocking_unknown_other_worktree_administration")
         self.assertEqual(planted["disposition"], "blocking")
-        self.assertFalse(module.provisional_attribution_only(contaminated_comparison))
 
     def test_other_linked_worktree_lock_is_bounded_provisional_activity(self):
         module = load_script("claude_review_other_worktree_lock", LAUNCHER)
@@ -3946,23 +3967,27 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         objects_directory.mkdir(parents=True, exist_ok=True)
         maintenance_lock = objects_directory / "maintenance.lock"
 
-        # Admitted: bare creation of a regular file, observed live.
+        # Eligible for the bounded window, but never tolerated. The reviewer
+        # cannot establish the writing actor, so the observation stays blocking
+        # and only becomes deferrable; lifetime is what the window then tests.
         comparison, record = self._maintenance_lock_record(
             module,
             environment,
             lambda: maintenance_lock.write_text("", encoding="utf-8"),
             live_monitoring=True,
         )
-        self.assertEqual(record["classification"], "tolerated_git_background_maintenance_lock")
-        self.assertEqual(record["disposition"], "tolerated")
+        self.assertEqual(record["classification"], "blocking_unattributed_background_maintenance_lock")
+        self.assertEqual(record["disposition"], "blocking")
+        self.assertNotEqual(record["disposition"], "tolerated")
         self.assertEqual(record["evidence"]["admitted_observation_scope"], "live_monitoring_only")
         self.assertEqual(record["evidence"]["observed_kind"], "file")
-        self.assertTrue(comparison["passed"])
+        self.assertFalse(comparison["passed"])
+        self.assertTrue(module.provisional_attribution_only(comparison))
         maintenance_lock.unlink()
 
-        # Terminal postflight is unchanged by the admission. The same creation
-        # that live monitoring tolerates must still block at the terminal
-        # boundary, so a lock surviving the attempt is never masked.
+        # Terminal postflight never defers. The same creation must block there
+        # and must not be provisional, so a lock surviving the attempt is
+        # decided by the terminal boundary rather than masked.
         comparison, record = self._maintenance_lock_record(
             module,
             environment,
@@ -3972,6 +3997,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(record["classification"], "blocking_lock_change")
         self.assertEqual(record["disposition"], "blocking")
         self.assertFalse(comparison["passed"])
+        self.assertFalse(module.provisional_attribution_only(comparison))
 
         # Mutations of a pre-existing lock are not creations and stay blocking
         # even under live monitoring.

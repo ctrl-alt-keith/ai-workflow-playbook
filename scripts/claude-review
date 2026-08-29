@@ -1685,21 +1685,27 @@ def lock_path(relative: str) -> bool:
 # observing one, and an unrelated worktree's operator does not share the
 # reviewer's environment.
 #
-# The admission is deliberately narrower than "this path is tolerated". Four
-# conditions must hold together, and each closes a distinct masking route:
+# This path is never tolerated. `external-ai-reviewer.md` admits exactly one
+# tolerated lock, and that one must be identified by exact path, actor, and
+# lifetime; the reviewer cannot establish the actor here, because the writing
+# process is another operator's Git rather than the controller's. So the
+# observation stays blocking and is only made eligible for the bounded
+# stabilization window, which discriminates on the one property that is
+# actually observable: lifetime. A lock that vanishes within the window leaves
+# no blocking change behind. A lock that persists still blocks, and terminal
+# postflight is untouched and remains decisive.
 #
-#   1. Live monitoring only. Terminal postflight remains fully fail-closed, so
-#      a lock that survives the attempt is still blocking. This preserves the
-#      external-ai-reviewer contract, which permits a live-monitor exception
-#      and prohibits extending it to terminal postflight.
+# Four conditions must hold together before the window applies:
+#
+#   1. Live monitoring only. Terminal postflight never defers.
 #   2. Creation only. A removal, replacement, content change, or mode change to
-#      this path is a mutation of pre-existing state and stays blocking.
+#      this path is a mutation of pre-existing state and blocks immediately.
 #   3. Regular file or already vanished. A symlink or directory at this path is
-#      never admitted, so it cannot be used to reach outside the object store.
-#   4. Protected candidate evidence unchanged, as for every other admission.
+#      never eligible, so it cannot be used to reach outside the object store.
+#   4. Protected candidate evidence unchanged.
 #
-# Every other lock, including any other path under objects/, remains
-# fail-closed in both live monitoring and terminal postflight.
+# Every other lock, including any other path under objects/, blocks immediately
+# in both live monitoring and terminal postflight.
 GIT_BACKGROUND_MAINTENANCE_LOCKS = frozenset({"objects/maintenance.lock"})
 
 
@@ -1950,13 +1956,13 @@ def classify_git_admin_changes(
                     and protected_evidence_unchanged
                 ):
                     scope = "git_background_maintenance"
-                    classification = "tolerated_git_background_maintenance_lock"
-                    disposition = "tolerated"
+                    classification = "blocking_unattributed_background_maintenance_lock"
                     evidence = {
                         "admitted_git_managed_path": relative,
                         "admitted_observation_scope": "live_monitoring_only",
                         "admitted_change_type": "added",
                         "observed_kind": new_identity.get("kind") if isinstance(new_identity, dict) else None,
+                        "provisional_attribution": "background_maintenance_lifetime_not_yet_observed",
                         "protected_candidate_evidence_unchanged": True,
                     }
                 else:
@@ -2181,7 +2187,17 @@ def provisional_attribution_only(comparison: dict[str, object]) -> bool:
             and evidence.get("provisional_attribution")
             == "unrelated_ref_transition_not_yet_observed"
         )
-        if not shared_object_provisional and not worktree_admin_provisional and not unrelated_ref_provisional:
+        background_maintenance_provisional = (
+            record["classification"] == "blocking_unattributed_background_maintenance_lock"
+            and evidence.get("provisional_attribution")
+            == "background_maintenance_lifetime_not_yet_observed"
+        )
+        if (
+            not shared_object_provisional
+            and not worktree_admin_provisional
+            and not unrelated_ref_provisional
+            and not background_maintenance_provisional
+        ):
             return False
         repository_root = record.get("repository_root")
         prefix = f"git-admin:{repository_root}:" if repository_root else "git-admin:"
