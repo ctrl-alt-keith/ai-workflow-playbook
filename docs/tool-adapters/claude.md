@@ -167,9 +167,10 @@ under a nested host sandbox showed that it can make every granted Bash command
 unusable. Instead, the controller independently executes each configured
 command before review under a safe environment that disables system Git
 and user Git configuration, repository hooks and filesystem monitors, external
-diffs, optional Git locks, pagers, Python bytecode writes, Claude instruction
-memory loading, and Claude auto memory, with the provider working directory and
-temporary state redirected to fresh attempt-local scratch through the qualified
+diffs, optional Git locks, background auto-maintenance, pagers, Python bytecode
+writes, Claude instruction memory loading, and Claude auto memory, with the
+provider working directory and temporary state redirected to fresh
+attempt-local scratch through the qualified
 macOS or Linux route in
 [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 It accepts only the exact Git status, diff, log, and revision forms needed by
@@ -178,6 +179,21 @@ revision grammar prevents unresolved operands from falling through to Git's
 filesystem comparison behavior. Explicit or inferred `diff --no-index`, path
 operands, traversal, unadmitted pathspec magic, shell forms, configuration
 overrides, text conversion, and external diff fail before provider launch.
+
+Disabling background auto-maintenance removes the controller as a source of
+`objects/maintenance.lock` in the candidate repository. It does not remove
+another operator's Git, which does not share this environment. A lock created
+by that actor remains reviewer side-effect contamination and still fails
+closed, because the reviewer cannot establish the writing actor and
+[`external-ai-reviewer.md`](../external-ai-reviewer.md) admits only a
+controller-owned transient lock identified by exact path, actor, and lifetime.
+
+Linked-worktree modelling requires `git worktree list --porcelain -z`, which
+Git introduced in 2.36.0. The launcher probes that exact capability before
+taking its first snapshot and fails closed naming the requirement and the
+observed version, because the unsupported switch would otherwise surface from
+inside snapshot collection and be reported as a review contract failure that
+names neither Git nor the version.
 
 The first configured exact command is also an in-provider capability canary.
 The system prompt requires it before substantive analysis, and the controller
