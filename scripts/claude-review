@@ -2436,22 +2436,48 @@ def trusted_system_executable(name: str, environment: dict[str, str]) -> Path:
     return path
 
 
-GIT_MINIMUM_VERSION_FOR_WORKTREE_NUL = "2.36.0"
+GIT_MINIMUM_VERSION_FOR_WORKTREE_NUL = (2, 36, 0)
 
 
-def git_worktree_capability_error(candidate: Path, environment: dict[str, str]) -> str | None:
-    """Return a named cause when Git cannot support linked-worktree modelling.
+def parsed_git_version(reported: str | None) -> tuple[int, int, int] | None:
+    """Extract a comparable version from ``git --version`` output, if present."""
+
+    if not reported:
+        return None
+    match = re.search(r"(\d+)\.(\d+)(?:\.(\d+))?", reported)
+    if match is None:
+        return None
+    return int(match.group(1)), int(match.group(2)), int(match.group(3) or 0)
+
+
+def git_worktree_capability_error(
+    candidate: Path,
+    environment: dict[str, str],
+) -> tuple[str, str] | None:
+    """Return ``(failure_classification, cause)`` when the required Git command cannot run.
 
     Attribution depends on ``git worktree list --porcelain -z``, which Git
     introduced in 2.36.0. Without this probe the unsupported switch surfaces
     from inside snapshot collection, and the attempt is reported as a review
     contract failure that names neither Git nor the version requirement.
+
+    A nonzero exit is not by itself evidence of an unsupported switch. The
+    command also fails when the candidate is not a repository, is unreadable,
+    or has damaged administration, and config loading only requires the
+    candidate to be an existing directory. The observed version is therefore
+    the discriminator: a Git at or above the minimum cannot be lacking the
+    capability, so that failure keeps the ordinary command-preflight
+    classification and its underlying cause. Only a Git below the minimum is
+    reported as a capability gap, and every branch preserves the cause so the
+    operator is not sent toward the wrong remediation.
     """
 
     try:
         executable = trusted_system_executable("git", environment)
     except (OSError, RuntimeError) as error:
-        return f"git is unavailable or is not trusted system code: {error}"
+        return "access_or_command_preflight_failure", (
+            f"git is unavailable or is not trusted system code: {error}"
+        )
     try:
         result = subprocess.run(
             [str(executable), "-C", str(candidate), "worktree", "list", "--porcelain", "-z"],
@@ -2460,16 +2486,31 @@ def git_worktree_capability_error(candidate: Path, environment: dict[str, str]) 
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            text=True,
         )
     except OSError as error:
-        return f"git could not be executed: {error}"
+        return "access_or_command_preflight_failure", f"git could not be executed: {error}"
     if result.returncode == 0:
         return None
-    observed = version_of(str(executable), environment, cwd=str(candidate))
-    return (
-        "git does not support 'worktree list --porcelain -z', which governed review "
-        f"requires for linked-worktree attribution: minimum "
-        f"{GIT_MINIMUM_VERSION_FOR_WORKTREE_NUL}, observed {observed or 'unknown'}"
+    detail = bounded_redacted(result.stderr.strip()) or f"exit status {result.returncode}"
+    minimum = ".".join(str(part) for part in GIT_MINIMUM_VERSION_FOR_WORKTREE_NUL)
+    reported = version_of(str(executable), environment, cwd=str(candidate))
+    observed = parsed_git_version(reported)
+    if observed is not None and observed >= GIT_MINIMUM_VERSION_FOR_WORKTREE_NUL:
+        return "access_or_command_preflight_failure", (
+            "'git worktree list --porcelain -z' failed against the candidate, and the "
+            f"observed git {reported} is at or above the {minimum} required for that "
+            f"command, so this is not a capability gap: {detail}"
+        )
+    if observed is not None:
+        return "git_capability_preflight_failure", (
+            "git does not support 'worktree list --porcelain -z', which governed review "
+            f"requires for linked-worktree attribution: minimum {minimum}, observed "
+            f"{reported}: {detail}"
+        )
+    return "access_or_command_preflight_failure", (
+        "'git worktree list --porcelain -z' failed and the git version could not be "
+        f"determined, so no capability claim is made: {detail}"
     )
 
 
@@ -2939,18 +2980,19 @@ def run_governed_review(
     with AttemptScratch.allocate(child_environment, "claude-review-controller-") as scratch:
         controller_environment = safe_command_environment(child_environment, scratch)
         environment = controller_environment
-        git_capability_error = git_worktree_capability_error(config.candidate, environment)
-        if git_capability_error is not None:
+        git_capability_failure = git_worktree_capability_error(config.candidate, environment)
+        if git_capability_failure is not None:
+            git_failure_classification, git_failure_cause = git_capability_failure
             record = {
                 "kind": "claude_governed_review",
                 "review_id": config.body["review_id"],
                 "contract_id": config.body["contract_id"],
                 "controller_id": controller_id,
                 "contract_identity": contract_identity,
-                "failure_classification": "git_capability_preflight_failure",
+                "failure_classification": git_failure_classification,
                 "candidate_verdict": "not_produced",
                 "substantive_review_started": False,
-                "error": git_capability_error,
+                "error": git_failure_cause,
             }
             emit_diagnostics(record, diagnostics_destination)
             return REVIEWER_FAILURE_EXIT
