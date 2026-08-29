@@ -17,8 +17,9 @@ the Claude product label. Apply the
 - **Claude Chat** is conversational. It has no repository filesystem. Profile
   instructions apply account-wide, while project instructions apply only
   inside that project. Repository files arrive through explicitly selected
-  GitHub content or project knowledge, so current source retrieval is
-  best-effort per thread rather than guaranteed by the instruction surface.
+  GitHub content, project knowledge, or another currently observed retrieval
+  route, so current source retrieval is best-effort per thread rather than
+  guaranteed by the instruction surface.
 - **Claude Cowork** is agentic-remote by default because a session has no
   guaranteed repository locality. A concrete Cowork session with an active
   desktop-connected local folder has repository locality for that connected
@@ -30,11 +31,12 @@ the Claude product label. Apply the
   current repository source and repo-local instructions are available through
   the execution environment.
 
-Initiation is a separate axis. Chat is normally human-initiated. Cowork can be
-human-initiated or unattended through scheduled tasks and Dispatch. Claude
-Code can be human-interactive or controller-launched. Human-interactive Code
-uses the ordinary repository sections below. A controller-launched independent
-review additionally uses
+Initiation is a separate axis. Chat is normally human-initiated. Scheduled
+Cowork tasks are unattended; Dispatch tasks are human-initiated assignments
+whose execution does not require the initiating human to remain present.
+Claude Code can be human-interactive or controller-launched. Human-interactive
+Code uses the ordinary repository sections below. A controller-launched
+independent review additionally uses
 [`Governed read-only reviewer launch`](#governed-read-only-reviewer-launch)
 and the controller-side adapter for the invoking executor; each adapter governs
 its own run boundary.
@@ -118,9 +120,12 @@ apply the first-action/material-change trigger once, not once per copy.
 
 Claude Code uses its file-backed `CLAUDE.md` discovery described below. Local
 file-backed hydration is deterministic when the required files are current and
-readable. In a remote Code workspace, the repo-local root `CLAUDE.md` is the
-bootstrap route to `docs/start-here.md` and repo-local `AGENTS.md`. If neither a
-user-global projection nor those repository files are readable, report the
+readable. In a remote Code workspace, use a repo-local root `CLAUDE.md`, when
+present, as a thin bootstrap pointer to the current `docs/start-here.md` and
+repo-local `AGENTS.md`; otherwise retrieve those two required sources directly
+through a currently observed route. User-global or project `CLAUDE.md` content
+triggers this hydration but does not substitute for either required source. If
+the current required sources are not readable or retrievable, report the
 capability gap and stop before repository-dependent work.
 
 The remaining execution, permission, worktree, context, connector, model, and

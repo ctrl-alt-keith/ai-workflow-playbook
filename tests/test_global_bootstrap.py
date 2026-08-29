@@ -102,7 +102,8 @@ class GlobalBootstrapTests(unittest.TestCase):
         self.assertIn("./CLAUDE.md` or `./.claude/CLAUDE.md", normalized)
         self.assertIn("broader CAK-187 provider rollout", normalized)
         self.assertIn("--require-claude", normalized)
-        self.assertIn("desktop Cowork sessions skip those user-scope imports", normalized)
+        self.assertIn("outside-working-directory imports", normalized)
+        self.assertIn("desktop Cowork sessions", normalized)
         self.assertIn("symlink or hard link", normalized)
         self.assertIn("strips block-level HTML comments", normalized)
 
@@ -111,6 +112,11 @@ class GlobalBootstrapTests(unittest.TestCase):
             encoding="utf-8"
         )
         normalized = " ".join(adapter.split())
+        chat = adapter.split("### Claude Chat", 1)[1].split("### Claude Cowork", 1)[0]
+        cowork = adapter.split("### Claude Cowork", 1)[1].split("### Claude Code", 1)[0]
+        code = adapter.split("### Claude Code", 1)[1].split(
+            "## Instruction Discovery And Precedence", 1
+        )[0]
         for heading in (
             "## Surface And Invocation Routing",
             "### Claude Chat",
@@ -123,6 +129,20 @@ class GlobalBootstrapTests(unittest.TestCase):
         self.assertIn("agentic-local", normalized)
         self.assertIn("Settings > Cowork > Global instructions", normalized)
         self.assertIn("#global-bootstrap-persistence", adapter)
+        self.assertIn("#connector-availability-is-runtime-evidence", chat)
+        self.assertIn("new turn or tool call", normalized)
+        self.assertIn(
+            "report the exact capability gap and stop", " ".join(chat.split())
+        )
+        self.assertIn(
+            "task definition must name a qualified current-source route",
+            " ".join(cowork.split()),
+        )
+        self.assertIn("duplicate transport is idempotent", " ".join(cowork.split()))
+        self.assertIn(
+            "does not substitute for either required source", " ".join(code.split())
+        )
+        self.assertIn("capability gap and stop", " ".join(code.split()))
 
     def test_validator_accepts_exact_blocks_with_unrelated_local_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -1,7 +1,8 @@
 # CLAUDE.md
 
-This file routes Claude Code sessions to the canonical instruction sources.
-It is not an authority layer and contains no doctrine of its own.
+This file routes Claude Code and desktop Cowork sessions with repository
+locality to the canonical instruction sources. It is not an authority layer
+and contains no doctrine of its own.
 
 Read these routing sources in startup order:
 
