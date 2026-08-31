@@ -366,24 +366,23 @@ Reason:
 For any complete prompt, select presentation by the recipient's currently
 qualified capability, independently of prompt materiality:
 
+This selector is symmetric: a Codex-produced prompt for Claude and a
+Claude-produced prompt for Codex are each complete prompts governed by this
+same shared presentation and handoff contract.
+
 - When the recipient has a qualified Dropbox retrieval route and the current
   storage contract supplies a permitted destination, place the prompt in a
   Dropbox-backed file, present the file surface produced by that operation, and
-  immediately provide the target-shaped retrieval handoff. A separate preview
-  or open action is optional under the matching client adapter and does not
-  block the handoff or require prompt approval.
+  immediately provide the target-shaped
+  [thin semantic handoff](#thin-semantic-handoff-envelope) without reproducing
+  the complete prompt. A separate preview or open action is optional under the
+  matching client adapter and does not block the handoff or require prompt
+  approval.
 - For a human recipient, or when the receiving system has no qualified Dropbox
   route, present the complete prompt inline through the matching client
   adapter. When access is unknown, apply the
   [connector-availability rule](start-here.md#connector-availability-is-runtime-evidence)
   before choosing this fallback.
-
-This selector is symmetric: a Codex-produced prompt for Claude and a
-Claude-produced prompt for Codex are each complete prompts governed by this
-same shared presentation and handoff contract. When the selector places the
-prompt in a Dropbox-backed file, immediately provide the target-shaped
-[thin semantic handoff](#thin-semantic-handoff-envelope) without reproducing
-the complete prompt.
 
 Preview is not raw-byte verification, approval, a send gate, delivery evidence,
 executor acknowledgement, a coordination state, or authority. A connector

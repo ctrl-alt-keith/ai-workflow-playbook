@@ -250,7 +250,7 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         )
         route = presentation.index("qualified Dropbox retrieval route")
         file = presentation.index("Dropbox-backed file")
-        handoff = presentation.index("target-shaped retrieval handoff")
+        handoff = presentation.index("target-shaped [thin semantic handoff]")
         self.assertLess(route, file)
         self.assertLess(file, handoff)
 
@@ -259,13 +259,10 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         self.assertIn("a Codex-produced prompt for Claude", presentation)
         self.assertIn("a Claude-produced prompt for Codex", presentation)
         self.assertIn("same shared presentation and handoff contract", presentation)
-        self.assertIn("immediately provide the target-shaped", presentation)
         self.assertIn(
-            "[thin semantic handoff](#thin-semantic-handoff-envelope)",
-            self.presentation,
-        )
-        self.assertIn(
-            "without reproducing the complete prompt", presentation
+            "immediately provide the target-shaped [thin semantic handoff]"
+            "(#thin-semantic-handoff-envelope) without reproducing the complete prompt",
+            presentation,
         )
 
         codex, claude = (" ".join(profile.split()) for profile in self.adapter_profiles[:2])
