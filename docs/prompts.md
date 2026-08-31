@@ -363,12 +363,12 @@ Reason:
 
 ## Cross-Executor Prompt Presentation
 
-For any complete prompt, select presentation by the recipient's currently
-qualified capability, independently of prompt materiality:
-
 This selector applies symmetrically when one executor produces a complete
 prompt for another: each direction is governed by the same shared presentation
 and handoff contract.
+
+For any complete prompt, select presentation by the recipient's currently
+qualified capability, independently of prompt materiality:
 
 - When the recipient has a qualified Dropbox retrieval route and the current
   storage contract supplies a permitted destination, place the prompt in a

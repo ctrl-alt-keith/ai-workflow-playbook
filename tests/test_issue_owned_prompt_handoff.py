@@ -24,6 +24,7 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.contract = normalized(DOCS / "prompt-contracts.md")
+        cls.core = normalized(DOCS / "core-model.md")
         cls.evidence = normalized(DOCS / "evidence-lifecycle.md")
         cls.prompts = normalized(DOCS / "prompts.md")
         cls.codex = normalized(DOCS / "tool-adapters" / "codex.md")
@@ -46,6 +47,10 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         cls.delivery_envelope = markdown_section(
             DOCS / "prompts.md",
             "## Issue-Owned Durable Prompt Delivery Envelope Add-On",
+        )
+        cls.kickoff_boundary = markdown_section(
+            DOCS / "core-model.md",
+            "## Kickoff Mutation Boundaries",
         )
         cls.complete_prompt_shape = markdown_section(
             DOCS / "prompts.md",
@@ -264,6 +269,26 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             "(#thin-semantic-handoff-envelope) without reproducing the complete prompt",
             presentation,
         )
+        for phrase in (
+            "one private OS-managed executor-owned attempt-local retrieval",
+            "Fallback changes delivery only",
+        ):
+            self.assertIn(phrase, self.contract)
+        for phrase in (
+            "Exact durable identity: [immutable human locator, provider locator, "
+            "object identity, size, SHA-256",
+            "Verify raw or attempt-local bytes, size, SHA-256, UTF-8, no BOM, LF "
+            "endings, and the declared final-newline rule before acceptance.",
+            "Fail closed on collision, mismatch, missing identity, prohibited "
+            "retention, unsupported required capability, or ambiguous authority.",
+            "Prohibited delivery: no exchange root, mutable alias, shadow durable "
+            "copy, or copy/paste claim of byte identity",
+        ):
+            self.assertIn(phrase, delivery_envelope)
+        self.assertIn(
+            "Do not reproduce the complete durable artifact in chat merely for transport.",
+            self.evidence,
+        )
 
         codex, claude = (" ".join(profile.split()) for profile in self.adapter_profiles[:2])
         directions = (
@@ -278,8 +303,8 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
                 "Otherwise use one private OS-managed executor-attempt copy",
                 "Bind the launch to its exact path, expected size, SHA-256, and "
                 "declared text format",
-                "Do not infer that qualification from connector presence, extracted "
-                "text, a synced folder",
+                "Do not use a synchronized local provider mount as durable identity, "
+                "retain the attempt-local copy as durable, or create an exchange root",
             ),
             (
                 "Claude",
@@ -311,35 +336,41 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
                 self.assertIn(fallback, recipient_profile)
                 self.assertIn(verification, recipient_profile)
                 self.assertIn(prohibited_local_substitute, recipient_profile)
-                self.assertIn(
-                    "one private OS-managed executor-owned attempt-local retrieval",
-                    self.contract,
+                self.assertIn("fail closed on the shared cleanup conditions", recipient_profile)
+                self.assertLess(
+                    recipient_profile.index(direct_route),
+                    recipient_profile.index(fallback),
                 )
-                self.assertIn("Fallback changes delivery only", self.contract)
+
+    def test_cross_executor_prompt_handoffs_keep_the_kickoff_mutation_boundary(self):
+        kickoff_boundary = " ".join(self.kickoff_boundary.split())
+        presentation = " ".join(self.presentation.split())
+        for phrase in (
+            "Task-owned orchestration and evidence mutations may be permitted",
+            "produce and preserve a decision package or exact downstream prompt and "
+            "its receipt",
+            "producing prompt or handoff evidence does not authorize repository "
+            "implementation, remote-repository mutation, or unrelated planning-system "
+            "mutation",
+            "pull request creates zero authority",
+        ):
+            self.assertIn(phrase, kickoff_boundary)
+
+        directions = (("Codex", "Claude"), ("Claude", "Codex"))
+        for producer, recipient in directions:
+            with self.subTest(producer=producer, recipient=recipient):
+                self.assertIn("selector applies symmetrically", presentation)
                 self.assertIn(
-                    "Exact durable identity: [immutable human locator, provider "
-                    "locator, object identity, size, SHA-256",
-                    delivery_envelope,
-                )
-                self.assertIn(
-                    "Verify raw or attempt-local bytes, size, SHA-256, UTF-8, no BOM, "
-                    "LF endings, and the declared final-newline rule before acceptance.",
-                    delivery_envelope,
-                )
-                self.assertIn(
-                    "Fail closed on collision, mismatch, missing identity, prohibited "
-                    "retention, unsupported required capability, or ambiguous authority.",
-                    delivery_envelope,
-                )
-                self.assertIn(
-                    "Prohibited delivery: no exchange root, mutable alias, shadow "
-                    "durable copy, or copy/paste claim of byte identity",
-                    delivery_envelope,
-                )
-                self.assertIn(
-                    "without reproducing the complete prompt",
+                    "same shared presentation and handoff contract",
                     presentation,
                 )
+
+        chatgpt_presentation = " ".join(self.chatgpt_presentation.split())
+        self.assertIn(
+            "[thin semantic handoff](../prompts.md#thin-semantic-handoff-envelope) "
+            "without reproducing the complete prompt",
+            chatgpt_presentation,
+        )
 
     def test_two_block_format_is_conditional_on_inline_presentation(self):
         complete_shape = " ".join(self.complete_prompt_shape.split())
