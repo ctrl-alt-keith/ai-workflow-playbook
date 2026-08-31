@@ -366,9 +366,9 @@ Reason:
 For any complete prompt, select presentation by the recipient's currently
 qualified capability, independently of prompt materiality:
 
-This selector is symmetric: a Codex-produced prompt for Claude and a
-Claude-produced prompt for Codex are each complete prompts governed by this
-same shared presentation and handoff contract.
+This selector applies symmetrically when one executor produces a complete
+prompt for another: each direction is governed by the same shared presentation
+and handoff contract.
 
 - When the recipient has a qualified Dropbox retrieval route and the current
   storage contract supplies a permitted destination, place the prompt in a

@@ -256,8 +256,7 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
 
     def test_codex_and_claude_handoffs_use_the_same_shared_selector(self):
         presentation = " ".join(self.presentation.split())
-        self.assertIn("a Codex-produced prompt for Claude", presentation)
-        self.assertIn("a Claude-produced prompt for Codex", presentation)
+        self.assertIn("selector applies symmetrically", presentation)
         self.assertIn("same shared presentation and handoff contract", presentation)
         self.assertIn(
             "immediately provide the target-shaped [thin semantic handoff]"
@@ -266,12 +265,14 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         )
 
         codex, claude = (" ".join(profile.split()) for profile in self.adapter_profiles[:2])
-        self.assertIn("when Codex receives an exact issue-owned prompt", codex)
-        self.assertIn("when Claude Code receives an exact issue-owned prompt", claude)
-        self.assertIn("Prefer direct retrieval", codex)
-        self.assertIn(
-            "Direct provider consumption", claude
+        directions = (
+            ("Codex", "Claude", claude, "when Claude Code receives", "Direct provider consumption"),
+            ("Claude", "Codex", codex, "when Codex receives", "Prefer direct retrieval"),
         )
+        for producer, recipient, recipient_profile, receipt, direct_route in directions:
+            with self.subTest(producer=producer, recipient=recipient):
+                self.assertIn(receipt, recipient_profile)
+                self.assertIn(direct_route, recipient_profile)
 
     def test_two_block_format_is_conditional_on_inline_presentation(self):
         complete_shape = " ".join(self.complete_prompt_shape.split())
