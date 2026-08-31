@@ -184,15 +184,58 @@ class ChatGPTAdapterTests(unittest.TestCase):
             contents[contents.index("### Prompt presentation") :].split()
         )
 
-        selector = prompt_presentation.index("Before rendering a complete, copy-ready prompt")
+        classification = prompt_presentation.index(
+            "Before choosing presentation, classify the artifact ChatGPT is about to produce"
+        )
+        executable = prompt_presentation.index(
+            "does not bypass complete-prompt handling when the produced artifact is complete or substantially executable"
+        )
+        selector = prompt_presentation.index(
+            "After that classification, before rendering a complete, copy-ready prompt"
+        )
         capability = prompt_presentation.index(
             "has inspected or attempted an unknown capability"
         )
         inline = prompt_presentation.index("present the shared operator-metadata block")
 
+        self.assertLess(classification, executable)
+        self.assertLess(executable, selector)
         self.assertLess(selector, capability)
         self.assertLess(capability, inline)
         self.assertIn(
             "[recipient-capability selector](../prompts.md#cross-executor-prompt-presentation)",
             prompt_presentation,
         )
+
+    def test_executable_examples_use_complete_prompt_presentation(self):
+        prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
+        codex = (DOCS / "tool-adapters" / "codex.md").read_text(encoding="utf-8")
+        classification = " ".join(
+            prompts[
+                prompts.index("## Produced-Artifact Classification") : prompts.index(
+                    "## Cross-Executor Prompt Presentation"
+                )
+            ].split()
+        )
+
+        for framing in (
+            "`example`",
+            "`sample`",
+            "`roughly`",
+            "`formatting`",
+            "`preview`",
+            "`demo`",
+            "`show me the format`",
+            "`sample prompt`",
+            "`example implementation prompt`",
+        ):
+            self.assertIn(framing, classification)
+        self.assertIn("complete or substantially executable", classification)
+        self.assertIn("before emitting any inline prompt block", classification)
+        self.assertIn("qualified capability", prompts)
+        self.assertIn("Dropbox-backed file", prompts)
+        self.assertIn("two-block shape", classification)
+        self.assertIn("known-value placeholder", classification)
+        self.assertIn("genuinely conceptual discussion", classification)
+        self.assertIn("GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol", codex)
+        self.assertNotIn("Recommended model: Codex", codex)

@@ -336,8 +336,16 @@ the applicable prompt and downstream-context contract.
 
 ### Prompt presentation
 
-Before rendering a complete, copy-ready prompt or downstream handoff inline,
-apply the shared [recipient-capability selector](../prompts.md#cross-executor-prompt-presentation).
+Before choosing presentation, classify the artifact ChatGPT is about to
+produce under the shared
+[produced-artifact classification](../prompts.md#produced-artifact-classification)
+rule. Request framing such as `example`, `sample`, `roughly`, `formatting`,
+`preview`, or `demo` does not bypass complete-prompt handling when the produced
+artifact is complete or substantially executable for its downstream recipient.
+Keep genuinely conceptual fragments and incomplete snippets lightweight.
+
+After that classification, before rendering a complete, copy-ready prompt or downstream handoff inline, apply the shared
+[recipient-capability selector](../prompts.md#cross-executor-prompt-presentation).
 Do not begin either inline block until that selector has established the
 recipient's qualified Dropbox route and permitted destination, or has inspected
 or attempted an unknown capability and selected the inline fallback. When the
