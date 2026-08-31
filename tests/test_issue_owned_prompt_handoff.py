@@ -256,6 +256,7 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
 
     def test_codex_and_claude_handoffs_use_the_same_shared_selector(self):
         presentation = " ".join(self.presentation.split())
+        delivery_envelope = " ".join(self.delivery_envelope.split())
         self.assertIn("selector applies symmetrically", presentation)
         self.assertIn("same shared presentation and handoff contract", presentation)
         self.assertIn(
@@ -266,13 +267,79 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
 
         codex, claude = (" ".join(profile.split()) for profile in self.adapter_profiles[:2])
         directions = (
-            ("Codex", "Claude", claude, "when Claude Code receives", "Direct provider consumption"),
-            ("Claude", "Codex", codex, "when Codex receives", "Prefer direct retrieval"),
+            (
+                "Codex",
+                "Claude",
+                claude,
+                "when Claude Code receives",
+                "Direct provider consumption is qualified only when the current "
+                "Claude surface can retrieve raw bytes and the required provider "
+                "identity metadata",
+                "Otherwise use one private OS-managed executor-attempt copy",
+                "Bind the launch to its exact path, expected size, SHA-256, and "
+                "declared text format",
+                "Do not infer that qualification from connector presence, extracted "
+                "text, a synced folder",
+            ),
+            (
+                "Claude",
+                "Codex",
+                codex,
+                "when Codex receives",
+                "Prefer direct retrieval only when the current connector or provider "
+                "route exposes raw bytes and the required provider identity metadata",
+                "download the raw provider object once into a private OS-managed "
+                "attempt-local directory",
+                "verify the provider identity and raw bytes, and pass Codex the exact "
+                "local path plus expected size and SHA-256",
+                "Do not use a locally synchronized provider mount as provider identity",
+            ),
         )
-        for producer, recipient, recipient_profile, receipt, direct_route in directions:
+        for (
+            producer,
+            recipient,
+            recipient_profile,
+            receipt,
+            direct_route,
+            fallback,
+            verification,
+            prohibited_local_substitute,
+        ) in directions:
             with self.subTest(producer=producer, recipient=recipient):
                 self.assertIn(receipt, recipient_profile)
                 self.assertIn(direct_route, recipient_profile)
+                self.assertIn(fallback, recipient_profile)
+                self.assertIn(verification, recipient_profile)
+                self.assertIn(prohibited_local_substitute, recipient_profile)
+                self.assertIn(
+                    "one private OS-managed executor-owned attempt-local retrieval",
+                    self.contract,
+                )
+                self.assertIn("Fallback changes delivery only", self.contract)
+                self.assertIn(
+                    "Exact durable identity: [immutable human locator, provider "
+                    "locator, object identity, size, SHA-256",
+                    delivery_envelope,
+                )
+                self.assertIn(
+                    "Verify raw or attempt-local bytes, size, SHA-256, UTF-8, no BOM, "
+                    "LF endings, and the declared final-newline rule before acceptance.",
+                    delivery_envelope,
+                )
+                self.assertIn(
+                    "Fail closed on collision, mismatch, missing identity, prohibited "
+                    "retention, unsupported required capability, or ambiguous authority.",
+                    delivery_envelope,
+                )
+                self.assertIn(
+                    "Prohibited delivery: no exchange root, mutable alias, shadow "
+                    "durable copy, or copy/paste claim of byte identity",
+                    delivery_envelope,
+                )
+                self.assertIn(
+                    "without reproducing the complete prompt",
+                    presentation,
+                )
 
     def test_two_block_format_is_conditional_on_inline_presentation(self):
         complete_shape = " ".join(self.complete_prompt_shape.split())
