@@ -239,3 +239,64 @@ class ChatGPTAdapterTests(unittest.TestCase):
         self.assertIn("genuinely conceptual discussion", classification)
         self.assertIn("GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol", codex)
         self.assertNotIn("Recommended model: Codex", codex)
+
+    def test_explicit_ready_to_run_request_cannot_be_downgraded_before_routing(
+        self,
+    ):
+        prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
+        chatgpt = (DOCS / "tool-adapters" / "chatgpt.md").read_text(
+            encoding="utf-8"
+        )
+        classification = " ".join(
+            prompts[
+                prompts.index("## Produced-Artifact Classification") : prompts.index(
+                    "## Cross-Executor Prompt Presentation"
+                )
+            ].split()
+        )
+        presentation = " ".join(
+            prompts[
+                prompts.index("## Cross-Executor Prompt Presentation") : prompts.index(
+                    "## Quick Navigation"
+                )
+            ].split()
+        )
+        chatgpt_presentation = " ".join(
+            chatgpt[chatgpt.index("### Prompt presentation") :].split()
+        )
+
+        cold_start_request = (
+            "Show me the exact Codex handoff you would use for CAK-194, "
+            "including the operator metadata and the complete executable prompt. "
+            "Treat it as ready to run, not as a conceptual example."
+        )
+        self.assertIn("exact Codex handoff", cold_start_request)
+        self.assertIn("complete executable prompt", cold_start_request)
+        self.assertIn("ready to run", cold_start_request)
+
+        for phrase in (
+            "authoritative input to this classification",
+            "exact, complete, executable, ready to run, final, ready to paste, "
+            "ready to execute, or complete runnable",
+            "do not weaken that classification with assistant-authored framing",
+            "`illustrative`",
+            "`sample-only`",
+            "`conceptual`",
+            "`provisional`",
+            "`rough`",
+            "`not finalized`",
+            "stronger safety, authority, or capability constraint",
+            "explicit blocked result",
+            "do not silently downgrade the artifact",
+        ):
+            self.assertIn(phrase, classification)
+
+        self.assertLess(
+            classification.index("authoritative input to this classification"),
+            classification.index("Classify the artifact actually produced"),
+        )
+        self.assertIn("qualified Dropbox retrieval route", presentation)
+        self.assertIn("Dropbox-backed file", presentation)
+        self.assertIn("without reproducing the complete prompt", presentation)
+        self.assertIn("present the complete prompt inline", presentation)
+        self.assertIn("consecutive copyable code blocks", chatgpt_presentation)

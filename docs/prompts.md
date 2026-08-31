@@ -363,6 +363,17 @@ Reason:
 
 ## Produced-Artifact Classification
 
+Explicit human readiness or classification language is authoritative input to
+this classification. When the human requests an exact, complete, executable,
+ready to run, final, ready to paste, ready to execute, or complete runnable
+prompt or handoff, do not weaken that classification with assistant-authored
+framing such as `illustrative`, `sample-only`, `conceptual`, `provisional`,
+`rough`, or `not finalized`. Apply the complete-prompt presentation and
+transport contract unless a stronger safety, authority, or capability
+constraint requires refusal or an explicit blocked result. If unresolved facts
+prevent a truthful ready-to-run artifact, resolve them from their owners or
+return that explicit blocked result; do not silently downgrade the artifact.
+
 Classify the artifact actually produced before choosing its presentation. The
 user's request framing can describe the desired level of detail, but words such
 as `example`, `sample`, `roughly`, `formatting`, `preview`, or `demo` do not
