@@ -311,8 +311,8 @@ may download the raw provider object once into a private OS-managed
 attempt-local directory, verify the provider identity and raw bytes, and pass
 Codex the exact local path plus expected size and SHA-256. Codex verifies the
 consumed local bytes and declared text format before acceptance. Do not use a
-locally synchronized provider mount as provider identity, treat the local
-retrieval as durable, or create an exchange root.
+locally synchronized provider mount as provider or durable identity, treat the
+local retrieval as durable, or create an exchange root.
 
 Record the delivery operation and Codex attempt separately from the durable
 prompt. Distinguish `DELIVERED`, `ACCEPTED`, `STARTED`, and the terminal

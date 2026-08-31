@@ -363,15 +363,21 @@ Reason:
 
 ## Cross-Executor Prompt Presentation
 
+This selector applies symmetrically when one executor produces a complete
+prompt for another: each direction is governed by the same shared presentation
+and handoff contract.
+
 For any complete prompt, select presentation by the recipient's currently
 qualified capability, independently of prompt materiality:
 
 - When the recipient has a qualified Dropbox retrieval route and the current
   storage contract supplies a permitted destination, place the prompt in a
   Dropbox-backed file, present the file surface produced by that operation, and
-  immediately provide the target-shaped retrieval handoff. A separate preview
-  or open action is optional under the matching client adapter and does not
-  block the handoff or require prompt approval.
+  immediately provide the target-shaped
+  [thin semantic handoff](#thin-semantic-handoff-envelope) without reproducing
+  the complete prompt. A separate preview or open action is optional under the
+  matching client adapter and does not block the handoff or require prompt
+  approval.
 - For a human recipient, or when the receiving system has no qualified Dropbox
   route, present the complete prompt inline through the matching client
   adapter. When access is unknown, apply the

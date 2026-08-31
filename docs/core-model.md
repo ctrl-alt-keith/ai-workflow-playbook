@@ -235,7 +235,9 @@ mutation boundary explicitly and keep these three classes distinct:
    migration, destructive cleanup, production execution, provider
    reconfiguration, or other task substance assigned to a later executor or
    phase. That work requires its own bounded authority and satisfied
-   prerequisites.
+   prerequisites. In particular, producing prompt or handoff evidence does not
+   authorize repository implementation, remote-repository mutation, or
+   unrelated planning-system mutation.
 3. **Human-gated transitions remain separately human-gated.** Architecture or
    operational adoption, destructive approval, merge, release, publication,
    scientific adoption, and any task-specific human decision gate require the

@@ -47,6 +47,10 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             DOCS / "prompts.md",
             "## Issue-Owned Durable Prompt Delivery Envelope Add-On",
         )
+        cls.kickoff_boundary = markdown_section(
+            DOCS / "core-model.md",
+            "## Kickoff Mutation Boundaries",
+        )
         cls.complete_prompt_shape = markdown_section(
             DOCS / "prompts.md",
             "## Complete Prompt Shape",
@@ -215,7 +219,8 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
 
     def test_adapters_project_actual_route_without_provider_configuration(self):
         self.assertIn(
-            "Do not use a locally synchronized provider mount as provider identity",
+            "Do not use a locally synchronized provider mount as provider or durable "
+            "identity",
             self.codex,
         )
         self.assertIn("controller-bound digest evidence plus exact read evidence", self.claude)
@@ -250,9 +255,105 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         )
         route = presentation.index("qualified Dropbox retrieval route")
         file = presentation.index("Dropbox-backed file")
-        handoff = presentation.index("target-shaped retrieval handoff")
+        handoff = presentation.index("target-shaped [thin semantic handoff]")
         self.assertLess(route, file)
         self.assertLess(file, handoff)
+
+    def test_codex_and_claude_handoffs_use_the_same_shared_selector(self):
+        presentation = " ".join(self.presentation.split())
+        delivery_envelope = " ".join(self.delivery_envelope.split())
+        self.assertIn("selector applies symmetrically", presentation)
+        self.assertIn("same shared presentation and handoff contract", presentation)
+        self.assertIn(
+            "immediately provide the target-shaped [thin semantic handoff]"
+            "(#thin-semantic-handoff-envelope) without reproducing the complete prompt",
+            presentation,
+        )
+        for phrase in (
+            "one private OS-managed executor-owned attempt-local retrieval",
+            "Fallback changes delivery only",
+        ):
+            self.assertIn(phrase, self.contract)
+        for phrase in (
+            "Exact durable identity: [immutable human locator, provider locator, "
+            "object identity, size, SHA-256",
+            "Verify raw or attempt-local bytes, size, SHA-256, UTF-8, no BOM, LF "
+            "endings, and the declared final-newline rule before acceptance.",
+            "Fail closed on collision, mismatch, missing identity, prohibited "
+            "retention, unsupported required capability, or ambiguous authority.",
+            "Prohibited delivery: no exchange root, mutable alias, shadow durable "
+            "copy, or copy/paste claim of byte identity",
+        ):
+            self.assertIn(phrase, delivery_envelope)
+        self.assertIn(
+            "Do not reproduce the complete durable artifact in chat merely for transport.",
+            self.evidence,
+        )
+
+        codex, claude = (" ".join(profile.split()) for profile in self.adapter_profiles[:2])
+        directions = (
+            (
+                "Codex",
+                "Claude",
+                claude,
+                "when Claude Code receives",
+                "Direct provider consumption is qualified only when the current "
+                "Claude surface can retrieve raw bytes and the required provider "
+                "identity metadata",
+                "Otherwise use one private OS-managed executor-attempt copy",
+                "Bind the launch to its exact path, expected size, SHA-256, and "
+                "declared text format",
+                "Do not use a locally synchronized provider mount as provider or "
+                "durable identity",
+            ),
+            (
+                "Claude",
+                "Codex",
+                codex,
+                "when Codex receives",
+                "Prefer direct retrieval only when the current connector or provider "
+                "route exposes raw bytes and the required provider identity metadata",
+                "download the raw provider object once into a private OS-managed "
+                "attempt-local directory",
+                "verify the provider identity and raw bytes, and pass Codex the exact "
+                "local path plus expected size and SHA-256",
+                "Do not use a locally synchronized provider mount as provider or "
+                "durable identity",
+            ),
+        )
+        for (
+            producer,
+            recipient,
+            recipient_profile,
+            receipt,
+            direct_route,
+            fallback,
+            verification,
+            prohibited_local_substitute,
+        ) in directions:
+            with self.subTest(producer=producer, recipient=recipient):
+                self.assertIn(receipt, recipient_profile)
+                self.assertIn(direct_route, recipient_profile)
+                self.assertIn(fallback, recipient_profile)
+                self.assertIn(verification, recipient_profile)
+                self.assertIn(prohibited_local_substitute, recipient_profile)
+                self.assertIn("fail closed on the shared cleanup conditions", recipient_profile)
+                self.assertLess(
+                    recipient_profile.index(direct_route),
+                    recipient_profile.index(fallback),
+                )
+
+    def test_cross_executor_prompt_handoffs_keep_the_kickoff_mutation_boundary(self):
+        kickoff_boundary = " ".join(self.kickoff_boundary.split())
+        presentation = " ".join(self.presentation.split())
+        self.assertIn(
+            "producing prompt or handoff evidence does not authorize repository "
+            "implementation, remote-repository mutation, or unrelated planning-system "
+            "mutation",
+            kickoff_boundary,
+        )
+        self.assertIn("selector applies symmetrically", presentation)
+        self.assertIn("same shared presentation and handoff contract", presentation)
 
     def test_two_block_format_is_conditional_on_inline_presentation(self):
         complete_shape = " ".join(self.complete_prompt_shape.split())
