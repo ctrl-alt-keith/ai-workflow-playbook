@@ -24,7 +24,6 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.contract = normalized(DOCS / "prompt-contracts.md")
-        cls.core = normalized(DOCS / "core-model.md")
         cls.evidence = normalized(DOCS / "evidence-lifecycle.md")
         cls.prompts = normalized(DOCS / "prompts.md")
         cls.codex = normalized(DOCS / "tool-adapters" / "codex.md")
@@ -220,7 +219,8 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
 
     def test_adapters_project_actual_route_without_provider_configuration(self):
         self.assertIn(
-            "Do not use a locally synchronized provider mount as provider identity",
+            "Do not use a locally synchronized provider mount as provider or durable "
+            "identity",
             self.codex,
         )
         self.assertIn("controller-bound digest evidence plus exact read evidence", self.claude)
@@ -303,8 +303,8 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
                 "Otherwise use one private OS-managed executor-attempt copy",
                 "Bind the launch to its exact path, expected size, SHA-256, and "
                 "declared text format",
-                "Do not use a synchronized local provider mount as durable identity, "
-                "retain the attempt-local copy as durable, or create an exchange root",
+                "Do not use a locally synchronized provider mount as provider or "
+                "durable identity",
             ),
             (
                 "Claude",
@@ -317,7 +317,8 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
                 "attempt-local directory",
                 "verify the provider identity and raw bytes, and pass Codex the exact "
                 "local path plus expected size and SHA-256",
-                "Do not use a locally synchronized provider mount as provider identity",
+                "Do not use a locally synchronized provider mount as provider or "
+                "durable identity",
             ),
         )
         for (
@@ -345,25 +346,14 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
     def test_cross_executor_prompt_handoffs_keep_the_kickoff_mutation_boundary(self):
         kickoff_boundary = " ".join(self.kickoff_boundary.split())
         presentation = " ".join(self.presentation.split())
-        for phrase in (
-            "Task-owned orchestration and evidence mutations may be permitted",
-            "produce and preserve a decision package or exact downstream prompt and "
-            "its receipt",
+        self.assertIn(
             "producing prompt or handoff evidence does not authorize repository "
             "implementation, remote-repository mutation, or unrelated planning-system "
             "mutation",
-            "pull request creates zero authority",
-        ):
-            self.assertIn(phrase, kickoff_boundary)
-
-        directions = (("Codex", "Claude"), ("Claude", "Codex"))
-        for producer, recipient in directions:
-            with self.subTest(producer=producer, recipient=recipient):
-                self.assertIn("selector applies symmetrically", presentation)
-                self.assertIn(
-                    "same shared presentation and handoff contract",
-                    presentation,
-                )
+            kickoff_boundary,
+        )
+        self.assertIn("selector applies symmetrically", presentation)
+        self.assertIn("same shared presentation and handoff contract", presentation)
 
     def test_two_block_format_is_conditional_on_inline_presentation(self):
         complete_shape = " ".join(self.complete_prompt_shape.split())

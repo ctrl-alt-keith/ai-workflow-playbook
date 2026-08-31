@@ -518,8 +518,9 @@ and byte verification require only the minimum read capability needed to
 inspect the prompt. Record whether Claude computed the digest itself or relied
 on controller-bound digest evidence plus exact read evidence. A direct Claude
 provider limitation does not block this profile when the exact attempt-local
-route succeeds. Do not use a synchronized local provider mount as durable
-identity, retain the attempt-local copy as durable, or create an exchange root.
+route succeeds. Do not use a locally synchronized provider mount as provider or
+durable identity, retain the attempt-local copy as durable, or create an
+exchange root.
 
 After prompt acceptance, choose Claude's tools and permission mode from the
 bounded task's authorized execution requirements. Read-only tools are mandatory
