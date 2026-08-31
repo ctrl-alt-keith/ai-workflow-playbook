@@ -177,3 +177,22 @@ class ChatGPTAdapterTests(unittest.TestCase):
         self.assertIn("does not ask ChatGPT to rename itself or report a naming limitation", normalized)
         self.assertNotIn("currently, that means an applicable Codex-targeted handoff", contents)
         self.assertIn("normal `SAME THREAD` or `CHILD TASK`", normalized)
+
+    def test_cold_start_codex_prompt_selects_capability_before_inline_rendering(self):
+        contents = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")
+        prompt_presentation = " ".join(
+            contents[contents.index("### Prompt presentation") :].split()
+        )
+
+        selector = prompt_presentation.index("Before rendering a complete, copy-ready prompt")
+        capability = prompt_presentation.index(
+            "has inspected or attempted an unknown capability"
+        )
+        inline = prompt_presentation.index("present the shared operator-metadata block")
+
+        self.assertLess(selector, capability)
+        self.assertLess(capability, inline)
+        self.assertIn(
+            "[recipient-capability selector](../prompts.md#cross-executor-prompt-presentation)",
+            prompt_presentation,
+        )
