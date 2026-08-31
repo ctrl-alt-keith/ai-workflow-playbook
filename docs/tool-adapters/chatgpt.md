@@ -214,11 +214,10 @@ the durable profile below; routine prompts do not inherit it from transport.
 
 Owner retrieval and output conformance remain separate checks. If a selected
 Dropbox or file route becomes blocked before a qualified prompt handoff is
-complete, preserve the frozen artifact, viewer, and recipient outputs and
-re-enter stages 5 through 8 against the newly observed capability state. When
-the owning contract permits inline fallback, preserve the two-block
-complete-prompt shape and report the blocked delivery limitation outside the
-copyable blocks.
+complete, apply the canonical decision model's bounded capability
+re-evaluation rule. When the owning contract permits inline fallback, preserve
+the two-block complete-prompt shape and report the blocked delivery limitation
+outside the copyable blocks.
 When the governing exact-byte or durable contract prohibits that fallback,
 preserve the target-shaped handoff with an explicit blocked state and stop. Do
 not degrade the required prompt or handoff into unconstrained status prose

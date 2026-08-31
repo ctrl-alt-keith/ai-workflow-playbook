@@ -422,10 +422,10 @@ recipient of a prompt that is semantically directed to a machine executor.
 
 | Order | Stage | Required input | Explicit output | Invariant |
 | --- | --- | --- | --- | --- |
-| 1 | `artifact-production` | Current human intent and the artifact actually being produced | `no-prompt`, `fragment`, or `prompt-produced` | Do not enter prompt delivery when no prompt artifact is being produced. |
+| 1 | `artifact-production` | Current human intent and the artifact actually being produced | `no-prompt` or `prompt-produced` | Do not enter prompt delivery when no prompt artifact is being produced. |
 | 2 | `artifact-classification` | Produced artifact plus authoritative readiness intent | `conceptual-fragment` or `complete-executable` | Classify produced semantics, not request vocabulary; freeze the result. |
 | 3 | `operator-viewer-resolution` | Current interaction and orchestration context | Explicit human or orchestration viewer identity | Viewer identity controls the operator-facing surface only. |
-| 4 | `execution-recipient-resolution` | Executable body, target surface, task shape, and human direction | Explicit recipient identity and `human` or `machine-executor` class | Resolve independently from the viewer; do not infer it from who asked the question. |
+| 4 | `execution-recipient-resolution` | Executable body, target surface, task shape, and human direction | Explicit recipient identity and `human` or `machine-executor` class, or `unresolved` with reason | Resolve independently from the viewer; do not infer it from who asked the question or default ambiguity to the human viewer. |
 | 5 | `capability-and-transport-resolution` | Frozen recipient identity, current runtime capability evidence, authority, and permitted destination | `qualified-file-route`, `inline-route`, `inline-fallback-permitted`, or `blocked` with reason | Inspect or attempt unknown capability; never invent a destination or weaken an exact-byte contract. |
 | 6 | `presentation-selection` | Frozen artifact class, recipient class, and route resolution | `lightweight`, `file-backed`, `inline`, or `blocked` | Qualified machine execution selects file-backed delivery; operator visibility cannot override it. |
 | 7 | `renderer-selection` | Frozen presentation selection | `lightweight`, `thin-handoff`, `canonical-inline-two-block`, or `none` | Inline rendering is reachable only from `inline`; a renderer cannot change upstream state. |
@@ -433,6 +433,9 @@ recipient of a prompt that is semantically directed to a machine executor.
 
 Apply these terminal mappings deterministically:
 
+- `no-prompt` ends the evaluation after `artifact-production`. Do not activate
+  classification, viewer, recipient, capability, presentation, renderer, or
+  delivery stages and do not emit a prompt-delivery result.
 - `conceptual-fragment` selects `lightweight` presentation and the lightweight
   renderer without machine-delivery ceremony.
 - `complete-executable` plus a `machine-executor` and
@@ -446,9 +449,20 @@ Apply these terminal mappings deterministically:
   presentation and the `canonical-inline-two-block` renderer, while preserving
   the observed file-route limitation outside the copyable blocks when the
   client surface permits it.
+- An `unresolved` execution recipient resolves transport to `blocked` with the
+  resolution reason and selects no complete-prompt renderer. Never treat an
+  unresolved recipient as the human viewer to obtain an inline route.
 - `blocked` selects no complete-prompt renderer. Emit the owning explicit
   blocked result; do not turn the block into convenient inline delivery or
   unconstrained status prose.
+
+The once-per-stage rule applies within one evaluation. If a selected route
+fails before delivery completes, the same delivery attempt may perform exactly
+one capability re-evaluation. Preserve the stage 1 through 4 outputs unchanged
+and activate only stages 5 through 8 against the newly observed capability
+state. If the re-evaluated route also fails, or capability remains unresolved,
+resolve `blocked` with the observed reason; do not re-enter again or recompute
+the artifact, viewer, or execution recipient.
 
 Conversational wording is evidence available to the production,
 classification, and recipient-resolution stages. It is not a lookup table and

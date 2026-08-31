@@ -61,8 +61,7 @@ class ChatGPTAdapterTests(unittest.TestCase):
 
         for phrase in (
             "blocked before a qualified prompt handoff is complete",
-            "preserve the frozen artifact, viewer, and recipient outputs",
-            "re-enter stages 5 through 8 against the newly observed capability state",
+            "canonical decision model's bounded capability re-evaluation rule",
             "preserve the two-block complete-prompt shape",
             "Do not degrade the required prompt or handoff into unconstrained status prose",
         ):
