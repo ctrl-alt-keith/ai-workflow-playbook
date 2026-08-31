@@ -274,13 +274,21 @@ establish sufficiency.
   leaves repository work or the human explicitly requests a different artifact
   style. Moving to another repository requires applying that repository's
   startup contract before assuming its native conventions.
-- Repository operating-mode persistence does not freeze the required source
-  set. When a task materially changes interaction mode, artifact type,
-  workflow, authoritative-source requirements, execution locality, or
-  authority boundary, re-evaluate activation routing for the current task and
-  retrieve newly required sources before answering, planning, drafting, or
-  acting. Reuse still-current verified sources; do not replay unchanged
-  doctrine or hydrate unrelated documents.
+- Repository operating-mode persistence does not freeze the task-specific
+  activated source set. When a task materially changes interaction mode,
+  artifact type, workflow, authoritative-source requirements, execution
+  locality, target executor, or authority boundary, re-evaluate activation
+  routing and compare the changed task's required-source set with the currently
+  activated set. Reuse the still-current repository floor and owners, retrieve
+  only newly required owners before answering, planning, drafting, or acting,
+  and do not blanket-rehydrate ordinary follow-ups. If a newly required owner
+  cannot be retrieved, fail closed for the affected conclusion or artifact;
+  memory, summaries, and convenient examples are not substitutes.
+- Activation and application are separate stages. Successfully retrieving an
+  owner does not prove its contract was applied. Validate the resulting
+  behavior against the activated contract, and if a later prerequisite blocks
+  the preferred path, preserve the owner's failure, fallback, or presentation
+  contract rather than degrading into unconstrained prose.
 - `docs/prompt-contracts.md` and its versioned machine-readable companions own
   shared prompt-contract meaning; implementing repositories own operational
   schemas, hydration, rendering, receipts, and validation code.
