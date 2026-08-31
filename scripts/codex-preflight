@@ -36,6 +36,18 @@ require_command "ssh" "Install OpenSSH client tools, then rerun this preflight."
 require_command "gh" "Install GitHub CLI from https://cli.github.com/, then rerun this preflight."
 require_command "git" "Install Git, then rerun this preflight."
 
+ssh_host="${SSH_TARGET#git@}"
+repo_authority="${REPO_URL#git@}"
+repo_host="${repo_authority%%:*}"
+
+if [ "$ssh_host" = "$SSH_TARGET" ] || [ "$repo_host" = "$repo_authority" ] || [ "$ssh_host" != "$repo_host" ]; then
+    fail_check \
+        "GitHub SSH target and repository URL use the same host" \
+        "Set CODEX_PREFLIGHT_GITHUB_SSH_TARGET and CODEX_PREFLIGHT_REPO_URL to matching git@host values, then rerun this preflight."
+fi
+
+pass_check "GitHub SSH target and repository URL use the same host"
+
 if command -v ssh-add >/dev/null 2>&1; then
     ssh_add_output="$(ssh-add -l 2>&1)"
     ssh_add_status="$?"
