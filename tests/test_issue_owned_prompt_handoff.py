@@ -254,6 +254,28 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         self.assertLess(route, file)
         self.assertLess(file, handoff)
 
+    def test_codex_and_claude_handoffs_use_the_same_shared_selector(self):
+        presentation = " ".join(self.presentation.split())
+        self.assertIn("a Codex-produced prompt for Claude", presentation)
+        self.assertIn("a Claude-produced prompt for Codex", presentation)
+        self.assertIn("same shared presentation and handoff contract", presentation)
+        self.assertIn(
+            "without reproducing the complete prompt in the thin handoff",
+            presentation,
+        )
+
+        for adapter in self.adapter_profiles[:2]:
+            self.assertIn(
+                "prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile",
+                adapter,
+            )
+            self.assertIn("attempt-local", adapter)
+            self.assertIn("fail closed", adapter)
+        self.assertIn("Prefer direct retrieval", self.adapter_profiles[0])
+        self.assertIn(
+            "Direct provider consumption", " ".join(self.adapter_profiles[1].split())
+        )
+
     def test_two_block_format_is_conditional_on_inline_presentation(self):
         complete_shape = " ".join(self.complete_prompt_shape.split())
         chatgpt_prompt = " ".join(self.chatgpt_prompt_presentation.split())
