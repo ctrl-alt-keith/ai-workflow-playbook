@@ -190,13 +190,12 @@ Apply the shared
 [`cross-executor prompt presentation`](../prompts.md#cross-executor-prompt-presentation)
 selector. For a machine recipient with qualified Dropbox retrieval and a
 permitted destination, use the authorized file route, present the card produced
-by the write when available, and immediately provide the target-shaped
-[thin semantic handoff](../prompts.md#thin-semantic-handoff-envelope) without
-reproducing the complete prompt. A separate preview or open action remains
-optional under the connected-app rules above. Do not wait for prompt approval
-or require the operator to open a preview; connector confirmation authorizes
-only its file operation. File-card and preview behavior is product-dependent
-runtime evidence, so recheck the relevant action.
+by the write when available, and immediately provide the target-shaped handoff.
+A separate preview or open action remains optional under the connected-app
+rules above. Do not wait for prompt approval or require the operator to open a
+preview; connector confirmation authorizes only its file operation. File-card
+and preview behavior is product-dependent runtime evidence, so recheck the
+relevant action.
 
 For a human recipient or a system without a qualified Dropbox route, use the
 existing [two-block inline presentation](#prompt-presentation). If access is

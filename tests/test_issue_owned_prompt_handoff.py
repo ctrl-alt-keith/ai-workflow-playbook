@@ -365,13 +365,6 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
                     presentation,
                 )
 
-        chatgpt_presentation = " ".join(self.chatgpt_presentation.split())
-        self.assertIn(
-            "[thin semantic handoff](../prompts.md#thin-semantic-handoff-envelope) "
-            "without reproducing the complete prompt",
-            chatgpt_presentation,
-        )
-
     def test_two_block_format_is_conditional_on_inline_presentation(self):
         complete_shape = " ".join(self.complete_prompt_shape.split())
         chatgpt_prompt = " ".join(self.chatgpt_prompt_presentation.split())
