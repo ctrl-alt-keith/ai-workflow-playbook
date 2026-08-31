@@ -361,6 +361,32 @@ Reason:
 [one concise task-specific explanation]
 ```
 
+## Produced-Artifact Classification
+
+Classify the artifact actually produced before choosing its presentation. The
+user's request framing can describe the desired level of detail, but words such
+as `example`, `sample`, `roughly`, `formatting`, `preview`, or `demo` do not
+make a produced artifact conceptual when it is complete or substantially
+executable for a downstream executor. This includes framing such as `show me
+the format`, `sample prompt`, or `example implementation prompt`.
+
+A produced artifact is substantially executable when it gives a downstream
+executor enough concrete task, scope, constraint, source, validation, and stop
+information to act as a prompt rather than merely illustrating a phrase or
+layout. Resolve known repository, task, and other required prompt-local values;
+do not retain a known-value placeholder to avoid this classification.
+
+Classify a complete or substantially executable artifact as a complete prompt
+for presentation and transport, then apply the recipient-capability selector
+before emitting any inline prompt block. This preserves the matching adapter's
+concrete model and reasoning metadata and the inline two-block shape when
+inline presentation is the selected route.
+
+Keep genuinely conceptual discussion, quoted source material, isolated
+snippets, and incomplete fragments lightweight. They are not complete prompts
+solely because they concern prompt design, and do not require file-backed
+transport.
+
 ## Cross-Executor Prompt Presentation
 
 This selector applies symmetrically when one executor produces a complete
