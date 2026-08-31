@@ -17,10 +17,15 @@ class ChatGPTAdapterTests(unittest.TestCase):
         self.assertIn("docs/tool-adapters/chatgpt.md", contents)
         self.assertNotIn("ChatGPT/Work runs must read", contents)
         self.assertIn("Repository operating-mode persistence does not freeze", contents)
-        self.assertIn("re-evaluate activation routing", contents)
-        self.assertIn("Reuse still-current verified sources", contents)
+        self.assertIn("re-evaluate activation routing", normalized_start_here)
+        self.assertIn(
+            "Reuse the still-current repository floor and owners",
+            normalized_start_here,
+        )
 
-    def test_start_here_re_routes_changed_task_shape_before_codex_prompt(self):
+    def test_start_here_reroutes_material_task_shape_without_blanket_rehydration(
+        self,
+    ):
         contents = (DOCS / "start-here.md").read_text(encoding="utf-8")
         chatgpt = (DOCS / "tool-adapters" / "chatgpt.md").read_text(
             encoding="utf-8"
@@ -29,27 +34,30 @@ class ChatGPTAdapterTests(unittest.TestCase):
         normalized_chatgpt = " ".join(chatgpt.split())
 
         for phrase in (
-            "Task-Shape Activation Re-Routing",
-            "Compare the changed task's required-source set with the currently activated source set",
-            "retrieve only the newly required owners",
+            "task-specific activated source set",
+            "re-evaluate activation routing",
+            "compare the changed task's required-source set with the currently activated set",
+            "retrieve only newly required owners",
+            "Reuse the still-current repository floor and owners",
+            "do not blanket-rehydrate ordinary follow-ups",
             "target executor",
-            "A convenient example in an already-loaded source cannot substitute",
             "fail closed for the affected conclusion or artifact",
-            "Let's begin CAK-194",
-            "give me an example codex prompt to show the formatting you'd use",
-            "docs/prompts.md",
-            "docs/tool-adapters/codex.md",
-            "review/audit to implementation",
-            "docs/feature-lifecycle.md",
+            "memory, summaries, and convenient examples are not substitutes",
             "Activation and application are separate stages",
-            "Successfully retrieving an owner does not prove",
+            "Successfully retrieving an owner does not prove its contract was applied",
+            "preserve the owner's failure, fallback, or presentation contract",
+            "rather than degrading into unconstrained prose",
         ):
             self.assertIn(phrase, normalized)
 
-        self.assertIn(
-            "does not require rereading the repository floor or other still-current owners",
-            normalized,
-        )
+        for incident_text in (
+            "CAK-194",
+            "CAK-195",
+            "Let's begin CAK-194",
+            "give me an example codex prompt to show the formatting you'd use",
+        ):
+            self.assertNotIn(incident_text, contents)
+
         for phrase in (
             "blocked before a qualified prompt handoff is complete",
             "re-run the recipient-capability selector against the observed state",
