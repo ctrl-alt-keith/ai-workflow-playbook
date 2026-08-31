@@ -336,8 +336,13 @@ the applicable prompt and downstream-context contract.
 
 ### Prompt presentation
 
-When the shared recipient-capability selector chooses inline presentation for
-a complete, copy-ready prompt or downstream handoff prepared in ChatGPT,
+Before rendering a complete, copy-ready prompt or downstream handoff inline,
+apply the shared [recipient-capability selector](../prompts.md#cross-executor-prompt-presentation).
+Do not begin either inline block until that selector has established the
+recipient's qualified Dropbox route and permitted destination, or has inspected
+or attempted an unknown capability and selected the inline fallback. When the
+shared recipient-capability selector chooses inline presentation for a complete,
+copy-ready prompt or downstream handoff,
 present the shared operator-metadata block followed immediately by the complete
 executable block as consecutive copyable code blocks, with no intervening
 prose. Immediately after the executable block, outside both code blocks, emit
