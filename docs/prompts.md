@@ -345,11 +345,16 @@ interpreted as inline HTML by Markdown tooling.
 
 ## Complete Prompt Shape
 
-When inline presentation is selected for a complete generated prompt, emit one
-shared operator-metadata block and one complete executable block consecutively.
-The executable block must remain complete and actionable without the metadata,
-so the operator can copy only that block. Matching executor adapters own
-concrete metadata fields and client presentation mechanics.
+When inline presentation is selected for a complete generated prompt, that
+selection controls the final response surface. Emit exactly two consecutive
+fenced code blocks: one shared operator-metadata block, then one complete
+executable block. Do not emit assistant-authored prose, headings, labels,
+separators, or postambles before, between, or after those blocks. Preserve
+ordinary line breaks inside both blocks; do not introduce Markdown
+line-continuation backslashes or equivalent escaping artifacts. The executable
+block must remain complete and actionable without the metadata, so the operator
+can copy only that block. Matching executor adapters own concrete metadata
+fields and client presentation mechanics.
 
 ```text
 Operator metadata (do not include in prompt)
