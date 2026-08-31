@@ -190,6 +190,55 @@ conditional routing activates them. Do not load full maintenance,
 cross-repository, prompt-contract, or multi-agent doctrine into an ordinary
 single-repository task that does not touch those surfaces.
 
+### Task-Shape Activation Re-Routing
+
+Repository operating mode and the currently activated source set are separate
+state. Before a repository-scoped response, plan, draft, or action, determine
+whether the task shape materially changed in artifact type, interaction mode,
+workflow, authoritative-source requirements, execution locality, target
+executor, or authority boundary. An ordinary follow-up with the same needs
+reuses the still-current activated sources.
+
+When the task shape changes:
+
+1. Derive the changed task's required-source set from [Task Routing](#task-routing),
+   the repository floor, [Conditional Repository Guidance](#conditional-repository-guidance),
+   and any narrower activation rule in the owning source.
+2. Compare the changed task's required-source set with the currently activated
+   source set.
+3. Reuse still-current owners and retrieve only the newly required owners
+   before reasoning about, drafting, or acting on the affected task. This does
+   not require rereading the repository floor or other still-current owners.
+4. If a newly required owner cannot be retrieved, fail closed for the affected
+   conclusion or artifact rather than substituting memory, a summary, or a
+   convenient example from an already-loaded source.
+5. Apply the retrieved owners to the resulting behavior and validate the
+   output against their contracts.
+
+Activation and application are separate stages. Successfully retrieving an
+owner does not prove that its requirements were applied. The output must still
+conform when a later prerequisite blocks the preferred path: use the activated
+owner's failure, fallback, or presentation rules rather than degrading into an
+unconstrained response. A convenient example in an already-loaded source cannot
+substitute for a newly activated narrower owner or prove behavioral conformance.
+
+The CAK-195 cold-start regression illustrates the boundary. A fresh-memory
+repository-scoped ChatGPT interaction begins with `Let's begin CAK-194` and
+hydrates the repository floor, ChatGPT adapter, and investigation sources. The
+next request, `give me an example codex prompt to show the formatting you'd
+use`, changes the artifact, interaction mode, and target executor. Prompt
+authoring therefore newly activates `docs/prompts.md`, and the Codex target
+newly activates `docs/tool-adapters/codex.md`; the still-current repository
+floor and ChatGPT sources are reused. Both owners must be retrieved before the
+Codex prompt is produced, and their output contract remains active if a later
+delivery prerequisite becomes blocked.
+
+A nearby sibling transition follows the same rule: moving from review/audit to
+implementation reuses the still-current repository floor and newly activates
+`docs/feature-lifecycle.md` before implementation planning or mutation. These
+examples define routing and conformance checks only; the specialized prompt,
+executor, lifecycle, and failure semantics remain with their canonical owners.
+
 ### Repository Instruction Hierarchy
 
 Apply overlapping repository instructions in this order:

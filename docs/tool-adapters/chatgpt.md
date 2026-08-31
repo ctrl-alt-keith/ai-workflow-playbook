@@ -202,6 +202,16 @@ existing [two-block inline presentation](#prompt-presentation). If access is
 unknown, inspect or attempt it before falling back. Material prompts also apply
 the durable profile below; routine prompts do not inherit it from transport.
 
+Owner retrieval and output conformance remain separate checks. If a selected
+Dropbox or file route becomes blocked before a qualified prompt handoff is
+complete, re-run the recipient-capability selector against the observed state.
+When it permits inline presentation, preserve the two-block complete-prompt
+shape and report the blocked delivery limitation outside the copyable blocks.
+When the governing exact-byte or durable contract prohibits that fallback,
+preserve the target-shaped handoff with an explicit blocked state and stop. Do
+not degrade the required prompt or handoff into unconstrained status prose
+merely because one downstream prerequisite failed.
+
 ### Dropbox Preview And Minimal Executor Handoff
 
 When optional operator preview is selected, exact-verify the durable prompt,
