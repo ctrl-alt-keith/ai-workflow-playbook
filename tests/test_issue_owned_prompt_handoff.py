@@ -249,8 +249,9 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
     def test_qualified_machine_recipient_uses_file_first_presentation(self):
         presentation = " ".join(self.presentation.split())
         self.assertIn(
-            "For any complete prompt, select presentation by the recipient's "
-            "currently qualified capability, independently of prompt materiality",
+            "For any complete prompt, select presentation by the execution "
+            "recipient's currently qualified capability and permitted destination, "
+            "independently of the operator or viewer identity",
             presentation,
         )
         route = presentation.index("qualified Dropbox retrieval route")
@@ -259,10 +260,10 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         self.assertLess(route, file)
         self.assertLess(file, handoff)
 
-    def test_codex_and_claude_handoffs_use_the_same_shared_selector(self):
+    def test_codex_and_claude_handoffs_use_the_same_shared_model(self):
         presentation = " ".join(self.presentation.split())
         delivery_envelope = " ".join(self.delivery_envelope.split())
-        self.assertIn("selector applies symmetrically", presentation)
+        self.assertIn("model applies symmetrically", presentation)
         self.assertIn("same shared presentation and handoff contract", presentation)
         self.assertIn(
             "immediately provide the target-shaped [thin semantic handoff]"
@@ -352,7 +353,7 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             "mutation",
             kickoff_boundary,
         )
-        self.assertIn("selector applies symmetrically", presentation)
+        self.assertIn("model applies symmetrically", presentation)
         self.assertIn("same shared presentation and handoff contract", presentation)
 
     def test_two_block_format_is_conditional_on_inline_presentation(self):
@@ -363,7 +364,7 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             complete_shape,
         )
         self.assertIn(
-            "When the shared recipient-capability selector chooses inline "
+            "When the model legitimately selects inline "
             "presentation for a complete, copy-ready prompt or downstream handoff",
             chatgpt_prompt,
         )
@@ -378,8 +379,8 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
 
     def test_human_or_unqualified_recipient_uses_inline_presentation(self):
         presentation = " ".join(self.presentation.split())
-        self.assertIn("For a human recipient", presentation)
-        self.assertIn("no qualified Dropbox route", presentation)
+        self.assertIn("For a human execution recipient", presentation)
+        self.assertIn("machine execution recipient has no qualified Dropbox route", presentation)
         self.assertIn("present the complete prompt inline", presentation)
         self.assertIn("consecutive copyable code blocks", self.chatgpt)
 
@@ -387,8 +388,8 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         presentation = " ".join(self.presentation.split())
         self.assertIn("issue-owned durable rendered-prompt handoff profile", presentation)
         self.assertIn("A routine prompt delivered through a file does not", presentation)
-        self.assertIn("use inline presentation rather than inventing a storage surface", presentation)
-        self.assertIn("two-block inline presentation", self.chatgpt_presentation)
+        self.assertIn("use inline presentation only when the owning fallback contract permits", presentation)
+        self.assertIn("two-block inline renderer", self.chatgpt_presentation)
 
     def test_chatgpt_preview_prefers_the_returned_file_id(self):
         preview = " ".join(self.chatgpt_dropbox_bootstrap.split())

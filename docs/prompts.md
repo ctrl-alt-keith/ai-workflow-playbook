@@ -192,8 +192,8 @@ Thread routing never relaxes prompt completeness:
   thread, but remains directly usable without another prompt.
 - A `CHILD TASK` receives a complete bounded child prompt.
 
-The [recipient-capability selector](#cross-executor-prompt-presentation)
-applies to every complete prompt across these routing modes.
+The [prompt delivery decision model](#prompt-delivery-decision-model) applies
+to every complete prompt across these routing modes.
 
 Use the executor adapter for vendor-specific routing. For an existing task that
 exceeds its assigned capability, prefer a bounded stronger child or an explicit
@@ -393,36 +393,92 @@ layout. Resolve known repository, task, and other required prompt-local values;
 do not retain a known-value placeholder to avoid this classification.
 
 Classify a complete or substantially executable artifact as a complete prompt
-for presentation and transport, then apply the recipient-capability selector
-before emitting any inline prompt block. This preserves the matching adapter's
-concrete model and reasoning metadata and the inline two-block shape when
-inline presentation is the selected route.
+for presentation and transport. That classification is the output of the
+delivery model's first two stages and must not be reinterpreted by recipient,
+capability, presentation, or renderer selection. This preserves the matching
+adapter's concrete model and reasoning metadata and the inline two-block shape
+when inline presentation is the selected route.
 
 Keep genuinely conceptual discussion, quoted source material, isolated
 snippets, and incomplete fragments lightweight. They are not complete prompts
 solely because they concern prompt design, and do not require file-backed
 transport.
 
+## Prompt Delivery Decision Model
+
+This is the canonical compositional decision model for prompt delivery. Within
+one decision evaluation, run each activated stage once in the declared order
+and carry its explicit output forward in one decision record. A later stage may
+consume an earlier output, but it must not re-read conversational wording to
+replace that output or infer a different artifact, viewer, recipient, or
+transport. Rendering begins only after presentation has been selected.
+
+The decision record keeps the human operator or viewer separate from the
+executable prompt's execution recipient. The operator or viewer receives
+metadata, a file surface, or a handoff; the execution recipient consumes the
+executable prompt. Human visibility, a request to receive or see a handoff,
+and the presence of operator metadata do not make the human the execution
+recipient of a prompt that is semantically directed to a machine executor.
+
+| Order | Stage | Required input | Explicit output | Invariant |
+| --- | --- | --- | --- | --- |
+| 1 | `artifact-production` | Current human intent and the artifact actually being produced | `no-prompt`, `fragment`, or `prompt-produced` | Do not enter prompt delivery when no prompt artifact is being produced. |
+| 2 | `artifact-classification` | Produced artifact plus authoritative readiness intent | `conceptual-fragment` or `complete-executable` | Classify produced semantics, not request vocabulary; freeze the result. |
+| 3 | `operator-viewer-resolution` | Current interaction and orchestration context | Explicit human or orchestration viewer identity | Viewer identity controls the operator-facing surface only. |
+| 4 | `execution-recipient-resolution` | Executable body, target surface, task shape, and human direction | Explicit recipient identity and `human` or `machine-executor` class | Resolve independently from the viewer; do not infer it from who asked the question. |
+| 5 | `capability-and-transport-resolution` | Frozen recipient identity, current runtime capability evidence, authority, and permitted destination | `qualified-file-route`, `inline-route`, `inline-fallback-permitted`, or `blocked` with reason | Inspect or attempt unknown capability; never invent a destination or weaken an exact-byte contract. |
+| 6 | `presentation-selection` | Frozen artifact class, recipient class, and route resolution | `lightweight`, `file-backed`, `inline`, or `blocked` | Qualified machine execution selects file-backed delivery; operator visibility cannot override it. |
+| 7 | `renderer-selection` | Frozen presentation selection | `lightweight`, `thin-handoff`, `canonical-inline-two-block`, or `none` | Inline rendering is reachable only from `inline`; a renderer cannot change upstream state. |
+| 8 | `delivery-outcome` | Complete decision record and selected renderer result | Selected delivery evidence or explicit fallback or blocked result | Emit only the selected surface and preserve the owning failure contract. |
+
+Apply these terminal mappings deterministically:
+
+- `conceptual-fragment` selects `lightweight` presentation and the lightweight
+  renderer without machine-delivery ceremony.
+- `complete-executable` plus a `machine-executor` and
+  `qualified-file-route` selects `file-backed` presentation and the
+  `thin-handoff` renderer. The complete executable prompt is not rendered
+  inline.
+- `complete-executable` plus a human execution recipient resolves
+  `inline-route`, then selects `inline` presentation and the
+  `canonical-inline-two-block` renderer.
+- `complete-executable` plus `inline-fallback-permitted` selects `inline`
+  presentation and the `canonical-inline-two-block` renderer, while preserving
+  the observed file-route limitation outside the copyable blocks when the
+  client surface permits it.
+- `blocked` selects no complete-prompt renderer. Emit the owning explicit
+  blocked result; do not turn the block into convenient inline delivery or
+  unconstrained status prose.
+
+Conversational wording is evidence available to the production,
+classification, and recipient-resolution stages. It is not a lookup table and
+must not be matched through a phrase whitelist or blacklist. Once those stages
+have resolved their semantic outputs, capability, presentation, and renderer
+selection consume only the decision record.
+
 ## Cross-Executor Prompt Presentation
 
-This selector applies symmetrically when one executor produces a complete
-prompt for another: each direction is governed by the same shared presentation
-and handoff contract.
+This section supplies the transport and presentation rules consumed by stages
+5 through 8 of the canonical decision model. The model applies symmetrically
+when one executor produces a complete prompt for another: each direction is
+governed by the same shared presentation and handoff contract.
 
-For any complete prompt, select presentation by the recipient's currently
-qualified capability, independently of prompt materiality:
+For any complete prompt, select presentation by the execution recipient's
+currently qualified capability and permitted destination, independently of
+the operator or viewer identity:
 
-- When the recipient has a qualified Dropbox retrieval route and the current
-  storage contract supplies a permitted destination, place the prompt in a
-  Dropbox-backed file, present the file surface produced by that operation, and
-  immediately provide the target-shaped
+- When the machine execution recipient has a qualified Dropbox retrieval route
+  and the current storage contract supplies a permitted destination, place the
+  prompt in a Dropbox-backed file, present the file surface produced by that
+  operation, and immediately provide the target-shaped
   [thin semantic handoff](#thin-semantic-handoff-envelope) without reproducing
   the complete prompt. A separate preview or open action is optional under the
   matching client adapter and does not block the handoff or require prompt
   approval.
-- For a human recipient, or when the receiving system has no qualified Dropbox
-  route, present the complete prompt inline through the matching client
-  adapter. When access is unknown, apply the
+- For a human execution recipient, or when the machine execution recipient has
+  no qualified Dropbox route and the owning contract permits inline fallback,
+  present the complete prompt inline through the matching client adapter. When
+  access is unknown, apply the
   [connector-availability rule](start-here.md#connector-availability-is-runtime-evidence)
   before choosing this fallback.
 
@@ -438,11 +494,14 @@ Complete that profile before reporting preservation or providing an
 exact-identity handoff. A routine prompt delivered through a file does not
 thereby acquire its durable capture, recovery, replay, receipt,
 immutable-version, or governance ceremony. When no permitted file destination
-exists, use inline presentation rather than inventing a storage surface.
+exists, use inline presentation only when the owning fallback contract permits
+it; otherwise emit the explicit blocked result rather than inventing a storage
+surface.
 
 ## Quick Navigation
 
 - [Task-Shape Surface Selection And Thin Handoffs](#task-shape-surface-selection-and-thin-handoffs)
+- [Prompt Delivery Decision Model](#prompt-delivery-decision-model)
 - [Cross-Executor Prompt Presentation](#cross-executor-prompt-presentation)
 - [Repository Implementation Task](#repository-implementation-task)
 - [Parallel Batch Add-On](#parallel-batch-add-on)
