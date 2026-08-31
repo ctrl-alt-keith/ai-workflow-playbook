@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import unittest
 
 
@@ -150,33 +151,72 @@ class ChatGPTAdapterTests(unittest.TestCase):
         ):
             self.assertIn(owner, contents)
 
-    def test_copy_ready_prompt_breadcrumb_stays_outside_both_code_blocks(self):
+    def test_inline_complete_prompt_renderer_owns_the_entire_response_surface(self):
         contents = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")
+        prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
         normalized = " ".join(contents.split())
+        complete_prompt_shape = " ".join(
+            prompts[
+                prompts.index("## Complete Prompt Shape") : prompts.index(
+                    "## Produced-Artifact Classification"
+                )
+            ].split()
+        )
 
         self.assertIn("complete, copy-ready prompt or downstream handoff", contents)
         self.assertIn("with no intervening prose", normalized)
-        self.assertIn(
-            "`ChatGPT thread: [exact canonical title]`",
-            contents,
+        self.assertIn("shared canonical renderer controls the entire response surface", normalized)
+        self.assertIn("no assistant-authored material before, between, or after", normalized)
+        self.assertIn("copy instruction, navigation breadcrumb, Markdown separator", normalized)
+        self.assertIn("prose label, or line-continuation escaping artifact", normalized)
+        self.assertNotIn("ChatGPT thread: [exact canonical title]", contents)
+
+        for phrase in (
+            "exactly two consecutive fenced code blocks",
+            "Do not emit assistant-authored prose, headings, labels, separators, or postambles",
+            "Markdown line-continuation backslashes or equivalent escaping artifacts",
+        ):
+            self.assertIn(phrase, complete_prompt_shape)
+
+        def is_canonical_inline_response(rendered):
+            match = re.fullmatch(
+                r"```[^\n]*\n(?P<metadata>.*?)```\n```[^\n]*\n(?P<prompt>.*?)```\n?",
+                rendered,
+                flags=re.DOTALL,
+            )
+            if not match:
+                return False
+            if not match.group("metadata").startswith("Thread routing:"):
+                return False
+            if not match.group("prompt").startswith("Outcome:"):
+                return False
+            return not any(
+                prohibited in rendered
+                for prohibited in (
+                    "Here’s the drop-in Codex handoff.",
+                    "---",
+                    "Copy the block as-is",
+                    "Reason:\\",
+                    "Outcome:\\",
+                    "Regression coverage:\\",
+                    "Final report:\\",
+                )
+            )
+
+        canonical_rendering = (
+            "```text\nThread routing: FRESH THREAD\nReason:\nFocused implementation.\n```\n"
+            "```text\nOutcome:\nImplement the bounded change.\n```\n"
         )
-        self.assertIn("outside both code blocks", contents)
-        self.assertIn(
-            "not task authority, execution identity, durable continuity, source evidence",
-            normalized,
-        )
-        self.assertIn("or part of the downstream executable prompt", normalized)
-        self.assertIn(
-            "quoted prompts, source excerpts, incomplete fragments, or conceptual discussion",
-            normalized,
-        )
-        self.assertIn("reuse that exact title in later complete prompts", normalized)
-        self.assertIn("not verified or changed ChatGPT UI state", normalized)
-        self.assertIn("downstream target executor adapter explicitly supports", normalized)
-        self.assertIn("ChatGPT-targeted prompts resolve the shared naming placeholder to nothing", normalized)
-        self.assertIn("does not ask ChatGPT to rename itself or report a naming limitation", normalized)
-        self.assertNotIn("currently, that means an applicable Codex-targeted handoff", contents)
-        self.assertIn("normal `SAME THREAD` or `CHILD TASK`", normalized)
+        self.assertTrue(is_canonical_inline_response(canonical_rendering))
+
+        for malformed_rendering in (
+            "Here’s the drop-in Codex handoff.\n" + canonical_rendering,
+            canonical_rendering.replace("\n```\n```text", "\n```\n---\n```text"),
+            canonical_rendering + "Copy the block as-is into a fresh Codex thread.\n",
+            canonical_rendering.replace("Reason:\n", "Reason:\\\n"),
+            canonical_rendering.replace("Outcome:\n", "Outcome:\\\n"),
+        ):
+            self.assertFalse(is_canonical_inline_response(malformed_rendering))
 
     def test_cold_start_codex_prompt_selects_capability_before_inline_rendering(self):
         contents = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")

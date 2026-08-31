@@ -353,28 +353,19 @@ shared recipient-capability selector chooses inline presentation for a complete,
 copy-ready prompt or downstream handoff,
 present the shared operator-metadata block followed immediately by the complete
 executable block as consecutive copyable code blocks, with no intervening
-prose. Immediately after the executable block, outside both code blocks, emit
-this separate line exactly:
-
-`ChatGPT thread: [exact canonical title]`
-
-Keep the executable block complete without metadata or the breadcrumb so the
-operator can copy only that block. The breadcrumb is human navigation only: it
-is not task authority, execution identity, durable continuity, source
-evidence, or part of the downstream executable prompt. Do not add it to quoted
-prompts, source excerpts, incomplete fragments, or conceptual discussion that
-does not deliver a copy-ready prompt.
-
-When no canonical title exists for the current ChatGPT workstream, establish a
-concise one; reuse that exact title in later complete prompts from the same
-conversation. The emitted value is a canonical navigation title, not verified
-or changed ChatGPT UI state when the UI title is not observable. The breadcrumb
-title may also be selected as a downstream visible name only when the
-downstream target executor adapter explicitly supports executor-applied naming.
-ChatGPT-targeted prompts resolve the shared naming placeholder to nothing. This
-adapter does not ask ChatGPT to rename itself or report a naming limitation,
-and it does not change the normal `SAME THREAD` or `CHILD TASK` routing behavior in
-[`prompts.md`](../prompts.md#executor-applied-visible-thread-names).
+prose. The shared canonical renderer controls the entire response surface:
+emit no assistant-authored material before, between, or after the two blocks.
+Do not add a copy instruction, navigation breadcrumb, Markdown separator,
+prose label, or line-continuation escaping artifact. Keep the executable block
+complete without metadata so the operator can copy only that block. This rule
+applies only after the shared selector has legitimately selected inline
+presentation; it does not change recipient-capability selection, Dropbox-backed
+routing, or the treatment of quoted prompts, source excerpts, incomplete
+fragments, and conceptual discussion. ChatGPT-targeted prompts resolve the
+shared naming placeholder to nothing. This adapter does not ask ChatGPT to
+rename itself or report a naming limitation. A downstream visible name may be
+selected only when the downstream target executor adapter explicitly supports
+executor-applied naming.
 
 Do not nest Markdown code fences inside the executable block; represent any
 embedded example with indentation or plain text. Optimize this client rendering
