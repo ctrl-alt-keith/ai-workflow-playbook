@@ -259,21 +259,21 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         self.assertIn("a Codex-produced prompt for Claude", presentation)
         self.assertIn("a Claude-produced prompt for Codex", presentation)
         self.assertIn("same shared presentation and handoff contract", presentation)
+        self.assertIn("immediately provide the target-shaped", presentation)
         self.assertIn(
-            "without reproducing the complete prompt in the thin handoff",
-            presentation,
+            "[thin semantic handoff](#thin-semantic-handoff-envelope)",
+            self.presentation,
+        )
+        self.assertIn(
+            "without reproducing the complete prompt", presentation
         )
 
-        for adapter in self.adapter_profiles[:2]:
-            self.assertIn(
-                "prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile",
-                adapter,
-            )
-            self.assertIn("attempt-local", adapter)
-            self.assertIn("fail closed", adapter)
-        self.assertIn("Prefer direct retrieval", self.adapter_profiles[0])
+        codex, claude = (" ".join(profile.split()) for profile in self.adapter_profiles[:2])
+        self.assertIn("when Codex receives an exact issue-owned prompt", codex)
+        self.assertIn("when Claude Code receives an exact issue-owned prompt", claude)
+        self.assertIn("Prefer direct retrieval", codex)
         self.assertIn(
-            "Direct provider consumption", " ".join(self.adapter_profiles[1].split())
+            "Direct provider consumption", claude
         )
 
     def test_two_block_format_is_conditional_on_inline_presentation(self):

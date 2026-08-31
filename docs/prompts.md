@@ -380,9 +380,10 @@ qualified capability, independently of prompt materiality:
 
 This selector is symmetric: a Codex-produced prompt for Claude and a
 Claude-produced prompt for Codex are each complete prompts governed by this
-same shared presentation and handoff contract. After a successful
-Dropbox-backed presentation, provide the target-shaped retrieval handoff
-without reproducing the complete prompt in the thin handoff.
+same shared presentation and handoff contract. When the selector places the
+prompt in a Dropbox-backed file, immediately provide the target-shaped
+[thin semantic handoff](#thin-semantic-handoff-envelope) without reproducing
+the complete prompt.
 
 Preview is not raw-byte verification, approval, a send gate, delivery evidence,
 executor acknowledgement, a coordination state, or authority. A connector
