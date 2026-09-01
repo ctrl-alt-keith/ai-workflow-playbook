@@ -254,6 +254,9 @@ class ChatGPTAdapterTests(unittest.TestCase):
         no_reclassification = prompt_presentation.index(
             "must not reclassify the produced artifact"
         )
+        state_realization = prompt_presentation.index(
+            "must materially realize the complete current stage-5-through-7 state"
+        )
         presentation = prompt_presentation.index(
             "unless `presentation-selection` produced `inline`"
         )
@@ -265,7 +268,8 @@ class ChatGPTAdapterTests(unittest.TestCase):
         )
 
         self.assertLess(frozen, no_reclassification)
-        self.assertLess(no_reclassification, presentation)
+        self.assertLess(no_reclassification, state_realization)
+        self.assertLess(state_realization, presentation)
         self.assertLess(presentation, renderer)
         self.assertLess(renderer, inline)
         self.assertIn(
@@ -288,6 +292,23 @@ class ChatGPTAdapterTests(unittest.TestCase):
             prompt_presentation,
         )
         self.assertIn("it cannot select another renderer", prompt_presentation)
+        self.assertIn(
+            "pass that record as the only delivery-decision input",
+            prompt_presentation,
+        )
+        self.assertIn(
+            "Missing, incomplete, stale, mismatched, or superseded records select no "
+            "complete-prompt renderer and fail closed",
+            prompt_presentation,
+        )
+        self.assertIn(
+            "freeze one new current record, and supersede the prior record",
+            prompt_presentation,
+        )
+        self.assertIn(
+            "A `file-backed` record therefore cannot reach the inline renderer",
+            prompt_presentation,
+        )
 
     def test_executable_examples_use_complete_prompt_presentation(self):
         prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
