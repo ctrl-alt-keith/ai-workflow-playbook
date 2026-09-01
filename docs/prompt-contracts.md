@@ -429,6 +429,24 @@ visibility, retention, ownership, or exact-byte preservation fails closed.
 Redaction produces a different rendered-prompt identity and must never be
 represented as the original exact prompt.
 
+### Ownership selection
+
+This profile qualifies issue-owned rendered prompts only; an issue-oriented
+destination is not a universal prompt-artifact root. A prompt without a
+governing issue must resolve another existing natural durable owner and pass
+that owner's storage contract before retention. Do not place non-issue material
+under an issue-like path, invent a planning issue solely to obtain storage, or
+introduce a new durable root merely for naming symmetry.
+
+When no existing owner qualifies, a routine prompt remains ordinary chat or
+attempt-local disposable mechanics as applicable. A prompt whose exact durable
+identity is required for an authorized downstream dependency fails storage
+admission until a natural durable owner is established; importance does not
+authorize an improvised destination. Another owner may define a narrower
+compatible profile, but it must preserve the semantic, identity, authority,
+verification, and fail-closed boundaries here rather than treating this
+issue-owned profile as a generic container.
+
 ### One durable identity
 
 The owning storage contract selects one immutable issue-owned destination for
