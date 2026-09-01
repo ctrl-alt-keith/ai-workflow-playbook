@@ -66,18 +66,11 @@ class CodexAdapterTests(unittest.TestCase):
         ):
             self.assertIn(phrase, self.contents)
 
-    def test_github_hydration_uses_gh_api_only_for_capability_gaps(self):
-        for phrase in (
-            "GitHub hydration and ordinary source-first retrieval",
-            "`gh api` as a direct-service-API fallback",
-            "REST endpoint is flexible or familiar",
-            "available GitHub connector",
-            "narrowest high-level `gh` command",
-            "`gh api` read-only and scoped to the required state",
-            "does not create a human approval gate",
-            "narrowest available way to retrieve authoritative state",
-        ):
-            self.assertIn(phrase, self.contents)
+    def test_github_command_selection_inherits_the_shared_rule(self):
+        self.assertIn(
+            "repo-readiness.md#command-form-and-intent-visibility", self.contents
+        )
+        self.assertNotIn("`gh api`", self.contents)
 
     def test_pr_evidence_requires_current_connector_backed_state(self):
         for phrase in (

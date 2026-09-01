@@ -353,21 +353,8 @@ Before repo-scoped work:
 - Apply the runtime verification rule in
   [`start-here.md`](../start-here.md#connector-availability-is-runtime-evidence);
   do not infer that a connector capability is absent because its tool has not
-  been loaded or inspected. Before falling back to a direct service API or
-  authenticated CLI for remote service state, determine whether the connector
-  provides the required capability. Direct APIs and CLIs remain appropriate
-  for verified connector gaps, repository-local workflows, or explicit
-  repository policy.
-- For GitHub hydration and ordinary source-first retrieval, treat `gh api` as
-  a direct-service-API fallback rather than the default retrieval primitive.
-  Do not select it only because the REST endpoint is flexible or familiar. Use
-  an available GitHub connector when it provides the required source, or the
-  narrowest high-level `gh` command when that is the appropriate direct
-  repository CLI. If neither provides the required capability, keep `gh api`
-  read-only and scoped to the required state unless the current task separately
-  authorizes mutation. This avoids unnecessary approval friction; it does not
-  create a human approval gate or prohibit `gh api` when it is the narrowest
-  available way to retrieve authoritative state.
+  been loaded or inspected. Follow the shared GitHub command-selection rule in
+  [`repo-readiness.md`](../repo-readiness.md#command-form-and-intent-visibility).
 - For policy-sensitive changes, apply the repo-family alignment check in
   [`repo-readiness.md`](../repo-readiness.md#repo-family-policy-alignment)
   before implementation.
