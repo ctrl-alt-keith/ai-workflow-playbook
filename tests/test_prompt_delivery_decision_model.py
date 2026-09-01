@@ -103,6 +103,65 @@ class AppliedDelivery:
     diagnostics: tuple[str, ...] = ()
 
 
+@dataclass(frozen=True)
+class FrozenDeliveryDecisionRecord:
+    """Test-only materialization of the resolved stage 1 through 7 outputs."""
+
+    stage_outputs: tuple[tuple[str, object], ...]
+    record_revision: int = 0
+    supersedes_record_revision: int | None = None
+
+    def __post_init__(self):
+        if tuple(stage for stage, _ in self.stage_outputs) != STAGES[:7]:
+            raise ValueError(
+                "complete frozen decision record requires every ordered stage 1 "
+                "through 7 output"
+            )
+        if any(output is None for _, output in self.stage_outputs):
+            raise ValueError("complete frozen decision record has no missing output")
+        if self.record_revision < 0 or (
+            self.record_revision == 0
+            and self.supersedes_record_revision is not None
+        ) or (
+            self.record_revision > 0
+            and self.supersedes_record_revision != self.record_revision - 1
+        ):
+            raise ValueError("frozen decision record lineage is incomplete or mismatched")
+
+        decision = dict(self.stage_outputs)
+        classification = decision[STAGES[1]]
+        resolution = decision[STAGES[4]]
+        if not isinstance(resolution, CapabilityRouteResolution):
+            raise ValueError("complete frozen decision record requires stage 5 state")
+
+        if classification == "conceptual-fragment":
+            expected_presentation = "lightweight"
+        elif resolution.route == "qualified-file-route":
+            expected_presentation = "file-backed"
+        elif resolution.route in ("inline-route", "inline-fallback-permitted"):
+            expected_presentation = "inline"
+        else:
+            expected_presentation = "blocked"
+        expected_renderer = {
+            "lightweight": "lightweight",
+            "file-backed": "thin-handoff",
+            "inline": "canonical-inline-two-block",
+            "blocked": "none",
+        }[expected_presentation]
+        if decision[STAGES[5]] != expected_presentation:
+            raise ValueError(
+                "frozen decision record presentation mismatches stage 5 resolution"
+            )
+        if decision[STAGES[6]] != expected_renderer:
+            raise ValueError(
+                "frozen decision record renderer mismatches frozen presentation"
+            )
+
+    @property
+    def decision(self):
+        return dict(self.stage_outputs)
+
+
 def decision_tail(
     case,
     classification,
@@ -215,41 +274,60 @@ def decision_tail(
     )
 
 
-def apply_delivery(
-    frozen_trace,
+def freeze_delivery_decision(
+    trace,
     *,
-    presentation=None,
-    renderer=None,
-    outcome=None,
+    record_revision=0,
+    supersedes_record_revision=None,
 ):
-    """Apply the selected renderer without recomputing upstream semantics."""
+    """Materialize and validate one complete stage 1 through 7 record."""
 
-    decision = dict(frozen_trace)
+    if tuple(stage for stage, _ in trace) != STAGES:
+        raise ValueError("complete frozen decision record requires the ordered trace")
+    return FrozenDeliveryDecisionRecord(
+        stage_outputs=tuple(trace[:7]),
+        record_revision=record_revision,
+        supersedes_record_revision=supersedes_record_revision,
+    )
+
+
+def apply_delivery(frozen_record, *, current_record=None):
+    """Apply only the current complete frozen decision record."""
+
+    if not isinstance(frozen_record, FrozenDeliveryDecisionRecord):
+        raise ValueError(
+            "complete frozen decision record is required before delivery application"
+        )
+    if not isinstance(current_record, FrozenDeliveryDecisionRecord):
+        raise ValueError(
+            "current complete frozen decision record is required before application"
+        )
+    if frozen_record != current_record:
+        raise ValueError("stale or superseded decision record cannot be consumed")
+
+    decision = frozen_record.decision
     route_resolution = decision[STAGES[4]]
-    selected = (
-        decision[STAGES[5]],
-        decision[STAGES[6]],
-        decision[STAGES[7]],
-    )
-    requested = (
-        selected[0] if presentation is None else presentation,
-        selected[1] if renderer is None else renderer,
-        selected[2] if outcome is None else outcome,
-    )
-    if requested != selected:
-        raise ValueError("application cannot replace the frozen delivery selection")
+    presentation = decision[STAGES[5]]
+    renderer = decision[STAGES[6]]
+    outcome = {
+        "lightweight": "lightweight-response",
+        "file-backed": "dropbox-backed-thin-handoff",
+        "inline": "inline-complete-prompt",
+        "blocked": "blocked-no-renderer",
+    }[presentation]
 
     return AppliedDelivery(
-        presentation=selected[0],
-        renderer=selected[1],
-        outcome=selected[2],
+        presentation=presentation,
+        renderer=renderer,
+        outcome=outcome,
         diagnostics=route_resolution.diagnostics,
     )
 
 
 def evaluate_and_apply(case):
     trace = decision_trace(case)
-    return trace, apply_delivery(trace)
+    record = freeze_delivery_decision(trace)
+    return trace, apply_delivery(record, current_record=record)
 
 
 def decision_trace(case):
@@ -281,15 +359,21 @@ def decision_trace(case):
 
 def reroute_after_capability_failure(
     case,
-    original_trace,
+    original_record,
     route_disqualification,
+    *,
+    current_record,
     **changes,
 ):
     """Re-evaluate only transport and downstream stages after route failure."""
 
+    if not isinstance(original_record, FrozenDeliveryDecisionRecord):
+        raise ValueError("capability re-entry requires a complete frozen decision record")
+    if original_record != current_record:
+        raise ValueError("stale or superseded decision record cannot restart re-entry")
     if route_disqualification is None:
         raise ValueError("capability re-entry requires owning route disqualification")
-    original_resolution = dict(original_trace)[STAGES[4]]
+    original_resolution = original_record.decision[STAGES[4]]
     if (
         original_resolution.route != route_disqualification.route
         or original_resolution.route_id != route_disqualification.route_id
@@ -304,10 +388,10 @@ def reroute_after_capability_failure(
             "capability re-entry case must match the current frozen route identity"
         )
     updated = replace(case, initial_route_disqualification=None, **changes)
-    classification = dict(original_trace)[STAGES[1]]
+    classification = original_record.decision[STAGES[1]]
     terminal_failure = original_resolution.capability_reentry_count >= 1
-    return (
-        *original_trace[:4],
+    trace = (
+        *original_record.stage_outputs[:4],
         *decision_tail(
             updated,
             classification,
@@ -315,6 +399,11 @@ def reroute_after_capability_failure(
             terminal_failure=terminal_failure,
             capability_reentry_count=1,
         ),
+    )
+    return freeze_delivery_decision(
+        trace,
+        record_revision=original_record.record_revision + 1,
+        supersedes_record_revision=original_record.record_revision,
     )
 
 
@@ -424,7 +513,31 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             normalized_section,
         )
         self.assertIn(
-            "Every later application failure consumes the current stage 5 record",
+            "Every later application failure consumes only that current record",
+            normalized_section,
+        )
+        self.assertIn(
+            "stages 5 through 7 must be materially realized as one complete frozen "
+            "decision record",
+            normalized_section,
+        )
+        self.assertIn(
+            "must not accept loose stage fields or reconstruct them from task prose, "
+            "diagnostics, rationale, or conversational context",
+            normalized_section,
+        )
+        self.assertIn(
+            "An absent, incomplete, stale, mismatched, or superseded record fails "
+            "closed with no complete-prompt renderer",
+            normalized_section,
+        )
+        self.assertIn(
+            "A caller cannot bypass the record and request a complete-prompt renderer "
+            "directly",
+            normalized_section,
+        )
+        self.assertIn(
+            "A stale or superseded record cannot restart application or bounded re-entry",
             normalized_section,
         )
         for mapping in (
@@ -507,22 +620,28 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             [output for _, output in trace],
         )
 
-        human = dict(
-            decision_trace(
-                replace(
-                    base,
-                    execution_recipient="human",
-                    recipient_class="human",
-                    qualified_file_capability=False,
-                    permitted_file_destination=False,
-                )
+        human_trace = decision_trace(
+            replace(
+                base,
+                execution_recipient="human",
+                recipient_class="human",
+                qualified_file_capability=False,
+                permitted_file_destination=False,
             )
         )
+        human = dict(human_trace)
         self.assertEqual(
             human["capability-and-transport-resolution"].route,
             "inline-route",
         )
         self.assertEqual(human["renderer-selection"], "canonical-inline-two-block")
+        human_record = freeze_delivery_decision(human_trace)
+        human_applied = apply_delivery(
+            human_record,
+            current_record=human_record,
+        )
+        self.assertEqual(human_applied.presentation, "inline")
+        self.assertEqual(human_applied.renderer, "canonical-inline-two-block")
 
     def test_conceptual_human_fragment_remains_lightweight(self):
         case = DeliveryCase(
@@ -627,7 +746,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             permitted_file_destination=True,
             qualified_file_route_id="dropbox:primary",
         )
-        initial = decision_trace(case)
+        initial = freeze_delivery_decision(decision_trace(case))
         fallback = reroute_after_capability_failure(
             case,
             initial,
@@ -636,12 +755,13 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 route_id="dropbox:primary",
                 reason="selected Dropbox write was rejected by its owning contract",
             ),
+            current_record=initial,
             qualified_file_capability=False,
             permitted_file_destination=False,
             inline_fallback_permitted=True,
         )
-        self.assertEqual(fallback[:4], initial[:4])
-        fallback_resolution = dict(fallback)[
+        self.assertEqual(fallback.stage_outputs[:4], initial.stage_outputs[:4])
+        fallback_resolution = fallback.decision[
             "capability-and-transport-resolution"
         ]
         self.assertEqual(fallback_resolution.qualification, "route-disqualified")
@@ -651,7 +771,10 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             fallback_resolution.current_route_disqualification.reason,
             "selected Dropbox write was rejected by its owning contract",
         )
-        self.assertEqual(dict(fallback)["renderer-selection"], "canonical-inline-two-block")
+        self.assertEqual(
+            fallback.decision["renderer-selection"],
+            "canonical-inline-two-block",
+        )
 
         unresolved = reroute_after_capability_failure(
             case,
@@ -661,11 +784,12 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 route_id="dropbox:primary",
                 reason="selected Dropbox route failed during application",
             ),
+            current_record=initial,
             capability_resolved=False,
             qualified_file_capability=False,
             permitted_file_destination=False,
         )
-        unresolved_resolution = dict(unresolved)[
+        unresolved_resolution = unresolved.decision[
             "capability-and-transport-resolution"
         ]
         self.assertEqual(unresolved_resolution.qualification, "unresolved")
@@ -674,7 +798,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             unresolved_resolution.prior_route_disqualification.reason,
             "selected Dropbox route failed during application",
         )
-        self.assertEqual(dict(unresolved)["presentation-selection"], "blocked")
+        self.assertEqual(unresolved.decision["presentation-selection"], "blocked")
 
         same_route = reroute_after_capability_failure(
             case,
@@ -684,11 +808,12 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 route_id="dropbox:primary",
                 reason="selected Dropbox destination became unavailable",
             ),
+            current_record=initial,
             qualified_file_capability=True,
             permitted_file_destination=True,
             qualified_file_route_id="dropbox:primary",
         )
-        same_route_resolution = dict(same_route)[
+        same_route_resolution = same_route.decision[
             "capability-and-transport-resolution"
         ]
         self.assertEqual(same_route_resolution.route, "blocked")
@@ -696,7 +821,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             same_route_resolution.current_route_disqualification.route_id,
             "dropbox:primary",
         )
-        self.assertEqual(dict(same_route)["presentation-selection"], "blocked")
+        self.assertEqual(same_route.decision["presentation-selection"], "blocked")
 
         alternate = reroute_after_capability_failure(
             case,
@@ -706,14 +831,15 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 route_id="dropbox:primary",
                 reason="selected Dropbox destination became unavailable",
             ),
+            current_record=initial,
             qualified_file_capability=True,
             permitted_file_destination=True,
             qualified_file_route_id="dropbox:alternate",
         )
-        alternate_resolution = dict(alternate)[
+        alternate_resolution = alternate.decision[
             "capability-and-transport-resolution"
         ]
-        self.assertEqual(alternate[:4], initial[:4])
+        self.assertEqual(alternate.stage_outputs[:4], initial.stage_outputs[:4])
         self.assertEqual(alternate_resolution.route, "qualified-file-route")
         self.assertEqual(alternate_resolution.route_id, "dropbox:alternate")
         self.assertEqual(alternate_resolution.qualification, "qualified")
@@ -723,7 +849,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             alternate_resolution.prior_route_disqualification.route_id,
             "dropbox:primary",
         )
-        self.assertEqual(dict(alternate)["renderer-selection"], "thin-handoff")
+        self.assertEqual(alternate.decision["renderer-selection"], "thin-handoff")
 
         alternate_case = replace(
             case,
@@ -739,18 +865,23 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 case,
                 alternate,
                 second_disqualification,
+                current_record=alternate,
             )
 
         second_failure = reroute_after_capability_failure(
             alternate_case,
             alternate,
             second_disqualification,
+            current_record=alternate,
             qualified_file_capability=False,
             permitted_file_destination=False,
             inline_fallback_permitted=True,
         )
-        self.assertEqual(second_failure[:4], initial[:4])
-        second_resolution = dict(second_failure)[
+        self.assertEqual(
+            second_failure.stage_outputs[:4],
+            initial.stage_outputs[:4],
+        )
+        second_resolution = second_failure.decision[
             "capability-and-transport-resolution"
         ]
         self.assertEqual(second_resolution.qualification, "route-disqualified")
@@ -760,8 +891,8 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             second_resolution.current_route_disqualification.reason,
             "re-evaluated file route also failed",
         )
-        self.assertEqual(dict(second_failure)["presentation-selection"], "blocked")
-        self.assertEqual(dict(second_failure)["renderer-selection"], "none")
+        self.assertEqual(second_failure.decision["presentation-selection"], "blocked")
+        self.assertEqual(second_failure.decision["renderer-selection"], "none")
 
     def test_capability_reentry_requires_explicit_route_disqualification(self):
         with self.assertRaisesRegex(
@@ -805,13 +936,14 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             permitted_file_destination=True,
             qualified_file_route_id="dropbox:primary",
         )
-        initial = decision_trace(case)
+        initial = freeze_delivery_decision(decision_trace(case))
 
         with self.assertRaisesRegex(ValueError, "owning route disqualification"):
             reroute_after_capability_failure(
                 case,
                 initial,
                 None,
+                current_record=initial,
                 qualified_file_capability=False,
                 permitted_file_destination=False,
                 inline_fallback_permitted=True,
@@ -824,14 +956,18 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             qualified_file_route_id=None,
         )
         with self.assertRaisesRegex(ValueError, "previously selected qualified route"):
+            never_qualified_record = freeze_delivery_decision(
+                decision_trace(never_qualified)
+            )
             reroute_after_capability_failure(
                 never_qualified,
-                decision_trace(never_qualified),
+                never_qualified_record,
                 owned_current_route_disqualification(
                     route="qualified-file-route",
                     route_id="dropbox:primary",
                     reason="caller asserted a failure without a selected route",
                 ),
+                current_record=never_qualified_record,
                 inline_fallback_permitted=True,
             )
 
@@ -869,13 +1005,99 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         self.assertEqual(applied.outcome, "dropbox-backed-thin-handoff")
         self.assertEqual(applied.diagnostics, resolution.diagnostics)
 
-        with self.assertRaisesRegex(ValueError, "frozen delivery selection"):
+        record = freeze_delivery_decision(trace)
+        with self.assertRaisesRegex(ValueError, "complete frozen decision record"):
             apply_delivery(
-                trace,
-                presentation="inline",
-                renderer="canonical-inline-two-block",
-                outcome="inline-complete-prompt",
+                "canonical-inline-two-block",
+                current_record=record,
             )
+
+    def test_narrative_direct_render_without_frozen_record_fails_closed(self):
+        narrative_inline_substitution = (
+            (
+                "capability-and-transport-resolution",
+                CapabilityRouteResolution(
+                    route="qualified-file-route",
+                    qualification="qualified-with-known-limitation",
+                    route_id="dropbox:primary",
+                    diagnostics=(
+                        "controller post-write raw-byte SHA verification unavailable",
+                    ),
+                ),
+            ),
+            ("presentation-selection", "inline"),
+            ("renderer-selection", "canonical-inline-two-block"),
+            ("delivery-outcome", "inline-complete-prompt"),
+        )
+
+        with self.assertRaisesRegex(ValueError, "complete frozen decision record"):
+            apply_delivery(narrative_inline_substitution, current_record=None)
+
+    def test_missing_incomplete_or_mismatched_record_fails_closed(self):
+        case = DeliveryCase(
+            produces_prompt=True,
+            complete_executable=True,
+            operator_viewer="human-operator",
+            execution_recipient="Codex",
+            recipient_class="machine-executor",
+            qualified_file_capability=True,
+            permitted_file_destination=True,
+            qualified_file_route_id="dropbox:primary",
+        )
+        trace = decision_trace(case)
+        record = freeze_delivery_decision(trace)
+
+        with self.assertRaisesRegex(ValueError, "complete frozen decision record"):
+            apply_delivery(None, current_record=record)
+        with self.assertRaisesRegex(ValueError, "every ordered stage 1 through 7"):
+            FrozenDeliveryDecisionRecord(stage_outputs=record.stage_outputs[:-1])
+
+        mismatched_outputs = tuple(
+            (stage, "inline") if stage == "presentation-selection" else (stage, output)
+            for stage, output in record.stage_outputs
+        )
+        with self.assertRaisesRegex(ValueError, "presentation mismatches stage 5"):
+            FrozenDeliveryDecisionRecord(stage_outputs=mismatched_outputs)
+
+    def test_superseded_record_cannot_restart_application_or_reentry(self):
+        case = DeliveryCase(
+            produces_prompt=True,
+            complete_executable=True,
+            operator_viewer="human-operator",
+            execution_recipient="Codex",
+            recipient_class="machine-executor",
+            qualified_file_capability=True,
+            permitted_file_destination=True,
+            qualified_file_route_id="dropbox:primary",
+        )
+        initial = freeze_delivery_decision(decision_trace(case))
+        disqualification = owned_current_route_disqualification(
+            route="qualified-file-route",
+            route_id="dropbox:primary",
+            reason="selected Dropbox destination became unavailable",
+        )
+        current = reroute_after_capability_failure(
+            case,
+            initial,
+            disqualification,
+            current_record=initial,
+            qualified_file_route_id="dropbox:alternate",
+        )
+
+        with self.assertRaisesRegex(ValueError, "stale or superseded"):
+            apply_delivery(initial, current_record=current)
+        with self.assertRaisesRegex(ValueError, "stale or superseded"):
+            reroute_after_capability_failure(
+                case,
+                initial,
+                disqualification,
+                current_record=current,
+                qualified_file_capability=False,
+                permitted_file_destination=False,
+            )
+        applied = apply_delivery(current, current_record=current)
+        self.assertEqual(applied.presentation, "file-backed")
+        self.assertEqual(applied.renderer, "thin-handoff")
 
     def test_task_target_capability_cannot_disqualify_current_file_route(self):
         case = DeliveryCase(
@@ -906,6 +1128,23 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         self.assertEqual(applied.renderer, "thin-handoff")
         self.assertEqual(applied.outcome, "dropbox-backed-thin-handoff")
         self.assertEqual(resolution.diagnostics, case.known_route_limitations)
+
+        without_target = replace(case, delegated_task_target_capabilities=())
+        frozen_without_target = freeze_delivery_decision(
+            decision_trace(without_target)
+        )
+        frozen_with_target = freeze_delivery_decision(trace)
+        self.assertEqual(
+            frozen_with_target.stage_outputs,
+            frozen_without_target.stage_outputs,
+        )
+        self.assertEqual(
+            apply_delivery(
+                frozen_without_target,
+                current_record=frozen_without_target,
+            ).renderer,
+            "thin-handoff",
+        )
 
         with self.assertRaisesRegex(
             ValueError,

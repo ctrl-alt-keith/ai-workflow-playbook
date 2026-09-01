@@ -383,7 +383,15 @@ ChatGPT must not reclassify the produced artifact, replace the execution
 recipient with the operator or viewer, or reconsider transport from request
 wording or diagnostic limitations during rendering. The final application
 executes the selected file-backed, inline, lightweight, or blocked action from
-that record; it cannot select another renderer. Keep genuinely conceptual
+that record; it cannot select another renderer. Before any complete-prompt
+renderer or delivery application is eligible, ChatGPT must materially realize
+the complete current stage-5-through-7 state as one frozen decision record and
+pass that record as the only delivery-decision input. Loose route,
+qualification, presentation, or renderer fields; task prose; diagnostics;
+rationale; and conversational context are not application inputs. Missing,
+incomplete, stale, mismatched, or superseded records select no complete-prompt
+renderer and fail closed. This explicit state boundary need not be displayed,
+persisted, or implemented as a second workflow engine. Keep genuinely conceptual
 fragments and incomplete snippets lightweight through the model's
 `lightweight` renderer.
 
@@ -407,6 +415,12 @@ shared naming placeholder to nothing. This adapter does not ask ChatGPT to
 rename itself or report a naming limitation. A downstream visible name may be
 selected only when the downstream target executor adapter explicitly supports
 executor-applied naming.
+
+Bounded route re-evaluation must complete stages 5 through 7 again, freeze one
+new current record, and supersede the prior record before application resumes.
+Neither application nor bounded re-entry may consume the stale or superseded
+record. A `file-backed` record therefore cannot reach the inline renderer, while
+a legitimate `inline` record still reaches the canonical two-block surface.
 
 Do not nest Markdown code fences inside the executable block; represent any
 embedded example with indentation or plain text. Optimize this client rendering

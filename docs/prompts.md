@@ -413,6 +413,18 @@ consume an earlier output, but it must not re-read conversational wording to
 replace that output or infer a different artifact, viewer, recipient, or
 transport. Rendering begins only after presentation has been selected.
 
+For a complete prompt, stages 5 through 7 must be materially realized as one
+complete frozen decision record before any complete-prompt renderer or delivery
+application is eligible. The record contains the resolved route and
+qualification state, exact route identity when applicable, diagnostics and
+re-entry state, presentation, and renderer. Renderer and application entry
+points consume that record as their only delivery-decision input; they must not
+accept loose stage fields or reconstruct them from task prose, diagnostics,
+rationale, or conversational context. An absent, incomplete, stale, mismatched,
+or superseded record fails closed with no complete-prompt renderer. Material
+realization is a semantic state boundary: it does not require a durable
+artifact, provider-visible object, UI disclosure, or a second workflow engine.
+
 The decision record keeps the human operator or viewer separate from the
 executable prompt's execution recipient. The operator or viewer receives
 metadata, a file surface, or a handoff; the execution recipient consumes the
@@ -429,7 +441,7 @@ recipient of a prompt that is semantically directed to a machine executor.
 | 5 | `capability-and-transport-resolution` | Frozen recipient identity; a current route-qualification evidence record that binds the current runtime route observation, route class and exact identity, and current owning qualification contract; authority; and permitted destination | Route selection and exact identity when applicable: `qualified-file-route`, `inline-route`, `inline-fallback-permitted`, or `blocked`; separate qualification: `qualified`, `qualified-with-known-limitation`, `route-disqualified`, or `unresolved`; non-disqualifying diagnostics; current or prior owning-contract route-disqualification records; and whether bounded re-evaluation was consumed | Inspect or attempt unknown capability; retain known limitations without treating them as route-disqualifying unless the owning contract says they are. Never invent a destination or weaken an exact-byte contract. |
 | 6 | `presentation-selection` | Frozen artifact class, recipient class, and route resolution | `lightweight`, `file-backed`, `inline`, or `blocked` | Qualified machine execution selects file-backed delivery; operator visibility cannot override it. |
 | 7 | `renderer-selection` | Frozen presentation selection | `lightweight`, `thin-handoff`, `canonical-inline-two-block`, or `none` | Inline rendering is reachable only from `inline`; a renderer cannot change upstream state. |
-| 8 | `delivery-outcome` | Complete decision record and selected renderer result | Executed selected delivery action plus its evidence, or explicit fallback or blocked result | Apply the frozen presentation and renderer selection. Emit only the selected surface and preserve the owning failure contract. |
+| 8 | `delivery-outcome` | Current complete frozen stage-5-through-7 decision record and selected renderer result | Executed selected delivery action plus its evidence, or explicit fallback or blocked result | Apply only the record's presentation and renderer selection. Emit only the selected surface and preserve the owning failure contract. |
 
 Stage 5 has a closed evidence-provenance boundary. Its qualification evidence
 record accepts only observations about the current runtime route, classified
@@ -501,12 +513,15 @@ Apply these terminal mappings deterministically:
   the bounded re-evaluation sequence below; its resulting stage 5 state drives
   this terminal mapping.
 
-The final delivery application consumes the frozen stage 5 through 7 outputs
-and executes the selected action. For `file-backed`, it invokes the selected
-file route and returns the thin handoff. It must not inspect diagnostic state
-to substitute the canonical inline renderer. For `inline`, it invokes only the
-canonical inline renderer. Application failure may enter the bounded
-re-evaluation rule below, but application itself cannot recompute transport.
+The final delivery application consumes the current complete frozen decision
+record and executes the selected action. A caller cannot bypass the record and
+request a complete-prompt renderer directly. For `file-backed`, the record
+makes inline rendering unreachable: application invokes the selected file
+route and returns the thin handoff. It must not inspect diagnostic state to
+substitute the canonical inline renderer. For `inline`, it invokes only the
+canonical inline renderer recorded through the legitimate inline decision.
+Application failure may enter the bounded re-evaluation rule below, but
+application itself cannot recompute transport.
 
 The once-per-stage rule applies within one evaluation. If a selected route
 becomes explicitly `route-disqualified` before delivery completes, the same
@@ -530,8 +545,12 @@ route also fails, terminate as `blocked` with that newly observed
 as merely `unresolved`, or recompute the artifact, viewer, or execution
 recipient. If capability instead remains unresolved, retain the prior failure
 reason as evidence while the new stage 5 qualification remains `unresolved`.
-Every later application failure consumes the current stage 5 record. Replaying
-a superseded pre-re-evaluation record is not another valid delivery transition.
+After downstream re-evaluation resolves stages 5 through 7, materialize a new
+complete frozen decision record before application continues and supersede the
+prior record. Every later application failure consumes only that current
+record. A stale or superseded record cannot restart application or bounded
+re-entry, and replaying a superseded pre-re-evaluation record is not another
+valid delivery transition.
 
 Conversational wording is evidence available to the production,
 classification, and recipient-resolution stages. It is not a lookup table and
