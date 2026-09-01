@@ -1,4 +1,5 @@
 from dataclasses import dataclass, replace
+from enum import Enum
 from pathlib import Path
 import unittest
 
@@ -38,7 +39,13 @@ class DeliveryCase:
     qualified_file_route_id: str | None = None
     inline_fallback_permitted: bool = False
     known_route_limitations: tuple[str, ...] = ()
+    delegated_task_target_capabilities: tuple[str, ...] = ()
     initial_route_disqualification: "RouteDisqualification | None" = None
+
+
+class QualificationEvidenceSource(str, Enum):
+    CURRENT_RUNTIME_ROUTE = "current-runtime-route-observation"
+    DELEGATED_TASK_TARGET = "delegated-task-target"
 
 
 @dataclass(frozen=True)
@@ -46,17 +53,35 @@ class RouteDisqualification:
     route: str
     route_id: str
     reason: str
+    evidence_source: QualificationEvidenceSource
+    owning_contract: str
 
     def __post_init__(self):
         if (
             self.route != "qualified-file-route"
             or not self.route_id
             or not self.reason
+            or not self.owning_contract
         ):
             raise ValueError(
                 "route disqualification requires a qualified file route, "
-                "route identity, and reason"
+                "route identity, and reason, plus an owning qualification contract"
             )
+        if self.evidence_source is not QualificationEvidenceSource.CURRENT_RUNTIME_ROUTE:
+            raise ValueError(
+                "route disqualification requires current runtime route evidence; "
+                "delegated task target state is excluded from stage 5 qualification"
+            )
+
+
+def owned_current_route_disqualification(*, route, route_id, reason):
+    return RouteDisqualification(
+        route=route,
+        route_id=route_id,
+        reason=reason,
+        evidence_source=QualificationEvidenceSource.CURRENT_RUNTIME_ROUTE,
+        owning_contract="test-current-route-qualification-contract",
+    )
 
 
 @dataclass(frozen=True)
@@ -344,6 +369,25 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             normalized_section,
         )
         self.assertIn(
+            "Stage 5 has a closed evidence-provenance boundary",
+            normalized_section,
+        )
+        self.assertIn(
+            "accepts only observations about the current runtime route, classified "
+            "by the current owning route-qualification contract",
+            normalized_section,
+        )
+        self.assertIn(
+            "desired future capability, implementation intent, prompt body, or "
+            "explanatory rationale is not current-route evidence",
+            normalized_section,
+        )
+        self.assertIn(
+            "Only that owning-contract classification may create route "
+            "disqualification",
+            normalized_section,
+        )
+        self.assertIn(
             "Route selection and exact identity when applicable: "
             "`qualified-file-route`, `inline-route`, "
             "`inline-fallback-permitted`, or `blocked`; separate qualification:",
@@ -450,6 +494,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 "qualified_file_route_id",
                 "inline_fallback_permitted",
                 "known_route_limitations",
+                "delegated_task_target_capabilities",
                 "initial_route_disqualification",
             },
         )
@@ -586,7 +631,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         fallback = reroute_after_capability_failure(
             case,
             initial,
-            RouteDisqualification(
+            owned_current_route_disqualification(
                 route="qualified-file-route",
                 route_id="dropbox:primary",
                 reason="selected Dropbox write was rejected by its owning contract",
@@ -611,7 +656,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         unresolved = reroute_after_capability_failure(
             case,
             initial,
-            RouteDisqualification(
+            owned_current_route_disqualification(
                 route="qualified-file-route",
                 route_id="dropbox:primary",
                 reason="selected Dropbox route failed during application",
@@ -634,7 +679,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         same_route = reroute_after_capability_failure(
             case,
             initial,
-            RouteDisqualification(
+            owned_current_route_disqualification(
                 route="qualified-file-route",
                 route_id="dropbox:primary",
                 reason="selected Dropbox destination became unavailable",
@@ -656,7 +701,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         alternate = reroute_after_capability_failure(
             case,
             initial,
-            RouteDisqualification(
+            owned_current_route_disqualification(
                 route="qualified-file-route",
                 route_id="dropbox:primary",
                 reason="selected Dropbox destination became unavailable",
@@ -684,7 +729,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             case,
             qualified_file_route_id="dropbox:alternate",
         )
-        second_disqualification = RouteDisqualification(
+        second_disqualification = owned_current_route_disqualification(
             route="qualified-file-route",
             route_id="dropbox:alternate",
             reason="re-evaluated file route also failed",
@@ -727,6 +772,8 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 route="qualified-file-route",
                 route_id="dropbox:primary",
                 reason="",
+                evidence_source=QualificationEvidenceSource.CURRENT_RUNTIME_ROUTE,
+                owning_contract="test-current-route-qualification-contract",
             )
         with self.assertRaisesRegex(
             ValueError,
@@ -736,6 +783,8 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 route="qualified-file-route",
                 route_id="",
                 reason="owning contract rejected the route",
+                evidence_source=QualificationEvidenceSource.CURRENT_RUNTIME_ROUTE,
+                owning_contract="test-current-route-qualification-contract",
             )
 
         case = DeliveryCase(
@@ -770,7 +819,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             reroute_after_capability_failure(
                 never_qualified,
                 decision_trace(never_qualified),
-                RouteDisqualification(
+                owned_current_route_disqualification(
                     route="qualified-file-route",
                     route_id="dropbox:primary",
                     reason="caller asserted a failure without a selected route",
@@ -820,6 +869,47 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 outcome="inline-complete-prompt",
             )
 
+    def test_task_target_capability_cannot_disqualify_current_file_route(self):
+        case = DeliveryCase(
+            produces_prompt=True,
+            complete_executable=True,
+            operator_viewer="human-operator",
+            execution_recipient="Codex",
+            recipient_class="machine-executor",
+            qualified_file_capability=True,
+            permitted_file_destination=True,
+            qualified_file_route_id="dropbox:primary",
+            known_route_limitations=(
+                "controller post-write raw-byte SHA verification unavailable",
+            ),
+            delegated_task_target_capabilities=(
+                "stronger controller-side exact-byte verification",
+            ),
+        )
+
+        trace, applied = evaluate_and_apply(case)
+        resolution = dict(trace)["capability-and-transport-resolution"]
+        self.assertEqual(resolution.route, "qualified-file-route")
+        self.assertEqual(
+            resolution.qualification,
+            "qualified-with-known-limitation",
+        )
+        self.assertEqual(applied.presentation, "file-backed")
+        self.assertEqual(applied.renderer, "thin-handoff")
+        self.assertEqual(applied.outcome, "dropbox-backed-thin-handoff")
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "delegated task target state is excluded from stage 5 qualification",
+        ):
+            RouteDisqualification(
+                route="qualified-file-route",
+                route_id="dropbox:primary",
+                reason="task target requests a stronger capability",
+                evidence_source=QualificationEvidenceSource.DELEGATED_TASK_TARGET,
+                owning_contract="test-current-route-qualification-contract",
+            )
+
     def test_route_disqualifying_failure_uses_owned_fallback_or_block(self):
         base = DeliveryCase(
             produces_prompt=True,
@@ -827,7 +917,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             operator_viewer="human-operator",
             execution_recipient="Codex",
             recipient_class="machine-executor",
-            initial_route_disqualification=RouteDisqualification(
+            initial_route_disqualification=owned_current_route_disqualification(
                 route="qualified-file-route",
                 route_id="dropbox:candidate",
                 reason="owning contract rejected the candidate Dropbox route",
