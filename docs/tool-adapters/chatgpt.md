@@ -186,27 +186,38 @@ establish a universal per-action client-rendering suppression control.
 
 ### Recipient-Capability Prompt Presentation
 
-Apply the shared
-[`cross-executor prompt presentation`](../prompts.md#cross-executor-prompt-presentation)
-selector. For a machine recipient with qualified Dropbox retrieval and a
-permitted destination, use the authorized file route, present the card produced
-by the write when available, and immediately provide the target-shaped handoff.
-A separate preview or open action remains optional under the connected-app
-rules above. Do not wait for prompt approval or require the operator to open a
-preview; connector confirmation authorizes only its file operation. File-card
-and preview behavior is product-dependent runtime evidence, so recheck the
-relevant action.
+Apply the complete shared
+[`prompt delivery decision model`](../prompts.md#prompt-delivery-decision-model),
+with the transport rules in
+[`cross-executor prompt presentation`](../prompts.md#cross-executor-prompt-presentation).
+Record the human operator or viewer and the executable prompt's execution
+recipient as independent stage outputs before inspecting capability. The fact
+that the operator asks to receive, view, or be given a handoff is evidence
+about the operator-facing surface; it does not replace a resolved Codex,
+Claude, Work, or other machine execution recipient with the human viewer.
 
-For a human recipient or a system without a qualified Dropbox route, use the
-existing [two-block inline presentation](#prompt-presentation). If access is
-unknown, inspect or attempt it before falling back. Material prompts also apply
+For a machine execution recipient with qualified Dropbox retrieval and a
+permitted destination, the model selects `file-backed` presentation. Use the
+authorized file route, present the card produced by the write when available,
+and immediately provide the target-shaped handoff. A separate preview or open
+action remains optional under the connected-app rules above. Do not wait for
+prompt approval or require the operator to open a preview; connector
+confirmation authorizes only its file operation. File-card and preview behavior
+is product-dependent runtime evidence, so recheck the relevant action.
+
+For a human execution recipient, or a machine execution recipient whose
+inspected capability state permits inline fallback, the model selects `inline`
+presentation and the existing
+[two-block inline renderer](#prompt-presentation). If access is unknown,
+inspect or attempt it before resolving the route. Material prompts also apply
 the durable profile below; routine prompts do not inherit it from transport.
 
 Owner retrieval and output conformance remain separate checks. If a selected
 Dropbox or file route becomes blocked before a qualified prompt handoff is
-complete, re-run the recipient-capability selector against the observed state.
-When it permits inline presentation, preserve the two-block complete-prompt
-shape and report the blocked delivery limitation outside the copyable blocks.
+complete, apply the canonical decision model's bounded capability
+re-evaluation rule. When the owning contract permits inline fallback, preserve
+the two-block complete-prompt shape and report the blocked delivery limitation
+outside the copyable blocks.
 When the governing exact-byte or durable contract prohibits that fallback,
 preserve the target-shaped handoff with an explicit blocked state and stop. Do
 not degrade the required prompt or handoff into unconstrained status prose
@@ -336,32 +347,29 @@ the applicable prompt and downstream-context contract.
 
 ### Prompt presentation
 
-Before choosing presentation, classify the artifact ChatGPT is about to
-produce under the shared
-[produced-artifact classification](../prompts.md#produced-artifact-classification)
-rule. Request framing such as `example`, `sample`, `roughly`, `formatting`,
-`preview`, or `demo` does not bypass complete-prompt handling when the produced
-artifact is complete or substantially executable for its downstream recipient.
-Keep genuinely conceptual fragments and incomplete snippets lightweight.
+Consume the frozen stage outputs from the shared
+[prompt delivery decision model](../prompts.md#prompt-delivery-decision-model).
+ChatGPT must not reclassify the produced artifact, replace the execution
+recipient with the operator or viewer, or reconsider transport from request
+wording during rendering. Keep genuinely conceptual fragments and incomplete
+snippets lightweight through the model's `lightweight` renderer.
 
-After that classification, before rendering a complete, copy-ready prompt or downstream handoff inline, apply the shared
-[recipient-capability selector](../prompts.md#cross-executor-prompt-presentation).
-Do not begin either inline block until that selector has established the
-recipient's qualified Dropbox route and permitted destination, or has inspected
-or attempted an unknown capability and selected the inline fallback. When the
-shared recipient-capability selector chooses inline presentation for a complete,
-copy-ready prompt or downstream handoff,
-present the shared operator-metadata block followed immediately by the complete
+Do not begin either inline block unless `presentation-selection` produced
+`inline` and `renderer-selection` produced `canonical-inline-two-block`.
+`file-backed` uses only the thin-handoff renderer, and `blocked` uses no
+complete-prompt renderer. When the model legitimately selects inline
+presentation for a complete, copy-ready prompt or downstream handoff, present
+the shared operator-metadata block followed immediately by the complete
 executable block as consecutive copyable code blocks, with no intervening
 prose. The shared canonical renderer controls the entire response surface:
 emit no assistant-authored material before, between, or after the two blocks.
 Do not add a copy instruction, navigation breadcrumb, Markdown separator,
 prose label, or line-continuation escaping artifact. Keep the executable block
 complete without metadata so the operator can copy only that block. This rule
-applies only after the shared selector has legitimately selected inline
-presentation; it does not change recipient-capability selection, Dropbox-backed
-routing, or the treatment of quoted prompts, source excerpts, incomplete
-fragments, and conceptual discussion. ChatGPT-targeted prompts resolve the
+applies only after the shared model has selected inline presentation; it does
+not change classification, recipient, capability, Dropbox-backed routing, or
+the treatment of quoted prompts, source excerpts, incomplete fragments, and
+conceptual discussion. ChatGPT-targeted prompts resolve the
 shared naming placeholder to nothing. This adapter does not ask ChatGPT to
 rename itself or report a naming limitation. A downstream visible name may be
 selected only when the downstream target executor adapter explicitly supports

@@ -443,13 +443,13 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
             normalized_readiness,
         )
         self.assertIn(
-            "The [recipient-capability selector](#cross-executor-prompt-presentation) "
+            "The [prompt delivery decision model](#prompt-delivery-decision-model) "
             "applies to every complete prompt",
             normalized_prompts,
         )
         self.assertIn(
-            "For any complete prompt, select presentation by the recipient's "
-            "currently qualified capability",
+            "For any complete prompt, select presentation by the execution "
+            "recipient's currently qualified capability and permitted destination",
             normalized_prompts,
         )
 

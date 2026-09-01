@@ -61,7 +61,7 @@ class ChatGPTAdapterTests(unittest.TestCase):
 
         for phrase in (
             "blocked before a qualified prompt handoff is complete",
-            "re-run the recipient-capability selector against the observed state",
+            "canonical decision model's bounded capability re-evaluation rule",
             "preserve the two-block complete-prompt shape",
             "Do not degrade the required prompt or handoff into unconstrained status prose",
         ):
@@ -218,34 +218,51 @@ class ChatGPTAdapterTests(unittest.TestCase):
         ):
             self.assertFalse(is_canonical_inline_response(malformed_rendering))
 
-    def test_cold_start_codex_prompt_selects_capability_before_inline_rendering(self):
+    def test_chatgpt_projects_frozen_delivery_model_before_inline_rendering(self):
         contents = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")
         prompt_presentation = " ".join(
             contents[contents.index("### Prompt presentation") :].split()
         )
+        recipient_start = contents.index(
+            "### Recipient-Capability Prompt Presentation"
+        )
+        recipient_end = contents.index(
+            "### Dropbox Preview And Minimal Executor Handoff"
+        )
+        recipient_projection = " ".join(
+            contents[recipient_start:recipient_end].split()
+        )
 
-        classification = prompt_presentation.index(
-            "Before choosing presentation, classify the artifact ChatGPT is about to produce"
+        frozen = prompt_presentation.index(
+            "Consume the frozen stage outputs from the shared"
         )
-        executable = prompt_presentation.index(
-            "does not bypass complete-prompt handling when the produced artifact is complete or substantially executable"
+        no_reclassification = prompt_presentation.index(
+            "must not reclassify the produced artifact"
         )
-        selector = prompt_presentation.index(
-            "After that classification, before rendering a complete, copy-ready prompt"
+        presentation = prompt_presentation.index(
+            "unless `presentation-selection` produced `inline`"
         )
-        capability = prompt_presentation.index(
-            "has inspected or attempted an unknown capability"
+        renderer = prompt_presentation.index(
+            "`renderer-selection` produced `canonical-inline-two-block`"
         )
-        inline = prompt_presentation.index("present the shared operator-metadata block")
+        inline = prompt_presentation.index(
+            "present the shared operator-metadata block"
+        )
 
-        self.assertLess(classification, executable)
-        self.assertLess(executable, selector)
-        self.assertLess(selector, capability)
-        self.assertLess(capability, inline)
+        self.assertLess(frozen, no_reclassification)
+        self.assertLess(no_reclassification, presentation)
+        self.assertLess(presentation, renderer)
+        self.assertLess(renderer, inline)
         self.assertIn(
-            "[recipient-capability selector](../prompts.md#cross-executor-prompt-presentation)",
+            "[prompt delivery decision model](../prompts.md#prompt-delivery-decision-model)",
             prompt_presentation,
         )
+        self.assertIn(
+            "operator or viewer and the executable prompt's execution recipient as independent stage outputs",
+            recipient_projection,
+        )
+        self.assertIn("before inspecting capability", recipient_projection)
+        self.assertIn("does not replace a resolved Codex", recipient_projection)
 
     def test_executable_examples_use_complete_prompt_presentation(self):
         prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
@@ -271,7 +288,10 @@ class ChatGPTAdapterTests(unittest.TestCase):
         ):
             self.assertIn(framing, classification)
         self.assertIn("complete or substantially executable", classification)
-        self.assertIn("before emitting any inline prompt block", classification)
+        self.assertIn(
+            "must not be reinterpreted by recipient, capability, presentation, or renderer selection",
+            classification,
+        )
         self.assertIn("qualified capability", prompts)
         self.assertIn("Dropbox-backed file", prompts)
         self.assertIn("two-block shape", classification)
