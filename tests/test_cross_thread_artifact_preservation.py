@@ -34,7 +34,6 @@ class CrossThreadArtifactPreservationTests(unittest.TestCase):
     def test_intermediate_threshold_requires_downstream_exact_identity_value(self):
         for phrase in (
             "expected downstream consumer is a useful signal, but it is not sufficient",
-            "substantial",
             "need an exact identity for the downstream dependency",
             "lossy or meaningfully weaker if reconstructed",
             "not from the executor or provider that produced it",
@@ -65,7 +64,7 @@ class CrossThreadArtifactPreservationTests(unittest.TestCase):
             "pull-request comment",
             "planning-system comment",
             "incidental discussion surface does not become the durable artifact store",
-            "mandatory capture failure boundary",
+            "#mandatory-governed-artifact-capture-failure-boundary",
         ):
             self.assertIn(phrase, self.intermediates)
 
@@ -75,23 +74,33 @@ class CrossThreadArtifactPreservationTests(unittest.TestCase):
             "concise verdict, material finding disposition",
             "immutable pointer or identity",
             "Do not paste the complete review",
+            "mandatory-governed-artifact-capture-failure-boundary",
             "failed and non-verdict attempts",
             "terminal receipt",
         ):
             self.assertIn(phrase, self.review_routing)
+        self.assertIn(
+            "evidence-lifecycle.md#governed-artifact-capture", self.review_routing
+        )
+        self.assertNotIn(
+            "1. the output is substantial rather than ordinary chat", self.review_routing
+        )
         self.assertNotIn("Dropbox", self.review_routing)
 
     def test_preservation_does_not_inflate_authority_or_status(self):
-        for phrase in (
-            "accepted evidence",
-            "canonical doctrine",
-            "approved decision",
-            "completed work",
-            "transition authority",
+        for clause in (
+            "Preservation never makes an intermediate artifact accepted evidence",
+            "canonical doctrine, an approved decision, completed work, or transition authority",
         ):
-            self.assertIn(phrase, self.intermediates)
-        for phrase in ("approval", "merge authority", "completion"):
-            self.assertIn(phrase, self.review_routing)
+            self.assertIn(clause, self.intermediates)
+        self.assertIn(
+            "it does not turn a failed attempt into a review verdict",
+            self.review_routing,
+        )
+        self.assertIn(
+            "or any review into approval, merge authority, or completion",
+            self.review_routing,
+        )
 
     def test_issue_owned_prompt_profile_rejects_non_issue_placement(self):
         for phrase in (

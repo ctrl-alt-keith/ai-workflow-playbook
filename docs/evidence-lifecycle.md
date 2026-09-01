@@ -69,8 +69,9 @@ role and give downstream consumers compact context plus its exact durable
 identity. Do not reproduce the complete body in chat, a pull-request comment,
 or a planning-system comment merely to keep it available; an incidental
 discussion surface does not become the durable artifact store through
-convenience. If the qualified durable route is unavailable, apply the mandatory
-capture failure boundary below rather than degrading to copy and paste.
+convenience. If the qualified durable route is unavailable, apply the
+[`mandatory capture failure boundary`](#mandatory-governed-artifact-capture-failure-boundary)
+rather than degrading to copy and paste.
 
 A failed or non-verdict review attempt may still qualify when its complete
 output or failure evidence has an authorized downstream review, diagnosis, or

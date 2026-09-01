@@ -80,17 +80,21 @@ candidate evidence or grounds to substitute another reviewer.
 
 Apply the governed-artifact candidate and storage-admission contract in
 [`evidence-lifecycle.md`](evidence-lifecycle.md#governed-artifact-capture) to
-complete review output. A substantial governed review normally qualifies when
-another thread, reviewer, disposition step, or human decision needs the exact
-output and reconstruction from a summary would weaken that dependency.
+complete governed review output. A substantial governed review qualifies only
+when the shared floor holds: another thread, reviewer, disposition step, or
+human decision needs the exact output and reconstruction from a summary would
+weaken that dependency.
 
-When the candidate and storage contract pass, preserve the complete review in
-the durable store selected by the owning workflow. Keep pull-request, planning,
-and chat discussion to the concise verdict, material finding disposition, and
-an immutable pointer or identity for the complete artifact. Do not paste the
-complete review into an incidental discussion surface as the normal successful
-path, and do not silently use that surface as storage when qualified durable
-capture is unavailable.
+When the candidate and storage contract pass, preserve the complete review at
+the durable destination selected by the owning storage contract, which for a
+governed review is the declared evidence destination bound by the launch
+contract. Keep pull-request, planning, and chat discussion to the concise
+verdict, material finding disposition, and an immutable pointer or identity for
+the complete artifact. Do not paste the complete review into an incidental
+discussion surface as the normal successful path. When qualified durable
+capture is unavailable, apply the
+[`mandatory governed-artifact capture failure boundary`](evidence-lifecycle.md#mandatory-governed-artifact-capture-failure-boundary)
+rather than using that surface as storage.
 
 Apply the same rule to failed and non-verdict attempts when their complete
 output or failure evidence has authorized downstream value and retention is
