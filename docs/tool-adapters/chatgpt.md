@@ -219,20 +219,24 @@ the durable profile below; routine prompts do not inherit it from transport.
 
 Owner retrieval and output conformance remain separate checks. Only when the
 frozen stage 5 record identifies a selected qualified Dropbox or file route
-and the owning contract classifies a new failure against that same route, with
-its reason, as `route-disqualified` before a qualified prompt handoff is
+and the owning contract classifies a new failure against that same route class
+and exact destination identity, with its reason, as `route-disqualified` before
+a qualified prompt handoff is
 complete may ChatGPT apply the canonical decision model's bounded capability
 re-evaluation rule. A known non-disqualifying limitation is retained as
 diagnostic evidence and does not activate re-entry. Sequence the owned failure
 classification, the single downstream-only re-evaluation, and then the
 terminal mapping from the resulting stage 5 state. Record there that bounded
 re-evaluation was consumed. A newly qualified and permitted file route remains
-file-backed; the prior route failure cannot force inline fallback. When no new
-file route qualifies and the owning contract
+file-backed only when its exact identity differs from the failed route; retain
+the old failure as prior evidence, not as a disqualification of the new route.
+Reasserting the same failed identity cannot force another file-backed attempt.
+When no new file route qualifies and the owning contract
 permits inline fallback, preserve the two-block complete-prompt shape and
 report the disqualification reason outside the copyable blocks. If the
 re-evaluated route also fails, stop blocked with that new reason rather than
-re-entering or relabeling the failure as unresolved.
+re-entering or relabeling the failure as unresolved. Consume only the current
+stage 5 record; a superseded pre-re-evaluation record cannot restart the bound.
 When the governing exact-byte or durable contract prohibits that fallback,
 preserve the target-shaped handoff with an explicit blocked state and stop. Do
 not degrade the required prompt or handoff into unconstrained status prose
