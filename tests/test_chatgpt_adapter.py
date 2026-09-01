@@ -63,6 +63,8 @@ class ChatGPTAdapterTests(unittest.TestCase):
             "route-disqualified` before a qualified prompt handoff is complete",
             "canonical decision model's bounded capability re-evaluation rule",
             "known non-disqualifying limitation is retained as diagnostic evidence",
+            "Sequence the owned failure classification, the single downstream-only re-evaluation",
+            "terminal fallback or blocked mapping from the resulting stage 5 state",
             "preserve the two-block complete-prompt shape",
             "Do not degrade the required prompt or handoff into unconstrained status prose",
         ):

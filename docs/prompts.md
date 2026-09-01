@@ -426,7 +426,7 @@ recipient of a prompt that is semantically directed to a machine executor.
 | 2 | `artifact-classification` | Produced artifact plus authoritative readiness intent | `conceptual-fragment` or `complete-executable` | Classify produced semantics, not request vocabulary; freeze the result. |
 | 3 | `operator-viewer-resolution` | Current interaction and orchestration context | Explicit human or orchestration viewer identity | Viewer identity controls the operator-facing surface only. |
 | 4 | `execution-recipient-resolution` | Executable body, target surface, task shape, and human direction | Explicit recipient identity and `human` or `machine-executor` class, or `unresolved` with reason | Resolve independently from the viewer; do not infer it from who asked the question or default ambiguity to the human viewer. |
-| 5 | `capability-and-transport-resolution` | Frozen recipient identity, current runtime capability evidence, authority, and permitted destination | A route selection plus separate qualification and diagnostic state: `qualified`, `qualified-with-known-limitation`, `route-disqualified`, or `unresolved` | Inspect or attempt unknown capability; retain known limitations without treating them as route-disqualifying unless the owning contract says they are. Never invent a destination or weaken an exact-byte contract. |
+| 5 | `capability-and-transport-resolution` | Frozen recipient identity, current runtime capability evidence, authority, and permitted destination | Route selection: `qualified-file-route`, `inline-route`, `inline-fallback-permitted`, or `blocked`; separate qualification: `qualified`, `qualified-with-known-limitation`, `route-disqualified`, or `unresolved`; plus diagnostics | Inspect or attempt unknown capability; retain known limitations without treating them as route-disqualifying unless the owning contract says they are. Never invent a destination or weaken an exact-byte contract. |
 | 6 | `presentation-selection` | Frozen artifact class, recipient class, and route resolution | `lightweight`, `file-backed`, `inline`, or `blocked` | Qualified machine execution selects file-backed delivery; operator visibility cannot override it. |
 | 7 | `renderer-selection` | Frozen presentation selection | `lightweight`, `thin-handoff`, `canonical-inline-two-block`, or `none` | Inline rendering is reachable only from `inline`; a renderer cannot change upstream state. |
 | 8 | `delivery-outcome` | Complete decision record and selected renderer result | Executed selected delivery action plus its evidence, or explicit fallback or blocked result | Apply the frozen presentation and renderer selection. Emit only the selected surface and preserve the owning failure contract. |
@@ -437,7 +437,10 @@ evidence while keeping the selected route qualified. `route-disqualified`
 means the owning contract explicitly makes the observed failure incompatible
 with that route. A later presentation, renderer, or application layer must not
 promote a diagnostic limitation into `route-disqualified` or use it to select
-a different transport.
+a different transport. Stage 4 `unresolved` means the execution recipient was
+not resolved; stage 5 `unresolved` means capability or transport never
+qualified or remains unresolved. A route that never qualified is not a route
+that was selected and later disqualified.
 
 Apply these terminal mappings deterministically:
 
@@ -465,9 +468,12 @@ Apply these terminal mappings deterministically:
 - `blocked` selects no complete-prompt renderer. Emit the owning explicit
   blocked result; do not turn the block into convenient inline delivery or
   unconstrained status prose.
-- `route-disqualified` follows the owning fallback or blocked contract. It may
-  select `inline-fallback-permitted` only when that fallback is explicitly
-  permitted; otherwise it resolves `blocked`.
+- At initial stage 5 resolution, `route-disqualified` follows the owning
+  fallback or blocked contract. It may select `inline-fallback-permitted` only
+  when that fallback is explicitly permitted; otherwise it resolves `blocked`.
+  When a selected route becomes disqualified during application, first apply
+  the bounded re-evaluation sequence below; its resulting stage 5 state drives
+  this terminal mapping.
 
 The final delivery application consumes the frozen stage 5 through 7 outputs
 and executes the selected action. For `file-backed`, it invokes the selected
@@ -481,9 +487,12 @@ becomes explicitly `route-disqualified` before delivery completes, the same
 delivery attempt may perform exactly one capability re-evaluation. A known
 non-disqualifying limitation does not activate re-entry. Preserve the stage 1
 through 4 outputs unchanged and activate only stages 5 through 8 against the
-newly observed capability state. If the re-evaluated route also fails, or
-capability remains unresolved, resolve `blocked` with the observed reason; do
-not re-enter again or recompute the artifact, viewer, or execution recipient.
+newly observed capability state. The sequence is: classify the observed
+failure as route-disqualifying under its owning contract, perform the one
+downstream-only re-evaluation, then apply the terminal mapping from the new
+stage 5 state. If the re-evaluated route also fails, or capability remains
+unresolved, resolve `blocked` with the observed reason; do not re-enter again
+or recompute the artifact, viewer, or execution recipient.
 
 Conversational wording is evidence available to the production,
 classification, and recipient-resolution stages. It is not a lookup table and

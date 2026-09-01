@@ -219,9 +219,12 @@ owning contract explicitly classifies a selected Dropbox or file route as
 `route-disqualified` before a qualified prompt handoff is complete may ChatGPT
 apply the canonical decision model's bounded capability re-evaluation rule. A
 known non-disqualifying limitation is retained as diagnostic evidence and does
-not activate re-entry. When the owning contract permits inline fallback after
-route disqualification, preserve the two-block complete-prompt shape and
-report the blocked delivery limitation outside the copyable blocks.
+not activate re-entry. Sequence the owned failure classification, the single
+downstream-only re-evaluation, and then the terminal fallback or blocked
+mapping from the resulting stage 5 state. When the owning contract permits
+inline fallback after route disqualification, preserve the two-block
+complete-prompt shape and report the blocked delivery limitation outside the
+copyable blocks.
 When the governing exact-byte or durable contract prohibits that fallback,
 preserve the target-shaped handoff with an explicit blocked state and stop. Do
 not degrade the required prompt or handoff into unconstrained status prose
