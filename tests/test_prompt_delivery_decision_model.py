@@ -1,4 +1,4 @@
-from dataclasses import dataclass, fields, replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 import unittest
 
@@ -37,7 +37,19 @@ class DeliveryCase:
     permitted_file_destination: bool = False
     inline_fallback_permitted: bool = False
     known_route_limitations: tuple[str, ...] = ()
-    route_disqualified: bool = False
+    initial_route_disqualification: "RouteDisqualification | None" = None
+
+
+@dataclass(frozen=True)
+class RouteDisqualification:
+    route: str
+    reason: str
+
+    def __post_init__(self):
+        if self.route != "qualified-file-route" or not self.reason:
+            raise ValueError(
+                "route disqualification requires a qualified file route and reason"
+            )
 
 
 @dataclass(frozen=True)
@@ -45,6 +57,8 @@ class CapabilityRouteResolution:
     route: str
     qualification: str
     diagnostics: tuple[str, ...] = ()
+    disqualification_reason: str | None = None
+    capability_reentry_count: int = 0
 
 
 @dataclass(frozen=True)
@@ -55,7 +69,17 @@ class AppliedDelivery:
     diagnostics: tuple[str, ...] = ()
 
 
-def decision_tail(case, classification, capability_failure_count=0):
+def decision_tail(
+    case,
+    classification,
+    *,
+    route_disqualification=None,
+    terminal_failure=False,
+    capability_reentry_count=0,
+):
+    disqualification_reason = (
+        route_disqualification.reason if route_disqualification else None
+    )
     if classification == "conceptual-fragment":
         route = "not-applicable"
         qualification = "not-applicable"
@@ -65,16 +89,12 @@ def decision_tail(case, classification, capability_failure_count=0):
     elif case.recipient_class == "human":
         route = "inline-route"
         qualification = "qualified"
-    elif capability_failure_count > 1 or not case.capability_resolved:
+    elif terminal_failure:
+        route = "blocked"
+        qualification = "route-disqualified"
+    elif not case.capability_resolved:
         route = "blocked"
         qualification = "unresolved"
-    elif case.route_disqualified:
-        route = (
-            "inline-fallback-permitted"
-            if case.inline_fallback_permitted
-            else "blocked"
-        )
-        qualification = "route-disqualified"
     elif case.qualified_file_capability and case.permitted_file_destination:
         route = "qualified-file-route"
         qualification = (
@@ -84,7 +104,12 @@ def decision_tail(case, classification, capability_failure_count=0):
         )
     elif case.inline_fallback_permitted:
         route = "inline-fallback-permitted"
-        qualification = "unresolved"
+        qualification = (
+            "route-disqualified" if route_disqualification else "unresolved"
+        )
+    elif route_disqualification:
+        route = "blocked"
+        qualification = "route-disqualified"
     else:
         route = "blocked"
         qualification = "unresolved"
@@ -93,6 +118,8 @@ def decision_tail(case, classification, capability_failure_count=0):
         route=route,
         qualification=qualification,
         diagnostics=case.known_route_limitations,
+        disqualification_reason=disqualification_reason,
+        capability_reentry_count=capability_reentry_count,
     )
 
     if classification == "conceptual-fragment":
@@ -181,20 +208,45 @@ def decision_trace(case):
             STAGES[3],
             f"{case.execution_recipient}:{case.recipient_class}",
         ),
-        *decision_tail(case, classification),
+        *decision_tail(
+            case,
+            classification,
+            route_disqualification=case.initial_route_disqualification,
+        ),
     )
 
 
-def reroute_after_capability_failure(case, original_trace, failure_count, **changes):
+def reroute_after_capability_failure(
+    case,
+    original_trace,
+    route_disqualification,
+    **changes,
+):
     """Re-evaluate only transport and downstream stages after route failure."""
 
-    updated = replace(case, **changes)
-    if not updated.route_disqualified:
-        raise ValueError("capability re-entry requires route-disqualified state")
+    if route_disqualification is None:
+        raise ValueError("capability re-entry requires owning route disqualification")
+    original_resolution = dict(original_trace)[STAGES[4]]
+    if (
+        original_resolution.route != route_disqualification.route
+        or original_resolution.qualification
+        not in ("qualified", "qualified-with-known-limitation")
+    ):
+        raise ValueError(
+            "capability re-entry requires a previously selected qualified route"
+        )
+    updated = replace(case, initial_route_disqualification=None, **changes)
     classification = dict(original_trace)[STAGES[1]]
+    terminal_failure = original_resolution.capability_reentry_count >= 1
     return (
         *original_trace[:4],
-        *decision_tail(updated, classification, capability_failure_count=failure_count),
+        *decision_tail(
+            updated,
+            classification,
+            route_disqualification=route_disqualification,
+            terminal_failure=terminal_failure,
+            capability_reentry_count=1,
+        ),
     )
 
 
@@ -260,8 +312,21 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         )
         self.assertIn(
             "classify the observed failure as route-disqualifying under its owning "
-            "contract, perform the one downstream-only re-evaluation, then apply "
-            "the terminal mapping from the new stage 5 state",
+            "contract against the same route selected in the frozen stage 5 record",
+            normalized_section,
+        )
+        self.assertIn(
+            "prior route failure does not preempt a different file route",
+            normalized_section,
+        )
+        self.assertIn(
+            "Record in the new stage 5 output that the bounded re-evaluation was "
+            "consumed",
+            normalized_section,
+        )
+        self.assertIn(
+            "terminate as `blocked` with that newly observed `route-disqualified` "
+            "reason",
             normalized_section,
         )
         for mapping in (
@@ -275,7 +340,15 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         ):
             self.assertIn(mapping, normalized_section)
 
-    def test_cold_start_variants_share_resolved_codex_semantics(self):
+    def test_resolved_codex_semantics_exclude_request_wording(self):
+        prompts = PROMPTS.read_text(encoding="utf-8")
+        for representative_request in (
+            "`prompt me`",
+            "`show me the machine handoff`",
+            "`give me the prompt`",
+        ):
+            self.assertIn(representative_request, prompts)
+
         base = DeliveryCase(
             produces_prompt=True,
             complete_executable=True,
@@ -299,21 +372,19 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             ("delivery-outcome", "dropbox-backed-thin-handoff"),
         )
 
-        variants = (
-            "Prompt me for CAK-194.",
-            "Show me the Codex handoff for CAK-194.",
-            "Give me the prompt for CAK-194.",
+        semantic_fields = set(DeliveryCase.__dataclass_fields__)
+        for forbidden_fragment in ("request", "text", "wording"):
+            self.assertFalse(
+                any(forbidden_fragment in field_name for field_name in semantic_fields)
+            )
+
+        trace, applied = evaluate_and_apply(base)
+        self.assertEqual(trace, expected)
+        self.assertEqual(applied.renderer, "thin-handoff")
+        self.assertNotIn(
+            "canonical-inline-two-block",
+            [output for _, output in trace],
         )
-        self.assertNotIn("request_text", {field.name for field in fields(DeliveryCase)})
-        for wording in variants:
-            with self.subTest(wording=wording):
-                trace, applied = evaluate_and_apply(base)
-                self.assertEqual(trace, expected)
-                self.assertEqual(applied.renderer, "thin-handoff")
-                self.assertNotIn(
-                    "canonical-inline-two-block",
-                    [output for _, output in trace],
-                )
 
         human = dict(
             decision_trace(
@@ -438,33 +509,101 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         fallback = reroute_after_capability_failure(
             case,
             initial,
-            1,
+            RouteDisqualification(
+                route="qualified-file-route",
+                reason="selected Dropbox write was rejected by its owning contract",
+            ),
             qualified_file_capability=False,
             permitted_file_destination=False,
             inline_fallback_permitted=True,
-            route_disqualified=True,
         )
         self.assertEqual(fallback[:4], initial[:4])
+        fallback_resolution = dict(fallback)[
+            "capability-and-transport-resolution"
+        ]
+        self.assertEqual(fallback_resolution.qualification, "route-disqualified")
+        self.assertEqual(fallback_resolution.capability_reentry_count, 1)
         self.assertEqual(
-            dict(fallback)["capability-and-transport-resolution"].qualification,
-            "route-disqualified",
+            fallback_resolution.disqualification_reason,
+            "selected Dropbox write was rejected by its owning contract",
         )
         self.assertEqual(dict(fallback)["renderer-selection"], "canonical-inline-two-block")
 
+        unresolved = reroute_after_capability_failure(
+            case,
+            initial,
+            RouteDisqualification(
+                route="qualified-file-route",
+                reason="selected Dropbox route failed during application",
+            ),
+            capability_resolved=False,
+            qualified_file_capability=False,
+            permitted_file_destination=False,
+        )
+        unresolved_resolution = dict(unresolved)[
+            "capability-and-transport-resolution"
+        ]
+        self.assertEqual(unresolved_resolution.qualification, "unresolved")
+        self.assertEqual(
+            unresolved_resolution.disqualification_reason,
+            "selected Dropbox route failed during application",
+        )
+        self.assertEqual(dict(unresolved)["presentation-selection"], "blocked")
+
+        alternate = reroute_after_capability_failure(
+            case,
+            initial,
+            RouteDisqualification(
+                route="qualified-file-route",
+                reason="selected Dropbox destination became unavailable",
+            ),
+            qualified_file_capability=True,
+            permitted_file_destination=True,
+        )
+        alternate_resolution = dict(alternate)[
+            "capability-and-transport-resolution"
+        ]
+        self.assertEqual(alternate[:4], initial[:4])
+        self.assertEqual(alternate_resolution.route, "qualified-file-route")
+        self.assertEqual(alternate_resolution.qualification, "qualified")
+        self.assertEqual(alternate_resolution.capability_reentry_count, 1)
+        self.assertEqual(
+            alternate_resolution.disqualification_reason,
+            "selected Dropbox destination became unavailable",
+        )
+        self.assertEqual(dict(alternate)["renderer-selection"], "thin-handoff")
+
         second_failure = reroute_after_capability_failure(
             case,
-            fallback,
-            2,
+            alternate,
+            RouteDisqualification(
+                route="qualified-file-route",
+                reason="re-evaluated file route also failed",
+            ),
             qualified_file_capability=False,
             permitted_file_destination=False,
             inline_fallback_permitted=True,
-            route_disqualified=True,
         )
         self.assertEqual(second_failure[:4], initial[:4])
+        second_resolution = dict(second_failure)[
+            "capability-and-transport-resolution"
+        ]
+        self.assertEqual(second_resolution.qualification, "route-disqualified")
+        self.assertEqual(second_resolution.capability_reentry_count, 1)
+        self.assertEqual(
+            second_resolution.disqualification_reason,
+            "re-evaluated file route also failed",
+        )
         self.assertEqual(dict(second_failure)["presentation-selection"], "blocked")
         self.assertEqual(dict(second_failure)["renderer-selection"], "none")
 
     def test_capability_reentry_requires_explicit_route_disqualification(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            "qualified file route and reason",
+        ):
+            RouteDisqualification(route="qualified-file-route", reason="")
+
         case = DeliveryCase(
             produces_prompt=True,
             complete_executable=True,
@@ -476,13 +615,29 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         )
         initial = decision_trace(case)
 
-        with self.assertRaisesRegex(ValueError, "route-disqualified"):
+        with self.assertRaisesRegex(ValueError, "owning route disqualification"):
             reroute_after_capability_failure(
                 case,
                 initial,
-                1,
+                None,
                 qualified_file_capability=False,
                 permitted_file_destination=False,
+                inline_fallback_permitted=True,
+            )
+
+        never_qualified = replace(
+            case,
+            qualified_file_capability=False,
+            permitted_file_destination=False,
+        )
+        with self.assertRaisesRegex(ValueError, "previously selected qualified route"):
+            reroute_after_capability_failure(
+                never_qualified,
+                decision_trace(never_qualified),
+                RouteDisqualification(
+                    route="qualified-file-route",
+                    reason="caller asserted a failure without a selected route",
+                ),
                 inline_fallback_permitted=True,
             )
 
@@ -527,7 +682,10 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             operator_viewer="human-operator",
             execution_recipient="Codex",
             recipient_class="machine-executor",
-            route_disqualified=True,
+            initial_route_disqualification=RouteDisqualification(
+                route="qualified-file-route",
+                reason="owning contract rejected the candidate Dropbox route",
+            ),
         )
 
         blocked = dict(decision_trace(base))
@@ -536,6 +694,10 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             "route-disqualified",
         )
         self.assertEqual(blocked["presentation-selection"], "blocked")
+        self.assertEqual(
+            blocked["capability-and-transport-resolution"].disqualification_reason,
+            "owning contract rejected the candidate Dropbox route",
+        )
 
         fallback = dict(
             decision_trace(replace(base, inline_fallback_permitted=True))

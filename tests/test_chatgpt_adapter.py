@@ -60,11 +60,17 @@ class ChatGPTAdapterTests(unittest.TestCase):
             self.assertNotIn(incident_text, contents)
 
         for phrase in (
-            "route-disqualified` before a qualified prompt handoff is complete",
+            "`prompt me`, `show me the Codex handoff`, and `give me the prompt`",
+            "upstream semantic evidence rather than a transport selector",
+            "frozen stage 5 record identifies a selected qualified Dropbox or file route",
+            "classifies a new failure against that same route, with its reason",
             "canonical decision model's bounded capability re-evaluation rule",
             "known non-disqualifying limitation is retained as diagnostic evidence",
             "Sequence the owned failure classification, the single downstream-only re-evaluation",
-            "terminal fallback or blocked mapping from the resulting stage 5 state",
+            "Record there that bounded re-evaluation was consumed",
+            "newly qualified and permitted file route remains file-backed",
+            "prior route failure cannot force inline fallback",
+            "stop blocked with that new reason",
             "preserve the two-block complete-prompt shape",
             "Do not degrade the required prompt or handoff into unconstrained status prose",
         ):

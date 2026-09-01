@@ -195,6 +195,9 @@ recipient as independent stage outputs before inspecting capability. The fact
 that the operator asks to receive, view, or be given a handoff is evidence
 about the operator-facing surface; it does not replace a resolved Codex,
 Claude, Work, or other machine execution recipient with the human viewer.
+Representative framing such as `prompt me`, `show me the Codex handoff`, and
+`give me the prompt` remains upstream semantic evidence rather than a
+transport selector or downstream renderer input.
 
 For a machine execution recipient with qualified Dropbox retrieval and a
 permitted destination, the model selects `file-backed` presentation. This
@@ -215,16 +218,21 @@ inspect or attempt it before resolving the route. Material prompts also apply
 the durable profile below; routine prompts do not inherit it from transport.
 
 Owner retrieval and output conformance remain separate checks. Only when the
-owning contract explicitly classifies a selected Dropbox or file route as
-`route-disqualified` before a qualified prompt handoff is complete may ChatGPT
-apply the canonical decision model's bounded capability re-evaluation rule. A
-known non-disqualifying limitation is retained as diagnostic evidence and does
-not activate re-entry. Sequence the owned failure classification, the single
-downstream-only re-evaluation, and then the terminal fallback or blocked
-mapping from the resulting stage 5 state. When the owning contract permits
-inline fallback after route disqualification, preserve the two-block
-complete-prompt shape and report the blocked delivery limitation outside the
-copyable blocks.
+frozen stage 5 record identifies a selected qualified Dropbox or file route
+and the owning contract classifies a new failure against that same route, with
+its reason, as `route-disqualified` before a qualified prompt handoff is
+complete may ChatGPT apply the canonical decision model's bounded capability
+re-evaluation rule. A known non-disqualifying limitation is retained as
+diagnostic evidence and does not activate re-entry. Sequence the owned failure
+classification, the single downstream-only re-evaluation, and then the
+terminal mapping from the resulting stage 5 state. Record there that bounded
+re-evaluation was consumed. A newly qualified and permitted file route remains
+file-backed; the prior route failure cannot force inline fallback. When no new
+file route qualifies and the owning contract
+permits inline fallback, preserve the two-block complete-prompt shape and
+report the disqualification reason outside the copyable blocks. If the
+re-evaluated route also fails, stop blocked with that new reason rather than
+re-entering or relabeling the failure as unresolved.
 When the governing exact-byte or durable contract prohibits that fallback,
 preserve the target-shaped handoff with an explicit blocked state and stop. Do
 not degrade the required prompt or handoff into unconstrained status prose
