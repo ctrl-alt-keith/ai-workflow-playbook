@@ -264,7 +264,7 @@ class CodexPreflightTest(unittest.TestCase):
             exit 255
         """
         commands["git"] = """
-            if [ "$1" = "ls-remote" ] && [ "$2" = "--exit-code" ] && [ "$3" = "git@github.example:org/repo.git" ]; then
+            if [ "$1" = "ls-remote" ] && [ "$2" = "--exit-code" ] && [ "$3" = "git@ssh.github.example:org/repo.git" ]; then
                 exit 0
             fi
             exit 128
@@ -274,7 +274,7 @@ class CodexPreflightTest(unittest.TestCase):
             commands,
             {
                 "CODEX_PREFLIGHT_GITHUB_SSH_TARGET": "git@ssh.github.example",
-                "CODEX_PREFLIGHT_REPO_URL": "git@github.example:org/repo.git",
+                "CODEX_PREFLIGHT_REPO_URL": "git@ssh.github.example:org/repo.git",
             },
         )
 
@@ -288,7 +288,7 @@ class CodexPreflightTest(unittest.TestCase):
     def test_repository_and_ssh_target_overrides_are_passed_as_literal_arguments(self) -> None:
         commands = self.fake_success_commands()
         ssh_target = "git@ssh.github.example;not-a-command"
-        repo_url = "git@github.example:org/repo.git;not-a-command"
+        repo_url = "git@ssh.github.example;not-a-command:org/repo.git"
         commands["ssh"] = f"""
             for arg in "$@"; do
                 [ "$arg" = "{ssh_target}" ] && target=1
@@ -320,6 +320,26 @@ class CodexPreflightTest(unittest.TestCase):
             result.stdout,
         )
         self.assertIn("PASS playbook repository is reachable with git ls-remote", result.stdout)
+
+    def test_mismatched_ssh_target_and_repository_host_fail_before_auth_checks(self) -> None:
+        commands = self.fake_success_commands()
+
+        result = self.run_preflight(
+            commands,
+            {
+                "CODEX_PREFLIGHT_GITHUB_SSH_TARGET": "git@ssh.github.example",
+                "CODEX_PREFLIGHT_REPO_URL": "git@github.example:org/repo.git",
+            },
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(
+            "FAIL GitHub SSH target and repository URL use the same host",
+            result.stdout,
+        )
+        self.assertIn("matching git@host values", result.stdout)
+        self.assertNotIn("ssh-add -l", result.stdout)
+        self.assertNotIn("GitHub SSH connectivity works", result.stdout)
 
 
 if __name__ == "__main__":
