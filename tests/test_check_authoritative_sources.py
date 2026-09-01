@@ -365,6 +365,20 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
 
         self.assertEqual(sources, [])
 
+    def test_markdown_sources_skip_unreadable_files_without_aborting_scan(self) -> None:
+        path = Path("docs/unreadable.md")
+
+        with mock.patch.object(Path, "is_symlink", return_value=False), mock.patch.object(
+            Path, "is_file", return_value=True
+        ), mock.patch.object(Path, "read_text", side_effect=PermissionError("denied")):
+            with mock.patch("builtins.print") as print_mock:
+                sources = scanner.markdown_sources([path])
+
+        self.assertEqual(sources, [])
+        print_mock.assert_called_once_with(
+            "authoritative-source-check: skipped unreadable file docs/unreadable.md"
+        )
+
     def test_all_markdown_files_excludes_symbolic_links(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
