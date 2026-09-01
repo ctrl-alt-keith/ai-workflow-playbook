@@ -274,6 +274,10 @@ def reroute_after_capability_failure(
         raise ValueError(
             "capability re-entry requires a previously selected qualified route"
         )
+    if case.qualified_file_route_id != original_resolution.route_id:
+        raise ValueError(
+            "capability re-entry case must match the current frozen route identity"
+        )
     updated = replace(case, initial_route_disqualification=None, **changes)
     classification = dict(original_trace)[STAGES[1]]
     terminal_failure = original_resolution.capability_reentry_count >= 1
@@ -676,14 +680,26 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         )
         self.assertEqual(dict(alternate)["renderer-selection"], "thin-handoff")
 
-        second_failure = reroute_after_capability_failure(
+        alternate_case = replace(
             case,
+            qualified_file_route_id="dropbox:alternate",
+        )
+        second_disqualification = RouteDisqualification(
+            route="qualified-file-route",
+            route_id="dropbox:alternate",
+            reason="re-evaluated file route also failed",
+        )
+        with self.assertRaisesRegex(ValueError, "current frozen route identity"):
+            reroute_after_capability_failure(
+                case,
+                alternate,
+                second_disqualification,
+            )
+
+        second_failure = reroute_after_capability_failure(
+            alternate_case,
             alternate,
-            RouteDisqualification(
-                route="qualified-file-route",
-                route_id="dropbox:alternate",
-                reason="re-evaluated file route also failed",
-            ),
+            second_disqualification,
             qualified_file_capability=False,
             permitted_file_destination=False,
             inline_fallback_permitted=True,
@@ -711,6 +727,15 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 route="qualified-file-route",
                 route_id="dropbox:primary",
                 reason="",
+            )
+        with self.assertRaisesRegex(
+            ValueError,
+            "qualified file route, route identity, and reason",
+        ):
+            RouteDisqualification(
+                route="qualified-file-route",
+                route_id="",
+                reason="owning contract rejected the route",
             )
 
         case = DeliveryCase(
