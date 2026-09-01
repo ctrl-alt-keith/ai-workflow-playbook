@@ -60,8 +60,19 @@ class ChatGPTAdapterTests(unittest.TestCase):
             self.assertNotIn(incident_text, contents)
 
         for phrase in (
-            "blocked before a qualified prompt handoff is complete",
+            "`prompt me`, `show me the Codex handoff`, and `give me the prompt`",
+            "upstream semantic evidence rather than a transport selector",
+            "frozen stage 5 record identifies a selected qualified Dropbox or file route",
+            "classifies a new failure against that same route class and exact destination identity",
             "canonical decision model's bounded capability re-evaluation rule",
+            "known non-disqualifying limitation is retained as diagnostic evidence",
+            "Sequence the owned failure classification, the single downstream-only re-evaluation",
+            "Record there that bounded re-evaluation was consumed",
+            "exact identity differs from the failed route",
+            "retain the old failure as prior evidence",
+            "Reasserting the same failed identity cannot force another file-backed attempt",
+            "stop blocked with that new reason",
+            "superseded pre-re-evaluation record cannot restart the bound",
             "preserve the two-block complete-prompt shape",
             "Do not degrade the required prompt or handoff into unconstrained status prose",
         ):
@@ -263,6 +274,16 @@ class ChatGPTAdapterTests(unittest.TestCase):
         )
         self.assertIn("before inspecting capability", recipient_projection)
         self.assertIn("does not replace a resolved Codex", recipient_projection)
+        self.assertIn("`qualified-with-known-limitation`", recipient_projection)
+        self.assertIn(
+            "do not reinterpret it as route disqualification",
+            recipient_projection,
+        )
+        self.assertIn(
+            "executes the selected file-backed, inline, lightweight, or blocked action",
+            prompt_presentation,
+        )
+        self.assertIn("it cannot select another renderer", prompt_presentation)
 
     def test_executable_examples_use_complete_prompt_presentation(self):
         prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
