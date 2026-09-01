@@ -47,6 +47,38 @@ brainstorming, transient explanations, routine status, and outputs without an
 exact downstream identity dependency remain ordinary chat. Routine work does
 not inherit governed-artifact ceremony.
 
+### Cross-thread-useful intermediate artifacts
+
+Apply the same three-part candidate floor to intermediate documents. An
+expected downstream consumer is a useful signal, but it is not sufficient by
+itself: the material must also be substantial, need an exact identity for the
+downstream dependency, and be lossy or meaningfully weaker if reconstructed
+from conversation or regenerated.
+
+Select preservation from the artifact's role and downstream value, not from
+the executor or provider that produced it. A complete review output, analysis
+package, finding-disposition input, implementation handoff, or temporary design
+document can qualify when another thread, executor, reviewer, or later phase
+needs its exact findings, constraints, instructions, or evidence. Apply this
+symmetrically to cross-executor handoffs. Disposable scratch, conversational
+scaffolding, redundant summaries, and easily regenerated notes with no exact
+downstream dependency remain disposable.
+
+After storage admission and successful capture, record the artifact's semantic
+role and give downstream consumers compact context plus its exact durable
+identity. Do not reproduce the complete body in chat, a pull-request comment,
+or a planning-system comment merely to keep it available; an incidental
+discussion surface does not become the durable artifact store through
+convenience. If the qualified durable route is unavailable, apply the mandatory
+capture failure boundary below rather than degrading to copy and paste.
+
+A failed or non-verdict review attempt may still qualify when its complete
+output or failure evidence has an authorized downstream review, diagnosis, or
+disposition role and storage admission permits retention. Preserve its failed
+or non-verdict status and keep it distinct from a successful review artifact.
+Preservation never makes an intermediate artifact accepted evidence, canonical
+doctrine, an approved decision, completed work, or transition authority.
+
 When the candidate is a rendered prompt intended for exact executor handoff,
 also apply the narrower
 [`issue-owned durable rendered-prompt handoff profile`](prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile).
