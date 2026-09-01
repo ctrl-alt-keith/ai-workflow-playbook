@@ -775,6 +775,14 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 evidence_source=QualificationEvidenceSource.CURRENT_RUNTIME_ROUTE,
                 owning_contract="test-current-route-qualification-contract",
             )
+        with self.assertRaisesRegex(ValueError, "owning qualification contract"):
+            RouteDisqualification(
+                route="qualified-file-route",
+                route_id="dropbox:primary",
+                reason="owning contract rejected the route",
+                evidence_source=QualificationEvidenceSource.CURRENT_RUNTIME_ROUTE,
+                owning_contract="",
+            )
         with self.assertRaisesRegex(
             ValueError,
             "qualified file route, route identity, and reason",
@@ -897,6 +905,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         self.assertEqual(applied.presentation, "file-backed")
         self.assertEqual(applied.renderer, "thin-handoff")
         self.assertEqual(applied.outcome, "dropbox-backed-thin-handoff")
+        self.assertEqual(resolution.diagnostics, case.known_route_limitations)
 
         with self.assertRaisesRegex(
             ValueError,
