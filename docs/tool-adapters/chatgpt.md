@@ -199,6 +199,17 @@ Representative framing such as `prompt me`, `show me the Codex handoff`, and
 `give me the prompt` remains upstream semantic evidence rather than a
 transport selector or downstream renderer input.
 
+Build stage 5 qualification only from the shared model's closed current-route
+evidence record: the observed current runtime route, its route class and exact
+identity, and the current owning route-qualification contract. Keep a
+delegated task's target capability, acceptance criteria, desired future state,
+implementation intent, prompt body, and explanatory rationale outside that
+record. The fact that the delegated work is meant to strengthen or repair the
+same capability does not make the route carrying that work unqualified. Do not
+convert such task-target evidence into `route-disqualified` or `unresolved`;
+only the current owning contract's classification of a current-route
+observation may produce route disqualification.
+
 For a machine execution recipient with qualified Dropbox retrieval and a
 permitted destination, the model selects `file-backed` presentation. This
 includes `qualified-with-known-limitation`: retain and report the diagnostic,

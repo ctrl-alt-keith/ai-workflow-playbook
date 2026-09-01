@@ -426,10 +426,24 @@ recipient of a prompt that is semantically directed to a machine executor.
 | 2 | `artifact-classification` | Produced artifact plus authoritative readiness intent | `conceptual-fragment` or `complete-executable` | Classify produced semantics, not request vocabulary; freeze the result. |
 | 3 | `operator-viewer-resolution` | Current interaction and orchestration context | Explicit human or orchestration viewer identity | Viewer identity controls the operator-facing surface only. |
 | 4 | `execution-recipient-resolution` | Executable body, target surface, task shape, and human direction | Explicit recipient identity and `human` or `machine-executor` class, or `unresolved` with reason | Resolve independently from the viewer; do not infer it from who asked the question or default ambiguity to the human viewer. |
-| 5 | `capability-and-transport-resolution` | Frozen recipient identity, current runtime capability evidence, authority, and permitted destination | Route selection and exact identity when applicable: `qualified-file-route`, `inline-route`, `inline-fallback-permitted`, or `blocked`; separate qualification: `qualified`, `qualified-with-known-limitation`, `route-disqualified`, or `unresolved`; non-disqualifying diagnostics; current or prior owning-contract route-disqualification records; and whether bounded re-evaluation was consumed | Inspect or attempt unknown capability; retain known limitations without treating them as route-disqualifying unless the owning contract says they are. Never invent a destination or weaken an exact-byte contract. |
+| 5 | `capability-and-transport-resolution` | Frozen recipient identity; a current route-qualification evidence record that binds the current runtime route observation, route class and exact identity, and current owning qualification contract; authority; and permitted destination | Route selection and exact identity when applicable: `qualified-file-route`, `inline-route`, `inline-fallback-permitted`, or `blocked`; separate qualification: `qualified`, `qualified-with-known-limitation`, `route-disqualified`, or `unresolved`; non-disqualifying diagnostics; current or prior owning-contract route-disqualification records; and whether bounded re-evaluation was consumed | Inspect or attempt unknown capability; retain known limitations without treating them as route-disqualifying unless the owning contract says they are. Never invent a destination or weaken an exact-byte contract. |
 | 6 | `presentation-selection` | Frozen artifact class, recipient class, and route resolution | `lightweight`, `file-backed`, `inline`, or `blocked` | Qualified machine execution selects file-backed delivery; operator visibility cannot override it. |
 | 7 | `renderer-selection` | Frozen presentation selection | `lightweight`, `thin-handoff`, `canonical-inline-two-block`, or `none` | Inline rendering is reachable only from `inline`; a renderer cannot change upstream state. |
 | 8 | `delivery-outcome` | Complete decision record and selected renderer result | Executed selected delivery action plus its evidence, or explicit fallback or blocked result | Apply the frozen presentation and renderer selection. Emit only the selected surface and preserve the owning failure contract. |
+
+Stage 5 has a closed evidence-provenance boundary. Its qualification evidence
+record accepts only observations about the current runtime route, classified
+by the current owning route-qualification contract against the named route
+class and exact identity. A delegated task's target state, acceptance
+requirement, desired future capability, implementation intent, prompt body, or
+explanatory rationale is not current-route evidence and must not enter this
+record. Those inputs may shape the delegated implementation prompt, but they
+cannot create `route-disqualified` or `unresolved` transport state. If the task
+is intended to strengthen, replace, or repair the same capability area, stage
+5 still classifies the route that exists now from its current observation and
+owning contract. Only that owning-contract classification may create route
+disqualification; excluded task-target evidence is rejected rather than
+reinterpreted as a current-route failure.
 
 Route qualification and route diagnostics are separate fields in the decision
 record. `qualified-with-known-limitation` retains the limitation and its owning

@@ -75,6 +75,10 @@ class ChatGPTAdapterTests(unittest.TestCase):
             "superseded pre-re-evaluation record cannot restart the bound",
             "preserve the two-block complete-prompt shape",
             "Do not degrade the required prompt or handoff into unconstrained status prose",
+            "closed current-route evidence record",
+            "delegated task's target capability, acceptance criteria, desired future state",
+            "does not make the route carrying that work unqualified",
+            "only the current owning contract's classification of a current-route observation",
         ):
             self.assertIn(phrase, normalized_chatgpt)
 
