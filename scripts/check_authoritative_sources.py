@@ -237,6 +237,8 @@ def markdown_sources(paths: list[Path]) -> list[tuple[str, str]]:
             sources.append((str(path), path.read_text(encoding="utf-8")))
         except UnicodeDecodeError:
             print(f"authoritative-source-check: skipped non-UTF-8 file {path}")
+        except OSError:
+            print(f"authoritative-source-check: skipped unreadable file {path}")
     return sources
 
 
