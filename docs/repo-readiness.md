@@ -540,11 +540,17 @@ aliases, or equivalent wrapper shells only for convenience. In particular,
 `zsh -lc`, `bash -lc`, `sh -c`, or equivalent forms are not normal wrappers for
 ordinary repo commands.
 
-For standard Git or GitHub CLI work, choose the `git` or `gh` command directly
-instead of substituting alternate APIs, helper tools, wrapper scripts, or
-connector-specific operations. Use alternate APIs or tools only when the task
-explicitly calls for capabilities the CLI cannot provide or when direct CLI
-access is unavailable and the fallback is reported clearly.
+For standard Git work, choose the `git` command directly instead of
+substituting alternate APIs, helper tools, wrapper scripts, or
+connector-specific operations. For ordinary GitHub workflow operations, choose
+high-level `gh` subcommands directly. Do not use `gh api` or `gh api graphql`
+as a fallback for normal repository workflows, and do not bypass this rule with
+direct GitHub REST or GraphQL HTTP calls or equivalent wrappers. When a required
+capability is unavailable through a high-level `gh` command, use an approved
+available connector or tool when it supports that operation. If neither a
+high-level `gh` command nor an approved connector or tool supports the required
+operation, report the capability gap rather than dropping to a lower-level API
+route.
 
 Preserve that directness at the execution layer too. Prefer native argv-style
 execution, such as `["git", "status"]` or `["gh", "pr", "create"]`, when the
