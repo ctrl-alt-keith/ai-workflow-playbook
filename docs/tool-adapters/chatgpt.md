@@ -197,13 +197,15 @@ about the operator-facing surface; it does not replace a resolved Codex,
 Claude, Work, or other machine execution recipient with the human viewer.
 
 For a machine execution recipient with qualified Dropbox retrieval and a
-permitted destination, the model selects `file-backed` presentation. Use the
-authorized file route, present the card produced by the write when available,
-and immediately provide the target-shaped handoff. A separate preview or open
-action remains optional under the connected-app rules above. Do not wait for
-prompt approval or require the operator to open a preview; connector
-confirmation authorizes only its file operation. File-card and preview behavior
-is product-dependent runtime evidence, so recheck the relevant action.
+permitted destination, the model selects `file-backed` presentation. This
+includes `qualified-with-known-limitation`: retain and report the diagnostic,
+but do not reinterpret it as route disqualification. Use the authorized file
+route, present the card produced by the write when available, and immediately
+provide the target-shaped handoff. A separate preview or open action remains
+optional under the connected-app rules above. Do not wait for prompt approval
+or require the operator to open a preview; connector confirmation authorizes
+only its file operation. File-card and preview behavior is product-dependent
+runtime evidence, so recheck the relevant action.
 
 For a human execution recipient, or a machine execution recipient whose
 inspected capability state permits inline fallback, the model selects `inline`
@@ -212,12 +214,14 @@ presentation and the existing
 inspect or attempt it before resolving the route. Material prompts also apply
 the durable profile below; routine prompts do not inherit it from transport.
 
-Owner retrieval and output conformance remain separate checks. If a selected
-Dropbox or file route becomes blocked before a qualified prompt handoff is
-complete, apply the canonical decision model's bounded capability
-re-evaluation rule. When the owning contract permits inline fallback, preserve
-the two-block complete-prompt shape and report the blocked delivery limitation
-outside the copyable blocks.
+Owner retrieval and output conformance remain separate checks. Only when the
+owning contract explicitly classifies a selected Dropbox or file route as
+`route-disqualified` before a qualified prompt handoff is complete may ChatGPT
+apply the canonical decision model's bounded capability re-evaluation rule. A
+known non-disqualifying limitation is retained as diagnostic evidence and does
+not activate re-entry. When the owning contract permits inline fallback after
+route disqualification, preserve the two-block complete-prompt shape and
+report the blocked delivery limitation outside the copyable blocks.
 When the governing exact-byte or durable contract prohibits that fallback,
 preserve the target-shaped handoff with an explicit blocked state and stop. Do
 not degrade the required prompt or handoff into unconstrained status prose
@@ -351,8 +355,11 @@ Consume the frozen stage outputs from the shared
 [prompt delivery decision model](../prompts.md#prompt-delivery-decision-model).
 ChatGPT must not reclassify the produced artifact, replace the execution
 recipient with the operator or viewer, or reconsider transport from request
-wording during rendering. Keep genuinely conceptual fragments and incomplete
-snippets lightweight through the model's `lightweight` renderer.
+wording or diagnostic limitations during rendering. The final application
+executes the selected file-backed, inline, lightweight, or blocked action from
+that record; it cannot select another renderer. Keep genuinely conceptual
+fragments and incomplete snippets lightweight through the model's
+`lightweight` renderer.
 
 Do not begin either inline block unless `presentation-selection` produced
 `inline` and `renderer-selection` produced `canonical-inline-two-block`.

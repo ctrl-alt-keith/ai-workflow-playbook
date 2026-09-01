@@ -426,10 +426,18 @@ recipient of a prompt that is semantically directed to a machine executor.
 | 2 | `artifact-classification` | Produced artifact plus authoritative readiness intent | `conceptual-fragment` or `complete-executable` | Classify produced semantics, not request vocabulary; freeze the result. |
 | 3 | `operator-viewer-resolution` | Current interaction and orchestration context | Explicit human or orchestration viewer identity | Viewer identity controls the operator-facing surface only. |
 | 4 | `execution-recipient-resolution` | Executable body, target surface, task shape, and human direction | Explicit recipient identity and `human` or `machine-executor` class, or `unresolved` with reason | Resolve independently from the viewer; do not infer it from who asked the question or default ambiguity to the human viewer. |
-| 5 | `capability-and-transport-resolution` | Frozen recipient identity, current runtime capability evidence, authority, and permitted destination | `qualified-file-route`, `inline-route`, `inline-fallback-permitted`, or `blocked` with reason | Inspect or attempt unknown capability; never invent a destination or weaken an exact-byte contract. |
+| 5 | `capability-and-transport-resolution` | Frozen recipient identity, current runtime capability evidence, authority, and permitted destination | A route selection plus separate qualification and diagnostic state: `qualified`, `qualified-with-known-limitation`, `route-disqualified`, or `unresolved` | Inspect or attempt unknown capability; retain known limitations without treating them as route-disqualifying unless the owning contract says they are. Never invent a destination or weaken an exact-byte contract. |
 | 6 | `presentation-selection` | Frozen artifact class, recipient class, and route resolution | `lightweight`, `file-backed`, `inline`, or `blocked` | Qualified machine execution selects file-backed delivery; operator visibility cannot override it. |
 | 7 | `renderer-selection` | Frozen presentation selection | `lightweight`, `thin-handoff`, `canonical-inline-two-block`, or `none` | Inline rendering is reachable only from `inline`; a renderer cannot change upstream state. |
-| 8 | `delivery-outcome` | Complete decision record and selected renderer result | Selected delivery evidence or explicit fallback or blocked result | Emit only the selected surface and preserve the owning failure contract. |
+| 8 | `delivery-outcome` | Complete decision record and selected renderer result | Executed selected delivery action plus its evidence, or explicit fallback or blocked result | Apply the frozen presentation and renderer selection. Emit only the selected surface and preserve the owning failure contract. |
+
+Route qualification and route diagnostics are separate fields in the decision
+record. `qualified-with-known-limitation` retains the limitation and its owning
+evidence while keeping the selected route qualified. `route-disqualified`
+means the owning contract explicitly makes the observed failure incompatible
+with that route. A later presentation, renderer, or application layer must not
+promote a diagnostic limitation into `route-disqualified` or use it to select
+a different transport.
 
 Apply these terminal mappings deterministically:
 
@@ -441,7 +449,9 @@ Apply these terminal mappings deterministically:
 - `complete-executable` plus a `machine-executor` and
   `qualified-file-route` selects `file-backed` presentation and the
   `thin-handoff` renderer. The complete executable prompt is not rendered
-  inline.
+  inline. This mapping is unchanged when the route qualification is
+  `qualified-with-known-limitation`; retain and surface the diagnostic without
+  changing the route, presentation, or renderer.
 - `complete-executable` plus a human execution recipient resolves
   `inline-route`, then selects `inline` presentation and the
   `canonical-inline-two-block` renderer.
@@ -455,14 +465,25 @@ Apply these terminal mappings deterministically:
 - `blocked` selects no complete-prompt renderer. Emit the owning explicit
   blocked result; do not turn the block into convenient inline delivery or
   unconstrained status prose.
+- `route-disqualified` follows the owning fallback or blocked contract. It may
+  select `inline-fallback-permitted` only when that fallback is explicitly
+  permitted; otherwise it resolves `blocked`.
+
+The final delivery application consumes the frozen stage 5 through 7 outputs
+and executes the selected action. For `file-backed`, it invokes the selected
+file route and returns the thin handoff. It must not inspect diagnostic state
+to substitute the canonical inline renderer. For `inline`, it invokes only the
+canonical inline renderer. Application failure may enter the bounded
+re-evaluation rule below, but application itself cannot recompute transport.
 
 The once-per-stage rule applies within one evaluation. If a selected route
-fails before delivery completes, the same delivery attempt may perform exactly
-one capability re-evaluation. Preserve the stage 1 through 4 outputs unchanged
-and activate only stages 5 through 8 against the newly observed capability
-state. If the re-evaluated route also fails, or capability remains unresolved,
-resolve `blocked` with the observed reason; do not re-enter again or recompute
-the artifact, viewer, or execution recipient.
+becomes explicitly `route-disqualified` before delivery completes, the same
+delivery attempt may perform exactly one capability re-evaluation. A known
+non-disqualifying limitation does not activate re-entry. Preserve the stage 1
+through 4 outputs unchanged and activate only stages 5 through 8 against the
+newly observed capability state. If the re-evaluated route also fails, or
+capability remains unresolved, resolve `blocked` with the observed reason; do
+not re-enter again or recompute the artifact, viewer, or execution recipient.
 
 Conversational wording is evidence available to the production,
 classification, and recipient-resolution stages. It is not a lookup table and
@@ -486,9 +507,10 @@ the operator or viewer identity:
   prompt in a Dropbox-backed file, present the file surface produced by that
   operation, and immediately provide the target-shaped
   [thin semantic handoff](#thin-semantic-handoff-envelope) without reproducing
-  the complete prompt. A separate preview or open action is optional under the
-  matching client adapter and does not block the handoff or require prompt
-  approval.
+  the complete prompt. A known non-disqualifying limitation remains diagnostic
+  evidence and does not change this selected action. A separate preview or
+  open action is optional under the matching client adapter and does not block
+  the handoff or require prompt approval.
 - For a human execution recipient, or when the machine execution recipient has
   no qualified Dropbox route and the owning contract permits inline fallback,
   present the complete prompt inline through the matching client adapter. When

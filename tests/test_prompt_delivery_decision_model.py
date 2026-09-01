@@ -36,23 +36,64 @@ class DeliveryCase:
     qualified_file_capability: bool = False
     permitted_file_destination: bool = False
     inline_fallback_permitted: bool = False
+    known_route_limitations: tuple[str, ...] = ()
+    route_disqualified: bool = False
+
+
+@dataclass(frozen=True)
+class CapabilityRouteResolution:
+    route: str
+    qualification: str
+    diagnostics: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class AppliedDelivery:
+    presentation: str
+    renderer: str
+    outcome: str
+    diagnostics: tuple[str, ...] = ()
 
 
 def decision_tail(case, classification, capability_failure_count=0):
     if classification == "conceptual-fragment":
         route = "not-applicable"
+        qualification = "not-applicable"
     elif case.recipient_class == "unresolved":
         route = "blocked"
+        qualification = "unresolved"
     elif case.recipient_class == "human":
         route = "inline-route"
+        qualification = "qualified"
     elif capability_failure_count > 1 or not case.capability_resolved:
         route = "blocked"
+        qualification = "unresolved"
+    elif case.route_disqualified:
+        route = (
+            "inline-fallback-permitted"
+            if case.inline_fallback_permitted
+            else "blocked"
+        )
+        qualification = "route-disqualified"
     elif case.qualified_file_capability and case.permitted_file_destination:
         route = "qualified-file-route"
+        qualification = (
+            "qualified-with-known-limitation"
+            if case.known_route_limitations
+            else "qualified"
+        )
     elif case.inline_fallback_permitted:
         route = "inline-fallback-permitted"
+        qualification = "route-disqualified"
     else:
         route = "blocked"
+        qualification = "route-disqualified"
+
+    route_resolution = CapabilityRouteResolution(
+        route=route,
+        qualification=qualification,
+        diagnostics=case.known_route_limitations,
+    )
 
     if classification == "conceptual-fragment":
         presentation = "lightweight"
@@ -77,11 +118,29 @@ def decision_tail(case, classification, capability_failure_count=0):
     }[presentation]
 
     return (
-        (STAGES[4], route),
+        (STAGES[4], route_resolution),
         (STAGES[5], presentation),
         (STAGES[6], renderer),
         (STAGES[7], outcome),
     )
+
+
+def apply_delivery(frozen_trace):
+    """Apply the selected renderer without recomputing upstream semantics."""
+
+    decision = dict(frozen_trace)
+    route_resolution = decision[STAGES[4]]
+    return AppliedDelivery(
+        presentation=decision[STAGES[5]],
+        renderer=decision[STAGES[6]],
+        outcome=decision[STAGES[7]],
+        diagnostics=route_resolution.diagnostics,
+    )
+
+
+def evaluate_and_apply(case):
+    trace = decision_trace(case)
+    return trace, apply_delivery(trace)
 
 
 def decision_trace(case):
@@ -140,6 +199,8 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             "`file-backed`",
             "`canonical-inline-two-block`",
             "`blocked`",
+            "`qualified-with-known-limitation`",
+            "`route-disqualified`",
         ):
             self.assertIn(output, section)
         self.assertIn(
@@ -156,6 +217,14 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         )
         self.assertIn(
             "Preserve the stage 1 through 4 outputs unchanged",
+            normalized_section,
+        )
+        self.assertIn(
+            "executes the selected action",
+            normalized_section,
+        )
+        self.assertIn(
+            "must not inspect diagnostic state to substitute the canonical inline renderer",
             normalized_section,
         )
         for mapping in (
@@ -184,7 +253,10 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             ("artifact-classification", "complete-executable"),
             ("operator-viewer-resolution", "human-operator"),
             ("execution-recipient-resolution", "Codex:machine-executor"),
-            ("capability-and-transport-resolution", "qualified-file-route"),
+            (
+                "capability-and-transport-resolution",
+                CapabilityRouteResolution("qualified-file-route", "qualified"),
+            ),
             ("presentation-selection", "file-backed"),
             ("renderer-selection", "thin-handoff"),
             ("delivery-outcome", "dropbox-backed-thin-handoff"),
@@ -198,8 +270,9 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         self.assertNotIn("request_text", {field.name for field in fields(DeliveryCase)})
         for wording in variants:
             with self.subTest(wording=wording):
-                trace = decision_trace(base)
+                trace, applied = evaluate_and_apply(base)
                 self.assertEqual(trace, expected)
+                self.assertEqual(applied.renderer, "thin-handoff")
                 self.assertNotIn(
                     "canonical-inline-two-block",
                     [output for _, output in trace],
@@ -216,7 +289,10 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 )
             )
         )
-        self.assertEqual(human["capability-and-transport-resolution"], "inline-route")
+        self.assertEqual(
+            human["capability-and-transport-resolution"].route,
+            "inline-route",
+        )
         self.assertEqual(human["renderer-selection"], "canonical-inline-two-block")
 
     def test_conceptual_human_fragment_remains_lightweight(self):
@@ -247,7 +323,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             decision_trace(replace(base, inline_fallback_permitted=True))
         )
         self.assertEqual(
-            fallback["capability-and-transport-resolution"],
+            fallback["capability-and-transport-resolution"].route,
             "inline-fallback-permitted",
         )
         self.assertEqual(fallback["presentation-selection"], "inline")
@@ -259,7 +335,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             decision_trace(replace(base, capability_resolved=False))
         )
         self.assertEqual(
-            blocked["capability-and-transport-resolution"], "blocked"
+            blocked["capability-and-transport-resolution"].route, "blocked"
         )
         self.assertEqual(blocked["presentation-selection"], "blocked")
         self.assertEqual(blocked["renderer-selection"], "none")
@@ -288,7 +364,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             inline_fallback_permitted=True,
         )
         trace = dict(decision_trace(case))
-        self.assertEqual(trace["capability-and-transport-resolution"], "blocked")
+        self.assertEqual(trace["capability-and-transport-resolution"].route, "blocked")
         self.assertEqual(trace["presentation-selection"], "blocked")
         self.assertEqual(trace["renderer-selection"], "none")
 
@@ -325,6 +401,58 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         self.assertEqual(second_failure[:4], initial[:4])
         self.assertEqual(dict(second_failure)["presentation-selection"], "blocked")
         self.assertEqual(dict(second_failure)["renderer-selection"], "none")
+
+    def test_known_limitation_is_retained_without_mutating_frozen_application(self):
+        case = DeliveryCase(
+            produces_prompt=True,
+            complete_executable=True,
+            operator_viewer="human-operator",
+            execution_recipient="Codex",
+            recipient_class="machine-executor",
+            qualified_file_capability=True,
+            permitted_file_destination=True,
+            known_route_limitations=(
+                "controller post-write raw-byte SHA verification unavailable",
+            ),
+        )
+
+        trace, applied = evaluate_and_apply(case)
+        resolution = dict(trace)["capability-and-transport-resolution"]
+        self.assertEqual(resolution.route, "qualified-file-route")
+        self.assertEqual(
+            resolution.qualification,
+            "qualified-with-known-limitation",
+        )
+        self.assertEqual(applied.presentation, "file-backed")
+        self.assertEqual(applied.renderer, "thin-handoff")
+        self.assertEqual(applied.outcome, "dropbox-backed-thin-handoff")
+        self.assertEqual(applied.diagnostics, resolution.diagnostics)
+
+    def test_route_disqualifying_failure_uses_owned_fallback_or_block(self):
+        base = DeliveryCase(
+            produces_prompt=True,
+            complete_executable=True,
+            operator_viewer="human-operator",
+            execution_recipient="Codex",
+            recipient_class="machine-executor",
+            route_disqualified=True,
+        )
+
+        blocked = dict(decision_trace(base))
+        self.assertEqual(
+            blocked["capability-and-transport-resolution"].qualification,
+            "route-disqualified",
+        )
+        self.assertEqual(blocked["presentation-selection"], "blocked")
+
+        fallback = dict(
+            decision_trace(replace(base, inline_fallback_permitted=True))
+        )
+        self.assertEqual(
+            fallback["capability-and-transport-resolution"].route,
+            "inline-fallback-permitted",
+        )
+        self.assertEqual(fallback["presentation-selection"], "inline")
 
 
 if __name__ == "__main__":

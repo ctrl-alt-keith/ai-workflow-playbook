@@ -60,8 +60,9 @@ class ChatGPTAdapterTests(unittest.TestCase):
             self.assertNotIn(incident_text, contents)
 
         for phrase in (
-            "blocked before a qualified prompt handoff is complete",
+            "route-disqualified` before a qualified prompt handoff is complete",
             "canonical decision model's bounded capability re-evaluation rule",
+            "known non-disqualifying limitation is retained as diagnostic evidence",
             "preserve the two-block complete-prompt shape",
             "Do not degrade the required prompt or handoff into unconstrained status prose",
         ):
@@ -263,6 +264,16 @@ class ChatGPTAdapterTests(unittest.TestCase):
         )
         self.assertIn("before inspecting capability", recipient_projection)
         self.assertIn("does not replace a resolved Codex", recipient_projection)
+        self.assertIn("`qualified-with-known-limitation`", recipient_projection)
+        self.assertIn(
+            "do not reinterpret it as route disqualification",
+            recipient_projection,
+        )
+        self.assertIn(
+            "executes the selected file-backed, inline, lightweight, or blocked action",
+            prompt_presentation,
+        )
+        self.assertIn("it cannot select another renderer", prompt_presentation)
 
     def test_executable_examples_use_complete_prompt_presentation(self):
         prompts = (DOCS / "prompts.md").read_text(encoding="utf-8")
