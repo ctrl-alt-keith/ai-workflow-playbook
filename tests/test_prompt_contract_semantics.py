@@ -408,6 +408,10 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertIn(LEGACY_V1_ANCHOR_PATH.name, canonical_doc)
         self.assertIn(VECTOR_PATH.name, canonical_doc)
 
+        for relative_path in ("prompts.md", "tool-adapters/codex.md"):
+            contents = (DOCS / relative_path).read_text(encoding="utf-8")
+            self.assertIn(ANCHOR_PATH.name, contents, relative_path)
+
     def test_local_links_in_affected_documentation_resolve(self):
         affected_documents = (
             "prompt-contracts.md",

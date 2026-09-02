@@ -32,9 +32,10 @@ class DropboxUploadEvidence:
     delivery_url_unconsumed: bool = True
     delivery_url_expired: bool = False
     delivery_url_ambiguous: bool = False
+    containment_verified: bool = True
     receiver_content_transfers: int = 1
-    receiver_byte_length_verified: bool = True
-    receiver_whole_file_sha256_verified: bool = True
+    receiver_observed_byte_length: int | None = 7622
+    receiver_observed_sha256: str | None = WHOLE_FILE_SHA256
 
 
 def present_text(value):
@@ -74,6 +75,8 @@ def qualified_dropbox_delivery_attempt(evidence):
         return False
     if len(set(paths)) != 1:
         return False
+    if not evidence.containment_verified:
+        return False
 
     sizes = (
         evidence.local_byte_length,
@@ -109,10 +112,13 @@ def qualified_dropbox_delivery_attempt(evidence):
         return False
     if evidence.receiver_content_transfers != 1:
         return False
-    return (
-        evidence.receiver_byte_length_verified
-        and evidence.receiver_whole_file_sha256_verified
-    )
+    if not valid_size(evidence.receiver_observed_byte_length):
+        return False
+    if evidence.receiver_observed_byte_length != evidence.local_byte_length:
+        return False
+    if not valid_sha256(evidence.receiver_observed_sha256):
+        return False
+    return evidence.receiver_observed_sha256 == evidence.whole_file_sha256
 
 
 class DropboxPromptVerificationTests(unittest.TestCase):
@@ -131,6 +137,14 @@ class DropboxPromptVerificationTests(unittest.TestCase):
         self.assertEqual(evidence.verification_content_downloads, 0)
         self.assertEqual(evidence.delivery_link_calls, 1)
         self.assertEqual(evidence.receiver_content_transfers, 1)
+        self.assertEqual(
+            evidence.receiver_observed_byte_length,
+            evidence.local_byte_length,
+        )
+        self.assertEqual(
+            evidence.receiver_observed_sha256,
+            evidence.whole_file_sha256,
+        )
         self.assertIn(
             "Raw post-write byte readback is not required after this qualified proof succeeds",
             self.normalized_contract,
@@ -247,6 +261,10 @@ class DropboxPromptVerificationTests(unittest.TestCase):
                 evidence = replace(DropboxUploadEvidence(), **changes)
                 self.assertFalse(qualified_dropbox_delivery_attempt(evidence))
 
+    def test_unverified_containment_does_not_qualify(self):
+        evidence = replace(DropboxUploadEvidence(), containment_verified=False)
+        self.assertFalse(qualified_dropbox_delivery_attempt(evidence))
+
     def test_second_download_link_call_does_not_qualify(self):
         evidence = replace(DropboxUploadEvidence(), delivery_link_calls=2)
         self.assertFalse(qualified_dropbox_delivery_attempt(evidence))
@@ -274,8 +292,10 @@ class DropboxPromptVerificationTests(unittest.TestCase):
         invalid = (
             {"receiver_content_transfers": 0},
             {"receiver_content_transfers": 2},
-            {"receiver_byte_length_verified": False},
-            {"receiver_whole_file_sha256_verified": False},
+            {"receiver_observed_byte_length": None},
+            {"receiver_observed_byte_length": 7621},
+            {"receiver_observed_sha256": None},
+            {"receiver_observed_sha256": "c" * 64},
         )
         for changes in invalid:
             with self.subTest(changes=changes):
