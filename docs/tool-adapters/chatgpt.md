@@ -337,13 +337,13 @@ identity and evidence; never make a second `download_link` call inside the
 successful attempt.
 
 Overwrite, autorename, a destination collision, object-identity mismatch,
-revision ambiguity, stored-size mismatch, Dropbox content-hash mismatch,
-missing required metadata, a second link call inside one attempt, or ambiguous
-provider state fails closed. Extracted text, preview content, reconstructed
-chat text, synchronized Dropbox files, and manual operator download/hash steps
-are prohibited substitutes. When the qualified provider-checksum path is
-unavailable, apply the shared raw-readback fallback rather than weakening exact
-verification.
+revision ambiguity, containment mismatch, stored-size mismatch, Dropbox
+content-hash mismatch, missing required metadata, a second link call inside one
+attempt, or ambiguous provider state fails closed. Extracted text, preview
+content, reconstructed chat text, synchronized Dropbox files, and manual
+operator download/hash steps are prohibited substitutes. When the qualified
+provider-checksum path is unavailable, apply the shared raw-readback fallback
+rather than weakening exact verification.
 
 Prefer a receiving executor's qualified direct retrieval of that durable object.
 When the receiver cannot directly retrieve and verify it, ChatGPT may coordinate

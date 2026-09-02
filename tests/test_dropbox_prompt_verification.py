@@ -8,7 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 DROPBOX_HASH = "a" * 64
 WHOLE_FILE_SHA256 = "b" * 64
-DROPBOX_PATH = "ns:14959974083//issues/CAK-194/prompt.md"
+ISSUE_DESTINATION_PREFIX = "ns:14959974083//issues/CAK-194/"
+DROPBOX_PATH = ISSUE_DESTINATION_PREFIX + "prompt.md"
 
 
 @dataclass(frozen=True)
@@ -76,6 +77,8 @@ def qualified_dropbox_delivery_attempt(evidence):
     if len(set(paths)) != 1:
         return False
     if not evidence.containment_verified:
+        return False
+    if not all(value.startswith(ISSUE_DESTINATION_PREFIX) for value in paths):
         return False
 
     sizes = (
@@ -160,19 +163,20 @@ class DropboxPromptVerificationTests(unittest.TestCase):
             DropboxUploadEvidence(), provider_dropbox_content_hash="c" * 64
         )
         self.assertFalse(qualified_dropbox_delivery_attempt(evidence))
-        self.assertIn("Dropbox content-hash mismatch", self.chatgpt)
+        self.assertIn("Dropbox\ncontent-hash mismatch", self.chatgpt)
 
     def test_provider_object_identity_mismatch_fails_closed(self):
         evidence = replace(DropboxUploadEvidence(), link_file_id="id:other")
         self.assertFalse(qualified_dropbox_delivery_attempt(evidence))
         self.assertIn("object-identity mismatch", self.chatgpt)
 
-    def test_whole_file_sha_and_dropbox_hash_are_distinct(self):
-        evidence = DropboxUploadEvidence()
-        self.assertNotEqual(
-            evidence.whole_file_sha256,
-            evidence.local_dropbox_content_hash,
+    def test_whole_file_sha_and_dropbox_hash_algorithms_are_separate(self):
+        evidence = replace(
+            DropboxUploadEvidence(),
+            whole_file_sha256="c" * 64,
+            receiver_observed_sha256="c" * 64,
         )
+        self.assertTrue(qualified_dropbox_delivery_attempt(evidence))
         for phrase in (
             "it is not ordinary whole-file SHA-256",
             "never be compared directly or described as equivalent",
@@ -263,6 +267,17 @@ class DropboxPromptVerificationTests(unittest.TestCase):
 
     def test_unverified_containment_does_not_qualify(self):
         evidence = replace(DropboxUploadEvidence(), containment_verified=False)
+        self.assertFalse(qualified_dropbox_delivery_attempt(evidence))
+        self.assertIn("containment mismatch", self.chatgpt)
+
+    def test_path_outside_issue_destination_does_not_qualify(self):
+        outside_path = "ns:14959974083//other/prompt.md"
+        evidence = replace(
+            DropboxUploadEvidence(),
+            created_path=outside_path,
+            observed_path=outside_path,
+            link_path=outside_path,
+        )
         self.assertFalse(qualified_dropbox_delivery_attempt(evidence))
 
     def test_second_download_link_call_does_not_qualify(self):
