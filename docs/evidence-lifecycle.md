@@ -105,9 +105,17 @@ content.
 After the candidate floor and all storage-admission conditions pass, capture
 the complete artifact durably during the producing task. Use one writer, a
 unique semantic dated or versioned target, and exclusive no-overwrite
-creation. Read the completed artifact back immediately and verify exact bytes,
-size, SHA-256, the declared text format, final-newline state, and containment
-where applicable. Freeze the successful path immediately.
+creation. Before the write, freeze the exact local bytes and derive their size,
+whole-file SHA-256, declared text format, final-newline state, and any qualified
+provider checksum from those same bytes.
+
+After creation, verify exact retention by raw-byte readback or by a qualified
+provider-integrity comparison that binds authoritative object identity, stored
+size, containment, and an officially documented provider checksum to the same
+frozen local bytes. All required values must be present and match. Keep the
+provider checksum distinct from whole-file SHA-256. When that comparison is
+unavailable, incomplete, ambiguous, or unqualified, exact raw-byte readback
+remains required. Freeze the successful path immediately.
 
 Corrections use a new identity with explicit lineage; never edit the frozen
 artifact in place. Artifact preservation does not by itself require Git, a
@@ -144,7 +152,8 @@ Record, as applicable:
 - a safe durable locator;
 - exact size and SHA-256;
 - encoding, line endings, and final-newline state;
-- exact-byte read-back and containment result;
+- exact integrity-verification route and result, including exact-byte read-back
+  when that route was used, plus containment result;
 - predecessor, review, disposition, supersession, or other lineage;
 - retention and visibility classification when the owning storage contract
   requires them;
@@ -179,7 +188,7 @@ Fail before retaining bytes or claiming capture-dependent completion when:
   mismatched;
 - retention is prohibited or uncertain;
 - the owning workflow supplies no permitted durable destination;
-- exact retention or immediate read-back is unavailable;
+- exact retention verification through either qualified route is unavailable;
 - the target exists, collides, escapes containment, or creates overwrite risk;
 - encoding, line endings, final-newline state, size, or digest mismatches; or
 - available transport or storage weakens ownership, authority, evidence,

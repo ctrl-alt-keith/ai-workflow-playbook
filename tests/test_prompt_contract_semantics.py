@@ -7,8 +7,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
-ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v2.json"
-LEGACY_ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v1.json"
+ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v3.json"
+HISTORICAL_V2_ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v2.json"
+LEGACY_V1_ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v1.json"
 VECTOR_PATH = DOCS / "prompt-contract-canonicalization-vectors-v1.json"
 
 
@@ -28,27 +29,47 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.anchor = json.loads(ANCHOR_PATH.read_text(encoding="utf-8"))
-        cls.legacy_anchor = json.loads(
-            LEGACY_ANCHOR_PATH.read_text(encoding="utf-8")
+        cls.historical_v2_anchor = json.loads(
+            HISTORICAL_V2_ANCHOR_PATH.read_text(encoding="utf-8")
+        )
+        cls.legacy_v1_anchor = json.loads(
+            LEGACY_V1_ANCHOR_PATH.read_text(encoding="utf-8")
         )
 
     def test_anchor_identity_and_required_keys(self):
         self.assertEqual(
             self.anchor["artifact_type"], "prompt_contract_semantic_anchors"
         )
-        self.assertEqual(self.anchor["anchor_version"], "2.0.0")
-        self.assertEqual(self.anchor["compatibility_major"], 2)
+        self.assertEqual(self.anchor["anchor_version"], "3.0.0")
+        self.assertEqual(self.anchor["compatibility_major"], 3)
 
-        self.assertEqual(self.legacy_anchor["anchor_version"], "1.1.0")
-        legacy_bytes = LEGACY_ANCHOR_PATH.read_bytes()
-        self.assertEqual(len(legacy_bytes), 8662)
+        self.assertEqual(self.historical_v2_anchor["anchor_version"], "2.0.0")
+        self.assertEqual(self.historical_v2_anchor["compatibility_major"], 2)
+        historical_v2_bytes = HISTORICAL_V2_ANCHOR_PATH.read_bytes()
+        self.assertEqual(len(historical_v2_bytes), 11593)
         self.assertEqual(
-            hashlib.sha256(legacy_bytes).hexdigest(),
+            hashlib.sha256(historical_v2_bytes).hexdigest(),
+            "71abb264847a2c950dfaccc9e438d8db7cb0dab14a1424552688a09ba03fb4f5",
+        )
+        historical_v2_capture = self.historical_v2_anchor[
+            "issue_owned_durable_handoff_profile"
+        ]["durable_capture"]
+        self.assertIs(historical_v2_capture["raw_provider_readback_required"], True)
+        self.assertNotIn(
+            "integrity_verification",
+            self.historical_v2_anchor["issue_owned_durable_handoff_profile"],
+        )
+
+        self.assertEqual(self.legacy_v1_anchor["anchor_version"], "1.1.0")
+        legacy_v1_bytes = LEGACY_V1_ANCHOR_PATH.read_bytes()
+        self.assertEqual(len(legacy_v1_bytes), 8662)
+        self.assertEqual(
+            hashlib.sha256(legacy_v1_bytes).hexdigest(),
             "e0ee48d832e911c2b88caf3e5fc82bf826ac0d4a2315b19302d88e20ffbd488c",
         )
-        legacy_capture = self.legacy_anchor["issue_owned_durable_handoff_profile"][
-            "durable_capture"
-        ]
+        legacy_capture = self.legacy_v1_anchor[
+            "issue_owned_durable_handoff_profile"
+        ]["durable_capture"]
         self.assertIs(legacy_capture["provider_revision_required"], True)
         self.assertNotIn(
             "provider_revision_recorded_when_available", legacy_capture
@@ -57,13 +78,31 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         supersession = self.anchor["supersession"]
         self.assertEqual(
             supersession["supersedes_for_new_compatible_selection"],
-            LEGACY_ANCHOR_PATH.name,
+            HISTORICAL_V2_ANCHOR_PATH.name,
         )
         self.assertIs(
             supersession["historical_consumers_remain_pinned_to_recorded_major"],
             True,
         )
         self.assertIs(supersession["implicit_major_adoption_prohibited"], True)
+
+        historical_v2_supersession = self.historical_v2_anchor["supersession"]
+        self.assertEqual(
+            historical_v2_supersession[
+                "supersedes_for_new_compatible_selection"
+            ],
+            LEGACY_V1_ANCHOR_PATH.name,
+        )
+        self.assertIs(
+            historical_v2_supersession[
+                "historical_consumers_remain_pinned_to_recorded_major"
+            ],
+            True,
+        )
+        self.assertIs(
+            historical_v2_supersession["implicit_major_adoption_prohibited"],
+            True,
+        )
 
         required_keys = {
             "artifact_classes",
@@ -108,7 +147,12 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertEqual(set(self.anchor["required_identity_names"]), required_identities)
 
     def test_prompt_contract_artifacts_have_no_duplicate_object_keys(self):
-        for path in (LEGACY_ANCHOR_PATH, ANCHOR_PATH, VECTOR_PATH):
+        for path in (
+            LEGACY_V1_ANCHOR_PATH,
+            HISTORICAL_V2_ANCHOR_PATH,
+            ANCHOR_PATH,
+            VECTOR_PATH,
+        ):
             with self.subTest(path=path.name):
                 load_json_without_duplicate_keys(path.read_text(encoding="utf-8"))
 
@@ -205,7 +249,6 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
                 "human_disposition",
             },
         )
-        self.assertTrue(profile["durable_capture"]["raw_provider_readback_required"])
         for key in (
             "containment_verification_required",
             "exact_byte_size_and_sha256_required",
@@ -217,7 +260,35 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         ):
             self.assertTrue(profile["durable_capture"][key])
         self.assertNotIn(
+            "raw_provider_readback_required", profile["durable_capture"]
+        )
+        self.assertNotIn(
             "provider_revision_required", profile["durable_capture"]
+        )
+
+        integrity = profile["integrity_verification"]
+        self.assertEqual(
+            integrity["allowed_routes"],
+            [
+                "exact_raw_provider_readback",
+                "qualified_local_bytes_provider_checksum",
+            ],
+        )
+        qualified = integrity["qualified_local_bytes_provider_checksum"]
+        for key in (
+            "authoritative_stored_size_matches_frozen_local_byte_length",
+            "created_and_reobserved_provider_object_identity_matches",
+            "provider_checksum_algorithm_officially_documented_for_local_to_stored_equality",
+            "provider_checksum_computed_from_same_frozen_local_bytes",
+            "provider_reported_checksum_matches_local_provider_checksum",
+            "whole_file_sha256_kept_distinct_from_provider_checksum",
+        ):
+            self.assertTrue(qualified[key])
+        self.assertFalse(qualified["raw_provider_readback_required_after_qualified_match"])
+        self.assertTrue(
+            integrity[
+                "unavailable_incomplete_ambiguous_or_unqualified_route_fails_closed"
+            ]
         )
 
         envelope = profile["delivery_envelope"]
@@ -338,8 +409,13 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
 
         canonical_doc = (DOCS / "prompt-contracts.md").read_text(encoding="utf-8")
         self.assertIn(ANCHOR_PATH.name, canonical_doc)
-        self.assertIn(LEGACY_ANCHOR_PATH.name, canonical_doc)
+        self.assertIn(HISTORICAL_V2_ANCHOR_PATH.name, canonical_doc)
+        self.assertIn(LEGACY_V1_ANCHOR_PATH.name, canonical_doc)
         self.assertIn(VECTOR_PATH.name, canonical_doc)
+
+        for relative_path in ("prompts.md", "tool-adapters/codex.md"):
+            contents = (DOCS / relative_path).read_text(encoding="utf-8")
+            self.assertIn(ANCHOR_PATH.name, contents, relative_path)
 
     def test_local_links_in_affected_documentation_resolve(self):
         affected_documents = (

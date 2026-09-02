@@ -98,8 +98,9 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             "UTF-8 without a byte-order mark",
             "LF line endings",
             "explicit final-newline rule",
-            "Immediately retrieve the raw stored bytes",
-            "Provider content hashes stay distinct from whole-file SHA-256",
+            "qualified comparison of the same frozen local bytes",
+            "raw readback remains required",
+            "Provider checksums and ordinary whole-file SHA-256 remain distinct algorithms and evidence",
         ):
             self.assertIn(phrase, self.contract)
 
@@ -167,8 +168,6 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             "never fabricate a revision",
         ):
             self.assertIn(phrase, self.contract)
-        self.assertIn("provider revision when exposed", self.chatgpt)
-        self.assertIn("record that unavailability explicitly", self.chatgpt)
         self.assertNotIn(
             "provider identity, provider revision, provider content hash when available",
             self.contract,
@@ -224,10 +223,8 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             self.codex,
         )
         self.assertIn("controller-bound digest evidence plus exact read evidence", self.claude)
-        self.assertIn("Extracted text alone is not exact-byte readback", self.chatgpt)
         for adapter in self.adapter_profiles:
             self.assertIn("provider", adapter.lower())
-            self.assertIn("concrete provider", adapter.lower())
             self.assertNotRegex(adapter, re.compile(r"\b\d{8,}\b"))
             self.assertNotRegex(
                 adapter,
@@ -241,10 +238,6 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
                 reusable_section,
                 re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"),
             )
-
-    def test_chatgpt_creation_fails_closed_on_collision(self):
-        for phrase in ("Overwrite", "autorename", "destination collision", "fails closed"):
-            self.assertIn(phrase, self.chatgpt)
 
     def test_qualified_machine_recipient_uses_file_first_presentation(self):
         presentation = " ".join(self.presentation.split())
@@ -397,7 +390,9 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         file_id = preview.index("`file_id` returned by the write")
         namespace = preview.index("returned namespace path only when no file ID")
         self.assertLess(file_id, namespace)
-        self.assertIn("before minting the single-use download link", preview)
+        preview_call = preview.index("`file_preview`")
+        download_link = preview.index("`download_link`")
+        self.assertLess(preview_call, download_link)
 
     def test_chatgpt_connector_results_are_not_the_visible_widget(self):
         preview = " ".join(self.chatgpt_dropbox_bootstrap.split())

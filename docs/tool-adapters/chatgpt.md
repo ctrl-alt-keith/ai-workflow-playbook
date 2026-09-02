@@ -255,11 +255,11 @@ merely because one downstream prerequisite failed.
 
 ### Dropbox Preview And Minimal Executor Handoff
 
-When optional operator preview is selected, exact-verify the durable prompt,
+When optional operator preview is selected, complete the shared pre-link checks,
 then call Dropbox `file_preview` with `file_paths` containing the exact
 `file_id` returned by the write. Use the exact returned namespace path only
 when no file ID is available; never strip its namespace prefix. Present the
-tool-produced widget before minting the single-use download link.
+tool-produced widget before the final `download_link` call.
 
 The preview call and connector metadata are not a visibly rendered preview.
 Do not substitute `open_in_dropbox_url`, copy or share links, thumbnail URLs,
@@ -285,36 +285,25 @@ Dropbox ID: [exact returned file ID]
 Expected bytes: [byte count]
 Expected SHA-256: [digest]
 Execute: Download once, verify the exact identity, byte count, and SHA-256, then execute the complete prompt file.
-Stop: Fail closed on retrieval, identity, size, or digest mismatch; do not reconstruct the prompt from chat.
+Stop: Fail closed on retrieval, identity, size, or SHA-256 mismatch. Do not reconstruct the prompt from chat.
 ```
 
 ### Issue-Owned Durable Prompt Capture And Handoff
 
 Apply the shared
-[`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
-when ChatGPT prepares an exact prompt for another executor. After the
-six-condition admission test and the owning storage contract pass, ChatGPT may
-use an authorized connected app to create the one immutable issue-owned object
-with absent-create semantics. It must re-observe the acting account, raw stored
-bytes, path and object identities, exact size and SHA-256, provider revision
-when exposed, provider content hash when available, text format, and containment
-before reporting `PRESERVED`. When the provider does not expose revision
-metadata, record that unavailability explicitly and never fabricate a revision.
-Overwrite, autorename, a destination collision, or an identity mismatch fails
-closed. Extracted text alone is not exact-byte readback.
+[`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile).
+For Dropbox's qualified provider-checksum route, compute `content_hash` from
+the frozen rendered bytes using Dropbox's documented algorithm. Apply the
+owning storage contract's absent-create and collision rules; extracted
+connector text is not exact-byte readback.
 
-Prefer a receiving executor's qualified direct retrieval of that durable object.
-When the receiver cannot directly retrieve and verify it, ChatGPT may coordinate
-one raw download into a private executor-owned attempt-local directory through
-an authorized operator or controller. That copy changes delivery only: it is
-not a second durable artifact, exchange surface, planning queue, or authority
-source. Keep delivery evidence, the receiving attempt, its receipt, output, and
-human disposition distinct from the durable prompt.
-
-The concrete provider, account, namespace, issue-path grammar, visibility,
-privacy, and retention rules belong to the project or storage owner and must
-not be copied into this adapter. Prompt preservation, delivery, hashes,
-receipts, and successful execution transfer zero authority.
+After the shared pre-link identity, path, containment, and revision checks,
+optionally preview the file, then call `download_link` once. Its returned file
+ID, path, stored size, and `content_hash` complete the provider-integrity
+comparison. Report `PRESERVED` only after they match, leave the same non-empty
+URL unconsumed for the executor, and otherwise use the shared raw-readback
+fallback. The qualified checksum route performs no controller verification
+content download.
 
 ## Workspace Agents
 
