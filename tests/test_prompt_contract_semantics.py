@@ -285,6 +285,11 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         ):
             self.assertTrue(qualified[key])
         self.assertFalse(qualified["raw_provider_readback_required_after_qualified_match"])
+        self.assertTrue(
+            integrity[
+                "unavailable_incomplete_ambiguous_or_unqualified_route_fails_closed"
+            ]
+        )
 
         envelope = profile["delivery_envelope"]
         self.assertTrue(
@@ -334,44 +339,6 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertFalse(
             profile["transport_cleanup"]["requires_recurring_cleanup_automation"]
         )
-
-    def test_dropbox_checksum_mapping_is_thin_and_fail_closed(self):
-        adapter = (DOCS / "tool-adapters" / "chatgpt.md").read_text(
-            encoding="utf-8"
-        )
-        start = adapter.index("### Issue-Owned Durable Prompt Capture And Handoff")
-        end = adapter.index("\n## ", start)
-        section = " ".join(adapter[start:end].split())
-
-        for phrase in (
-            "compute their byte length, ordinary whole-file SHA-256, "
-            "text-format properties, and Dropbox `content_hash`",
-            "authoritative stored size",
-            "call Dropbox `download_link` exactly once for the final handoff",
-            "The executor downloads the file once, verifies its byte length and "
-            "ordinary whole-file SHA-256",
-            "missing or mismatched identity, size, checksum, or containment "
-            "evidence fails closed",
-            "apply the shared raw-readback fallback",
-        ):
-            self.assertIn(phrase, section)
-
-        for rejected_handoff in (
-            "A second `download_link` call",
-            "controller consumption of the URL",
-            "a controller verification content download",
-            "does not satisfy this checksum-based handoff",
-        ):
-            self.assertIn(rejected_handoff, section)
-
-        for out_of_scope_term in (
-            "delivery attempt",
-            "replacement link",
-            "receiver content transfer",
-            "terminal workflow",
-            "action eligibility",
-        ):
-            self.assertNotIn(out_of_scope_term, section)
 
     def test_reasoning_versioning_transport_and_fresh_selection(self):
         self.assertEqual(self.anchor["reasoning_classes"], ["light", "medium", "high"])

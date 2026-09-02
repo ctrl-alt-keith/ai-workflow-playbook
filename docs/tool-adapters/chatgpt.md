@@ -292,61 +292,17 @@ Stop: Fail closed on retrieval, identity, size, or SHA-256 mismatch. Do not reco
 
 Apply the shared
 [`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
-when ChatGPT prepares an exact prompt for another executor. After the
-six-condition admission test and the owning storage contract pass, ChatGPT may
-use an authorized connected app to create the one immutable issue-owned object
-with absent-create semantics.
+when ChatGPT prepares an exact prompt for another executor. For Dropbox's
+qualified provider-checksum route, compute `content_hash` from the frozen
+rendered bytes using Dropbox's documented algorithm and require the returned
+file ID, path, stored size, and `content_hash` to match the preserved object.
+Keep `content_hash` distinct from ordinary whole-file SHA-256; missing or
+mismatched evidence uses the shared fail-closed raw-readback fallback.
 
-Before upload, freeze the exact rendered UTF-8 bytes and compute their byte
-length, ordinary whole-file SHA-256, text-format properties, and Dropbox
-`content_hash` using Dropbox's documented algorithm over that same byte
-sequence. Dropbox documents `content_hash` as a local-to-server content check
-whose algorithm hashes 4 MiB blocks and then hashes the concatenated binary
-block digests; it is not ordinary whole-file SHA-256. See Dropbox's official
-[`Content Hash`](https://www.dropbox.com/developers/reference/content-hash)
-reference.
-
-After absent-create succeeds, bind the returned file ID and destination path,
-then re-observe the acting account, exact path and object identities,
-authoritative stored size, provider revision when exposed, Dropbox
-`content_hash`, and containment. Compare stored size with the frozen local byte
-length and compare provider-reported `content_hash` with the locally computed
-Dropbox content hash. Keep both values distinct from the frozen ordinary
-whole-file SHA-256. This qualified provider-integrity proof verifies the upload
-without a controller verification download or raw post-write readback. When the
-provider does not expose revision metadata, record that unavailability
-explicitly and never fabricate a revision.
-
-After preservation verification succeeds, call Dropbox `download_link`
-exactly once for the final handoff. Bind the returned link metadata to the same
-file ID, path, authoritative stored size, and Dropbox `content_hash` used by the
-provider-integrity proof. Do not open, preflight, or consume the returned URL in
-the controller; give that unconsumed URL to the executor. A second
-`download_link` call, controller consumption of the URL, or a controller
-verification content download does not satisfy this checksum-based handoff.
-
-The executor downloads the file once, verifies its byte length and ordinary
-whole-file SHA-256, and only then executes it.
-
-Overwrite, autorename, a destination collision, or missing or mismatched
-identity, size, checksum, or containment evidence fails closed. Extracted text,
-preview content, reconstructed chat text, synchronized Dropbox files, and
-manual operator download/hash steps are prohibited substitutes. When the
-qualified provider-checksum path cannot qualify, apply the shared raw-readback
-fallback rather than weakening exact verification.
-
-Prefer a receiving executor's qualified direct retrieval of that durable object.
-When the receiver cannot directly retrieve and verify it, ChatGPT may coordinate
-one raw download into a private executor-owned attempt-local directory through
-an authorized operator or controller. That copy changes delivery only: it is
-not a second durable artifact, exchange surface, planning queue, or authority
-source. Keep delivery evidence, the receiving attempt, its receipt, output, and
-human disposition distinct from the durable prompt.
-
-The concrete provider, account, namespace, issue-path grammar, visibility,
-privacy, and retention rules belong to the project or storage owner and must
-not be copied into this adapter. Prompt preservation, delivery, hashes,
-receipts, and successful execution transfer zero authority.
+After preservation succeeds, call `download_link` once and leave its URL
+unconsumed for the executor. The compact handoff above already requires the
+executor to download once and verify byte length and ordinary whole-file
+SHA-256 before execution.
 
 ## Workspace Agents
 

@@ -168,8 +168,6 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             "never fabricate a revision",
         ):
             self.assertIn(phrase, self.contract)
-        self.assertIn("provider revision when exposed", self.chatgpt)
-        self.assertIn("record that unavailability explicitly", self.chatgpt)
         self.assertNotIn(
             "provider identity, provider revision, provider content hash when available",
             self.contract,
@@ -225,11 +223,8 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             self.codex,
         )
         self.assertIn("controller-bound digest evidence plus exact read evidence", self.claude)
-        self.assertIn("without a controller verification download", self.chatgpt)
-        self.assertIn("Extracted text, preview content, reconstructed chat text", self.chatgpt)
         for adapter in self.adapter_profiles:
             self.assertIn("provider", adapter.lower())
-            self.assertIn("concrete provider", adapter.lower())
             self.assertNotRegex(adapter, re.compile(r"\b\d{8,}\b"))
             self.assertNotRegex(
                 adapter,
@@ -243,10 +238,6 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
                 reusable_section,
                 re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"),
             )
-
-    def test_chatgpt_creation_fails_closed_on_collision(self):
-        for phrase in ("Overwrite", "autorename", "destination collision", "fails closed"):
-            self.assertIn(phrase, self.chatgpt)
 
     def test_qualified_machine_recipient_uses_file_first_presentation(self):
         presentation = " ".join(self.presentation.split())
