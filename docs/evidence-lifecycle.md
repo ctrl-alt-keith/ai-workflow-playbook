@@ -105,9 +105,29 @@ content.
 After the candidate floor and all storage-admission conditions pass, capture
 the complete artifact durably during the producing task. Use one writer, a
 unique semantic dated or versioned target, and exclusive no-overwrite
-creation. Read the completed artifact back immediately and verify exact bytes,
-size, SHA-256, the declared text format, final-newline state, and containment
-where applicable. Freeze the successful path immediately.
+creation. Before the write, freeze the exact local bytes and derive their size,
+whole-file SHA-256, declared text format, and final-newline state from those
+bytes rather than from a preview, extracted text, reconstructed content, or a
+different serialization.
+
+After creation, verify exact retention through the route selected by the owning
+storage contract. Exact raw-byte readback is one qualified route. A qualified
+provider-integrity route may instead compare authoritative stored size and a
+provider-reported content checksum with the same values computed locally from
+the frozen bytes, but only when the provider's official contract defines that
+checksum as a local-to-stored-content equality check, exposes the algorithm
+needed for the local computation, and binds the reported identity, size, and
+checksum to the exact created object. Re-observe containment and provider
+identity, and record provider revision when exposed. An upload-success
+response, arbitrary checksum, unbound metadata result, or provider checksum
+computed from different bytes is not sufficient. Keep the artifact's
+whole-file SHA-256 distinct from any provider-specific checksum.
+
+When the provider-integrity route is unavailable, incomplete, ambiguous, or
+unqualified, exact raw-byte readback remains required. A qualified checksum
+match removes only the redundant verification read; it does not weaken
+collision, no-overwrite, identity, containment, format, retention, or
+fail-closed requirements. Freeze the successful path immediately.
 
 Corrections use a new identity with explicit lineage; never edit the frozen
 artifact in place. Artifact preservation does not by itself require Git, a
@@ -144,7 +164,8 @@ Record, as applicable:
 - a safe durable locator;
 - exact size and SHA-256;
 - encoding, line endings, and final-newline state;
-- exact-byte read-back and containment result;
+- exact integrity-verification route and result, including exact-byte read-back
+  when that route was used, plus containment result;
 - predecessor, review, disposition, supersession, or other lineage;
 - retention and visibility classification when the owning storage contract
   requires them;
@@ -179,7 +200,7 @@ Fail before retaining bytes or claiming capture-dependent completion when:
   mismatched;
 - retention is prohibited or uncertain;
 - the owning workflow supplies no permitted durable destination;
-- exact retention or immediate read-back is unavailable;
+- exact retention verification through either qualified route is unavailable;
 - the target exists, collides, escapes containment, or creates overwrite risk;
 - encoding, line endings, final-newline state, size, or digest mismatches; or
 - available transport or storage weakens ownership, authority, evidence,

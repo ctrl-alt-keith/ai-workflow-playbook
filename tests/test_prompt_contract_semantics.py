@@ -36,7 +36,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertEqual(
             self.anchor["artifact_type"], "prompt_contract_semantic_anchors"
         )
-        self.assertEqual(self.anchor["anchor_version"], "2.0.0")
+        self.assertEqual(self.anchor["anchor_version"], "2.1.0")
         self.assertEqual(self.anchor["compatibility_major"], 2)
 
         self.assertEqual(self.legacy_anchor["anchor_version"], "1.1.0")
@@ -205,7 +205,6 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
                 "human_disposition",
             },
         )
-        self.assertTrue(profile["durable_capture"]["raw_provider_readback_required"])
         for key in (
             "containment_verification_required",
             "exact_byte_size_and_sha256_required",
@@ -217,8 +216,31 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         ):
             self.assertTrue(profile["durable_capture"][key])
         self.assertNotIn(
+            "raw_provider_readback_required", profile["durable_capture"]
+        )
+        self.assertNotIn(
             "provider_revision_required", profile["durable_capture"]
         )
+
+        integrity = profile["integrity_verification"]
+        self.assertEqual(
+            integrity["allowed_routes"],
+            [
+                "exact_raw_provider_readback",
+                "qualified_local_bytes_provider_checksum",
+            ],
+        )
+        qualified = integrity["qualified_local_bytes_provider_checksum"]
+        for key in (
+            "authoritative_stored_size_matches_frozen_local_byte_length",
+            "created_and_reobserved_provider_object_identity_matches",
+            "provider_checksum_algorithm_officially_documented_for_local_to_stored_equality",
+            "provider_checksum_computed_from_same_frozen_local_bytes",
+            "provider_reported_checksum_matches_local_provider_checksum",
+            "whole_file_sha256_kept_distinct_from_provider_checksum",
+        ):
+            self.assertTrue(qualified[key])
+        self.assertFalse(qualified["raw_provider_readback_required_after_qualified_match"])
 
         envelope = profile["delivery_envelope"]
         self.assertTrue(

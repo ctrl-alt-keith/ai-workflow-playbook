@@ -255,11 +255,13 @@ merely because one downstream prerequisite failed.
 
 ### Dropbox Preview And Minimal Executor Handoff
 
-When optional operator preview is selected, exact-verify the durable prompt,
-then call Dropbox `file_preview` with `file_paths` containing the exact
-`file_id` returned by the write. Use the exact returned namespace path only
-when no file ID is available; never strip its namespace prefix. Present the
-tool-produced widget before minting the single-use download link.
+When optional operator preview is selected, complete every available pre-link
+identity and storage check, then call Dropbox `file_preview` with `file_paths`
+containing the exact `file_id` returned by the write. Use the exact returned
+namespace path only when no file ID is available; never strip its namespace
+prefix. Present the tool-produced widget before the final metadata-bearing
+`download_link` operation mints the receiver URL. Preview does not establish
+the provider-integrity proof; the final metadata comparison below does.
 
 The preview call and connector metadata are not a visibly rendered preview.
 Do not substitute `open_in_dropbox_url`, copy or share links, thumbnail URLs,
@@ -285,7 +287,7 @@ Dropbox ID: [exact returned file ID]
 Expected bytes: [byte count]
 Expected SHA-256: [digest]
 Execute: Download once, verify the exact identity, byte count, and SHA-256, then execute the complete prompt file.
-Stop: Fail closed on retrieval, identity, size, or digest mismatch; do not reconstruct the prompt from chat.
+Stop: Fail closed on retrieval, identity, size, or SHA-256 mismatch. Do not reconstruct the prompt from chat or compare ordinary SHA-256 directly with Dropbox content_hash.
 ```
 
 ### Issue-Owned Durable Prompt Capture And Handoff
@@ -295,13 +297,42 @@ Apply the shared
 when ChatGPT prepares an exact prompt for another executor. After the
 six-condition admission test and the owning storage contract pass, ChatGPT may
 use an authorized connected app to create the one immutable issue-owned object
-with absent-create semantics. It must re-observe the acting account, raw stored
-bytes, path and object identities, exact size and SHA-256, provider revision
-when exposed, provider content hash when available, text format, and containment
-before reporting `PRESERVED`. When the provider does not expose revision
-metadata, record that unavailability explicitly and never fabricate a revision.
-Overwrite, autorename, a destination collision, or an identity mismatch fails
-closed. Extracted text alone is not exact-byte readback.
+with absent-create semantics.
+
+Before upload, freeze the exact rendered UTF-8 bytes and compute their byte
+length, ordinary whole-file SHA-256, text-format properties, and Dropbox
+`content_hash` using Dropbox's documented algorithm over that same byte
+sequence. Dropbox documents `content_hash` as a local-to-server content check
+whose algorithm hashes 4 MiB blocks and then hashes the concatenated binary
+block digests; it is not ordinary whole-file SHA-256. See Dropbox's official
+[`Content Hash`](https://www.dropbox.com/developers/reference/content-hash)
+reference.
+
+After absent-create succeeds, bind the returned file ID and destination path,
+then re-observe the acting account, exact path and object identities,
+authoritative stored size, provider revision when exposed, Dropbox
+`content_hash`, and containment. Compare stored size with the frozen local byte
+length and compare provider-reported `content_hash` with the locally computed
+Dropbox content hash. Keep both values distinct from the frozen ordinary
+whole-file SHA-256. This qualified provider-integrity proof verifies the upload
+without a controller verification download or raw post-write readback. When the
+provider does not expose revision metadata, record that unavailability
+explicitly and never fabricate a revision.
+
+When `download_link` exposes the exact file ID, path, stored size, Dropbox
+`content_hash`, and receiver URL together, one final call may both complete the
+provider comparison and mint the receiver's bounded link. Hold the URL until
+every metadata comparison passes, then return that same unconsumed URL to the
+receiver. Do not open, preview, unfurl, scan, issue `HEAD`, request a range, or
+otherwise preflight it. If any comparison fails, do not expose the URL.
+
+Overwrite, autorename, a destination collision, object-identity mismatch,
+revision ambiguity, stored-size mismatch, Dropbox content-hash mismatch,
+missing required metadata, or ambiguous provider state fails closed. Extracted
+text, preview content, reconstructed chat text, synchronized Dropbox files, and
+manual operator download/hash steps are prohibited substitutes. When the
+qualified provider-checksum path is unavailable, apply the shared raw-readback
+fallback rather than weakening exact verification.
 
 Prefer a receiving executor's qualified direct retrieval of that durable object.
 When the receiver cannot directly retrieve and verify it, ChatGPT may coordinate

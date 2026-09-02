@@ -48,9 +48,11 @@ class GovernedArtifactCaptureTests(unittest.TestCase):
         for phrase in (
             "Use one writer",
             "exclusive no-overwrite creation",
-            "Read the completed artifact back immediately",
-            "size, SHA-256",
-            "containment where applicable",
+            "freeze the exact local bytes",
+            "whole-file SHA-256",
+            "Exact raw-byte readback is one qualified route",
+            "provider-integrity route may instead compare authoritative stored size",
+            "Re-observe containment and provider identity",
             "Corrections use a new identity with explicit lineage",
             "scratch is not a substitute for required durable capture",
         ):

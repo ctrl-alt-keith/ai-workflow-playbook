@@ -456,14 +456,27 @@ a new immutable version with predecessor lineage; do not create mutable
 `latest`, `current`, or status-driven aliases.
 
 New text prompts use UTF-8 without a byte-order mark, LF line endings, an
-explicit final-newline rule, exact byte size, and SHA-256 over the exact
-rendered bytes. Immediately retrieve the raw stored bytes and verify the format,
-size, digest, immutable human locator, provider locator, provider object
-identity, provider content hash when available, and containment beneath the
-owning issue destination. Record provider revision when the owning provider
-exposes it. Otherwise record explicitly that revision evidence is unavailable;
-never fabricate a revision or treat another identifier as its substitute.
-Provider content hashes stay distinct from whole-file SHA-256.
+explicit final-newline rule, exact byte size, and whole-file SHA-256 over the
+exact rendered bytes. Freeze those local bytes before upload and derive every
+local identity value from that frozen byte sequence.
+
+After absent-create succeeds, verify the stored object through exact raw-byte
+readback or a qualified provider-integrity proof. The latter qualifies only
+when the owning provider officially documents a local checksum algorithm for
+verifying that its stored copy matches local bytes; the controller computes
+that provider checksum over the same frozen bytes; authoritative metadata binds
+the created and re-observed object identity, stored size, and provider checksum
+to the exact destination; and every identity, size, checksum, containment, and
+collision check matches. An upload-success response, arbitrary checksum,
+extracted text, preview, or unbound metadata is insufficient. Raw post-write
+byte readback is not required after this qualified proof succeeds; otherwise it
+remains required.
+
+Record provider revision when the owning provider exposes it. Otherwise record
+explicitly that revision evidence is unavailable; never fabricate a revision
+or treat another identifier as its substitute. Provider checksums and ordinary
+whole-file SHA-256 remain distinct evidence with distinct algorithms and must
+never be compared directly or described as equivalent.
 
 The owning storage contract, rather than this provider-neutral profile, defines
 the concrete provider, account, namespace, issue-path grammar, privacy,
@@ -543,7 +556,7 @@ only when their minimum predicates are met:
 
 | State | Minimum evidence |
 | --- | --- |
-| `PRESERVED` | One durable object was created, or a prior ambiguous absent-create was reconciled exact under the rule above; raw provider readback exact-matched the intended bytes, size, format, digest, and containment. |
+| `PRESERVED` | One durable object was created and exact integrity was proved by raw provider readback or a qualified local-byte/provider-checksum comparison, or a prior ambiguous absent-create was reconciled exact under the raw-readback rule above; identity, size, format, digest or provider checksum as applicable, and containment matched. |
 | `DELIVERED` | One delivery operation identifies the exact rendered prompt, selected route, intended target, and observed delivery result. |
 | `ACCEPTED` | The receiving executor explicitly acknowledges the prompt identity; delivery alone is insufficient. |
 | `STARTED` | One unique executor attempt actually began; acknowledgement alone is insufficient. |

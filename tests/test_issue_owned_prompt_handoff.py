@@ -98,8 +98,9 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             "UTF-8 without a byte-order mark",
             "LF line endings",
             "explicit final-newline rule",
-            "Immediately retrieve the raw stored bytes",
-            "Provider content hashes stay distinct from whole-file SHA-256",
+            "qualified provider-integrity proof",
+            "Raw post-write byte readback is not required after this qualified proof succeeds",
+            "Provider checksums and ordinary whole-file SHA-256 remain distinct evidence",
         ):
             self.assertIn(phrase, self.contract)
 
@@ -224,7 +225,8 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             self.codex,
         )
         self.assertIn("controller-bound digest evidence plus exact read evidence", self.claude)
-        self.assertIn("Extracted text alone is not exact-byte readback", self.chatgpt)
+        self.assertIn("without a controller verification download", self.chatgpt)
+        self.assertIn("Extracted text, preview content, reconstructed chat text", self.chatgpt)
         for adapter in self.adapter_profiles:
             self.assertIn("provider", adapter.lower())
             self.assertIn("concrete provider", adapter.lower())
@@ -397,7 +399,9 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         file_id = preview.index("`file_id` returned by the write")
         namespace = preview.index("returned namespace path only when no file ID")
         self.assertLess(file_id, namespace)
-        self.assertIn("before minting the single-use download link", preview)
+        self.assertIn("before the final metadata-bearing", preview)
+        self.assertIn("`download_link` operation mints the receiver URL", preview)
+        self.assertIn("Preview does not establish the provider-integrity proof", preview)
 
     def test_chatgpt_connector_results_are_not_the_visible_widget(self):
         preview = " ".join(self.chatgpt_dropbox_bootstrap.split())
