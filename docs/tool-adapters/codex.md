@@ -290,7 +290,7 @@ For a versioned material prompt:
   and verify the acting identity immediately before action.
 
 The current Playbook artifacts
-[`prompt-contract-semantic-anchors-v2.json`](../prompt-contract-semantic-anchors-v2.json)
+[`prompt-contract-semantic-anchors-v3.json`](../prompt-contract-semantic-anchors-v3.json)
 and
 [`prompt-contract-canonicalization-vectors-v1.json`](../prompt-contract-canonicalization-vectors-v1.json)
 define shared anchors and conformance inputs. They do not implement a Codex

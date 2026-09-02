@@ -332,7 +332,7 @@ deterministic model output.
 
 The Playbook-owned machine-readable anchors and canonicalization vectors are:
 
-- [`prompt-contract-semantic-anchors-v2.json`](prompt-contract-semantic-anchors-v2.json)
+- [`prompt-contract-semantic-anchors-v3.json`](prompt-contract-semantic-anchors-v3.json)
 - [`prompt-contract-canonicalization-vectors-v1.json`](prompt-contract-canonicalization-vectors-v1.json)
 
 They encode semantic anchors and conformance evidence only. They are not an

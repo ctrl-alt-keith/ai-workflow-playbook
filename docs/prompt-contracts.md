@@ -13,13 +13,16 @@ owning repository may implement those mechanics under its local contract, but
 the implementation must preserve the boundaries defined here.
 
 The current versioned machine-readable companion for new selections is
-[`prompt-contract-semantic-anchors-v2.json`](prompt-contract-semantic-anchors-v2.json).
+[`prompt-contract-semantic-anchors-v3.json`](prompt-contract-semantic-anchors-v3.json).
 The historical
+[`prompt-contract-semantic-anchors-v2.json`](prompt-contract-semantic-anchors-v2.json)
+and
 [`prompt-contract-semantic-anchors-v1.json`](prompt-contract-semantic-anchors-v1.json)
-remains immutable for compatibility-major v1 consumers. Version 2 supersedes
-version 1 for new compatible selection, but no consumer adopts the new major
-implicitly; replay and historical consumers remain pinned to their recorded
-major and exact bytes.
+remain immutable for compatibility-major v2 and v1 consumers. Version 3
+supersedes version 2 for new explicit compatible selection, while version 2
+continues to supersede version 1 within its recorded lineage. No consumer
+adopts a new major implicitly; replay and historical consumers remain pinned
+to their recorded v1 or v2 identity and exact bytes.
 RFC 8785 conformance cases are in
 [`prompt-contract-canonicalization-vectors-v1.json`](prompt-contract-canonicalization-vectors-v1.json).
 

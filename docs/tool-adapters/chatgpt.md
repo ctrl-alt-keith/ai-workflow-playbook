@@ -319,20 +319,31 @@ without a controller verification download or raw post-write readback. When the
 provider does not expose revision metadata, record that unavailability
 explicitly and never fabricate a revision.
 
-When `download_link` exposes the exact file ID, path, stored size, Dropbox
-`content_hash`, and receiver URL together, one final call may both complete the
-provider comparison and mint the receiver's bounded link. Hold the URL until
-every metadata comparison passes, then return that same unconsumed URL to the
+Define one successful Dropbox delivery attempt as zero controller verification
+content downloads, exactly one final metadata-bearing `download_link` call,
+and one returned non-empty, unconsumed receiver URL. The link result must bind
+that URL to the same exact file ID, path, stored size, and Dropbox
+`content_hash` used by the provider-integrity proof. Hold the URL until every
+metadata comparison passes, then return that same unconsumed URL to the
 receiver. Do not open, preview, unfurl, scan, issue `HEAD`, request a range, or
-otherwise preflight it. If any comparison fails, do not expose the URL.
+otherwise preflight it from the controller.
+
+The receiving executor performs exactly one receiver content transfer through
+that URL, then verifies the retrieved byte length and ordinary whole-file
+SHA-256 before execution. A consumed, expired, missing, ambiguous, or
+mismatched URL fails that delivery attempt. If the owning workflow permits a
+replacement link, represent it as a new distinct delivery attempt with its own
+identity and evidence; never make a second `download_link` call inside the
+successful attempt.
 
 Overwrite, autorename, a destination collision, object-identity mismatch,
 revision ambiguity, stored-size mismatch, Dropbox content-hash mismatch,
-missing required metadata, or ambiguous provider state fails closed. Extracted
-text, preview content, reconstructed chat text, synchronized Dropbox files, and
-manual operator download/hash steps are prohibited substitutes. When the
-qualified provider-checksum path is unavailable, apply the shared raw-readback
-fallback rather than weakening exact verification.
+missing required metadata, a second link call inside one attempt, or ambiguous
+provider state fails closed. Extracted text, preview content, reconstructed
+chat text, synchronized Dropbox files, and manual operator download/hash steps
+are prohibited substitutes. When the qualified provider-checksum path is
+unavailable, apply the shared raw-readback fallback rather than weakening exact
+verification.
 
 Prefer a receiving executor's qualified direct retrieval of that durable object.
 When the receiver cannot directly retrieve and verify it, ChatGPT may coordinate

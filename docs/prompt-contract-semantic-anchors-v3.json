@@ -1,5 +1,5 @@
 {
-  "anchor_version": "2.0.0",
+  "anchor_version": "3.0.0",
   "artifact_type": "prompt_contract_semantic_anchors",
   "artifact_classes": [
     "immutable_semantic_prompt_contract",
@@ -124,10 +124,28 @@
       "one_writer": true,
       "provider_content_hash_recorded_when_available": true,
       "provider_object_identity_required": true,
-      "raw_provider_readback_required": true,
       "provider_revision_recorded_when_available": true,
       "provider_revision_unavailability_recorded_when_not_exposed": true,
       "provider_revision_must_not_be_fabricated": true
+    },
+    "integrity_verification": {
+      "allowed_routes": [
+        "exact_raw_provider_readback",
+        "qualified_local_bytes_provider_checksum"
+      ],
+      "exact_raw_provider_readback": {
+        "exact_bytes_size_format_digest_and_containment_required": true
+      },
+      "qualified_local_bytes_provider_checksum": {
+        "authoritative_stored_size_matches_frozen_local_byte_length": true,
+        "created_and_reobserved_provider_object_identity_matches": true,
+        "provider_checksum_algorithm_officially_documented_for_local_to_stored_equality": true,
+        "provider_checksum_computed_from_same_frozen_local_bytes": true,
+        "provider_reported_checksum_matches_local_provider_checksum": true,
+        "raw_provider_readback_required_after_qualified_match": false,
+        "whole_file_sha256_kept_distinct_from_provider_checksum": true
+      },
+      "unavailable_incomplete_ambiguous_or_unqualified_route_fails_closed": true
     },
     "admission_fail_closed_triggers": [
       "storage_visibility_privacy_or_retention_not_affirmative",
@@ -200,7 +218,8 @@
       "PRESERVED": [
         "one_durable_object_created_or_prior_ambiguous_absent_create_reconciled_exact",
         "exact_reconciliation_requires_same_target_object_identity_and_no_second_write",
-        "raw_provider_readback_matches_intended_bytes_size_format_digest_and_containment"
+        "created_object_integrity_verified_by_exact_raw_readback_or_qualified_local_bytes_provider_checksum",
+        "ambiguous_absent_create_reconciliation_still_requires_raw_readback"
       ],
       "DELIVERED": [
         "one_delivery_operation_identifies_exact_rendered_prompt",
@@ -344,9 +363,9 @@
       "strictly_non_behavioral_executor_invisible_change"
     ]
   },
-  "compatibility_major": 2,
+  "compatibility_major": 3,
   "supersession": {
-    "supersedes_for_new_compatible_selection": "prompt-contract-semantic-anchors-v1.json",
+    "supersedes_for_new_compatible_selection": "prompt-contract-semantic-anchors-v2.json",
     "historical_consumers_remain_pinned_to_recorded_major": true,
     "implicit_major_adoption_prohibited": true
   }
