@@ -106,28 +106,16 @@ After the candidate floor and all storage-admission conditions pass, capture
 the complete artifact durably during the producing task. Use one writer, a
 unique semantic dated or versioned target, and exclusive no-overwrite
 creation. Before the write, freeze the exact local bytes and derive their size,
-whole-file SHA-256, declared text format, and final-newline state from those
-bytes rather than from a preview, extracted text, reconstructed content, or a
-different serialization.
+whole-file SHA-256, declared text format, final-newline state, and any qualified
+provider checksum from those same bytes.
 
-After creation, verify exact retention through the route selected by the owning
-storage contract. Exact raw-byte readback is one qualified route. A qualified
-provider-integrity route may instead compare authoritative stored size and a
-provider-reported content checksum with the same values computed locally from
-the frozen bytes, but only when the provider's official contract defines that
-checksum as a local-to-stored-content equality check, exposes the algorithm
-needed for the local computation, and binds the reported identity, size, and
-checksum to the exact created object. Re-observe containment and provider
-identity, and record provider revision when exposed. An upload-success
-response, arbitrary checksum, unbound metadata result, or provider checksum
-computed from different bytes is not sufficient. Keep the artifact's
-whole-file SHA-256 distinct from any provider-specific checksum.
-
-When the provider-integrity route is unavailable, incomplete, ambiguous, or
-unqualified, exact raw-byte readback remains required. A qualified checksum
-match removes only the redundant verification read; it does not weaken
-collision, no-overwrite, identity, containment, format, retention, or
-fail-closed requirements. Freeze the successful path immediately.
+After creation, verify exact retention by raw-byte readback or by a qualified
+provider-integrity comparison that binds authoritative object identity, stored
+size, containment, and an officially documented provider checksum to the same
+frozen local bytes. All required values must be present and match. Keep the
+provider checksum distinct from whole-file SHA-256. When that comparison is
+unavailable, incomplete, ambiguous, or unqualified, exact raw-byte readback
+remains required. Freeze the successful path immediately.
 
 Corrections use a new identity with explicit lineage; never edit the frozen
 artifact in place. Artifact preservation does not by itself require Git, a

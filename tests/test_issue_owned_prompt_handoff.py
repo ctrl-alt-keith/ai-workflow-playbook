@@ -98,9 +98,9 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             "UTF-8 without a byte-order mark",
             "LF line endings",
             "explicit final-newline rule",
-            "qualified provider-integrity proof",
-            "Raw post-write byte readback is not required after this qualified proof succeeds",
-            "Provider checksums and ordinary whole-file SHA-256 remain distinct evidence",
+            "qualified comparison of the same frozen local bytes",
+            "raw readback remains required",
+            "Provider checksums and ordinary whole-file SHA-256 remain distinct algorithms and evidence",
         ):
             self.assertIn(phrase, self.contract)
 
@@ -399,9 +399,8 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         file_id = preview.index("`file_id` returned by the write")
         namespace = preview.index("returned namespace path only when no file ID")
         self.assertLess(file_id, namespace)
-        self.assertIn("before the final metadata-bearing", preview)
-        self.assertIn("`download_link` operation mints the receiver URL", preview)
-        self.assertIn("Preview does not establish the provider-integrity proof", preview)
+        self.assertIn("complete preservation verification", preview)
+        self.assertIn("before calling the final single-use download link", preview)
 
     def test_chatgpt_connector_results_are_not_the_visible_widget(self):
         preview = " ".join(self.chatgpt_dropbox_bootstrap.split())

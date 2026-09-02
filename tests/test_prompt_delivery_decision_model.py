@@ -989,7 +989,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             permitted_file_destination=True,
             qualified_file_route_id="dropbox:primary",
             known_route_limitations=(
-                "provider revision metadata unavailable",
+                "controller post-write raw-byte SHA verification unavailable",
             ),
         )
 
@@ -1021,7 +1021,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                     qualification="qualified-with-known-limitation",
                     route_id="dropbox:primary",
                     diagnostics=(
-                        "provider revision metadata unavailable",
+                        "controller post-write raw-byte SHA verification unavailable",
                     ),
                 ),
             ),
@@ -1110,7 +1110,7 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             permitted_file_destination=True,
             qualified_file_route_id="dropbox:primary",
             known_route_limitations=(
-                "provider revision metadata unavailable",
+                "controller post-write raw-byte SHA verification unavailable",
             ),
             delegated_task_target_capabilities=(
                 "stronger controller-side exact-byte verification",

@@ -255,13 +255,11 @@ merely because one downstream prerequisite failed.
 
 ### Dropbox Preview And Minimal Executor Handoff
 
-When optional operator preview is selected, complete every available pre-link
-identity and storage check, then call Dropbox `file_preview` with `file_paths`
-containing the exact `file_id` returned by the write. Use the exact returned
-namespace path only when no file ID is available; never strip its namespace
-prefix. Present the tool-produced widget before the final metadata-bearing
-`download_link` operation mints the receiver URL. Preview does not establish
-the provider-integrity proof; the final metadata comparison below does.
+When optional operator preview is selected, complete preservation verification,
+then call Dropbox `file_preview` with `file_paths` containing the exact
+`file_id` returned by the write. Use the exact returned namespace path only
+when no file ID is available; never strip its namespace prefix. Present the
+tool-produced widget before calling the final single-use download link.
 
 The preview call and connector metadata are not a visibly rendered preview.
 Do not substitute `open_in_dropbox_url`, copy or share links, thumbnail URLs,
@@ -319,31 +317,23 @@ without a controller verification download or raw post-write readback. When the
 provider does not expose revision metadata, record that unavailability
 explicitly and never fabricate a revision.
 
-Define one successful Dropbox delivery attempt as zero controller verification
-content downloads, exactly one final metadata-bearing `download_link` call,
-and one returned non-empty, unconsumed receiver URL. The link result must bind
-that URL to the same exact file ID, path, stored size, and Dropbox
-`content_hash` used by the provider-integrity proof. Hold the URL until every
-metadata comparison passes, then return that same unconsumed URL to the
-receiver. Do not open, preview, unfurl, scan, issue `HEAD`, request a range, or
-otherwise preflight it from the controller.
+After preservation verification succeeds, call Dropbox `download_link`
+exactly once for the final handoff. Bind the returned link metadata to the same
+file ID, path, authoritative stored size, and Dropbox `content_hash` used by the
+provider-integrity proof. Do not open, preflight, or consume the returned URL in
+the controller; give that unconsumed URL to the executor. A second
+`download_link` call, controller consumption of the URL, or a controller
+verification content download does not satisfy this checksum-based handoff.
 
-The receiving executor performs exactly one receiver content transfer through
-that URL, then verifies the retrieved byte length and ordinary whole-file
-SHA-256 before execution. A consumed, expired, missing, ambiguous, or
-mismatched URL fails that delivery attempt. If the owning workflow permits a
-replacement link, represent it as a new distinct delivery attempt with its own
-identity and evidence; never make a second `download_link` call inside the
-successful attempt.
+The executor downloads the file once, verifies its byte length and ordinary
+whole-file SHA-256, and only then executes it.
 
-Overwrite, autorename, a destination collision, object-identity mismatch,
-revision ambiguity, containment mismatch, stored-size mismatch, Dropbox
-content-hash mismatch, missing required metadata, a second link call inside one
-attempt, or ambiguous provider state fails closed. Extracted text, preview
-content, reconstructed chat text, synchronized Dropbox files, and manual
-operator download/hash steps are prohibited substitutes. When the qualified
-provider-checksum path is unavailable, apply the shared raw-readback fallback
-rather than weakening exact verification.
+Overwrite, autorename, a destination collision, or missing or mismatched
+identity, size, checksum, or containment evidence fails closed. Extracted text,
+preview content, reconstructed chat text, synchronized Dropbox files, and
+manual operator download/hash steps are prohibited substitutes. When the
+qualified provider-checksum path cannot qualify, apply the shared raw-readback
+fallback rather than weakening exact verification.
 
 Prefer a receiving executor's qualified direct retrieval of that durable object.
 When the receiver cannot directly retrieve and verify it, ChatGPT may coordinate

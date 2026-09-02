@@ -50,9 +50,9 @@ class GovernedArtifactCaptureTests(unittest.TestCase):
             "exclusive no-overwrite creation",
             "freeze the exact local bytes",
             "whole-file SHA-256",
-            "Exact raw-byte readback is one qualified route",
-            "provider-integrity route may instead compare authoritative stored size",
-            "Re-observe containment and provider identity",
+            "raw-byte readback or by a qualified provider-integrity comparison",
+            "authoritative object identity, stored size, containment",
+            "officially documented provider checksum",
             "Corrections use a new identity with explicit lineage",
             "scratch is not a substitute for required durable capture",
         ):

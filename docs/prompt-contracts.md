@@ -463,23 +463,19 @@ explicit final-newline rule, exact byte size, and whole-file SHA-256 over the
 exact rendered bytes. Freeze those local bytes before upload and derive every
 local identity value from that frozen byte sequence.
 
-After absent-create succeeds, verify the stored object through exact raw-byte
-readback or a qualified provider-integrity proof. The latter qualifies only
-when the owning provider officially documents a local checksum algorithm for
-verifying that its stored copy matches local bytes; the controller computes
-that provider checksum over the same frozen bytes; authoritative metadata binds
-the created and re-observed object identity, stored size, and provider checksum
-to the exact destination; and every identity, size, checksum, containment, and
-collision check matches. An upload-success response, arbitrary checksum,
-extracted text, preview, or unbound metadata is insufficient. Raw post-write
-byte readback is not required after this qualified proof succeeds; otherwise it
+After absent-create succeeds, prove preservation by exact raw-byte readback or
+by a qualified comparison of the same frozen local bytes with authoritative
+provider object identity, stored size, containment, and an officially
+documented provider checksum. Missing or mismatched required identity, size,
+checksum, or containment evidence fails closed. When the provider-integrity
+route is unavailable, incomplete, ambiguous, or unqualified, raw readback
 remains required.
 
 Record provider revision when the owning provider exposes it. Otherwise record
 explicitly that revision evidence is unavailable; never fabricate a revision
 or treat another identifier as its substitute. Provider checksums and ordinary
-whole-file SHA-256 remain distinct evidence with distinct algorithms and must
-never be compared directly or described as equivalent.
+whole-file SHA-256 remain distinct algorithms and evidence and must never be
+compared directly or described as equivalent.
 
 The owning storage contract, rather than this provider-neutral profile, defines
 the concrete provider, account, namespace, issue-path grammar, privacy,
