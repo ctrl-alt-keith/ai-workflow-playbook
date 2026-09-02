@@ -223,8 +223,10 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             self.codex,
         )
         self.assertIn("controller-bound digest evidence plus exact read evidence", self.claude)
+        self.assertIn("Extracted text alone is not exact-byte readback", self.chatgpt)
         for adapter in self.adapter_profiles:
             self.assertIn("provider", adapter.lower())
+            self.assertIn("concrete provider", adapter.lower())
             self.assertNotRegex(adapter, re.compile(r"\b\d{8,}\b"))
             self.assertNotRegex(
                 adapter,
@@ -238,6 +240,16 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
                 reusable_section,
                 re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"),
             )
+
+    def test_chatgpt_creation_fails_closed_on_collision(self):
+        capture = " ".join(self.adapter_profiles[2].split())
+        for phrase in (
+            "absent-create",
+            "no-overwrite",
+            "no-autorename",
+            "a destination collision fails closed",
+        ):
+            self.assertIn(phrase, capture)
 
     def test_qualified_machine_recipient_uses_file_first_presentation(self):
         presentation = " ".join(self.presentation.split())
@@ -387,12 +399,57 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
     def test_chatgpt_preview_prefers_the_returned_file_id(self):
         preview = " ".join(self.chatgpt_dropbox_bootstrap.split())
         self.assertIn("Dropbox `file_preview` with `file_paths`", preview)
+        for check in (
+            "object-ID",
+            "path",
+            "containment",
+            "revision-when-exposed",
+        ):
+            self.assertIn(check, preview)
         file_id = preview.index("`file_id` returned by the write")
         namespace = preview.index("returned namespace path only when no file ID")
         self.assertLess(file_id, namespace)
         preview_call = preview.index("`file_preview`")
         download_link = preview.index("`download_link`")
         self.assertLess(preview_call, download_link)
+
+    def test_chatgpt_download_link_completes_provider_integrity_proof(self):
+        capture = " ".join(self.adapter_profiles[2].split())
+        for phrase in (
+            "created object's non-empty file ID and path",
+            "containment beneath the exact issue destination",
+            "provider revision when exposed",
+            "record that unavailability explicitly",
+            "zero controller verification content downloads",
+            "Extracted text alone is not exact-byte readback",
+            "Defer authoritative stored size and `content_hash` evidence",
+            "returned file ID, path, stored size, and `content_hash`",
+            "match the created object",
+            "require a non-empty returned URL",
+            "keep `content_hash` distinct from ordinary whole-file SHA-256",
+            "leave the URL unconsumed for the executor",
+            "Do not report `PRESERVED` until that comparison succeeds",
+            "shared fail-closed raw-readback fallback",
+        ):
+            self.assertIn(phrase, capture)
+        self.assertEqual(capture.count("`download_link`"), 1)
+
+        write = capture.index("After the write")
+        pre_link = capture.index("complete the pre-link checks")
+        preview = capture.index("Optionally preview the file")
+        download_link = capture.index("call `download_link` exactly once")
+        comparison = capture.index("Require its returned file ID")
+        self.assertLess(write, pre_link)
+        self.assertLess(pre_link, preview)
+        self.assertLess(preview, download_link)
+        self.assertLess(download_link, comparison)
+
+        bootstrap = " ".join(self.chatgpt_dropbox_bootstrap.split())
+        self.assertIn(
+            "Do not reconstruct the prompt from chat or compare ordinary SHA-256 "
+            "directly with Dropbox content_hash",
+            bootstrap,
+        )
 
     def test_chatgpt_connector_results_are_not_the_visible_widget(self):
         preview = " ".join(self.chatgpt_dropbox_bootstrap.split())

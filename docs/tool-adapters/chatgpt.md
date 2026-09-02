@@ -255,11 +255,13 @@ merely because one downstream prerequisite failed.
 
 ### Dropbox Preview And Minimal Executor Handoff
 
-When optional operator preview is selected, complete the available pre-link
-checks, then call Dropbox `file_preview` with `file_paths` containing the exact
-`file_id` returned by the write. Use the exact returned namespace path only
-when no file ID is available; never strip its namespace prefix. Present the
-tool-produced widget before the final `download_link` call.
+When optional operator preview is selected, complete the pre-link object-ID,
+path, containment, and revision-when-exposed checks defined in the issue-owned
+capture profile below. Then call Dropbox `file_preview` with `file_paths`
+containing the exact `file_id` returned by the write. Use the exact returned
+namespace path only when no file ID is available; never strip its namespace
+prefix. Present the tool-produced widget before the final `download_link`
+call.
 
 The preview call and connector metadata are not a visibly rendered preview.
 Do not substitute `open_in_dropbox_url`, copy or share links, thumbnail URLs,
@@ -294,14 +296,26 @@ Apply the shared
 [`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
 when ChatGPT prepares an exact prompt for another executor. For Dropbox's
 qualified provider-checksum route, compute `content_hash` from the frozen
-rendered bytes using Dropbox's documented algorithm.
+rendered bytes using Dropbox's documented algorithm. The concrete provider,
+account, namespace, issue-path grammar, visibility, privacy, and retention
+rules remain with the project or storage owner. Use its absent-create,
+no-overwrite, and no-autorename semantics; a destination collision fails
+closed.
 
-After the write and available pre-link checks, optionally preview the file,
-then call `download_link` once. Require its returned file ID, path, stored size,
-and `content_hash` to match the preserved object, keep `content_hash` distinct
-from ordinary whole-file SHA-256, and leave the returned URL unconsumed for the
-executor. Missing or mismatched evidence uses the shared fail-closed
-raw-readback fallback.
+After the write, complete the pre-link checks by re-observing and matching the
+created object's non-empty file ID and path, its containment beneath the exact
+issue destination, and its provider revision when exposed. When revision is
+not exposed, record that unavailability explicitly; never fabricate it.
+Perform zero controller verification content downloads in that qualified
+attempt. Extracted text alone is not exact-byte readback. Defer authoritative
+stored size and `content_hash` evidence to the final link response. Optionally
+preview the file, then call
+`download_link` exactly once. Require its returned file ID, path, stored size,
+and `content_hash` to match the created object; require a non-empty returned URL,
+keep `content_hash` distinct from ordinary whole-file SHA-256, and leave the URL
+unconsumed for the executor. Do not report `PRESERVED` until that comparison
+succeeds. Missing or mismatched evidence uses the shared fail-closed raw-readback
+fallback.
 
 ## Workspace Agents
 
