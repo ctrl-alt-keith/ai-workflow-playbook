@@ -255,11 +255,11 @@ merely because one downstream prerequisite failed.
 
 ### Dropbox Preview And Minimal Executor Handoff
 
-When optional operator preview is selected, complete preservation verification,
-then call Dropbox `file_preview` with `file_paths` containing the exact
+When optional operator preview is selected, complete the available pre-link
+checks, then call Dropbox `file_preview` with `file_paths` containing the exact
 `file_id` returned by the write. Use the exact returned namespace path only
 when no file ID is available; never strip its namespace prefix. Present the
-tool-produced widget before calling the final single-use download link.
+tool-produced widget before the final `download_link` call.
 
 The preview call and connector metadata are not a visibly rendered preview.
 Do not substitute `open_in_dropbox_url`, copy or share links, thumbnail URLs,
@@ -294,15 +294,14 @@ Apply the shared
 [`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
 when ChatGPT prepares an exact prompt for another executor. For Dropbox's
 qualified provider-checksum route, compute `content_hash` from the frozen
-rendered bytes using Dropbox's documented algorithm and require the returned
-file ID, path, stored size, and `content_hash` to match the preserved object.
-Keep `content_hash` distinct from ordinary whole-file SHA-256; missing or
-mismatched evidence uses the shared fail-closed raw-readback fallback.
+rendered bytes using Dropbox's documented algorithm.
 
-After preservation succeeds, call `download_link` once and leave its URL
-unconsumed for the executor. The compact handoff above already requires the
-executor to download once and verify byte length and ordinary whole-file
-SHA-256 before execution.
+After the write and available pre-link checks, optionally preview the file,
+then call `download_link` once. Require its returned file ID, path, stored size,
+and `content_hash` to match the preserved object, keep `content_hash` distinct
+from ordinary whole-file SHA-256, and leave the returned URL unconsumed for the
+executor. Missing or mismatched evidence uses the shared fail-closed
+raw-readback fallback.
 
 ## Workspace Agents
 

@@ -390,8 +390,9 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         file_id = preview.index("`file_id` returned by the write")
         namespace = preview.index("returned namespace path only when no file ID")
         self.assertLess(file_id, namespace)
-        self.assertIn("complete preservation verification", preview)
-        self.assertIn("before calling the final single-use download link", preview)
+        preview_call = preview.index("`file_preview`")
+        download_link = preview.index("`download_link`")
+        self.assertLess(preview_call, download_link)
 
     def test_chatgpt_connector_results_are_not_the_visible_widget(self):
         preview = " ".join(self.chatgpt_dropbox_bootstrap.split())
