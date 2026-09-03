@@ -31,12 +31,17 @@ class ProposalArtifactTopologyTests(unittest.TestCase):
             DOCS / "feature-lifecycle.md",
             "## Branch And PR Rules",
         )
+        cls.proposal_first = markdown_section(
+            DOCS / "feature-lifecycle.md",
+            "### Proportional proposal-first delivery",
+        )
         cls.prompts = markdown_section(
             DOCS / "prompts.md",
             "### Repository-topology authorization check",
         )
         cls.owner_normalized = normalized(cls.owner)
         cls.lifecycle_normalized = normalized(cls.lifecycle)
+        cls.proposal_first_normalized = normalized(cls.proposal_first)
         cls.prompts_normalized = normalized(cls.prompts)
 
     def test_owner_keeps_phase_mutation_and_capture_as_separate_decisions(self):
@@ -86,6 +91,8 @@ class ProposalArtifactTopologyTests(unittest.TestCase):
         )
 
     def test_generated_handoffs_require_current_phase_mutation_authority(self):
+        paragraphs = [normalized(value) for value in self.prompts.split("\n\n")]
+        authorization_paragraph = paragraphs[1]
         for action in (
             "implementation mode",
             "worktree",
@@ -95,20 +102,37 @@ class ProposalArtifactTopologyTests(unittest.TestCase):
             "push",
             "pull request",
         ):
-            self.assertIn(action, self.prompts_normalized)
+            self.assertIn(action, authorization_paragraph)
         self.assertIn(
             "identify the current human direction or narrower owning-workflow rule that authorizes repository mutation in the current phase",
-            self.prompts_normalized,
+            authorization_paragraph,
         )
+        discussion_paragraph = paragraphs[2]
+        self.assertIn("current intent is discussion-first", discussion_paragraph)
+        self.assertIn("Omit Git topology", discussion_paragraph)
+        self.assertIn("Stop for the human decision", discussion_paragraph)
         self.assertIn("zero-repository-mutation stop boundary", self.prompts_normalized)
 
     def test_exact_proposal_identity_rejects_empty_commit_and_mutable_pr_body(self):
-        combined = " ".join(
-            (self.owner_normalized, self.lifecycle_normalized, self.prompts_normalized)
+        self.assertIn("empty commit", self.owner_normalized)
+        self.assertIn("mutable pull-request description", self.owner_normalized)
+        self.assertIn("natural durable owner", self.owner_normalized)
+        for projection in (self.lifecycle, self.proposal_first, self.prompts):
+            self.assertIn(
+                "repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces",
+                projection,
+            )
+        self.assertNotIn("mutable pull-request description", self.lifecycle_normalized)
+        self.assertNotIn("mutable pull-request description", self.prompts_normalized)
+
+    def test_proposal_first_phase_routes_to_owner_before_artifact_selection(self):
+        pointer = self.proposal_first_normalized.index(
+            "current-phase mutation-authority and proposal-surface decision"
         )
-        self.assertIn("empty commit", combined)
-        self.assertIn("mutable pull-request description", combined)
-        self.assertIn("natural durable owner", combined)
+        transition = self.proposal_first_normalized.index(
+            "When the proposal-first path applies"
+        )
+        self.assertLess(pointer, transition)
 
     def test_shared_owner_routes_provider_selection_to_storage_contract(self):
         self.assertIn(

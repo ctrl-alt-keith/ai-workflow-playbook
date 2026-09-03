@@ -54,6 +54,10 @@ inspection to implementation. They do not need a proposal artifact,
 independent review, or proposal-only pull request merely to follow a longer
 example.
 
+Before naming or selecting the proposal artifact in the transition below,
+apply the current-phase mutation-authority and proposal-surface decision in
+[`repo-readiness.md`](repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces).
+
 When the proposal-first path applies, preserve these semantic transitions:
 
 1. retrieve the authoritative sources and identify owners, scope, exclusions,
@@ -361,8 +365,7 @@ implementation may continue on the same branch and PR. Keep proposal approval
 and final implementation review distinct: proposal approval authorizes only the
 stated implementation, and merge still requires separate authorization against
 the exact reviewed implementation head. Materiality or an independent-review
-requirement does not itself choose the proposal PR. Do not use an empty commit
-to represent or freeze revisions of a mutable pull-request description.
+requirement does not itself choose the proposal PR.
 
 Record two different identities when merge follows. The implementation head is
 the pre-merge commit reviewed for merge authorization. The resulting integrated

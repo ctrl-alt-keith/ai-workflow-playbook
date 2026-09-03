@@ -231,9 +231,10 @@ permitted also do not create repository-mutation authority.
 
 For discussion-first intent such as `come up with a proposal we can discuss,
 then implement`, keep repositories read-only for the current phase. Return a
-compact proposal in the active interaction. When the proposal is substantial
-and exact durable identity would materially improve review, handoff, recovery,
-or independent review, apply the existing governed-artifact candidate and
+compact proposal in the active interaction. When the proposal is substantial,
+its exact identity is required for review, handoff, recovery, or independent
+review, and regeneration or interaction-only retention would weaken that
+dependency, apply the existing governed-artifact candidate and
 storage-admission contract in
 [`evidence-lifecycle.md`](evidence-lifecycle.md#governed-artifact-capture). Use
 the issue-owned provider destination only when the current project's owning

@@ -173,14 +173,14 @@ authorized, select review/audit or orchestration/prompt-authoring mode for the
 current phase. Omit Git topology and state the zero-repository-mutation stop
 boundary. Return a compact proposal in the active interaction, or direct a
 substantial proposal through the existing governed-artifact capture and owning
-storage-admission contract when exact durable identity would materially improve
-review, handoff, recovery, or independent review. Stop for the human decision.
+storage-admission contract when exact identity is required for review, handoff,
+recovery, or independent review and regeneration or interaction-only retention
+would weaken that dependency. Stop for the human decision.
 
 Do not use a keyword-only rule: `proposal` and `design` do not prohibit a
 repository artifact when the human explicitly requests a design document or
 proposal pull request. Conversely, recorded later implementation intent does
-not authorize Git in the discussion phase. Never use an empty commit or mutable
-pull-request description as the exact identity of proposal bytes.
+not authorize Git in the discussion phase.
 
 ### Provider-neutral examples
 
