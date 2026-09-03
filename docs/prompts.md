@@ -561,6 +561,76 @@ selection consume only the decision record. Representative requests such as
 upstream evidence; they are neither transport selectors nor repeated inputs to
 the downstream stages.
 
+### Issue-Owned File-Backed Handoff Prose-DAG Pilot
+
+This pilot is opt-in for a normal-use trial. Activate it once the
+`PROMPT_READY` prerequisites hold: the canonical decision model has resolved a
+complete executable prompt for the one machine recipient named by the
+activating adapter, the governing issue and intended issue-owned destination
+are known, and the prompt body is frozen for this attempt. The
+`PROMPT_READY -> ROUTE_QUALIFIED` transition consumes the already-frozen stages
+5 through 7 decision record when that record selects a qualified file route,
+`file-backed` presentation, and the `thin-handoff` renderer. The pilot does not
+replace, repeat, or recompute any of the eight stages. A record with another
+selection remains under the canonical decision model and does not enter this
+graph. No recipient is eligible unless its adapter explicitly activates this
+pilot.
+
+Once explicitly activated, use this fixed last-mile graph:
+
+```text
+PROMPT_READY
+    -> ROUTE_QUALIFIED
+    -> PROMPT_STORED
+    -> ARTIFACT_VERIFIED
+    -> HANDOFF_EMITTED
+
+Any unmet prerequisite -> BLOCKED
+Human correction -> new revision, retaining the nearest still-valid state
+```
+
+- `PROMPT_READY` means the complete prompt, machine execution recipient,
+  governing issue, destination intent, and frozen body are resolved.
+- `ROUTE_QUALIFIED` means the current Dropbox route, acting account,
+  destination permission, and required capability were inspected or
+  successfully exercised. Inline complete-prompt rendering is ineligible.
+- `PROMPT_STORED` means one issue-owned Dropbox object was created and its
+  provider identity was captured under the existing durable handoff profile.
+- `ARTIFACT_VERIFIED` means current provider identity and applicable integrity
+  evidence were re-observed and matched before handoff creation.
+- `HANDOFF_EMITTED` means the operator received the selected compact
+  target-shaped retrieval handoff without the complete prompt body. It is
+  terminal success for this delivery attempt.
+- `BLOCKED` means one named prerequisite or action failed. Take no downstream
+  transition or delivery action.
+
+For every material transition in an activated attempt, surface one compact
+operator-visible receipt at the transition boundary. Keep it outside both the
+stored prompt and the receiver's copyable execution instructions:
+
+```text
+Issue-owned file-backed handoff pilot | revision [n]
+[from] -> [to] | [succeeded | blocked]
+Basis: [decisive observed prerequisite or exact block reason] | Action: [selected action]
+Ineligible: [actions excluded by this transition] | Next: [eligible transition or terminal state]
+Correction: supersedes revision [n]; retains [nearest valid state]; invalidates [state or pending action]
+```
+
+Include the correction line only after human correction, and increment the
+revision. A successful receipt relies only on observed provider or connector
+facts where they are decisive; it must not invent evidence. It records
+execution-state evidence, grants no authority, performs no lifecycle
+transition, and contains no complete prompt body, secret, or hidden reasoning.
+
+The observed action must match the selected action and transition. Treat a
+wrong transition, an unsupported prerequisite, an action contradiction, a
+stale or superseded revision, or an omitted receipt as a visible pilot failure.
+A correct `BLOCKED` receipt names the failure and leaves downstream actions
+ineligible. This vocabulary is only for this pilot, not a general incident
+taxonomy, retry model, or workflow framework. Ordinary chat, prompt authoring,
+conceptual fragments, human-recipient inline delivery, and non-pilot handoffs
+do not inherit it.
+
 ## Cross-Executor Prompt Presentation
 
 This section supplies the transport and presentation rules consumed by stages
@@ -608,6 +678,7 @@ surface.
 
 - [Task-Shape Surface Selection And Thin Handoffs](#task-shape-surface-selection-and-thin-handoffs)
 - [Prompt Delivery Decision Model](#prompt-delivery-decision-model)
+- [Issue-Owned File-Backed Handoff Prose-DAG Pilot](#issue-owned-file-backed-handoff-prose-dag-pilot)
 - [Cross-Executor Prompt Presentation](#cross-executor-prompt-presentation)
 - [Repository Implementation Task](#repository-implementation-task)
 - [Parallel Batch Add-On](#parallel-batch-add-on)

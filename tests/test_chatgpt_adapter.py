@@ -118,6 +118,24 @@ class ChatGPTAdapterTests(unittest.TestCase):
         )
         self.assertIn("not symptom-by-symptom repair", contents)
 
+    def test_issue_owned_codex_handoff_pilot_hook_is_explicit_and_thin(self):
+        contents = (DOCS / "tool-adapters/chatgpt.md").read_text(
+            encoding="utf-8"
+        )
+        anchor = "#issue-owned-file-backed-handoff-prose-dag-pilot"
+        hook = next(
+            paragraph for paragraph in contents.split("\n\n") if anchor in paragraph
+        )
+        normalized_hook = " ".join(hook.split())
+
+        self.assertNotIn("### Issue-Owned Codex Handoff Pilot Projection", contents)
+        self.assertIn(anchor, hook)
+        self.assertRegex(normalized_hook, r"explicitly activated.*CAK-209.*Codex trial")
+        self.assertRegex(
+            normalized_hook,
+            r"transition receipts.*operator-visible metadata.*outside.*copyable handoff",
+        )
+
     def test_adapter_keeps_chat_and_work_under_chatgpt(self):
         chatgpt = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")
         codex = (DOCS / "tool-adapters/codex.md").read_text(encoding="utf-8")

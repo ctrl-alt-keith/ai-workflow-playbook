@@ -221,6 +221,12 @@ or require the operator to open a preview; connector confirmation authorizes
 only its file operation. File-card and preview behavior is product-dependent
 runtime evidence, so recheck the relevant action.
 
+For the explicitly activated CAK-209 normal-use Codex trial, ChatGPT applies the
+shared
+[`Issue-Owned File-Backed Handoff Prose-DAG Pilot`](../prompts.md#issue-owned-file-backed-handoff-prose-dag-pilot)
+and presents its transition receipts as operator-visible metadata outside the
+receiver's copyable handoff.
+
 For a human execution recipient, or a machine execution recipient whose
 inspected capability state permits inline fallback, the model selects `inline`
 presentation and the existing
