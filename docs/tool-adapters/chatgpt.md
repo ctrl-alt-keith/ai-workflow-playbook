@@ -221,6 +221,12 @@ or require the operator to open a preview; connector confirmation authorizes
 only its file operation. File-card and preview behavior is product-dependent
 runtime evidence, so recheck the relevant action.
 
+For the explicitly activated CAK-209 normal-use Codex trial, ChatGPT applies the
+shared
+[`Issue-Owned File-Backed Handoff Prose-DAG Pilot`](../prompts.md#issue-owned-file-backed-handoff-prose-dag-pilot)
+and presents its transition receipts as operator-visible metadata outside the
+receiver's copyable handoff.
+
 For a human execution recipient, or a machine execution recipient whose
 inspected capability state permits inline fallback, the model selects `inline`
 presentation and the existing
@@ -252,25 +258,6 @@ When the governing exact-byte or durable contract prohibits that fallback,
 preserve the target-shaped handoff with an explicit blocked state and stop. Do
 not degrade the required prompt or handoff into unconstrained status prose
 merely because one downstream prerequisite failed.
-
-### Issue-Owned Codex Handoff Pilot Projection
-
-During an explicitly activated CAK-209 normal-use pilot attempt, apply the
-shared
-[`Issue-Owned File-Backed Handoff Prose-DAG Pilot`](../prompts.md#issue-owned-file-backed-handoff-prose-dag-pilot)
-only after the current decision record has selected the qualified Dropbox
-file route, `file-backed` presentation, and the `thin-handoff` renderer. Display
-each compact transition receipt at the matching action boundary, outside the
-stored prompt and outside the receiver's copyable handoff instructions.
-
-Populate decisive evidence only from provider or connector facts ChatGPT
-actually observed. Ensure the visible connector action and response surface
-match the receipt's selected action: a file-backed transition must not render
-the complete prompt inline. A `BLOCKED` receipt performs no downstream action,
-and a human correction increments the revision, makes the superseded revision
-ineligible, and resumes only from the nearest still-valid state. Do not apply
-this projection to ordinary chat, prompt authoring, non-Codex recipients,
-inline delivery, or handoffs where the pilot was not explicitly activated.
 
 ### Dropbox Preview And Minimal Executor Handoff
 

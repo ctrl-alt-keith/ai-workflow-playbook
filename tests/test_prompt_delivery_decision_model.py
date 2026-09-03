@@ -576,11 +576,15 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         self.assertIn("Ineligible:", pilot)
         self.assertIn("Correction:", pilot)
         self.assertIn(
-            "does not replace or recompute any of the eight stages",
+            "does not replace, repeat, or recompute any of the eight stages",
             normalized_pilot,
         )
-        self.assertIn("Ordinary chat", pilot)
-        self.assertIn("not a general incident taxonomy", normalized_pilot)
+        self.assertIn("`PROMPT_READY` prerequisites hold", normalized_pilot)
+        self.assertIn(
+            "`PROMPT_READY -> ROUTE_QUALIFIED` transition consumes the "
+            "already-frozen stages 5 through 7 decision record",
+            normalized_pilot,
+        )
 
     def test_resolved_codex_semantics_exclude_request_wording(self):
         prompts = PROMPTS.read_text(encoding="utf-8")
