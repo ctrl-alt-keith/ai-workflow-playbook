@@ -146,7 +146,18 @@ class OperatorProgressEconomyTests(unittest.TestCase):
         self.assertIn("aggregate routine successful operations", self.codex)
         self.assertIn("without restarting", self.codex)
         self.assertIn("Successful completion projection", self.codex)
-        self.assertIn("successful-completion-projection", self.prompts)
+        self.assertIn("Successful completion projection", self.claude)
+        self.assertEqual(
+            2, self.prompts.count("successful-completion-projection")
+        )
+        self.assertIn(
+            "Report the canonical outcome and any material validation exception",
+            self.prompts,
+        )
+        self.assertIn(
+            "report to the coordinating orchestrator",
+            self.prompts,
+        )
         self.assertIn("governed stream and attempt evidence", self.claude)
         self.assertIn("execution-context mismatch", self.claude)
 
