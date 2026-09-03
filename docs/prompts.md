@@ -763,7 +763,8 @@ Constraints:
 - Follow `docs/repo-readiness.md`, the matching executor adapter, and
   repo-local `AGENTS.md` for interaction mode, command form, worktree,
   validation, and delivery.
-- Report blockers, validation failures, residual risks, and uncertainty.
+- Surface blockers, validation failures, unresolved risks, and material
+  uncertainty.
 
 Tasks:
 1. Inspect the existing structure and relevant source material.
@@ -776,7 +777,8 @@ Validation:
 
 Delivery:
 - [branch, commit, push, and PR expectation, or explicit exclusion]
-- Include a concise summary, validation results, and residual risks.
+- Apply `docs/core-model.md#successful-completion-projection` to the final
+  report.
 
 Permissions and completion boundary:
 - Authorized actions: [local edits, validation, commit, push, PR, or narrower]

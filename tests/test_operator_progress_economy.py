@@ -67,6 +67,7 @@ def progress_fixture() -> dict:
 
 def successful_completion_fixture() -> dict:
     return {
+        "fixture_scope": "contract-only-not-runtime-or-ui-conformance",
         "operator_report": {
             "outcome": "Implemented CAK-185",
             "result": "PR #384 is open and review-ready",
@@ -195,6 +196,10 @@ class OperatorProgressEconomyTests(unittest.TestCase):
         self.assertEqual(preference["attempt_before"], preference["attempt_after"])
 
     def test_successful_completion_projects_operator_result_not_forensic_replay(self):
+        self.assertEqual(
+            "contract-only-not-runtime-or-ui-conformance",
+            self.completion["fixture_scope"],
+        )
         report = " ".join(self.completion["operator_report"].values())
         forensic = self.completion["durable_forensic_evidence"]
 
