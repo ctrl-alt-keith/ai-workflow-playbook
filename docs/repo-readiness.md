@@ -599,13 +599,14 @@ For standard Git work, choose the `git` command directly instead of
 substituting alternate APIs, helper tools, wrapper scripts, or
 connector-specific operations. For ordinary GitHub workflow operations, choose
 high-level `gh` subcommands directly. Do not use `gh api` or `gh api graphql`
-as a fallback for normal repository workflows, and do not bypass this rule with
-direct GitHub REST or GraphQL HTTP calls or equivalent wrappers. When a required
-capability is unavailable through a high-level `gh` command, use an approved
-available connector or tool when it supports that operation. If neither a
-high-level `gh` command nor an approved connector or tool supports the required
-operation, report the capability gap rather than dropping to a lower-level API
-route.
+merely because a high-level convenience command is unavailable, and do not
+bypass this rule with direct GitHub REST or GraphQL HTTP calls or equivalent
+wrappers. Use an approved available connector or tool when it supports the
+required hosted fact. If a materially necessary fact remains unavailable,
+apply the minimum-sufficient retrieval and explicit-escalation rule in
+[`source-first-retrieval.md`](source-first-retrieval.md#minimum-sufficient-retrieval)
+before considering a bounded lower-level read; otherwise omit the nonessential
+fact or report the capability gap.
 
 Preserve that directness at the execution layer too. Prefer native argv-style
 execution, such as `["git", "status"]` or `["gh", "pr", "create"]`, when the
