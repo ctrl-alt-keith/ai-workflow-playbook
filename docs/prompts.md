@@ -773,7 +773,7 @@ Tasks:
 
 Validation:
 - Run [validation_path].
-- Report the exact result.
+- Report the canonical outcome and any material validation exception.
 
 Delivery:
 - [branch, commit, push, and PR expectation, or explicit exclusion]
@@ -814,8 +814,9 @@ Parallel execution:
 - Define any merge-order dependencies before launch.
 - Keep one repository, one branch, one worktree, and one PR per lane.
 - Validate each lane with the repository's canonical validation path.
-- Workers stop at PR readiness and report changed files, validation, overlap,
-  blockers, residual risk, and merge-order dependencies.
+- Workers stop at PR readiness and report to the coordinating orchestrator the
+  changed files, validation, overlap, blockers, residual risk, and merge-order
+  dependencies needed for lane reconciliation.
 - The orchestrator inspects outputs directly, reconciles sequentially, reruns
   canonical validation after updates, and stops before merge unless explicitly
   authorized.
@@ -1027,9 +1028,10 @@ Delivery:
 - Include expected GitHub issue closing keywords and planning references when
   those identifiers are provided.
 - At successful completion, apply the
-  `core-model.md#successful-completion-projection` rule. Report the completed
-  outcome, reviewable repository result and status, canonical validation and
-  review summary, useful exact implementation identity, and stop boundary.
+  `docs/core-model.md#successful-completion-projection` rule. Report the
+  completed outcome, reviewable repository result and status, canonical
+  validation and review summary, useful exact implementation identity, and
+  stop boundary.
   Add changed-file, risk, or evidence detail only when it materially affects
   operator review or action.
 ```
