@@ -1,5 +1,8 @@
 from pathlib import Path
 import re
+import subprocess
+import sys
+import tempfile
 import unittest
 
 
@@ -26,6 +29,7 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
         cls.contract = normalized(DOCS / "prompt-contracts.md")
         cls.evidence = normalized(DOCS / "evidence-lifecycle.md")
         cls.prompts = normalized(DOCS / "prompts.md")
+        cls.readiness = normalized(DOCS / "repo-readiness.md")
         cls.codex = normalized(DOCS / "tool-adapters" / "codex.md")
         cls.claude = normalized(DOCS / "tool-adapters" / "claude.md")
         cls.chatgpt = normalized(DOCS / "tool-adapters" / "chatgpt.md")
@@ -427,6 +431,82 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             self.assertIn(field, bootstrap)
         self.assertIn("Keep the complete prompt in Dropbox", section)
         self.assertIn("do not summarize or reproduce the prompt", section)
+
+    def test_retrieval_bootstrap_uses_a_shell_safe_name_and_direct_process(self):
+        section = self.chatgpt_dropbox_bootstrap
+        blocks = re.findall(r"```[^\n]*\n(.*?)\n```", section, re.DOTALL)
+        self.assertEqual(len(blocks), 1)
+        bootstrap = blocks[0]
+        directory_name_line = next(
+            line
+            for line in bootstrap.splitlines()
+            if line.startswith("Attempt directory basename:")
+        )
+        directory_name = directory_name_line.partition(":")[2].strip()
+        local_name_line = next(
+            line for line in bootstrap.splitlines() if line.startswith("Local filename:")
+        )
+        local_name = local_name_line.partition(":")[2].strip()
+
+        self.assertRegex(directory_name, re.compile(r"\A[A-Za-z0-9._-]+\Z"))
+        self.assertRegex(local_name, re.compile(r"\A[A-Za-z0-9._-]+\Z"))
+        self.assertIn("direct argv/process invocation", bootstrap)
+        self.assertIn(
+            "workflow-generated attempt-local retrieval basenames",
+            self.readiness,
+        )
+        self.assertIn("direct argv/process invocation", self.codex)
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            probe = root / "downloader-probe"
+            marker = root / "downloader-invoked"
+            probe.write_text(
+                f"#!{sys.executable}\n"
+                "from pathlib import Path\n"
+                "import sys\n"
+                "Path(sys.argv[1]).write_text('\\n'.join(sys.argv[2:]), "
+                "encoding='utf-8')\n",
+                encoding="utf-8",
+            )
+            probe.chmod(0o700)
+
+            unsafe_target = root / "prompt retrieval (first attempt)" / local_name
+            single_use_url = "https://example.invalid/file?token=a&single_use=1"
+            shell_built_command = (
+                f"{probe} {marker} --output {unsafe_target} {single_use_url}"
+            )
+            rejected = subprocess.run(
+                ["/bin/sh", "-c", shell_built_command],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertFalse(marker.exists())
+
+            safe_directory = root / directory_name.replace("XXXXXXXX", "A1")
+            self.assertRegex(safe_directory.name, re.compile(r"\A[A-Za-z0-9._-]+\Z"))
+            safe_target = safe_directory / local_name
+            invoked = subprocess.run(
+                [
+                    str(probe),
+                    str(marker),
+                    "--output",
+                    str(safe_target),
+                    single_use_url,
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(invoked.returncode, 0, invoked.stderr)
+            self.assertEqual(
+                marker.read_text(encoding="utf-8").splitlines(),
+                ["--output", str(safe_target), single_use_url],
+            )
 
 
 if __name__ == "__main__":

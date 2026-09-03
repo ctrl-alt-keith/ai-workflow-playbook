@@ -288,9 +288,11 @@ Reason:
 ```text
 Download: [fresh single-use raw-download URL]
 Dropbox ID: [exact returned file ID]
+Attempt directory basename: prompt-retrieval.XXXXXXXX
+Local filename: prompt.md
 Expected bytes: [byte count]
 Expected SHA-256: [digest]
-Execute: Download once, verify the exact identity, byte count, and SHA-256, then execute the complete prompt file.
+Execute: Download exactly once with a direct argv/process invocation into the qualified private attempt-local directory, verify the exact identity, byte count, and SHA-256, then execute the complete prompt file.
 Stop: Fail closed on retrieval, identity, size, or SHA-256 mismatch. Do not reconstruct the prompt from chat.
 ```
 
