@@ -485,6 +485,14 @@ explicit owner assigns it a non-disposable role; prefer a role-specific name.
 Generic persistent `scratch/` is prohibited by default for disposable
 mechanics.
 
+Constrain workflow-generated attempt-local retrieval basenames to
+`[A-Za-z0-9._-]+`, including generated child-directory and local-file
+basenames. Do not derive them from issue titles, prompt text, or other free-form
+labels that can introduce spaces, quotes, brackets, colons, parentheses, shell
+metacharacters, or avoidable quoting hazards. Continue to pass paths as data and
+quote them defensively whenever a shell is genuinely required; the restricted
+basename is an ergonomics safeguard, not permission for string interpolation.
+
 Environment variables such as `TMPDIR`, `TEMP`, and `TMP` are observations or
 inputs, not authority. Temporary-directory helpers are allocation mechanics,
 not authority. An applicable owner qualifies a platform mapping in its own

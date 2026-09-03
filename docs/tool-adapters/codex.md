@@ -314,6 +314,13 @@ consumed local bytes and declared text format before acceptance. Do not use a
 locally synchronized provider mount as provider or durable identity, treat the
 local retrieval as durable, or create an exchange root.
 
+For this fallback, apply the shared attempt-local retrieval basename and
+path-as-data rules in
+[`repo-readiness.md#repo-local-workflow-state`](../repo-readiness.md#repo-local-workflow-state).
+Invoke the downloader with a direct argv/process invocation when shell syntax
+is not genuinely required, passing the URL and output path as separate
+arguments.
+
 Record the delivery operation and Codex attempt separately from the durable
 prompt. Distinguish `DELIVERED`, `ACCEPTED`, `STARTED`, and the terminal
 attempt outcome rather than inferring one from another. Preserve required
