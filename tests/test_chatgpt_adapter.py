@@ -91,6 +91,7 @@ class ChatGPTAdapterTests(unittest.TestCase):
             "Persistent-context activation",
             "Chat, Work, and execution locality",
             "Connected apps, approvals, and consequential actions",
+            "Issue-Owned Codex Handoff Pilot Projection",
             "Workspace Agents",
             "Prompt and downstream-context projection",
             "Generated artifacts",
@@ -117,6 +118,24 @@ class ChatGPTAdapterTests(unittest.TestCase):
             "does not expand the human-authorized task", " ".join(contents.split())
         )
         self.assertIn("not symptom-by-symptom repair", contents)
+
+    def test_issue_owned_codex_handoff_pilot_projection_is_explicit_and_thin(self):
+        contents = (DOCS / "tool-adapters/chatgpt.md").read_text(
+            encoding="utf-8"
+        )
+        start = contents.index("### Issue-Owned Codex Handoff Pilot Projection")
+        end = contents.index("### Dropbox Preview And Minimal Executor Handoff")
+        pilot = contents[start:end]
+        normalized_pilot = " ".join(pilot.split())
+
+        self.assertIn("#issue-owned-file-backed-handoff-prose-dag-pilot", pilot)
+        self.assertIn("explicitly activated", pilot)
+        self.assertIn("`file-backed`", pilot)
+        self.assertIn("`thin-handoff`", pilot)
+        self.assertIn("outside the stored prompt", normalized_pilot)
+        self.assertIn("`BLOCKED`", pilot)
+        self.assertIn("must not render the complete prompt inline", normalized_pilot)
+        self.assertIn("ordinary chat", pilot)
 
     def test_adapter_keeps_chat_and_work_under_chatgpt(self):
         chatgpt = (DOCS / "tool-adapters/chatgpt.md").read_text(encoding="utf-8")

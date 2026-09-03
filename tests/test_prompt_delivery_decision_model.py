@@ -551,6 +551,37 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
         ):
             self.assertIn(mapping, normalized_section)
 
+    def test_docs_define_bounded_issue_owned_codex_handoff_pilot(self):
+        prompts = PROMPTS.read_text(encoding="utf-8")
+        heading = "### Issue-Owned File-Backed Handoff Prose-DAG Pilot"
+        pilot = prompts[
+            prompts.index(heading) : prompts.index(
+                "## Cross-Executor Prompt Presentation"
+            )
+        ]
+        normalized_pilot = " ".join(pilot.split())
+
+        states = (
+            "PROMPT_READY",
+            "ROUTE_QUALIFIED",
+            "PROMPT_STORED",
+            "ARTIFACT_VERIFIED",
+            "HANDOFF_EMITTED",
+        )
+        positions = [pilot.index(state) for state in states]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn("Any unmet prerequisite -> BLOCKED", pilot)
+        self.assertIn("Human correction -> new revision", pilot)
+        self.assertIn("[from] -> [to] | [succeeded | blocked]", pilot)
+        self.assertIn("Ineligible:", pilot)
+        self.assertIn("Correction:", pilot)
+        self.assertIn(
+            "does not replace or recompute any of the eight stages",
+            normalized_pilot,
+        )
+        self.assertIn("Ordinary chat", pilot)
+        self.assertIn("not a general incident taxonomy", normalized_pilot)
+
     def test_resolved_codex_semantics_exclude_request_wording(self):
         prompts = PROMPTS.read_text(encoding="utf-8")
         decision_section = prompts[
