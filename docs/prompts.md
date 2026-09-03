@@ -588,16 +588,26 @@ the downstream stages.
 
 ### Issue-Owned File-Backed Handoff Prose-DAG Pilot
 
-This pilot is opt-in for a normal-use trial. Activate it once the
-`PROMPT_READY` prerequisites hold: the canonical decision model has resolved a
-complete executable prompt for the one machine recipient named by the
-activating adapter, the governing issue and intended issue-owned destination
-are known, and the prompt body is frozen for this attempt. The
-`PROMPT_READY -> ROUTE_QUALIFIED` transition consumes the already-frozen stages
-5 through 7 decision record when that record selects a qualified file route,
-`file-backed` presentation, and the `thin-handoff` renderer. The pilot does not
-replace, repeat, or recompute any of the eight stages. A record with another
-selection remains under the canonical decision model and does not enter this
+This pilot is opt-in for a normal-use trial. For an explicitly activated
+attempt, enter the graph at `PROMPT_READY` once its prerequisites hold: the
+canonical decision model has resolved a complete executable prompt for the one
+machine recipient named by the activating adapter, the governing issue and
+intended issue-owned destination are known, and the prompt body is frozen for
+this attempt. Entry at `PROMPT_READY` precedes route qualification. A qualified
+route, existing destination, destination permission, or required write
+capability is not an activation prerequisite.
+
+After graph entry, the canonical decision model resolves stages 5 through 7
+once. The `PROMPT_READY -> ROUTE_QUALIFIED` transition consumes the resulting
+frozen decision record when it selects a qualified file route, `file-backed`
+presentation, and the `thin-handoff` renderer. If route, destination,
+permission, or required-capability qualification instead fails, record
+`PROMPT_READY -> BLOCKED`, select `blocked` presentation with no complete-prompt
+renderer, and keep every downstream graph transition and inline complete-prompt
+fallback ineligible. That failure does not retroactively remove the attempt
+from the graph. The pilot does not replace, repeat, or recompute any of the
+eight stages. A record with another selection outside an explicitly activated
+attempt remains under the canonical decision model and does not enter this
 graph. No recipient is eligible unless its adapter explicitly activates this
 pilot.
 

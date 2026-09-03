@@ -581,15 +581,31 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             "does not replace, repeat, or recompute any of the eight stages",
             normalized_pilot,
         )
-        for relationship in (
-            "`PROMPT_READY` prerequisites hold",
+        for semantic_anchor in (
+            "enter the graph at `PROMPT_READY`",
+            "route qualification",
+            "activation prerequisite",
             "`PROMPT_READY -> ROUTE_QUALIFIED`",
-            "already-frozen stages 5 through 7 decision record",
+            "resulting frozen decision record",
             "qualified file route",
             "`file-backed` presentation",
             "`thin-handoff` renderer",
+            "`PROMPT_READY -> BLOCKED`",
+            "`blocked` presentation",
+            "no complete-prompt renderer",
+            "inline complete-prompt fallback",
+            "retroactively remove the attempt from the graph",
         ):
-            self.assertIn(relationship, normalized_opening)
+            self.assertIn(semantic_anchor, normalized_opening)
+
+        self.assertLess(
+            normalized_opening.index("enter the graph at `PROMPT_READY`"),
+            normalized_opening.index("After graph entry"),
+        )
+        self.assertLess(
+            normalized_opening.index("`PROMPT_READY -> ROUTE_QUALIFIED`"),
+            normalized_opening.index("`PROMPT_READY -> BLOCKED`"),
+        )
 
     def test_resolved_codex_semantics_exclude_request_wording(self):
         prompts = PROMPTS.read_text(encoding="utf-8")
