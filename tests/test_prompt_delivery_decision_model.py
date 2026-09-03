@@ -559,7 +559,9 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 "## Cross-Executor Prompt Presentation"
             )
         ]
+        opening = pilot[: pilot.index("Once explicitly activated")]
         normalized_pilot = " ".join(pilot.split())
+        normalized_opening = " ".join(opening.split())
 
         states = (
             "PROMPT_READY",
@@ -579,12 +581,15 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
             "does not replace, repeat, or recompute any of the eight stages",
             normalized_pilot,
         )
-        self.assertIn("`PROMPT_READY` prerequisites hold", normalized_pilot)
-        self.assertIn(
-            "`PROMPT_READY -> ROUTE_QUALIFIED` transition consumes the "
+        for relationship in (
+            "`PROMPT_READY` prerequisites hold",
+            "`PROMPT_READY -> ROUTE_QUALIFIED`",
             "already-frozen stages 5 through 7 decision record",
-            normalized_pilot,
-        )
+            "qualified file route",
+            "`file-backed` presentation",
+            "`thin-handoff` renderer",
+        ):
+            self.assertIn(relationship, normalized_opening)
 
     def test_resolved_codex_semantics_exclude_request_wording(self):
         prompts = PROMPTS.read_text(encoding="utf-8")

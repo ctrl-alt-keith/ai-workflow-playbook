@@ -569,10 +569,12 @@ complete executable prompt for the one machine recipient named by the
 activating adapter, the governing issue and intended issue-owned destination
 are known, and the prompt body is frozen for this attempt. The
 `PROMPT_READY -> ROUTE_QUALIFIED` transition consumes the already-frozen stages
-5 through 7 decision record when it selects a qualified file route,
+5 through 7 decision record when that record selects a qualified file route,
 `file-backed` presentation, and the `thin-handoff` renderer. The pilot does not
-replace, repeat, or recompute any of the eight stages. No recipient is eligible
-unless its adapter explicitly activates this pilot.
+replace, repeat, or recompute any of the eight stages. A record with another
+selection remains under the canonical decision model and does not enter this
+graph. No recipient is eligible unless its adapter explicitly activates this
+pilot.
 
 Once explicitly activated, use this fixed last-mile graph:
 
