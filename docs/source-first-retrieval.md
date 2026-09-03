@@ -72,6 +72,49 @@ observed action and outcome, the verified source state or action and outcome
 control. This matters because reasoning traces can be post-hoc, incomplete, or
 optimized toward what the workflow appears to reward.
 
+## Minimum-Sufficient Retrieval
+
+Source-first retrieval means obtaining the minimum sufficient authoritative
+evidence needed for the current claim or decision. Name that claim or decision,
+identify the source that owns each required fact, and set the evidence boundary
+before retrieval. Inspect only the state needed to satisfy that boundary, and
+stop when the claim or decision is supported. More provider objects do not make
+the evidence more authoritative.
+
+This boundary does not weaken a mandatory trigger or permit an essential
+unknown to be ignored. If a materially necessary fact cannot be verified, mark
+the gate partial or blocked. If a fact is not necessary to the current claim or
+decision, omit it instead of expanding retrieval into a speculative inventory.
+
+For ordinary repository inspection and delivery, prefer the narrowest normal
+supported surface that owns or directly exposes the required fact:
+
+- repository-native `git` commands for repository, ref, and worktree facts;
+- high-level provider CLI commands for supported hosted facts;
+- connected GitHub reads for hosted state they expose; and
+- repository-native validation or workflow commands for facts they own.
+
+The absence of a high-level convenience command does not by itself justify
+`gh api`, an equivalent raw provider API, or a provider-wide inventory. In
+ordinary repository inspection, use a lower-level provider read only when a
+concrete fact is materially necessary for the current claim or decision and
+normal supported surfaces cannot establish it. Before that escalation, state
+the exact missing fact, why it matters, and why the first-class surfaces are
+insufficient. When those conditions are not met, omit the fact or report the
+capability gap.
+
+Specialized evidence-surface audits may intentionally use a separately
+constrained low-level read path when their required evidence classes are not
+available through ordinary surfaces. Investigations where provider API behavior
+is itself the subject may also inspect that API directly. Those workflows name
+the low-level surface and its safeguards as part of their task; they are not
+ordinary-repository fallback precedent.
+
+For overlap or collision risk, current `main`, relevant pull requests, target
+files, and specifically identified refs are normally sufficient. Do not require
+an inventory of every active branch, ref, workflow, or provider object unless
+the inventory itself is materially necessary to the decision.
+
 ## Triggers
 
 Classify triggers before using prior conversation, summaries, memory, or pasted

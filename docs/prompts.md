@@ -758,10 +758,15 @@ Context:
 Retrieval:
 - Read `ai-workflow-playbook/docs/start-here.md`, the target repo's
   `AGENTS.md`, and any required tool adapter before acting.
-- Retrieve or revalidate authoritative repository, issue, PR, file, CI, log, or
-  artifact state before relying on it.
-- Stop broad search once the target files, constraints, validation path, and
-  delivery expectation are clear.
+- Apply
+  `docs/source-first-retrieval.md#minimum-sufficient-retrieval`: state the claim
+  or decision and its evidence boundary, then retrieve only the authoritative
+  state needed to support it. Do not prescribe speculative provider-object
+  inventories.
+- For overlap or collision risk, inspect current `main`, relevant pull
+  requests, target files, and specifically identified refs as needed. Do not
+  inventory every branch, ref, workflow, or provider object unless that
+  inventory is materially necessary to the decision.
 
 Scope:
 - In scope: [files, behavior, or workflow area]
