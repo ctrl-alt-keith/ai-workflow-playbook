@@ -212,6 +212,61 @@ Keep this policy in the shared playbook. Repo-local `AGENTS.md` files should
 reference or rely on it rather than duplicate it, except where a repository
 truly requires different behavior.
 
+### Current-phase mutation authority and proposal surfaces
+
+Keep three decisions separate before producing a proposal, design, spec,
+review package, or similar planning artifact:
+
+1. What is the current semantic phase?
+2. Does current human intent or a narrower owning workflow authorize
+   repository mutation in that phase?
+3. Does the produced material qualify for durable governed-artifact capture?
+
+Proposal-first and design-first describe a semantic decision boundary, not a
+Git topology. Planning or design authority permits producing the requested
+recommendation; it does not by itself authorize implementation mode, a
+worktree, branch, repository file, commit, push, pull request, or another Git
+artifact. Issue-owned orchestration or evidence writes that are separately
+permitted also do not create repository-mutation authority.
+
+For discussion-first intent such as `come up with a proposal we can discuss,
+then implement`, keep repositories read-only for the current phase. Return a
+compact proposal in the active interaction. When the proposal is substantial,
+its exact identity is required for review, handoff, recovery, or independent
+review, and regeneration or interaction-only retention would weaken that
+dependency, apply the existing governed-artifact candidate and
+storage-admission contract in
+[`evidence-lifecycle.md`](evidence-lifecycle.md#governed-artifact-capture). Use
+the issue-owned provider destination only when the current project's owning
+storage contract selects and admits that route. The shared Playbook does not
+select Dropbox or another provider as a universal destination.
+
+Do not create a worktree, branch, empty commit, repository proposal document,
+or proposal pull request merely to make discussion-first material durable or
+reviewable. A mutable pull-request description is not frozen or given an exact
+proposal identity by an empty commit. When exact proposal bytes matter, retain
+them through their natural durable owner and reference that identity from the
+interaction, planning, or review surface.
+
+Select a repository document or proposal pull request only when the human or a
+narrower owning workflow explicitly authorizes that artifact surface for the
+current phase. That authority remains bounded to the named proposal artifact;
+it does not authorize implementation. Once implementation is explicitly
+authorized, use normal repository delivery.
+
+| Current-phase intent | Repository mutation | Proposal surface | Stop boundary |
+| --- | --- | --- | --- |
+| Discussion-first, compact proposal | Not authorized | Active interaction | Human decision before implementation |
+| Discussion-first, substantial proposal whose exact identity qualifies and is admitted | Not authorized | Existing governed-artifact route selected by its owning storage contract | Human decision before implementation |
+| Explicit repository design document | Authorized for the named artifact only | Named repository document | Separate implementation authority |
+| Explicit proposal pull request | Authorized for the proposal surface only | Repository worktree, branch, and proposal pull request | Separate implementation authority |
+| Direct implementation and pull-request delivery | Authorized | Normal implementation worktree, branch, and pull request | Stop before merge unless separately authorized |
+
+An independent-review or material-doctrine requirement may require an exact
+durable proposal identity, but it does not select Git, a pull request, or any
+other storage surface. Select that surface from current authority and the
+owning artifact contract.
+
 ## Single-Operator Review Posture
 
 For repository ecosystems primarily operated by one maintainer with rapid

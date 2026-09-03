@@ -65,6 +65,39 @@ def progress_fixture() -> dict:
     }
 
 
+def successful_completion_fixture() -> dict:
+    return {
+        "fixture_scope": "contract-only-not-runtime-or-ui-conformance",
+        "operator_report": {
+            "outcome": "Implemented CAK-185",
+            "result": "PR #384 is open and review-ready",
+            "validation_review": "canonical validation passed; independent review accepted",
+            "head": "reviewed-head-sentinel",
+            "stop_boundary": "stopped before merge",
+        },
+        "durable_forensic_evidence": {
+            "retrieval_attempts": "forensic-only-three-preflight-attempts",
+            "payload_bytes": "forensic-only-10193-byte-payload",
+            "payload_sha256": "forensic-only-payload-sha256",
+            "provider_file_id": "forensic-only-provider-file-id",
+            "provider_path": "/forensic-only/cak-185-prompt.md",
+            "provider_revision": "forensic-only-provider-revision",
+            "provider_content_hash": "forensic-only-provider-content-hash",
+            "review_artifact_identities": [
+                "forensic-only-review-v1",
+                "forensic-only-review-v2",
+            ],
+            "scratch_cleanup": "forensic-only-scratch-cleanup-verified",
+            "deletion_authority_reminder": "forensic-only-deletion-confirmation",
+        },
+        "exception_report": {
+            "result": "handoff blocked",
+            "material_exception": "payload integrity mismatch",
+            "consequence": "operator action is required before execution",
+        },
+    }
+
+
 class OperatorProgressEconomyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -75,6 +108,7 @@ class OperatorProgressEconomyTests(unittest.TestCase):
         cls.codex = normalized(DOCS / "tool-adapters" / "codex.md")
         cls.claude = normalized(DOCS / "tool-adapters" / "claude.md")
         cls.fixture = progress_fixture()
+        cls.completion = successful_completion_fixture()
 
     def test_core_owns_the_provider_neutral_invariant(self):
         for phrase in (
@@ -88,6 +122,11 @@ class OperatorProgressEconomyTests(unittest.TestCase):
             "Preserve complete item-level evidence outside the conversation",
             "when the active runtime supports it",
             "report client-forced output as a limitation",
+            "A successful completion report is an operator review surface, not a replay of the durable receipt",
+            "the reviewable repository result and its current status",
+            "the canonical validation and review outcome at a useful summary level",
+            "the current stop boundary",
+            "not a required sentence template or layout",
         ):
             self.assertIn(phrase, self.core)
 
@@ -106,6 +145,19 @@ class OperatorProgressEconomyTests(unittest.TestCase):
         self.assertIn("client-enforced UI", self.chatgpt)
         self.assertIn("aggregate routine successful operations", self.codex)
         self.assertIn("without restarting", self.codex)
+        self.assertIn("Successful completion projection", self.codex)
+        self.assertIn("Successful completion projection", self.claude)
+        self.assertEqual(
+            2, self.prompts.count("successful-completion-projection")
+        )
+        self.assertIn(
+            "Report the canonical outcome and any material validation exception",
+            self.prompts,
+        )
+        self.assertIn(
+            "report to the coordinating orchestrator",
+            self.prompts,
+        )
         self.assertIn("governed stream and attempt evidence", self.claude)
         self.assertIn("execution-context mismatch", self.claude)
 
@@ -156,6 +208,62 @@ class OperatorProgressEconomyTests(unittest.TestCase):
         preference = self.fixture["mid_run_preference"]
         self.assertTrue(preference["runtime_supports_change"])
         self.assertEqual(preference["attempt_before"], preference["attempt_after"])
+
+    def test_successful_completion_projects_operator_result_not_forensic_replay(self):
+        self.assertEqual(
+            "contract-only-not-runtime-or-ui-conformance",
+            self.completion["fixture_scope"],
+        )
+        report = " ".join(self.completion["operator_report"].values())
+        forensic = self.completion["durable_forensic_evidence"]
+
+        for expected in (
+            "Implemented CAK-185",
+            "PR #384",
+            "validation passed",
+            "review accepted",
+            "reviewed-head-sentinel",
+            "stopped before merge",
+        ):
+            self.assertIn(expected, report)
+
+        for value in forensic.values():
+            values = value if isinstance(value, list) else [value]
+            for item in values:
+                self.assertNotIn(str(item), report)
+
+        for phrase in (
+            "byte counts and digests",
+            "provider object metadata",
+            "temporary-scratch and cleanup mechanics",
+            "retained evidence identities",
+            "command history, and raw test counts",
+            "does not weaken evidence collection, verification, identity, retention, or retrievability",
+        ):
+            self.assertIn(phrase, self.core)
+
+    def test_material_exception_surfaces_without_replaying_complete_receipt(self):
+        exception = " ".join(self.completion["exception_report"].values())
+        self.assertIn("integrity mismatch", exception)
+        self.assertIn("operator action is required", exception)
+        self.assertIn(
+            "Report the material exception and its consequence rather than the complete forensic history",
+            self.core,
+        )
+
+    def test_completion_projection_preserves_transition_receipts(self):
+        self.assertIn(
+            "does not suppress progress updates or mandatory transition-time receipts",
+            self.core,
+        )
+        self.assertIn(
+            "must still be emitted at their transition boundaries",
+            self.core,
+        )
+        self.assertIn(
+            "Issue-Owned File-Backed Handoff Prose-DAG Pilot",
+            self.prompts,
+        )
 
 
 if __name__ == "__main__":

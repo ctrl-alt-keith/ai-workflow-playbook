@@ -157,6 +157,31 @@ controller's declared boundary, not prompt-contract machinery: hydrators,
 adapters, renderers, validators, receipts, and checkpoints remain unable to
 drive lifecycle state or orchestration.
 
+### Repository-topology authorization check
+
+Before a generated prompt or handoff requires implementation mode, a worktree,
+branch, repository edit, commit, push, or pull request, identify the current
+human direction or narrower owning-workflow rule that authorizes repository
+mutation in the current phase. Apply the canonical decision rule in
+[`repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces`](repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces).
+Do not infer repository-mutation authority from future implementation intent,
+planning or design authority, materiality, an independent-review requirement,
+an issue-owned evidence write, or the usefulness of durable collaboration.
+
+When current intent is discussion-first and repository mutation is not
+authorized, select review/audit or orchestration/prompt-authoring mode for the
+current phase. Omit Git topology and state the zero-repository-mutation stop
+boundary. Return a compact proposal in the active interaction, or direct a
+substantial proposal through the existing governed-artifact capture and owning
+storage-admission contract when exact identity is required for review, handoff,
+recovery, or independent review and regeneration or interaction-only retention
+would weaken that dependency. Stop for the human decision.
+
+Do not use a keyword-only rule: `proposal` and `design` do not prohibit a
+repository artifact when the human explicitly requests a design document or
+proposal pull request. Conversely, recorded later implementation intent does
+not authorize Git in the discussion phase.
+
 ### Provider-neutral examples
 
 | Situation | Explicit kickoff boundary |
@@ -738,7 +763,8 @@ Constraints:
 - Follow `docs/repo-readiness.md`, the matching executor adapter, and
   repo-local `AGENTS.md` for interaction mode, command form, worktree,
   validation, and delivery.
-- Report blockers, validation failures, residual risks, and uncertainty.
+- Surface blockers, validation failures, unresolved risks, and material
+  uncertainty.
 
 Tasks:
 1. Inspect the existing structure and relevant source material.
@@ -747,11 +773,12 @@ Tasks:
 
 Validation:
 - Run [validation_path].
-- Report the exact result.
+- Report the canonical outcome and any material validation exception.
 
 Delivery:
 - [branch, commit, push, and PR expectation, or explicit exclusion]
-- Include a concise summary, validation results, and residual risks.
+- Apply `docs/core-model.md#successful-completion-projection` to the final
+  report.
 
 Permissions and completion boundary:
 - Authorized actions: [local edits, validation, commit, push, PR, or narrower]
@@ -787,8 +814,9 @@ Parallel execution:
 - Define any merge-order dependencies before launch.
 - Keep one repository, one branch, one worktree, and one PR per lane.
 - Validate each lane with the repository's canonical validation path.
-- Workers stop at PR readiness and report changed files, validation, overlap,
-  blockers, residual risk, and merge-order dependencies.
+- Workers stop at PR readiness and report to the coordinating orchestrator the
+  changed files, validation, overlap, blockers, residual risk, and merge-order
+  dependencies needed for lane reconciliation.
 - The orchestrator inspects outputs directly, reconciles sequentially, reruns
   canonical validation after updates, and stops before merge unless explicitly
   authorized.
@@ -999,7 +1027,13 @@ Delivery:
   changes.
 - Include expected GitHub issue closing keywords and planning references when
   those identifiers are provided.
-- Report the PR link, files changed, validation results, and residual risks.
+- At successful completion, apply the
+  `docs/core-model.md#successful-completion-projection` rule. Report the
+  completed outcome, reviewable repository result and status, canonical
+  validation and review summary, useful exact implementation identity, and
+  stop boundary.
+  Add changed-file, risk, or evidence detail only when it materially affects
+  operator review or action.
 ```
 
 ## PR Review

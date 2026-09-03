@@ -699,9 +699,13 @@ cd /ABSOLUTE/PATH/TO/ai-workflow-playbook
 ## Delivery And Stop Conditions
 
 Follow the PR readiness, validation, and delivery rules in
-[`repo-readiness.md`](../repo-readiness.md) and repo-local `AGENTS.md`. On
-completion, report the PR link when one was opened or updated, files changed,
-validation results, and known blockers or residual risks.
+[`repo-readiness.md`](../repo-readiness.md) and repo-local `AGENTS.md`.
+When reporting successful completion, apply the core model's
+[`Successful completion projection`](../core-model.md#successful-completion-projection).
+Normally include the opened or updated PR and its status, the canonical
+validation and review summary, the exact implementation head when useful, and
+the stop boundary. Add changed-file, blocker, risk, or forensic-evidence detail
+only when it materially affects operator review or action.
 
 Pause and ask for human input when the repository, branch, or worktree context
 appears wrong, the scope is ambiguous or has shifted, required source state

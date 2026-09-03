@@ -992,6 +992,10 @@ Pause and ask for human input when:
 Use the PR readiness, validation, and delivery rules in
 [`repo-readiness.md`](../repo-readiness.md) and repo-local `AGENTS.md`.
 
-When reporting completion for Codex implementation work, include the PR link
-when one was opened or updated, files changed, validation results, and any
-known blockers or residual risks.
+When reporting successful completion for Codex implementation work, apply the
+core model's
+[`Successful completion projection`](../core-model.md#successful-completion-projection).
+Normally include the opened or updated PR and its status, the canonical
+validation and review summary, the exact implementation head when useful, and
+the stop boundary. Add changed-file, blocker, risk, or forensic-evidence detail
+only when it materially affects operator review or action.
