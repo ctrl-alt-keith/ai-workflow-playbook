@@ -456,6 +456,13 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             self.readiness,
         )
         self.assertIn("direct argv/process invocation", self.codex)
+        codex_retrieval = self.adapter_profiles[0]
+        self.assertIn(
+            "repo-readiness.md#repo-local-workflow-state",
+            codex_retrieval,
+        )
+        self.assertNotIn("[A-Za-z0-9._-]+", codex_retrieval)
+        self.assertNotIn("spaces, quotes, brackets", codex_retrieval)
 
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
