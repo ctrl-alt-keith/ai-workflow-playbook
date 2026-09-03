@@ -157,6 +157,31 @@ controller's declared boundary, not prompt-contract machinery: hydrators,
 adapters, renderers, validators, receipts, and checkpoints remain unable to
 drive lifecycle state or orchestration.
 
+### Repository-topology authorization check
+
+Before a generated prompt or handoff requires implementation mode, a worktree,
+branch, repository edit, commit, push, or pull request, identify the current
+human direction or narrower owning-workflow rule that authorizes repository
+mutation in the current phase. Apply the canonical decision rule in
+[`repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces`](repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces).
+Do not infer repository-mutation authority from future implementation intent,
+planning or design authority, materiality, an independent-review requirement,
+an issue-owned evidence write, or the usefulness of durable collaboration.
+
+When current intent is discussion-first and repository mutation is not
+authorized, select review/audit or orchestration/prompt-authoring mode for the
+current phase. Omit Git topology and state the zero-repository-mutation stop
+boundary. Return a compact proposal in the active interaction, or direct a
+substantial proposal through the existing governed-artifact capture and owning
+storage-admission contract when exact durable identity would materially improve
+review, handoff, recovery, or independent review. Stop for the human decision.
+
+Do not use a keyword-only rule: `proposal` and `design` do not prohibit a
+repository artifact when the human explicitly requests a design document or
+proposal pull request. Conversely, recorded later implementation intent does
+not authorize Git in the discussion phase. Never use an empty commit or mutable
+pull-request description as the exact identity of proposal bytes.
+
 ### Provider-neutral examples
 
 | Situation | Explicit kickoff boundary |

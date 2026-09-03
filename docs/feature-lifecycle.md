@@ -344,15 +344,25 @@ reviewed identity requires a new review. This narrow same-PR allowance does not
 remove a lifecycle phase, reduce a required gate, or permit another semantic
 phase boundary to pass without explicit review and authority.
 
-For proposal-first work, a proposal-only draft PR can be a proportionate,
-durable collaboration surface. When repository policy permits, the exact
-proposal may be approved on that branch and bounded implementation may continue
-on the same branch and PR. Keep the proposal approval and final implementation
-review distinct: proposal approval authorizes only the stated implementation,
-and merge still requires separate authorization against the exact reviewed
-implementation head. This topology is recommended only when it improves
-traceability or review; it is not required for small changes or repositories
-whose local policy uses another review surface.
+Proposal-first names the semantic decision boundary above, not a proposal
+branch or pull-request topology. Apply
+[`repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces`](repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces)
+before choosing the artifact surface. Without repository-mutation authority for
+the current phase, create no worktree, branch, commit, repository document, or
+pull request; return a compact proposal in the active interaction or, when its
+exact durable identity qualifies and storage admission passes, use the existing
+governed-artifact route selected by its owner.
+
+A proposal-only draft PR can still be a proportionate collaboration surface
+when the human or a narrower owning workflow explicitly authorizes that
+repository artifact for the current phase and repository policy permits it.
+The exact proposal may then be approved on that branch and bounded
+implementation may continue on the same branch and PR. Keep proposal approval
+and final implementation review distinct: proposal approval authorizes only the
+stated implementation, and merge still requires separate authorization against
+the exact reviewed implementation head. Materiality or an independent-review
+requirement does not itself choose the proposal PR. Do not use an empty commit
+to represent or freeze revisions of a mutable pull-request description.
 
 Record two different identities when merge follows. The implementation head is
 the pre-merge commit reviewed for merge authorization. The resulting integrated
