@@ -88,6 +88,41 @@ outside the conversation. Honor an operator's mid-run request for quieter or
 more verbose progress when the active runtime supports it, and report
 client-forced output as a limitation rather than claiming it was suppressed.
 
+### Successful completion projection
+
+A successful completion report is an operator review surface, not a replay of
+the durable receipt. For delegated repository execution, normally report only
+the completed outcome, the reviewable repository result and its current
+status, the canonical validation and review outcome at a useful summary level,
+the exact implementation identity when it materially aids review or approval,
+and the current stop boundary. This is a semantic minimum, not a required
+sentence template or layout.
+
+Leave prompt acquisition and delivery mechanics, byte counts and digests,
+provider object metadata, routine preflight attempts, temporary-scratch and
+cleanup mechanics, retained evidence identities, routine artifact-deletion
+authority reminders, command history, and raw test counts in their owning
+durable evidence rather than routinely replaying them in normal completion
+prose. This projection reduces operator-facing repetition only; it does not
+weaken evidence collection, verification, identity, retention, or
+retrievability.
+
+Surface additional detail when it changes what the operator needs to know or
+do, including failure or partial success, identity or integrity mismatch, a
+retry that materially affected execution, validation or review failure,
+capability or authentication limits, unexpected state, unresolved risk or
+blocker, a required human decision, or cleanup residue. Report the material
+exception and its consequence rather than the complete forensic history.
+
+This post-execution projection does not suppress progress updates or mandatory
+transition-time receipts required by a specialized workflow. In particular,
+receipts required by the
+[Issue-Owned File-Backed Handoff Prose-DAG Pilot](prompts.md#issue-owned-file-backed-handoff-prose-dag-pilot)
+must still be emitted at their transition boundaries; they need not be replayed
+again after successful downstream execution. A handoff may therefore carry
+more execution and verification detail than the later successful completion
+report.
+
 ## Authority Follows The Question
 
 Do not select one universal system of record for a workflow. Classify the

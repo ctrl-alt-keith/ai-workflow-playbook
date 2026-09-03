@@ -1024,7 +1024,12 @@ Delivery:
   changes.
 - Include expected GitHub issue closing keywords and planning references when
   those identifiers are provided.
-- Report the PR link, files changed, validation results, and residual risks.
+- At successful completion, apply the
+  `core-model.md#successful-completion-projection` rule. Report the completed
+  outcome, reviewable repository result and status, canonical validation and
+  review summary, useful exact implementation identity, and stop boundary.
+  Add changed-file, risk, or evidence detail only when it materially affects
+  operator review or action.
 ```
 
 ## PR Review
