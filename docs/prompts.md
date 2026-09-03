@@ -586,6 +586,71 @@ selection consume only the decision record. Representative requests such as
 upstream evidence; they are neither transport selectors nor repeated inputs to
 the downstream stages.
 
+### Prompt freeze and transport-only latch
+
+Apply the interaction-mode action eligibility latch in
+[`repo-readiness.md`](repo-readiness.md#interaction-mode-action-eligibility-latch)
+before this delivery latch. This section constrains action eligibility around
+the canonical decision model and the existing file-backed handoff pilot; it is
+not a second delivery controller, graph, or prompt architecture.
+
+Use this semantic progression for an issue-owned machine-executor handoff:
+
+```text
+PROMPT_DESIGN -> PROMPT_FROZEN -> DROPBOX_TRANSPORT_ONLY
+```
+
+- `PROMPT_DESIGN` permits the selected source reads and prompt construction
+  authorized by orchestration/prompt-authoring mode.
+- `PROMPT_FROZEN` means the complete rendered bytes and their exact identity
+  are fixed for the attempt. Transport, diagnostics, preview, or operator
+  presentation may not revise them.
+- `DROPBOX_TRANSPORT_ONLY` begins when the frozen stages 5 through 7 record
+  selects the qualified issue-owned Dropbox route, file-backed presentation,
+  and thin-handoff renderer. It remains active through the selected delivery
+  outcome or a named blocked state.
+
+In `DROPBOX_TRANSPORT_ONLY`, the eligible operations are limited to the owning
+storage and transport contract: create the issue folder if absent, create one
+absent prompt file, verify provider identity and exact content or qualified
+integrity evidence, preview only when the selected presentation requires it,
+mint one fresh download link, and emit the compact retrieval handoff. The
+complete prompt stays out of chat. Repository or GitHub mutation, Linear
+mutation, unrelated provider or authentication changes, downstream execution,
+source hydration, repository analysis, prompt redesign or polish, issue
+editing, and inline complete-prompt rendering are ineligible. A failed
+ineligible action does not make an alternate syntax or retry eligible; this is
+an action-class boundary, not a rigid global tool-call cap.
+
+Do not ask for fresh permission for a routine Dropbox operation already
+authorized by the current human instruction and owning storage contract. Reuse
+successful connector-action evidence under the current
+[`connector-availability rule`](start-here.md#connector-availability-is-runtime-evidence);
+do not rediscover an already successful same action without one of that rule's
+recheck triggers.
+
+An operator correction replaces the incompatible active envelope and resumes
+from the nearest still-valid verified state. A material change to prompt
+requirements returns to `PROMPT_DESIGN` and produces a new frozen revision. A
+delivery or presentation correction that does not change prompt requirements
+retains the exact `PROMPT_FROZEN` bytes, invalidates incompatible pending
+renderers or actions, and enters or resumes `DROPBOX_TRANSPORT_ONLY` without
+replaying source hydration, capability discovery, or prompt design.
+
+Immediately before the external Dropbox write, surface one concise
+operator-visible transition stating that the prompt is frozen, Dropbox
+transport-only mode is active, and unrelated GitHub, Linear, and repository
+mutations are ineligible. This is observability under
+[`core-model.md`](core-model.md#operator-observability), not a permission
+request or per-tool narration.
+
+For the Prose-DAG pilot below, `PROMPT_FROZEN` satisfies the frozen-body part
+of `PROMPT_READY`; the pilot still performs its existing entry and route
+qualification. Once `ROUTE_QUALIFIED` selects the file-backed record,
+`DROPBOX_TRANSPORT_ONLY` constrains the eligible operations through
+`HANDOFF_EMITTED` or `BLOCKED`. The pilot graph and its transition receipts
+remain the execution record; these latches do not add another DAG.
+
 ### Issue-Owned File-Backed Handoff Prose-DAG Pilot
 
 This pilot is opt-in for a normal-use trial. For an explicitly activated
@@ -1093,7 +1158,8 @@ Retrieval:
   mergeability, and task fit are clear enough for the requested depth.
 
 Instructions:
-- Apply `docs/review-packet.md#direct-pr-inspection`.
+- Apply `docs/review-packet.md#direct-pr-inspection`, including its
+  connector-sufficient review latch.
 - Stay in review/audit mode unless the human explicitly changes the task.
 - Treat user summaries, completion reports, and pasted excerpts as navigation,
   not PR evidence.

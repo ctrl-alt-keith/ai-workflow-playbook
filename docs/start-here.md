@@ -84,10 +84,14 @@ Never explain inability to perform an operation by speculating about connector
 availability. A successful connector invocation in the current conversation is
 positive evidence that the connector remains available; successful use of a
 specific capability is positive evidence that the capability remains
-available. Do not contradict that evidence unless a subsequent connector
-inspection or invocation demonstrates otherwise. Prior use of a different
-action does not establish that a requested read or write capability exists, so
-inspect or attempt the relevant operation before reaching that conclusion.
+available. After one connector action succeeds in the current execution
+context, do not rediscover or re-probe that same action before using it again.
+Recheck only when the action later fails, the acting identity or connection
+changes, the next step requires a materially different capability, or the
+provider reports drift. Do not contradict still-current success evidence
+without one of those triggers. Prior use of a different action does not
+establish that a requested read or write capability exists, so inspect or
+attempt the relevant operation before reaching that conclusion.
 
 ## Canonical Ownership
 
