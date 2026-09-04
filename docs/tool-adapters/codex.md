@@ -413,9 +413,10 @@ authority outside the sandbox.
 
 Raw `gh api` access is forbidden in favor of a supported high-level `gh`
 command or an approved connector. Report a capability gap when neither route
-can establish a materially necessary fact. The template does not install
-itself into `~/.codex/rules/custom.rules`; workstation reconciliation remains a
-separate post-merge action.
+can establish a materially necessary fact. A documented lower-level exception
+requires an explicit operator change to this deny rule; agents do not bypass
+it. The template does not install itself into `~/.codex/rules/custom.rules`;
+workstation reconciliation remains a separate post-merge action.
 
 ### Child-Process Login Identity
 
