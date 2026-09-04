@@ -108,10 +108,12 @@ documents four instruction scopes in broad-to-specific load order: managed
 policy, user instructions at `~/.claude/CLAUDE.md`, project instructions at
 `./CLAUDE.md` or `./.claude/CLAUDE.md`, and personal project-local
 instructions. Project instructions appear in context after user instructions,
-and discovered files are concatenated rather than one scope overriding another.
-Claude Code reads `CLAUDE.md`, not repo-local `AGENTS.md`, unless the latter is
-imported or explicitly read. Explicitly read `AGENTS.md`, keep any `CLAUDE.md`
-as a thin pointer rather than a policy copy, and apply the
+and discovered files are concatenated rather than one scope overriding another;
+load order is context ordering, not authority transfer, and user-level
+`~/.claude/CLAUDE.md` remains operator context that cannot override repo-local
+policy. Claude Code reads `CLAUDE.md`, not repo-local `AGENTS.md`, unless the
+latter is imported or explicitly read. Explicitly read `AGENTS.md`, keep any
+`CLAUDE.md` as a thin pointer rather than a policy copy, and apply the
 [`repository instruction hierarchy`](../start-here.md#repository-instruction-hierarchy).
 
 For CAK-187, install the copy-ready
@@ -571,7 +573,7 @@ cd /ABSOLUTE/PATH/TO/ai-workflow-playbook
 ./scripts/codex-preflight
 ```
 
-## Delivery And Stop Conditions
+## Delivery
 
 Follow the PR readiness, validation, and delivery rules in
 [`repo-readiness.md`](../repo-readiness.md) and repo-local `AGENTS.md`.

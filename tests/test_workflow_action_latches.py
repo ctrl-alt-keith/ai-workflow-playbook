@@ -6,10 +6,13 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
+CORE_MODEL = ROOT / "docs" / "core-model.md"
 REPO_READINESS = ROOT / "docs" / "repo-readiness.md"
 PROMPTS = ROOT / "docs" / "prompts.md"
 REVIEW_PACKET = ROOT / "docs" / "review-packet.md"
 CHATGPT_ADAPTER = ROOT / "docs" / "tool-adapters" / "chatgpt.md"
+CODEX_ADAPTER = ROOT / "docs" / "tool-adapters" / "codex.md"
+CLAUDE_ADAPTER = ROOT / "docs" / "tool-adapters" / "claude.md"
 
 
 class Mode(str, Enum):
@@ -271,6 +274,7 @@ class PromptHandoffEvidence:
 class WorkflowActionLatchTests(unittest.TestCase):
     def test_each_latch_has_one_canonical_heading_owner(self):
         expected_owners = {
+            "## Interactive And Execution Surfaces": CORE_MODEL,
             "### Interaction-mode action eligibility latch": REPO_READINESS,
             "### Prompt freeze and transport-only latch": PROMPTS,
             "### Connector-sufficient review latch": REVIEW_PACKET,
@@ -287,6 +291,13 @@ class WorkflowActionLatchTests(unittest.TestCase):
             "prompts.md#prompt-freeze-and-transport-only-latch",
             CHATGPT_ADAPTER.read_text(encoding="utf-8").lower(),
         )
+        surface_anchor = "core-model.md#interactive-and-execution-surfaces"
+        for projection in (PROMPTS, CHATGPT_ADAPTER, CODEX_ADAPTER, CLAUDE_ADAPTER):
+            with self.subTest(projection=projection.name):
+                self.assertIn(
+                    surface_anchor,
+                    projection.read_text(encoding="utf-8").lower(),
+                )
 
     def test_prompt_authoring_allowlist_is_model_independent(self):
         for model_route in ("stronger", "lower-cost"):
