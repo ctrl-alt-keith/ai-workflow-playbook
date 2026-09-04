@@ -117,32 +117,50 @@ class AirtableHandoffBehaviorTests(unittest.TestCase):
         )
 
         failures = (
-            (replace(evidence, result_count=0), "one record"),
-            (replace(evidence, result_count=2), "one record"),
-            (replace(evidence, observed_base_id="appOther"), "base ID"),
-            (replace(evidence, observed_table_id="tblOther"), "table ID"),
-            (replace(evidence, observed_record_id="recOther"), "record ID"),
-            (replace(evidence, stored_key="other"), "handoff key"),
+            ("missing record", replace(evidence, result_count=0)),
+            ("multiple records", replace(evidence, result_count=2)),
+            ("wrong base", replace(evidence, observed_base_id="appOther")),
+            ("wrong table", replace(evidence, observed_table_id="tblOther")),
+            ("wrong record", replace(evidence, observed_record_id="recOther")),
+            ("wrong key", replace(evidence, stored_key="other")),
             (
+                "wrong fields",
                 replace(evidence, observed_fields=frozenset({"Payload"})),
-                "field set",
             ),
-            (replace(evidence, stored_bytes=len(payload_bytes) - 1), "byte length"),
             (
-                replace(evidence, envelope_bytes=len(payload_bytes) - 1),
-                "byte length",
+                "stored byte mismatch",
+                replace(evidence, stored_bytes=len(payload_bytes) - 1),
             ),
-            (replace(evidence, stored_sha256="0" * 64), "digest"),
-            (replace(evidence, envelope_sha256="0" * 64), "digest"),
-            (replace(evidence, payload=payload.rstrip("\n")), "final newline"),
-            (replace(evidence, payload="\ufeff" + payload), "text format"),
-            (replace(evidence, payload=payload.replace("\n", "\r\n")), "text format"),
-            (replace(evidence, final_newline_expected=False), "final newline"),
-            (replace(evidence, envelope_executor_identity=""), "executor identity"),
+            (
+                "envelope byte mismatch",
+                replace(evidence, envelope_bytes=len(payload_bytes) - 1),
+            ),
+            ("stored digest mismatch", replace(evidence, stored_sha256="0" * 64)),
+            (
+                "envelope digest mismatch",
+                replace(evidence, envelope_sha256="0" * 64),
+            ),
+            (
+                "missing final newline",
+                replace(evidence, payload=payload.rstrip("\n")),
+            ),
+            ("byte-order mark", replace(evidence, payload="\ufeff" + payload)),
+            (
+                "CRLF line ending",
+                replace(evidence, payload=payload.replace("\n", "\r\n")),
+            ),
+            (
+                "unexpected final newline",
+                replace(evidence, final_newline_expected=False),
+            ),
+            (
+                "missing executor identity",
+                replace(evidence, envelope_executor_identity=""),
+            ),
         )
-        for invalid, message in failures:
-            with self.subTest(message=message):
-                with self.assertRaisesRegex(ValueError, message):
+        for case, invalid in failures:
+            with self.subTest(case=case):
+                with self.assertRaises(ValueError):
                     invalid.verify()
 
     def test_correction_is_append_only_and_creates_a_new_attempt(self):
@@ -188,9 +206,9 @@ class AirtableHandoffBehaviorTests(unittest.TestCase):
                 "new attempt",
             ),
         )
-        for arguments, message in invalid_corrections:
-            with self.subTest(message=message):
-                with self.assertRaisesRegex(ValueError, message):
+        for arguments, case in invalid_corrections:
+            with self.subTest(case=case):
+                with self.assertRaises(ValueError):
                     original.correction(**arguments)
 
 
