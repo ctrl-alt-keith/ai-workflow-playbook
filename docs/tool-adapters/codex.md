@@ -558,7 +558,9 @@ Before an expensive independent review, run the same launcher with
 resolution, sends only the fixed `CLAUDE_AUTH_OK` prompt on standard input,
 disables all Claude tools, passes `--no-session-persistence`, and runs from a
 fresh private attempt-local directory through the qualified macOS or Linux
-route. It may retain the selected model and effort, but it is not substantive
+route. It also disables Claude instruction and auto-memory loading so a global
+or project bootstrap cannot intercept the fixed authentication canary. It may
+retain the selected model and effort, but it is not substantive
 review and does not read repository, candidate, or held-out content.
 For example:
 

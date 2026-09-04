@@ -3892,7 +3892,15 @@ def main(argv: list[str] | None = None) -> int:
     if not execution_fixture:
         child_environment.pop("CLAUDE_REVIEW_TEST_FIXTURE", None)
         child_environment.pop("CLAUDE_REVIEW_TEST_SCRATCH_PARENT", None)
-    child_environment.update({"HOME": effective_home, "USER": user, "LOGNAME": user})
+    child_environment.update(
+        {
+            "HOME": effective_home,
+            "USER": user,
+            "LOGNAME": user,
+            "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
+            "CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1",
+        }
+    )
     selected_arguments = preflight_arguments(args.claude_args) if args.auth_preflight else args.claude_args
     try:
         preflight_directory = (
