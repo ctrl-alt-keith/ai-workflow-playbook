@@ -45,20 +45,21 @@ Start a new thread when:
 - the new task needs a clean brief and a fresh review surface
 - capture work would otherwise be buried inside delivery chatter
 
-## New Branch And PR Required When
+## Split A Branch Or PR When
 
-Every semantic phase boundary retains an explicit review and authority
-boundary. Implementation and approval may share the current PR only when the
-approval is anchored to the exact reviewed commit or bytes and downstream
-authority remains fail-closed. A semantic change to the reviewed material
-requires renewed review; this allowance does not reduce lifecycle phases or
-create a general same-PR rule.
+A semantic phase boundary retains any applicable review and authority boundary,
+but it does not require a new branch or pull request. Keep one focused
+implementation branch and pull request when the same change can carry a clear
+review surface through its lifecycle. Required review or approval may apply to
+the exact implementation identity in that pull request; a later semantic change
+to the reviewed material requires renewed review.
 
-A new branch and PR are required when:
+Split into a new branch and pull request when:
 
-- the current phase has merged and the next phase begins
-- release is complete and post-release capture starts
-- the work changes from delivery to reusable playbook capture
-- the review audience or decision surface changes materially
+- the current pull request has merged and a separately authorized change begins
+- the human or a narrowly applicable workflow explicitly requires a separate
+  delivery surface
+- scope, ownership, validation, merge timing, revert strategy, or review
+  audience differs enough to make the next change an independent deliverable
 
-The default should be smaller, phase-shaped branches rather than one branch that tries to carry the whole story.
+Do not split work merely because its lifecycle phase label changes.

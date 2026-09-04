@@ -27,12 +27,10 @@ prerequisite workflow owns the current completion boundary, it remains the
 governing workflow until the current authorized action transitions into
 feature-delivery planning or execution.
 
-Lifecycle planning includes defining intended behavior, constraints, risks, or
-acceptance shape; preparing a proposal-first change; and defining contract
-tests. Proposal-first planning therefore activates this guidance before
-mutation. Activation does not grant implementation authority, and an
-implementation blocker does not deactivate lifecycle planning that is already
-the current authorized action.
+Lifecycle planning includes defining intended behavior, constraints, risks,
+acceptance shape, or contract tests. Activation does not grant implementation
+authority, and an implementation blocker does not deactivate lifecycle
+planning that is already the current authorized action.
 
 ## Phase Guidance
 
@@ -40,47 +38,41 @@ the current authorized action.
 
 Define the intended behavior, constraints, risks, and acceptance shape. The goal is alignment, not code volume.
 
-### Proportional proposal-first delivery
+### Proportional decision boundaries
 
-Use a proposal-first path when implementation depends on material ambiguity,
-cross-repository ownership, policy or authority boundaries, irreversible or
-high-risk consequences, or a review cost that is meaningfully reduced by
-agreeing on the change before mutation. A human or repo-local workflow may also
-require this path explicitly.
+Use a design, review, or approval boundary before consequential implementation
+when material ambiguity, cross-repository ownership, policy or authority
+sensitivity, irreversible or high-risk consequences, or costly review makes
+that separation useful or required. Keep the boundary proportional: small,
+mechanical, reversible work with clear authority can move directly from source
+inspection to implementation.
 
-Keep it proportional. Small, mechanical, low-risk changes with an obvious
-owner, bounded diff, and ordinary validation can move directly from source
-inspection to implementation. They do not need a proposal artifact,
-independent review, or proposal-only pull request merely to follow a longer
-example.
+The boundary is semantic, not a delivery pattern. It may occur in the active
+interaction, the owning issue or decision record, an existing review surface,
+or the exact implementation pull request. It does not by itself require a
+separate artifact, branch, or pull request. Apply the repository-mutation and
+decision-boundary rule in
+[`repo-readiness.md`](repo-readiness.md#repository-mutation-and-decision-boundaries).
 
-Before naming or selecting the proposal artifact in the transition below,
-apply the current-phase mutation-authority and proposal-surface decision in
-[`repo-readiness.md`](repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces).
-
-When the proposal-first path applies, preserve these semantic transitions:
+Before consequential implementation:
 
 1. retrieve the authoritative sources and identify owners, scope, exclusions,
    risks, and acceptance criteria;
-2. prepare the bounded proposal and name its exact artifact identity;
-3. obtain independent review when the human, task, or selected risk contract
-   requires it;
-4. disposition every substantive finding and decide whether the original
-   review remains applicable using
+2. obtain any review or approval required before implementation and disposition
+   substantive findings under
    [`review-packet.md`](review-packet.md#independent-review-findings-and-re-review);
-5. freeze the exact proposal identity and obtain human approval that states the
-   implementation authority granted;
-6. implement only the approved scope, then run canonical validation;
-7. present the exact implementation head for final human review and separate
-   merge authorization; and
-8. after merge, retrieve the resulting integrated identity and reconcile any
-   external authority that tracks completion.
+3. confirm that current human direction or the owning workflow authorizes the
+   bounded implementation;
+4. implement only that scope and run canonical validation; and
+5. present the exact implementation head for final human review and merge
+   authorization, then retrieve the integrated identity after merge when the
+   workflow requires reconciliation.
 
-These transitions do not require eight separate gates, branches, or pull
-requests. A selected independent review is evidence for a human decision, not
-approval or execution authority. A frozen proposal makes implementation more
-bounded; it does not eliminate implementation judgment, validation, or final
-review.
+A selected independent review is evidence for a human decision, not approval
+or execution authority. When implementation is already authorized, required
+review or human approval may apply to the exact implementation artifact if the
+owning workflow permits it. A separate design or proposal artifact remains
+valid only when explicitly requested or narrowly required.
 
 ### Contract tests
 
@@ -251,9 +243,10 @@ provenance vocabulary:
 
 1. Preserve the research, operational evidence, negative evidence, and
    competing hypotheses in their existing evidence or staging owner.
-2. Prepare one bounded candidate synthesis with an exact artifact identity,
-   scope, exclusions, proposed normative effect, and materiality
-   classification.
+2. Prepare one bounded candidate artifact with an exact identity, scope,
+   exclusions, proposed normative effect, and materiality classification. When
+   implementation is authorized, this may be the exact implementation commit;
+   a separate design or proposal artifact is not required.
 3. For a material promotion, obtain governed independent review of that exact
    artifact. Record the selected reviewer identity and provider, and handle a
    named reviewer failure or proposed substitution under
@@ -266,9 +259,9 @@ provenance vocabulary:
    re-review merely because bytes changed.
 5. Prepare the
    [`doctrine-provenance`](review-packet.md#doctrine-provenance) review packet.
-   Link the evidence, candidate identity, review record, finding dispositions,
-   validation, open questions, and exact implementation artifact without
-   copying the full evidence history into doctrine.
+   Link the evidence, exact reviewed artifact, review record, finding
+   dispositions, validation, and open questions without copying the full
+   evidence history into doctrine.
 6. Obtain an explicit human promotion decision against the exact reviewed
    artifact. Review, validation, repository or CI state, automation, tool
    capability, merge mechanics, and merge results grant no such authority.
@@ -277,7 +270,9 @@ provenance vocabulary:
    withdrawn, and superseded material retains its historical status under the
    existing staging and preservation guidance.
 
-The human promotion decision may share a pull request with implementation when
+The reviewed candidate may be the implementation pull request head when the
+implementation authority and review contract permit it. The human promotion
+decision may share that pull request with implementation when
 the approval-identity rules in
 [`review-packet.md`](review-packet.md#approval-identity-and-ownership) are
 satisfied. After every required prerequisite is satisfied, one explicit human
@@ -344,35 +339,28 @@ project-map-only PRs for release updates.
 
 ## Branch And PR Rules
 
-Every semantic phase boundary requires an explicit review and authority
-boundary. After a phase merges, start a new branch and PR for the next lifecycle
-phase. This keeps the review surface narrow and preserves clean checkpoints.
+Lifecycle phases organize goals and review boundaries; they do not prescribe
+branch or pull-request topology. One focused implementation branch and pull
+request may carry a coherent change through design, contract tests,
+implementation, and hardening. A direct implementation request uses that
+one-PR path by default.
 
-Implementation and approval may share one PR only when the approval is anchored
-to the exact reviewed commit or bytes and downstream authority remains
-fail-closed until that approval is recorded. Any semantic change after the
-reviewed identity requires a new review. This narrow same-PR allowance does not
-remove a lifecycle phase, reduce a required gate, or permit another semantic
-phase boundary to pass without explicit review and authority.
+Keep every required review and authority boundary explicit. Implementation,
+review, and approval may share one pull request when approval is anchored to
+the exact reviewed commit or bytes and downstream authority remains fail-closed
+until the approval is recorded. Any semantic change after the reviewed identity
+requires the applicable renewed review or approval.
 
-Proposal-first names the semantic decision boundary above, not a proposal
-branch or pull-request topology. Apply
-[`repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces`](repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces)
-before choosing the artifact surface. Without repository-mutation authority for
-the current phase, create no worktree, branch, commit, repository document, or
-pull request; return a compact proposal in the active interaction or, when its
-exact durable identity qualifies and storage admission passes, use the existing
-governed-artifact route selected by its owner.
-
-A proposal-only draft PR can still be a proportionate collaboration surface
-when the human or a narrower owning workflow explicitly authorizes that
-repository artifact for the current phase and repository policy permits it.
-The exact proposal may then be approved on that branch and bounded
-implementation may continue on the same branch and PR. Keep proposal approval
-and final implementation review distinct: proposal approval authorizes only the
-stated implementation, and merge still requires separate authorization against
-the exact reviewed implementation head. Materiality or an independent-review
-requirement does not itself choose the proposal PR.
+Split work into another branch or pull request only when the human or a
+narrowly applicable workflow requires it, or when the next change is an
+independent deliverable with meaningfully different scope, ownership,
+validation, review audience, merge timing, or revert strategy. A separate
+design document or proposal-only pull request is valid when explicitly
+requested or narrowly required, but authority for that artifact does not
+authorize implementation. Materiality or an independent-review requirement
+alone does not select a separate artifact or Git surface. Apply
+[`repo-readiness.md#repository-mutation-and-decision-boundaries`](repo-readiness.md#repository-mutation-and-decision-boundaries)
+before creating repository topology.
 
 Record two different identities when merge follows. The implementation head is
 the pre-merge commit reviewed for merge authorization. The resulting integrated
@@ -529,12 +517,10 @@ and blocked cleanup reporting, follow
 other executors, follow the matching adapter when one documents stricter
 worktree handling.
 
-The expected pattern is:
-
-1. Merge the current phase
-2. Open a new branch for the next phase
-3. Open a new PR for that phase
-4. Complete post-release capture before starting the next major arc
+Do not split a coherent change merely because it crosses a lifecycle phase
+label. After the current pull request merges, any later independently
+authorized change starts from freshly fetched `origin/main` on its own branch.
+Complete required post-release capture before starting the next major arc.
 
 When overlapping PRs touch the same shared surface, merge behavior, workflow, or other source-of-truth changes before formatting, restructuring, or cleanup. Let cleanup absorb the settled state last.
 
@@ -542,7 +528,5 @@ When concurrent PRs have no file overlap and no open review concerns, merge orde
 is flexible. Say that explicitly in the review packet instead of inventing a
 false dependency.
 
-Do not roll multiple lifecycle phases into one long-running branch unless there
-is a strong reason and the review surface remains clear. The same-PR
-implementation-and-approval allowance above is not a blanket exception to this
-sequential lifecycle discipline.
+Keep one-PR delivery focused and reviewable; it is not permission to accumulate
+unrelated lifecycle work on a long-running branch.
