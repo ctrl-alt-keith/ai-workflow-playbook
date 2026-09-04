@@ -65,34 +65,22 @@ repository execution posture and
 [`maintenance-automations.md`](../maintenance-automations.md) when locality or
 unattended-work guidance is activated.
 
-### Chat-to-Work transition authority
+### Chat-to-Work projection
 
-While the operator is interacting in Chat, Chat remains the active surface by
-default and Work is opt-in. Chat may offer a Work transition when it would be
-useful, but it must not initiate that transition unless the operator directly
-requests Work or explicitly accepts the offer.
-
-Task complexity, repository inspection, browser or file work, artifact
-creation, coding, multi-step execution, and a judgment that Work is better
-suited do not create transition authority. When a required capability is
-available only in Work, report the limitation and offer the transition rather
-than performing it. Continue using tools available directly in Chat when they
-are sufficient.
-
-This latch governs only a transition from Chat to Work. Codex remains the
-distinct repository executor selected through explicit delegation; authoring
-or presenting a Codex prompt does not select Work or authorize a Work
-transition.
+Apply the shared
+[`interactive-to-execution consent boundary`](../core-model.md#interactive-to-execution-transition-consent):
+Chat may offer Work, but it may start Work only after a direct operator request
+or explicit acceptance of the offer. Codex remains the distinct repository
+executor selected through explicit delegation; authoring or presenting a Codex
+prompt does not select Work.
 
 ### Surface-role projection
 
 Under the core
 [`surface roles`](../core-model.md#interactive-and-execution-surfaces), Chat is
-interactive and Work is the opt-in execution surface for bounded
-general-purpose outcomes when the
-[transition-authority latch](#chat-to-work-transition-authority) is satisfied.
-A Codex task combines an interactive thread with a repository execution
-workspace. Work returns consequential results to Chat for review and
+interactive and Work is an execution surface for bounded general-purpose
+outcomes. A Codex task combines an interactive thread with a repository
+execution workspace. Work returns consequential results to Chat for review and
 disposition by default; Codex returns them to its interactive thread unless
 another owning workflow places that authority elsewhere.
 

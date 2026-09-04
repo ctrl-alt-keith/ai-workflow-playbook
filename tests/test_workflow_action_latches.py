@@ -20,18 +20,6 @@ class Mode(str, Enum):
     REVIEW_AUDIT = "review/audit"
 
 
-class ChatWorkConsent(str, Enum):
-    NONE = "none"
-    DIRECT_REQUEST = "direct-request"
-    OFFER_ACCEPTED = "offer-accepted"
-
-
-class ChatAction(str, Enum):
-    USE_CHAT_TOOLS = "use-chat-tools"
-    OFFER_WORK = "offer-work"
-    START_WORK = "start-work"
-
-
 class PromptState(str, Enum):
     DESIGN = "PROMPT_DESIGN"
     FROZEN = "PROMPT_FROZEN"
@@ -107,31 +95,6 @@ LOCAL_REPRODUCTION_ACTIONS = {
     Action.CLEANUP_TEMP_REPOSITORY,
     Action.SHELL_WRAPPER,
 }
-
-
-@dataclass(frozen=True)
-class ChatWorkTransitionLatch:
-    """Test-only evaluator for the Chat-to-Work consent boundary."""
-
-    consent: ChatWorkConsent = ChatWorkConsent.NONE
-    offer_open: bool = False
-
-    def eligible_actions(self):
-        actions = {ChatAction.USE_CHAT_TOOLS, ChatAction.OFFER_WORK}
-        if self.consent is not ChatWorkConsent.NONE:
-            actions.add(ChatAction.START_WORK)
-        return actions
-
-    def offer_work(self):
-        return replace(self, offer_open=True)
-
-    def request_work(self):
-        return replace(self, consent=ChatWorkConsent.DIRECT_REQUEST)
-
-    def accept_work_offer(self):
-        if not self.offer_open:
-            raise ValueError("no Work offer is awaiting acceptance")
-        return replace(self, consent=ChatWorkConsent.OFFER_ACCEPTED)
 
 
 @dataclass(frozen=True)
@@ -315,7 +278,6 @@ class WorkflowActionLatchTests(unittest.TestCase):
             "### Interaction-mode action eligibility latch": REPO_READINESS,
             "### Prompt freeze and transport-only latch": PROMPTS,
             "### Connector-sufficient review latch": REVIEW_PACKET,
-            "### Chat-to-Work transition authority": CHATGPT_ADAPTER,
         }
         markdown = {
             path: path.read_text(encoding="utf-8") for path in DOCS.rglob("*.md")
@@ -336,35 +298,6 @@ class WorkflowActionLatchTests(unittest.TestCase):
                     surface_anchor,
                     projection.read_text(encoding="utf-8").lower(),
                 )
-
-    def test_chat_task_cannot_start_work_without_explicit_consent(self):
-        for task_shape in (
-            "complex",
-            "repository",
-            "browser-backed",
-            "file-producing",
-            "multi-step",
-        ):
-            with self.subTest(task_shape=task_shape):
-                latch = ChatWorkTransitionLatch()
-                self.assertNotIn(ChatAction.START_WORK, latch.eligible_actions())
-                self.assertIn(ChatAction.USE_CHAT_TOOLS, latch.eligible_actions())
-                offered = latch.offer_work()
-                self.assertNotIn(ChatAction.START_WORK, offered.eligible_actions())
-
-    def test_direct_work_request_permits_transition(self):
-        latch = ChatWorkTransitionLatch().request_work()
-        self.assertIn(ChatAction.START_WORK, latch.eligible_actions())
-        self.assertEqual(latch.consent, ChatWorkConsent.DIRECT_REQUEST)
-
-    def test_explicit_acceptance_of_work_offer_permits_transition(self):
-        latch = ChatWorkTransitionLatch().offer_work().accept_work_offer()
-        self.assertIn(ChatAction.START_WORK, latch.eligible_actions())
-        self.assertEqual(latch.consent, ChatWorkConsent.OFFER_ACCEPTED)
-
-    def test_work_offer_cannot_be_accepted_before_it_is_made(self):
-        with self.assertRaisesRegex(ValueError, "no Work offer"):
-            ChatWorkTransitionLatch().accept_work_offer()
 
     def test_prompt_authoring_allowlist_is_model_independent(self):
         for model_route in ("stronger", "lower-cost"):

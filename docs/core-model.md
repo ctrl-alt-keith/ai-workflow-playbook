@@ -203,6 +203,19 @@ steering, judgment, review, disposition, and final human-controlled closure.
 Execution surfaces perform bounded tool-backed work, mutation, validation, and
 evidence production under an explicit execution contract.
 
+### Interactive-to-execution transition consent
+
+An interactive surface may recommend a different execution surface, but it
+must not instantiate or transition into that surface without explicit operator
+consent. Consent is either a direct operator request for that execution surface
+or explicit acceptance of an offered transition.
+
+Task complexity, multi-step work, repository work, browser, file, or artifact
+work, coding, and a judgment that the execution surface is a better fit do not
+create transition authority. When a required capability exists only on that
+surface, report the limitation and offer the transition; continue using tools
+available on the interactive surface when they are sufficient.
+
 A product may expose either or both roles. Route by task shape and current
 capability, not vendor, product, difficulty, or model choice. Consequential
 completion decisions normally return to the interactive surface unless an

@@ -80,6 +80,15 @@ anchored to real behavior, not just a convenient local approximation.
 Use integration validation to confirm path equivalence at milestones, not as
 the repeated inner loop for every candidate fix.
 
+## Documentation Validation
+
+Validate documentation structure, links, schemas, machine-consumed contracts,
+or executable behavior where applicable. Do not add tests that assert
+incidental wording, sentences, headings, explanatory prose, or equivalent
+text-presence checks. Exact-text assertions are appropriate only when the exact
+bytes or tokens are themselves a machine-consumed contract or externally
+required interface.
+
 ## Config And CLI Default Changes
 
 When extending config/default precedence or CLI override logic, identify every
