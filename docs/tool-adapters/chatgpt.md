@@ -190,6 +190,11 @@ Apply the complete shared
 [`prompt delivery decision model`](../prompts.md#prompt-delivery-decision-model),
 with the transport rules in
 [`cross-executor prompt presentation`](../prompts.md#cross-executor-prompt-presentation).
+Apply its shared
+[`prompt freeze and transport-only latch`](../prompts.md#prompt-freeze-and-transport-only-latch)
+without copying the state or action allowlist into this adapter. ChatGPT
+consumes that canonical frozen state and projects only the selected connector
+actions and response surface.
 Record the human operator or viewer and the executable prompt's execution
 recipient as independent stage outputs before inspecting capability. The fact
 that the operator asks to receive, view, or be given a handoff is evidence

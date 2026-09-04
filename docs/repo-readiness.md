@@ -171,6 +171,36 @@ Examples:
   orchestration/prompt-authoring mode until the human explicitly asks for
   implementation.
 
+### Interaction-mode action eligibility latch
+
+Mode selection constrains the current controller's eligible action classes; it
+is not only a label for the final response. Resolve the bounded deliverable from
+the current human instruction, materialize its allowed action set, and
+invalidate every incompatible pending action before the next tool call. A
+narrower current instruction replaces a broader active envelope from earlier
+conversation. Superseded plans, queued actions, fallback attempts, and failed
+out-of-scope operations retain no residual execution eligibility.
+
+A request whose bounded deliverable is a prompt or machine handoff selects
+orchestration/prompt-authoring mode for the current controller. Representative
+requests include `Prompt me to ...`, `Create the Codex prompt`, `Kick this off
+with Codex`, `Give me the handoff`, and `Put this prompt in Dropbox`. These are
+regression examples, not a phrase-matching classifier: the semantic deliverable
+controls. Once selected, the controller may perform only the reads needed to
+construct the prompt and the exact issue-owned preservation and delivery
+operations authorized by the task and owning storage contract. GitHub writes,
+repository mutation, Linear writes, unrelated provider changes,
+authentication changes, and downstream execution are ineligible unless the
+current human instruction explicitly adds that action class.
+
+Review/audit mode similarly invalidates implementation and local-reproduction
+plans unless the human explicitly authorizes those actions for the current
+review. Apply the narrower connector-backed rule in
+[`review-packet.md`](review-packet.md#connector-sufficient-review-latch) when a
+connector can supply the required review evidence. A material human change may
+select a new mode and action set; convergence, tool availability, a failed
+forbidden attempt, or broader conversational history cannot.
+
 Do not infer implementation mode from vague wording such as "fix this",
 "handle this", or "let's fix the bug" when the surrounding context suggests
 advisory review, audit, orchestration, or prompt generation.

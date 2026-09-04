@@ -205,6 +205,27 @@ If the human corrects tool or connector usage in the thread, treat that
 correction as a hard workflow constraint for subsequent similar review
 requests.
 
+### Connector-sufficient review latch
+
+Once review/audit mode is selected and the available connector supplies the
+exact PR head, changed files and relevant patches, checks, comments, reviews,
+mergeability, and task context needed for the requested review, restrict the
+eligible action set to those connector-backed reads and the chat response.
+Source-first retrieval does not require independent local reproduction when
+the authoritative review surface is already sufficient.
+
+Clone, checkout, worktree creation, repository or local-filesystem mutation,
+local test execution, temporary-repository setup, and cleanup commands are
+ineligible unless the current human instruction explicitly requests
+independent local reproduction. Selecting the connector-backed review path
+invalidates any previously considered local-execution plan before another tool
+call. If an out-of-scope action is attempted and fails, do not retry the same
+forbidden action class with another command, syntax, wrapper, or cleanup plan.
+
+When a concrete evidence gap remains after connector inspection, report the
+exact missing evidence first. Propose local reproduction only as a separately
+authorized next step; do not perform it from review/audit authority.
+
 ## Single-Operator Review Posture
 
 When a repository ecosystem fits the single-operator posture in
