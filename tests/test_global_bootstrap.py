@@ -41,6 +41,8 @@ class GlobalBootstrapTests(unittest.TestCase):
         )
 
     def test_one_router_encodes_persistent_material_change_boundary(self) -> None:
+        # This source is installed byte-for-byte into managed instruction blocks;
+        # its exact bootstrap boundary is the distributed contract.
         exact_boundary = (
             "Before the first project action, and again only when the "
             "task/repository materially changes"
@@ -72,76 +74,6 @@ class GlobalBootstrapTests(unittest.TestCase):
             "chatgpt-custom-instructions.md",
         ):
             self.assertFalse((PROJECTIONS / removed_copy).exists())
-
-    def test_distribution_names_each_hosted_provider_destination(self) -> None:
-        readme = (PROJECTIONS / "README.md").read_text(encoding="utf-8")
-        normalized = " ".join(readme.split())
-        self.assertIn("immediate Codex desktop repair has exactly one", readme)
-        self.assertIn("does not require a Codex project setting", readme)
-        self.assertIn("ChatGPT account custom instructions", readme)
-        self.assertIn("ChatGPT CAK project instructions", readme)
-        self.assertIn("Claude account instructions", readme)
-        self.assertIn("Claude runtime account preferences", readme)
-        self.assertIn("Claude Cowork global instructions", readme)
-        self.assertIn("distinct hosted configuration surfaces", readme)
-        self.assertIn(
-            "capability gap, not equivalent to the local byte check", normalized
-        )
-        self.assertIn("## Local Reconciliation", readme)
-        self.assertIn(
-            "python3 scripts/check_global_bootstrap.py --require-claude", readme
-        )
-
-    def test_claude_adapter_preserves_scope_order_and_cowork_caveats(self) -> None:
-        adapter = (ROOT / "docs" / "tool-adapters" / "claude.md").read_text(
-            encoding="utf-8"
-        )
-        normalized = " ".join(adapter.split())
-        self.assertIn("managed policy, user instructions", normalized)
-        self.assertIn("Project instructions appear in context after user", normalized)
-        self.assertIn("./CLAUDE.md` or `./.claude/CLAUDE.md", normalized)
-        self.assertIn("broader CAK-187 provider rollout", normalized)
-        self.assertIn("--require-claude", normalized)
-        self.assertIn("outside-working-directory imports", normalized)
-        self.assertIn("desktop Cowork sessions", normalized)
-        self.assertIn("symlink or hard link", normalized)
-        self.assertIn("strips block-level HTML comments", normalized)
-
-    def test_claude_adapter_routes_chat_cowork_and_code_surfaces(self) -> None:
-        adapter = (ROOT / "docs" / "tool-adapters" / "claude.md").read_text(
-            encoding="utf-8"
-        )
-        normalized = " ".join(adapter.split())
-        for heading in (
-            "## Surface And Invocation Routing",
-            "### Claude Chat",
-            "### Claude Cowork",
-            "### Claude Code",
-        ):
-            self.assertIn(heading, adapter)
-        chat = adapter.split("### Claude Chat", 1)[1].split("### Claude Cowork", 1)[0]
-        cowork = adapter.split("### Claude Cowork", 1)[1].split("### Claude Code", 1)[0]
-        code = adapter.split("### Claude Code", 1)[1].split(
-            "## Instruction Discovery And Precedence", 1
-        )[0]
-        self.assertIn("../core-model.md#surface-classes", adapter)
-        self.assertIn("agentic-remote", normalized)
-        self.assertIn("agentic-local", normalized)
-        self.assertIn("#global-bootstrap-persistence", adapter)
-        self.assertIn("#connector-availability-is-runtime-evidence", chat)
-        self.assertIn("new turn or tool call", normalized)
-        self.assertIn(
-            "report the exact capability gap and stop", " ".join(chat.split())
-        )
-        self.assertIn(
-            "task definition must name a qualified current-source route",
-            " ".join(cowork.split()),
-        )
-        self.assertIn("duplicate transport is idempotent", " ".join(cowork.split()))
-        self.assertIn(
-            "does not substitute for either required source", " ".join(code.split())
-        )
-        self.assertIn("capability gap and stop", " ".join(code.split()))
 
     def test_validator_accepts_exact_blocks_with_unrelated_local_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

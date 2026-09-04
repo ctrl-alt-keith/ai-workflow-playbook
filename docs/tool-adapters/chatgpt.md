@@ -17,9 +17,9 @@ adapter selection.
 ## Repository-bootstrap boundary
 
 Project instructions are bootstrap and routing input, not a second copy of the
-Playbook. After the CAK-108 project bootstrap has routed repository work to the
-current [`start-here.md`](../start-here.md), apply this adapter with the
-repository floor and the task-activated guidance.
+Playbook. After project bootstrap routes repository work to current
+[`start-here.md`](../start-here.md), apply this adapter with the repository
+floor and task-activated guidance.
 
 Use the one copy-ready
 [`global bootstrap router`](../../distributions/global-bootstrap/bootstrap-router.md)

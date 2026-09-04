@@ -43,114 +43,63 @@ its own run boundary.
 
 ## Hydration Transport By Surface
 
-Persistent instructions trigger hydration; they do not prove that hydration
-succeeded or that a repository snapshot is current. Apply the shared
+Persistent instructions trigger hydration but do not prove success or source
+freshness. Apply the shared
 [`global bootstrap router`](../../distributions/global-bootstrap/bootstrap-router.md)
-at each independently starting hosted surface that must enter CAK repository
-work. Its
-[`global bootstrap persistence`](../start-here.md#global-bootstrap-persistence)
-boundary applies unchanged: hydrate before the first project action and again
-only when the task or repository materially changes, never merely because a
-new turn or tool call occurs. Then use these source routes:
+and its
+[`persistence boundary`](../start-here.md#global-bootstrap-persistence) at each
+independently starting Claude surface, then use the surface-specific route
+below.
 
 ### Account-Level Hosted Transports
 
 - Anthropic documents **Instructions for Claude** as an account-wide setting
-  that applies to conversations. Because it is account-level, do not frame it
-  as a Chat-only transport or infer that project instructions replace it.
+  for conversations; it is not a Chat-only transport and project instructions
+  do not replace it.
 - When a current run exposes one or more `user_preferences` blocks, treat them
-  as independently observed runtime instruction transports until the owning
-  hosted setting and precedence are established. Audit each block for stale
-  unconditional hydration wording. An edit to **Instructions for Claude** does
-  not prove that a separately presented runtime block changed. If its owner
-  remains unknown, record unresolved provenance, continue treating the stale
-  block as active, and do not claim reconciliation.
+  as independently observed transports until ownership and precedence are
+  established. An account-setting edit does not prove that a separately
+  presented block changed.
 - Anthropic separately documents Cowork Global instructions as standing
-  instructions for every Cowork session. The published route is **Settings >
-  Cowork**, then **Global instructions**; current UI exposure is runtime
-  evidence. If an account or build does not expose that route, record the gap
-  instead of assuming another account field owns the same transport.
+  Cowork instructions at **Settings > Cowork > Global instructions**. Current
+  UI exposure remains runtime evidence; do not substitute another account
+  field when that route is absent.
 
 ### Claude Chat
 
-- Put the canonical global router in the verified account instruction
-  transport when ordinary Chat conversations may start CAK work. A bare
-  repository URL is context, not an instruction to retrieve and apply it.
-- Use project instructions for project-specific context; do not copy shared
-  Playbook doctrine or another router body there when the account-level router
-  already covers the session.
-- Prefer explicitly selected GitHub content for repository files. In a Claude
-  project, GitHub content is a selected, synchronized knowledge source;
-  refresh it when the task materially changes or before relying on mutable
-  repository state whose freshness has not been established. A successful
-  prior sync does not prove the current branch or file version. Another
-  currently observed retrieval route is valid when it returns the current
-  required source.
-- If the current `docs/start-here.md`, repo-local `AGENTS.md`, or another
-  required source cannot be retrieved after inspecting or attempting the
-  relevant route, report the exact capability gap and stop the
-  repository-dependent task. Apply the
-  [`runtime-evidence rule`](../start-here.md#connector-availability-is-runtime-evidence)
-  before claiming a connector or retrieval capability is unavailable. Do not
-  proceed from project memory, chat history, or a stale synchronized copy while
-  claiming current hydration.
-
-Chat hydration is therefore best-effort per thread. Account or project
-instructions can reliably present the routing request, but they cannot create
-filesystem locality or guarantee that the selected GitHub source is current.
+Put the router in the verified account transport and keep project instructions
+to project-specific context. Prefer explicitly selected current GitHub content
+or another observed current route; a prior project sync is not current-source
+evidence. Chat hydration is best-effort per thread. If a required source cannot
+be retrieved after applying the
+[`runtime-evidence rule`](../start-here.md#connector-availability-is-runtime-evidence),
+stop the repository-dependent task rather than proceeding from conversation or
+project memory.
 
 ### Claude Cowork
 
-- Put the canonical global router in the verified Cowork Global instructions
-  transport when Cowork sessions may start CAK work. This is a distinct
-  hosted/manual surface from account instructions, observed runtime account
-  preferences, and `~/.claude/CLAUDE.md`. The published menu route does not
-  prove that a particular account or product build currently exposes it.
-- When no verified global transport is exposed, an interactive Cowork run may
-  proceed only when its current task or a verified project/folder instruction
-  explicitly triggers hydration and the required current sources are obtained.
-  Record the global coverage gap; do not substitute a duplicate router in a
-  project or folder field.
-- Folder instructions provide project-specific context when a local folder is
-  selected on desktop. Cowork project instructions and context apply only
-  within that project. Keep either layer thin and point it to the repository's
-  current `CLAUDE.md`/`AGENTS.md` route instead of copying shared doctrine.
-- With a connected local repository folder, read the current
-  `docs/start-here.md`, root `CLAUDE.md`, and repo-local `AGENTS.md` from that
-  folder at the first-action/material-change boundary. If the desktop bridge
-  or folder is unavailable, use a currently observed connector or synchronized
-  project source and preserve its freshness limitation.
-- Scheduled and other unattended Cowork tasks run without a human available
-  at startup. Their task definition must name a qualified current-source route
-  and stop when it is unavailable; remembered context and a prior successful
-  run are not substitutes.
+Use verified Cowork Global instructions for the router and keep project or
+folder instructions as thin project-specific pointers. When no global
+transport is exposed, an interactive task may proceed only from a verified
+task, project, or folder trigger that obtains the required current sources;
+record the coverage gap. A connected local folder supplies the local startup
+route while the connection remains available. Unattended tasks must name a
+qualified current-source route and stop when it is unavailable.
 
-Cowork's product-native global and folder instructions are the portable
-instruction surfaces across Cowork sessions. Claude Code's memory guidance
-also documents `~/.claude/CLAUDE.md` behavior in desktop Cowork sessions, but
-that file is not the sole Cowork route: outside-working-directory imports and
-linked user files are skipped there, and cloud/web/mobile Cowork execution must
-not infer coverage from a workstation file.
+Desktop Cowork skips outside-working-directory imports and linked user files;
+cloud, web, and mobile Cowork cannot infer coverage from a workstation
+`~/.claude/CLAUDE.md`.
 
-Anthropic does not publish cross-surface precedence or deduplication semantics
-for account instructions, runtime `user_preferences` blocks, and Cowork Global
-instructions. Treat them as independently verified transports and do not infer
-that account instructions alone cover Cowork. If one runtime presents the exact
-canonical router through more than one surface, the duplicate transport is
-idempotent: apply the first-action/material-change trigger once, not once per
-copy.
+Anthropic does not publish precedence among account instructions, runtime
+`user_preferences`, and Cowork Global instructions. Verify them independently;
+if one runtime presents the exact router more than once, apply its trigger once.
 
 ### Claude Code
 
-Claude Code uses its file-backed `CLAUDE.md` discovery described below. Local
-file-backed hydration is deterministic when the required files are current and
-readable. In a remote Code workspace, use a repo-local root `CLAUDE.md`, when
-present, as a thin bootstrap pointer to the current `docs/start-here.md` and
-repo-local `AGENTS.md`; otherwise retrieve those two required sources directly
-through a currently observed route. User-global or project `CLAUDE.md` content
-triggers this hydration but does not substitute for either required source. If
-the current required sources are not readable or retrievable, report the
-capability gap and stop before repository-dependent work.
+Claude Code uses the file-backed `CLAUDE.md` discovery below. A repo-local
+`CLAUDE.md` may point to current `docs/start-here.md` and `AGENTS.md` but does
+not replace them. In remote Code, retrieve those sources through the current
+workspace or another observed route and stop if they are unavailable.
 
 The remaining execution, permission, worktree, context, model, and delivery
 sections are Claude Code-specific unless a section explicitly says
@@ -164,40 +113,18 @@ policy, user instructions at `~/.claude/CLAUDE.md`, project instructions at
 `./CLAUDE.md` or `./.claude/CLAUDE.md`, and personal project-local
 instructions. Project instructions appear in context after user instructions,
 and discovered files are concatenated rather than one scope overriding another.
-Claude Code reads `CLAUDE.md`, not repo-local `AGENTS.md`,
-unless the latter is imported or explicitly read; yet `AGENTS.md` is the
-canonical repository execution layer the startup contract requires. Therefore:
+Claude Code reads `CLAUDE.md`, not repo-local `AGENTS.md`, unless the latter is
+imported or explicitly read. Explicitly read `AGENTS.md`, keep any `CLAUDE.md`
+as a thin pointer rather than a policy copy, and apply the
+[`repository instruction hierarchy`](../start-here.md#repository-instruction-hierarchy).
 
-- Explicitly read the target repository's `AGENTS.md`; do not assume auto-loaded
-  memory covers repo-local policy.
-- Do not fork `AGENTS.md` or shared doctrine into a `CLAUDE.md`. If a `CLAUDE.md`
-  exists, keep it a thin pointer to `docs/start-here.md` and the repo's
-  `AGENTS.md`, not a second policy source. See
-  [`repo-readiness.md`](../repo-readiness.md#agentsmd-responsibilities).
-- Memory files are a transport for instructions, not an authority layer. The
-  [Repository Instruction Hierarchy](../start-here.md#repository-instruction-hierarchy)
-  governs; a user-level `~/.claude/CLAUDE.md` is operator context and does not
-  override repo-local policy. The documented load order places project
-  instructions after user instructions, but load order is context ordering,
-  not authority transfer.
-- For the broader CAK-187 provider rollout, use the copy-ready
-  [`global bootstrap router`](../../distributions/global-bootstrap/bootstrap-router.md)
-  as an inline marked block in the regular user-level file. It applies the shared
-  [`global bootstrap persistence`](../start-here.md#global-bootstrap-persistence)
-  timing invariant across repositories; it is not a per-turn retrieval rule.
-  Validate a completed local Claude rollout with
-  `python3 scripts/check_global_bootstrap.py --require-claude` from the Playbook
-  repository.
-- Do not implement the user-global router as an import that resolves outside a
-  Cowork session's working directory, or as a symlink or hard link. Claude Code
-  documents that desktop Cowork sessions skip those user-scope imports and a
-  linked `~/.claude/CLAUDE.md`. A regular inline managed block avoids those
-  two failure modes, but it does not replace Cowork Global instructions or
-  establish coverage for cloud, web, or mobile Cowork sessions.
-- Keep the managed HTML markers around the inline router. Claude Code strips
-  block-level HTML comments before injecting `CLAUDE.md` content into context,
-  so the markers remain available to the drift validator without consuming
-  model context or becoming model instructions.
+For CAK-187, install the copy-ready
+[`global bootstrap router`](../../distributions/global-bootstrap/bootstrap-router.md)
+as a regular inline marked block in the user-level file and validate it with
+`python3 scripts/check_global_bootstrap.py --require-claude`. Do not use an
+outside-working-directory import, symlink, or hard link; desktop Cowork skips
+those forms. Preserve the HTML markers: Claude Code strips them from model
+context while the drift validator retains them.
 
 ## Interaction Mode And Permission Mode
 
@@ -224,32 +151,24 @@ from the interaction mode.
   repository work with meaningful blast radius, and do not treat repository-level
   `deny` rules as a sufficient safety boundary under it.
 
-Approval is capability, not authority
-([`core-model.md`](../core-model.md#authority-and-transitions)). Being allowed to
-run a tool does not authorize merge, release, tag, destructive, or externally
-visible actions; those remain human-gated (see
-[Delivery And Stop Conditions](#delivery-and-stop-conditions)).
+Permission mode changes capability, not authority; apply
+[`core-model.md`](../core-model.md#authority-and-transitions).
 
 ## Command Execution
 
 Claude executes Bash commands as separate processes. In the main session,
-working-directory changes may carry over within the project or explicitly added
-directories, but shell environment changes such as `export`, `source`, aliases,
-and virtual-environment activation do not persist between calls; subagent
-working-directory changes do not persist. Keep commands self-contained and
-follow the
+working-directory changes may carry over within the project or explicitly
+added directories, but shell environment changes do not persist between calls;
+subagent working-directory changes do not persist. Keep commands self-contained
+and follow the
 [command-form rule](../repo-readiness.md#command-form-and-intent-visibility):
 run ordinary repository operations in direct, single-purpose form (`git status`,
 `gh pr view <n>`, `make check`) rather than wrapping them in extra `bash -lc`,
-aliases, or compound-shell layers that hide intent. Claude may issue independent
-tool calls in parallel; keep parallel calls to independent read-only inspection
-and never parallelize mutating Git or overlapping worktree operations.
+aliases, or compound-shell layers that hide intent. Parallelize only independent
+read-only inspection.
 
-Isolation comes from the permission model and the working directory or Git
-worktree, not from a writable-root sandbox. Keep durable artifacts under their
-natural durable owner and repository working state in its repository-owned
-paths; use attempt-local scratch only for short-lived private process mechanics
-whose loss cannot impair recovery. See
+Claude has no Codex-style writable-root sandbox. Apply the shared durable-state
+and scratch rules in
 [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
 ### Governed read-only reviewer launch
@@ -461,45 +380,27 @@ trace suppression.
 
 ## Worktrees And Subagents
 
-Apply the one-repository, one-branch, one-worktree, one-PR rule and
-`<repo>/.worktrees/` placement from
-[`repo-readiness.md`](../repo-readiness.md#pr-readiness) unchanged; create
-repo-changing worktrees with direct `git worktree add` naming the full
-`.worktrees/<task-name>` path.
-
 Non-fork Claude subagents (`Task` tool) start with a separate context and do not
-receive the parent conversation history or files the parent previously read, so
-give each one a complete, self-contained envelope rather than relying on implicit
-conversational context: repository and working directory, interaction mode and
-deliverable, goal, scope and exclusions, source evidence or retrieval
-instructions, validation path, and stop conditions (this is the standalone-worker
-requirement in
-[`orchestration-and-parallelism.md`](../orchestration-and-parallelism.md)).
-Worker authority stops at the envelope; a worker must not merge, enable
-auto-merge, update other branches, or continue into downstream reconciliation
-unless the human authorizes that step.
+receive parent conversation history or previously read files. Give each one the
+complete standalone envelope owned by
+[`orchestration-and-parallelism.md`](../orchestration-and-parallelism.md), and
+apply worktree and PR topology from
+[`repo-readiness.md`](../repo-readiness.md#pr-readiness).
 
 ## Context Compaction And Recovery
 
-Claude Code auto-compacts before the context window fills and supports `/compact`
-and session resume (`--resume`, `--continue`). Compaction replaces earlier turns
-with a summary. Treat compacted or resumed conversation as navigation, not
-authority: after either, re-retrieve authoritative repository, PR, issue, CI, and
-file state before relying on it, per
+Claude Code auto-compacts before the context window fills and supports
+`/compact`, `--resume`, and `--continue`. Treat the resulting summary as
+navigation and refresh required mutable state under
 [`source-first-retrieval.md`](../source-first-retrieval.md) and
 [durable continuity](../core-model.md#durable-continuity).
 
 ## Connectors
 
-This section applies across Claude surfaces that expose connectors. Claude
-reaches remote services, including GitHub, through MCP servers. Apply the
-[runtime-evidence rule](../start-here.md#connector-availability-is-runtime-evidence):
-inspect available connector actions or attempt the operation before claiming a
-capability is unavailable, and treat a successful call as evidence it remains
-available. For GitHub PR and issue work, prefer connector-first inspection per
-[`review-packet.md`](../review-packet.md#direct-pr-inspection); direct `git` and
-`gh` supplement it and remain appropriate for verified connector gaps or
-repo-local workflows.
+Claude reaches remote services through MCP connectors. Apply the shared
+[`runtime-evidence rule`](../start-here.md#connector-availability-is-runtime-evidence)
+and the GitHub route in
+[`review-packet.md`](../review-packet.md#direct-pr-inspection).
 
 ### Issue-Owned Durable Prompt Retrieval
 
@@ -512,33 +413,21 @@ observed route. Do not infer that qualification from connector presence,
 extracted text, a synced folder, or another actor's successful retrieval.
 
 Otherwise use one private OS-managed executor-attempt copy produced by an
-authorized controller or operator from the raw durable object. Bind the launch
-to its exact path, expected size, SHA-256, and declared text format. Retrieval
-and byte verification require only the minimum read capability needed to
-inspect the prompt. Record whether Claude computed the digest itself or relied
-on controller-bound digest evidence plus exact read evidence. A direct Claude
-provider limitation does not block this profile when the exact attempt-local
-route succeeds. Do not use a locally synchronized provider mount as provider or
-durable identity, retain the attempt-local copy as durable, or create an
-exchange root.
+authorized controller or operator, bind the launch to its exact path, size,
+SHA-256, and text format, and record whether Claude computed the digest or used
+controller-bound evidence. A direct-provider limitation does not block a
+successful exact attempt-local route. A synchronized mount, exchange root, or
+retained attempt copy is not durable provider identity.
 
-After prompt acceptance, choose Claude's tools and permission mode from the
-bounded task's authorized execution requirements. Read-only tools are mandatory
-only when the owning task is read-only or a narrower reviewer or qualification
-contract requires read-only inspection. Disable session persistence only when
-the owning execution, reviewer, or qualification contract requires it. Prompt
-handoff alone does not prohibit write tools, tests, repository mutation, output
-creation, or session persistence already authorized by the bounded task.
-Preservation and exact retrieval still grant no substantive execution
-authority.
+After acceptance, choose tools, permission mode, and session persistence from
+the owning task or narrower reviewer contract; prompt retrieval alone does not
+make execution read-only or grant substantive authority.
 
-Keep delivery, acknowledgement, Claude attempt, attempt receipt, and output
-identities separate. Preserve required evidence, then remove and verify removal
-of only the private attempt-local copy after the attempt no longer depends on
-it. Revalidate containment and identity, and fail closed on the shared cleanup
-conditions in [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
-The concrete provider, account, namespace, destination, retention, and
-visibility values remain outside this reusable adapter.
+Preserve the profile's distinct evidence identities, then clean up only the
+private attempt copy under
+[`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state). Concrete
+provider, account, destination, retention, and visibility values remain outside
+this adapter.
 
 ## Claude Model, Thinking, And Thread Routing
 
@@ -639,13 +528,9 @@ routing. A qualified separate Claude invocation can supply the selected external
 review only when it meets the reviewer contract. A child spawned by the party
 under review is not externally independent, regardless of its model, vendor,
 effort, or isolated context; an internally spawned Codex review remains Codex
-review. Mechanical external verification and Codex
-mechanical fallback must be labeled as their actual mechanism and never
-retroactively stand in for substantive external review. CAK-106 is observational
-workflow evidence only: substantive authority/process findings justified deeper
-review, while later evidence-precision, environment-limited verification, and
-mechanical follow-up were candidates for a bounded qualified mechanism. It does
-not establish savings, quality parity, or cross-vendor equivalence.
+review. Mechanical external verification and Codex mechanical fallback must be
+labeled as their actual mechanism and never retroactively stand in for
+substantive external review.
 
 ### Prompt Operator Metadata
 
@@ -674,15 +559,9 @@ the executable body when it is a validation or qualification requirement.
 
 When a material prompt uses the product-neutral reasoning class in
 [`prompt-contracts.md`](../prompt-contracts.md) (`light`, `medium`, `high`), the
-Claude representation is a supported thinking/effort setting plus model
-selection chosen for the bounded task. Concrete model names and thinking/effort
-settings are adapter configuration and attempt-receipt metadata, not the meaning
-of the class.
-Preserve whether the class and each capability are mandatory or advisory; if the
-available Claude surface cannot meet a mandatory requirement without weakening a
-guarantee, fail closed rather than silently downgrade. A model change alone does
-not justify a prompt rewrite; preserve existing behavior first, then make
-surgical changes tied to an observed failure.
+Claude representation is the supported model and thinking/effort setting
+selected above. Preserve mandatory versus advisory capability and fail closed
+when the available surface cannot meet a mandatory requirement.
 
 ## Local GitHub And Environment Preflight
 
@@ -706,12 +585,6 @@ Normally include the opened or updated PR and its status, the canonical
 validation and review summary, the exact implementation head when useful, and
 the stop boundary. Add changed-file, blocker, risk, or forensic-evidence detail
 only when it materially affects operator review or action.
-
-Pause and ask for human input when the repository, branch, or worktree context
-appears wrong, the scope is ambiguous or has shifted, required source state
-cannot be retrieved, more than one valid path depends on human judgment, or the
-next step is merge, release, tag, destructive, externally visible, or
-permissions-sensitive.
 
 ## References
 

@@ -85,27 +85,12 @@ that state instead of reproducing it. Include, as applicable:
 - required locality and tools;
 - validation, outputs, and completion or stop boundary.
 
-These are semantic fields, not an operational package schema. The pointed
-package may preserve the complete contract, accepted inputs, source and
-artifact identities, prior decisions, receipts, validation evidence, and a
-recorded next permitted action. The target must retrieve and verify the exact
-manifest or sealed-package identity before relying on that payload. For
-material execution, use the exact identity evidence required by the owning
-package contract, such as an immutable path plus digest, file identity, attempt
-identity, or version. A mutable issue directory, package root, or bare folder
-path is navigation only; it is not the governing package identity.
-
-The envelope declares human direction, bounded authority, and the owning
-authority reference but creates zero authority itself. Stored contracts,
-next-action statements, paths, digests, packages, prompts, receipts,
-validation, and successful retrieval also create or transfer zero authority. A
-recorded next action remains historical or asserted instruction until the
-current acting identity and live authority are verified from their owner.
-
-If the exact package identity is inaccessible, unresolved, stale, mismatched,
-or ambiguous, stop before affected execution or return an explicit
-non-authorizing partial result. Do not reconstruct missing contract, authority,
-or evidence from conversation memory.
+These are semantic fields, not a package schema. Verify the exact identity
+required by the owning package contract before relying on its payload; a mutable
+directory or bare folder path is navigation only. The envelope declares bounded
+authority and its live owning reference but creates none. If package identity
+or current authority is unavailable, stale, mismatched, or ambiguous, stop the
+affected execution rather than reconstructing it from conversation.
 
 ### Target-shaped projections
 
@@ -181,16 +166,6 @@ Do not use a keyword-only rule: `proposal` and `design` do not prohibit a
 repository artifact when the human explicitly requests a design document or
 proposal pull request. Conversely, recorded later implementation intent does
 not authorize Git in the discussion phase.
-
-### Provider-neutral examples
-
-| Situation | Explicit kickoff boundary |
-| --- | --- |
-| Ready kickoff | Current authority and prerequisites pass, so the controller may advance the governing task, preserve the exact downstream prompt and receipt under the applicable evidence contract, verify their identities, and return the handoff. It performs none of the delegated repository execution. |
-| Blocked kickoff | A prerequisite or authority check fails. The controller does not falsely advance the task; it may record the exact blocker when that task-owned write is useful and authorized. No downstream execution is implied. |
-| Architecture thread | The controller may write and preserve the task-owned decision package. Architecture adoption remains a separate human decision against the reviewed package identity. |
-| Destructive workflow | The controller may produce and preserve a read-only manifest. Deletion remains separately human-approved and is not authorized by the manifest. |
-| Delegated repository implementation | The controller may preserve the downstream prompt and task-owned planning evidence. The repository executor owns repository mutation only under its own bounded authority and prerequisites. |
 
 ## Thread Routing And Configuration Continuity
 
@@ -331,38 +306,19 @@ patch that requires the operator to splice text into an older prompt.
 
 ## Prompt Contract Identity
 
-For material execution that may be reviewed, recovered, or replayed, apply the
-canonical semantics in [`prompt-contracts.md`](prompt-contracts.md). Keep the
-immutable semantic prompt contract separate from the append-only attempt
-receipt and from the exact rendered prompt bytes.
-
-The immutable semantic contract is created and hashed before hydration or
-rendering. It defines meaning, compatibility, validation, authority-reference,
-reasoning, transport, evidence, and fail-closed requirements without including
-selected or derived digests. The attempt receipt references that contract and
-records selected sources, derived identities, delivery, current safety-policy
-observation, live-authority outcome, validation, and execution evidence.
-
-The prompt carries bounded instruction and evidence; it does not own canonical
-doctrine, durable workflow state, evidence acceptance, or approval. Prompt
-text, contract digests, validation success, receipts, checkpoints, and
-transport delivery cannot grant authority. The execution or adoption layer
-must re-read live durable authority immediately before action.
-
-Fresh attempts select compatible inputs once and keep them immutable. Replay
-resolves the recorded contract and exact inputs without reading current mutable
-sources or silently upgrading an adapter, renderer, validator, reasoning
-recommendation, or fallback policy. Replay reproduces authorized inputs, not
-deterministic model output.
+For material execution that may be reviewed, recovered, or replayed, apply
+[`prompt-contracts.md`](prompt-contracts.md). It owns the separation among the
+immutable semantic contract, rendered bytes, append-only attempt receipt,
+authority references, fresh selection, and replay. This template layer does not
+redefine those identities or turn them into authority.
 
 The Playbook-owned machine-readable anchors and canonicalization vectors are:
 
 - [`prompt-contract-semantic-anchors-v3.json`](prompt-contract-semantic-anchors-v3.json)
 - [`prompt-contract-canonicalization-vectors-v1.json`](prompt-contract-canonicalization-vectors-v1.json)
 
-They encode semantic anchors and conformance evidence only. They are not an
-operational schema, prompt generator, hydrator, renderer, receipt, or workflow
-engine.
+They are semantic anchors and conformance evidence, not an operational workflow
+schema.
 
 Use lint-safe placeholders such as `[repository]`, `[validation_path]`, or
 backticked tokens in Markdown templates. Angle-bracket placeholders can be
@@ -393,41 +349,19 @@ Reason:
 
 ## Produced-Artifact Classification
 
-Explicit human readiness or classification language is authoritative input to
-this classification. When the human requests an exact, complete, executable,
-ready to run, final, ready to paste, ready to execute, or complete runnable
-prompt or handoff, do not weaken that classification with assistant-authored
-framing such as `illustrative`, `sample-only`, `conceptual`, `provisional`,
-`rough`, or `not finalized`. Apply the complete-prompt presentation and
-transport contract unless a stronger safety, authority, or capability
-constraint requires refusal or an explicit blocked result. If unresolved facts
-prevent a truthful ready-to-run artifact, resolve them from their owners or
-return that explicit blocked result; do not silently downgrade the artifact.
+Classify the artifact actually produced before choosing presentation. Explicit
+human readiness language is authoritative input, but request words such as
+`example`, `sample`, `roughly`, `preview`, or `demo` do not make an otherwise
+complete or substantially executable artifact conceptual. A substantially
+executable artifact supplies enough task, scope, constraints, sources,
+validation, and stop information for a downstream executor to act.
 
-Classify the artifact actually produced before choosing its presentation. The
-user's request framing can describe the desired level of detail, but words such
-as `example`, `sample`, `roughly`, `formatting`, `preview`, or `demo` do not
-make a produced artifact conceptual when it is complete or substantially
-executable for a downstream executor. This includes framing such as `show me
-the format`, `sample prompt`, or `example implementation prompt`.
-
-A produced artifact is substantially executable when it gives a downstream
-executor enough concrete task, scope, constraint, source, validation, and stop
-information to act as a prompt rather than merely illustrating a phrase or
-layout. Resolve known repository, task, and other required prompt-local values;
-do not retain a known-value placeholder to avoid this classification.
-
-Classify a complete or substantially executable artifact as a complete prompt
-for presentation and transport. That classification is the output of the
-delivery model's first two stages and must not be reinterpreted by recipient,
-capability, presentation, or renderer selection. This preserves the matching
-adapter's concrete model and reasoning metadata and the inline two-block shape
-when inline presentation is the selected route.
-
-Keep genuinely conceptual discussion, quoted source material, isolated
-snippets, and incomplete fragments lightweight. They are not complete prompts
-solely because they concern prompt design, and do not require file-backed
-transport.
+Resolve known prompt-local values and classify complete or substantially
+executable output as a complete prompt in stages 1 and 2 below. Later recipient,
+capability, presentation, or renderer selection cannot downgrade it. If missing
+facts prevent a truthful ready-to-run artifact, resolve them or return the
+owning blocked result. Genuine discussion, quoted material, isolated snippets,
+and incomplete fragments remain lightweight.
 
 ## Prompt Delivery Decision Model
 

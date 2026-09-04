@@ -557,29 +557,14 @@ it after the same containment and identity revalidation; preserve it when the
 interruption is under investigation. Platform-level temporary reclamation is
 outside this contract and neither grants disposal authority nor violates it.
 
-Examples:
-
-1. Generated one-attempt command intermediates belong in attempt-local scratch.
-2. Exact durable prompt bytes may be copied into private executor mechanics and
-   disposed only after verified use and required evidence are preserved.
-3. Build and test intermediates follow repository or tool ownership and their
-   intended survival; they are not scratch merely because they are generated.
-4. A crashed attempt's survivors are untrusted residue, never a recovery input.
-5. An output found to need later review is promoted and exact-verified before
-   its former scratch location is cleaned.
-6. Without a qualified temporary-root mapping, fail closed or use another
-   explicitly authorized design; never silently fall back.
-7. Historical `scratch/` references may remain as frozen provenance, but no
-   mutable guidance may imply that they are the current disposable default.
-
 The platform projections currently implemented by this Playbook are:
 
-- the bounded Darwin precedent from CAK-158/150: resolve with
+- Darwin: resolve with
   `/usr/bin/getconf DARWIN_USER_TEMP_DIR` and require its private directory
   ownership and mode; and
-- the bounded Linux design from CAK-155, pending first Linux-host execution
-  evidence: use fixed `/tmp` only when it is a real root-owned directory with
-  exact sticky shared-temporary mode `01777`.
+- Linux, pending first host-execution evidence: use fixed `/tmp` only when it
+  is a real root-owned directory with exact sticky shared-temporary mode
+  `01777`.
 
 Each projection validates its own platform root rather than trusting `$TMPDIR`,
 uses a fresh private unique child with mode `0700`, binds parent and child
