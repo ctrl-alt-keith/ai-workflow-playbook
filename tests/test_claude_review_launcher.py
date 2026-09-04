@@ -2694,6 +2694,35 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         )
         self.assertEqual((self.root / "lingering-child-terminal").read_text(), "terminal")
 
+    def test_partial_reader_failure_cannot_qualify_as_complete_stream_evidence(self):
+        module = load_script("claude_review_partial_reader_failure", LAUNCHER)
+
+        class PartialThenFailedStream:
+            def __init__(self):
+                self.reads = 0
+
+            def readline(self):
+                self.reads += 1
+                if self.reads == 1:
+                    return b"partial review evidence\n"
+                raise OSError("fixture reader failure")
+
+        failed = module.PipeCollector(PartialThenFailedStream())
+        complete = module.PipeCollector(io.BytesIO(b"complete stderr\n"))
+        failed.thread.join(timeout=1)
+        complete.thread.join(timeout=1)
+
+        stream_evidence = {
+            "collectors_reached_eof_before_stream_freeze": (
+                failed.eof.is_set() and complete.eof.is_set()
+            ),
+            "collector_read_errors": {"stdout": failed.error, "stderr": complete.error},
+        }
+
+        self.assertEqual(failed.bytes(), b"partial review evidence\n")
+        self.assertFalse(stream_evidence["collectors_reached_eof_before_stream_freeze"])
+        self.assertEqual(stream_evidence["collector_read_errors"]["stdout"], "fixture reader failure")
+
     def test_retry_exhaustion_stops_at_three_and_auth_stops_at_one(self):
         exhausted, exhausted_diagnostic = self.run_governed("transient_always")
         self.assertEqual(exhausted.returncode, 70)
