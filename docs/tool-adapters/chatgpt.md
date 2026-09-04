@@ -180,9 +180,24 @@ owning workflow requires it. If the client renders a card from the write action
 itself, classify that as client-enforced UI, avoid redundant preview calls or
 model narration, and report the limitation when material rather than claiming
 the card was suppressed. Current
-[OpenAI Apps guidance](https://help.openai.com/en/articles/11487775-connectors-in)
-documents rich in-chat app experiences and write confirmations, but does not
-establish a universal per-action client-rendering suppression control.
+[OpenAI Apps guidance](https://help.openai.com/en/articles/11487775), checked
+2026-09-03, documents that permission options may include `Allow all actions`
+for an eligible app or account, while availability is app- and account-specific
+and some safety or workspace protections still apply. Treat the effective
+setting and the exact action contract as runtime evidence; this repository
+cannot configure either one or infer that a general permission setting waives
+a more specific action requirement.
+
+When the current Dropbox `create_folder` or `create_file` action contract, as
+observed 2026-09-03, unconditionally requires the assistant to present the
+exact mutation plan and obtain explicit confirmation in chat, that contract
+owns the prerequisite for the attempt. The original `prompt me` request
+remains sufficient task authorization under the Playbook, but it precedes the
+required plan and therefore cannot satisfy that post-plan connector
+confirmation. Apply the shared pilot's
+existing `BLOCKED` and correction path until the prerequisite is satisfied;
+do not reinterpret the interruption as missing task authority, add another
+approval gate, or switch the machine recipient to inline prompt delivery.
 
 ### Recipient-Capability Prompt Presentation
 
@@ -222,9 +237,11 @@ but do not reinterpret it as route disqualification. Use the authorized file
 route, present the card produced by the write when available, and immediately
 provide the target-shaped handoff. A separate preview or open action remains
 optional under the connected-app rules above. Do not wait for prompt approval
-or require the operator to open a preview; connector confirmation authorizes
-only its file operation. File-card and preview behavior is product-dependent
-runtime evidence, so recheck the relevant action.
+or require the operator to open a preview. If the selected create action has
+the post-plan confirmation contract described above, pause on that external
+prerequisite and resume the shared transport path after it is satisfied;
+confirmation authorizes only its file operation. File-card and preview behavior
+is product-dependent runtime evidence, so recheck the relevant action.
 
 For the explicitly activated CAK-209 normal-use Codex trial, ChatGPT applies the
 shared

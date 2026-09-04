@@ -22,6 +22,11 @@ class PromptState(str, Enum):
     FROZEN = "PROMPT_FROZEN"
     DROPBOX_TRANSPORT_ONLY = "DROPBOX_TRANSPORT_ONLY"
     HANDED_OFF = "HANDOFF_EMITTED"
+    BLOCKED = "BLOCKED"
+
+
+class RuntimePrerequisite(str, Enum):
+    CONNECTOR_MUTATION_CONFIRMATION = "connector-mutation-confirmation"
 
 
 class Action(str, Enum):
@@ -97,6 +102,10 @@ class ControllerLatch:
     model_route: str
     prompt_state: PromptState | None = None
     frozen_prompt_digest: str | None = None
+    task_authorized: bool = False
+    hydration_revision: int = 0
+    prompt_design_revision: int = 0
+    runtime_blocker: RuntimePrerequisite | None = None
     connector_evidence_complete: bool = False
     local_reproduction_authorized: bool = False
     proven_connector_actions: frozenset[str] = frozenset()
@@ -108,6 +117,9 @@ class ControllerLatch:
             mode=Mode.PROMPT_AUTHORING,
             model_route=model_route,
             prompt_state=PromptState.DESIGN,
+            task_authorized=True,
+            hydration_revision=1,
+            prompt_design_revision=1,
         )
 
     @classmethod
@@ -167,6 +179,28 @@ class ControllerLatch:
                     Action.RENDER_INLINE,
                 }
             ),
+        )
+
+    def block_on_connector_confirmation(self):
+        if self.prompt_state is not PromptState.FROZEN or not self.task_authorized:
+            raise ValueError("connector confirmation block requires authorized prompt")
+        return replace(
+            self,
+            prompt_state=PromptState.BLOCKED,
+            runtime_blocker=RuntimePrerequisite.CONNECTOR_MUTATION_CONFIRMATION,
+        )
+
+    def confirm_connector_mutation(self):
+        if (
+            self.prompt_state is not PromptState.BLOCKED
+            or self.runtime_blocker
+            is not RuntimePrerequisite.CONNECTOR_MUTATION_CONFIRMATION
+        ):
+            raise ValueError("connector confirmation is not required")
+        return replace(
+            self,
+            prompt_state=PromptState.FROZEN,
+            runtime_blocker=None,
         )
 
     def revise_prompt(self, digest, *, material_requirement_change):
@@ -309,6 +343,56 @@ class WorkflowActionLatchTests(unittest.TestCase):
                 "dropbox.create_file", provider_drift=True
             )
         )
+
+    def test_connector_confirmation_blocks_then_resumes_frozen_transport(self):
+        frozen = ControllerLatch.prompt_authoring(model_route="stronger").freeze(
+            "sha256:prompt-v1"
+        )
+        blocked = frozen.block_on_connector_confirmation()
+        self.assertEqual(blocked.prompt_state, PromptState.BLOCKED)
+        self.assertTrue(blocked.task_authorized)
+        self.assertEqual(
+            blocked.runtime_blocker,
+            RuntimePrerequisite.CONNECTOR_MUTATION_CONFIRMATION,
+        )
+        self.assertEqual(blocked.eligible_actions(), set())
+
+        resumed = blocked.confirm_connector_mutation().enter_dropbox_transport()
+        self.assertEqual(resumed.prompt_state, PromptState.DROPBOX_TRANSPORT_ONLY)
+        self.assertEqual(resumed.runtime_blocker, None)
+        self.assertEqual(resumed.frozen_prompt_digest, blocked.frozen_prompt_digest)
+        self.assertEqual(resumed.hydration_revision, blocked.hydration_revision)
+        self.assertEqual(
+            resumed.prompt_design_revision,
+            blocked.prompt_design_revision,
+        )
+
+        issue_folder_exists = False
+        transport_trace = (
+            (() if issue_folder_exists else (Action.CREATE_ISSUE_FOLDER,))
+            + (
+                Action.CREATE_PROMPT_FILE,
+                Action.VERIFY_PROMPT,
+                Action.MINT_DOWNLOAD_LINK,
+                Action.EMIT_HANDOFF,
+            )
+        )
+        self.assertEqual(
+            transport_trace,
+            (
+                Action.CREATE_ISSUE_FOLDER,
+                Action.CREATE_PROMPT_FILE,
+                Action.VERIFY_PROMPT,
+                Action.MINT_DOWNLOAD_LINK,
+                Action.EMIT_HANDOFF,
+            ),
+        )
+        for action in transport_trace:
+            resumed.assert_eligible(action)
+        self.assertTrue(PROMPT_MUTATION_FORBIDDEN.isdisjoint(transport_trace))
+        self.assertNotIn(Action.HYDRATE_SOURCES, transport_trace)
+        self.assertNotIn(Action.EDIT_PROMPT, transport_trace)
+        self.assertNotIn(Action.RENDER_INLINE, transport_trace)
 
     def test_transport_trace_is_exact_and_handoff_contains_no_prompt_body(self):
         transport = ControllerLatch.prompt_authoring(model_route="stronger").freeze(

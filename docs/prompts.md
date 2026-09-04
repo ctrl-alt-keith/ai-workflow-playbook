@@ -622,9 +622,13 @@ editing, and inline complete-prompt rendering are ineligible. A failed
 ineligible action does not make an alternate syntax or retry eligible; this is
 an action-class boundary, not a rigid global tool-call cap.
 
-Do not ask for fresh permission for a routine Dropbox operation already
-authorized by the current human instruction and owning storage contract. Reuse
-successful connector-action evidence under the current
+Do not invent a fresh Playbook approval for a routine Dropbox operation already
+authorized by the current human instruction and owning storage contract. This
+does not waive a confirmation that the current connector action contract
+requires after presenting its exact mutation plan. That confirmation is an
+external runtime prerequisite for the connector operation, not missing task
+authorization or a prompt-approval gate. Reuse successful connector-action
+evidence under the current
 [`connector-availability rule`](start-here.md#connector-availability-is-runtime-evidence);
 do not rediscover an already successful same action without one of that rule's
 recheck triggers.
@@ -675,6 +679,18 @@ eight stages. A record with another selection outside an explicitly activated
 attempt remains under the canonical decision model and does not enter this
 graph. No recipient is eligible unless its adapter explicitly activates this
 pilot.
+
+When the current connector action contract mandates explicit confirmation
+after its exact create plan is presented, the original handoff request still
+supplies task authorization but cannot satisfy that later runtime prerequisite.
+Record `PROMPT_READY -> BLOCKED` before any create action, name the connector-
+mandated confirmation as the blocker, and keep inline rendering and unrelated
+mutations ineligible. Ask only for the confirmation the connector contract
+requires; do not ask whether the prompt or Dropbox workflow is approved again.
+After confirmation, issue a correction revision that retains `PROMPT_READY`,
+the frozen prompt identity, recipient, issue destination, and all still-current
+route evidence, then resume qualification and transport. Do not repeat source
+hydration or prompt design, and do not add a confirmation-specific graph state.
 
 Once explicitly activated, use this fixed last-mile graph:
 
@@ -760,8 +776,11 @@ the operator or viewer identity:
 
 Preview is not raw-byte verification, approval, a send gate, delivery evidence,
 executor acknowledgement, a coordination state, or authority. A connector
-confirmation needed to create or preview the file authorizes only that
-connector operation, not a separate prompt-approval workflow.
+confirmation needed after the exact create or preview plan is an external
+runtime prerequisite. It authorizes only the named connector operation, does
+not repair missing task authorization, and is not a separate prompt-approval
+workflow. A Playbook-authorized operation remains blocked when that prerequisite
+is unsatisfied; Playbook prose cannot waive it.
 
 Prompt governance is a separate selection. A material prompt that passes its
 admission test additionally applies the
