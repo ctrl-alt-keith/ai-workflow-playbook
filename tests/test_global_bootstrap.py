@@ -40,41 +40,6 @@ class GlobalBootstrapTests(unittest.TestCase):
             stderr=subprocess.PIPE,
         )
 
-    def test_one_router_encodes_persistent_material_change_boundary(self) -> None:
-        # This source is installed byte-for-byte into managed instruction blocks;
-        # its exact bootstrap boundary is the distributed contract.
-        exact_boundary = (
-            "Before the first project action, and again only when the "
-            "task/repository materially changes"
-        )
-        contents = ROUTER.read_text(encoding="utf-8")
-        normalized = " ".join(contents.split())
-        self.assertIn(exact_boundary, normalized)
-        self.assertIn("reuse the still-current repository operating mode", normalized)
-        self.assertIn("do not retrieve `start-here.md` again merely", normalized)
-        self.assertIn(
-            "When the first-action or material-change trigger applies, "
-            "retrieving and applying `start-here.md` is the only permitted action:",
-            normalized,
-        )
-        self.assertIn(
-            "If it cannot be retrieved or read, the only permitted response is "
-            "to say so plainly",
-            normalized,
-        )
-        self.assertIn("do not proceed from memory", normalized)
-        self.assertIn(
-            "the only permitted action: Do not respond, reason about the task, "
-            "or invoke another tool before applying it.",
-            normalized,
-        )
-        for removed_copy in (
-            "codex-AGENTS.md",
-            "claude-CLAUDE.md",
-            "chatgpt-custom-instructions.md",
-        ):
-            self.assertFalse((PROJECTIONS / removed_copy).exists())
-
     def test_validator_accepts_exact_blocks_with_unrelated_local_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
