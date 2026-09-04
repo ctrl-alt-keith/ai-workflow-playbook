@@ -54,7 +54,7 @@ separate artifact, branch, or pull request. Apply the repository-mutation and
 decision-boundary rule in
 [`repo-readiness.md`](repo-readiness.md#repository-mutation-and-decision-boundaries).
 
-Before consequential implementation:
+Across a consequential change:
 
 1. retrieve the authoritative sources and identify owners, scope, exclusions,
    risks, and acceptance criteria;
