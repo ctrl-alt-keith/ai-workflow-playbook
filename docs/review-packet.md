@@ -46,10 +46,14 @@ human-owned approval record. Link the human decision to that identity and state
 the authority it grants and the next action it permits.
 
 Execution systems may prepare a packet and identify the approval being
-requested. They must not author, mutate, backfill, or infer the human approval
-record. Capability, successful execution, validation, status fields, receipts,
-or the absence of objections cannot be interpreted as approval. The human role
-and decision ownership remain defined in
+requested, but must not author, mutate, backfill, broaden, or infer the
+human approval record. They may faithfully record unambiguous authority already
+expressed by an explicit human instruction under the owning workflow; apply
+[`feature-lifecycle.md#doctrine-promotion`](feature-lifecycle.md#doctrine-promotion)
+for doctrine promotion and merge authorization.
+Capability, successful execution, validation, status fields, receipts, or the
+absence of objections cannot be interpreted as approval. The human role and
+decision ownership remain defined in
 [`core-model.md#human-role`](core-model.md#human-role).
 
 ## Approval Validity

@@ -270,9 +270,8 @@ provenance vocabulary:
    validation, open questions, and exact implementation artifact without
    copying the full evidence history into doctrine.
 6. Obtain an explicit human promotion decision against the exact reviewed
-   artifact. A reviewer verdict, finding resolution, validation result,
-   approval capability, execution capability, or merge result does not grant
-   that authority.
+   artifact. Review, validation, repository or CI state, automation, tool
+   capability, merge mechanics, and merge results grant no such authority.
 7. After the repository transition, retrieve the integrated identity and
    preserve the promotion decision and provenance. Rejected, demoted,
    withdrawn, and superseded material retains its historical status under the
@@ -281,9 +280,17 @@ provenance vocabulary:
 The human promotion decision may share a pull request with implementation when
 the approval-identity rules in
 [`review-packet.md`](review-packet.md#approval-identity-and-ownership) are
-satisfied. It must state that the exact artifact is promoted and what reusable
-guidance becomes authoritative; ordinary approval or merge without that record
-is not doctrine promotion.
+satisfied. After every required prerequisite is satisfied, one explicit human
+instruction may both promote the exact reviewed artifact and authorize its
+merge when the artifact, unchanged semantic identity, normative effect, and
+human intent are unambiguous. The decision is semantic: it requires neither
+promotion-specific wording nor duplicate authorization, and its durable record
+may faithfully record the existing instruction.
+
+Do not infer that combined authority from generic approval, ambiguity in the
+referent, human intent, or normative effect, changed identity, an incomplete
+prerequisite, automation, or non-human evidence. Those cases remain separate or
+fail closed; merge execution never supplies missing promotion authority.
 
 ### Classification examples
 
