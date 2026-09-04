@@ -229,7 +229,7 @@ Its presentation is final input to this client projection: an Airtable route
 uses the thin handoff, a blocked route renders no complete prompt, and
 conceptual fragments remain lightweight.
 
-For `inline` plus `canonical-inline-two-block`, emit the shared operator
+For the canonical inline two-block presentation, emit the shared operator
 metadata and complete executable prompt as two consecutive fenced blocks with
 no assistant prose before, between, or after them. Keep the executable block
 independently usable and represent embedded examples without nested fences.

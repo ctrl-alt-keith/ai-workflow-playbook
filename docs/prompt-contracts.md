@@ -353,9 +353,11 @@ The candidate and storage-admission boundaries are inherited from
 [`Governed Artifact Capture`](evidence-lifecycle.md#governed-artifact-capture).
 The conditions below project that owner onto rendered prompts and add only the
 prompt-specific identity, evidence, and recovery boundaries. For this profile,
-the shared Airtable record creation and consumer checks replace the write and
-verification mechanics in `Direct Durable Capture`; they do not weaken its
-candidate, privacy, visibility, retention, ownership, or fail-closed boundaries.
+the shared Airtable record creation, producer readback, and consumer checks
+replace the write and verification mechanics in
+[`Direct Durable Capture`](evidence-lifecycle.md#direct-durable-capture); they do
+not weaken its candidate, privacy, visibility, retention, ownership, or
+fail-closed boundaries.
 
 ### Admission
 
@@ -403,6 +405,12 @@ Apply the shared Airtable record and envelope exactly as defined in
 contract selects the permitted base and table; reusable doctrine and adapters
 do not embed account-specific IDs. This profile adds no second prompt object,
 delivery route, or verification procedure.
+
+For an admitted material prompt, the producer retrieves the newly returned
+exact record ID and applies the shared field, canonical-text, byte-length, and
+SHA-256 checks against the frozen payload before claiming retention or emitting
+the envelope. The consumer independently repeats those checks before accepting
+the handoff.
 
 Keep the semantic prompt contract, rendered prompt, Airtable record, external
 envelope, producing receipt, delivery evidence, and attempt receipt as separate

@@ -344,11 +344,11 @@ executable artifact supplies enough task, scope, constraints, sources,
 validation, and stop information for a downstream executor to act.
 
 Resolve known prompt-local values and classify complete or substantially
-executable output as a complete prompt in stages 1 and 2 below. Later recipient,
-capability, presentation, or renderer selection cannot downgrade it. If missing
-facts prevent a truthful ready-to-run artifact, resolve them or return the
-owning blocked result. Genuine discussion, quoted material, isolated snippets,
-and incomplete fragments remain lightweight.
+executable output as a complete prompt before applying the delivery decision
+model below. Later recipient, capability, presentation, or renderer selection
+cannot downgrade it. If missing facts prevent a truthful ready-to-run artifact,
+resolve them or return the owning blocked result. Genuine discussion, quoted
+material, isolated snippets, and incomplete fragments remain lightweight.
 
 ## Prompt Delivery Decision Model
 

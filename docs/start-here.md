@@ -171,8 +171,8 @@ scoped analysis, review, planning, advice, prompting, or mutation.
   divergence interpretation, and promotion boundaries
 - `docs/authoritative-source-check.md` -> advisory source scanner workflow
 - `docs/repo-awareness-onboarding-refresh.md` -> repository inventory refresh
-- `docs/prompt-contracts.md` -> canonical semantics for versioned, hydrated,
-  rendered, delivered, fresh, and replayed material prompts
+- `docs/prompt-contracts.md` -> canonical semantics for hydrated, rendered,
+  delivered, fresh, and replayed material prompts
 - `docs/prompts.md` -> reusable prompt templates
 
 The Repository Read Order defines the ordered universe of potentially relevant
@@ -293,9 +293,9 @@ establish sufficiency.
   behavior against the activated contract, and if a later prerequisite blocks
   the preferred path, preserve the owner's failure, fallback, or presentation
   contract rather than degrading into unconstrained prose.
-- `docs/prompt-contracts.md` and its versioned machine-readable companions own
-  shared prompt-contract meaning; implementing repositories own operational
-  schemas, hydration, rendering, receipts, and validation code.
+- `docs/prompt-contracts.md` owns shared prompt-contract meaning; implementing
+  repositories own operational schemas, hydration, rendering, receipts, and
+  validation code.
 - Repo-local `AGENTS.md` is the repository execution layer. Playbook changes
   and `AGENTS.md` edits are separate work types; edit `AGENTS.md` only with
   explicit authorization or when that update is the task's primary purpose.
