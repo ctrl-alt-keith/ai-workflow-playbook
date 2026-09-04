@@ -271,8 +271,8 @@ provenance vocabulary:
    copying the full evidence history into doctrine.
 6. Obtain an explicit human promotion decision against the exact reviewed
    artifact. A reviewer verdict, finding resolution, validation result,
-   approval capability, execution capability, or merge result does not grant
-   that authority.
+   approval or execution capability, repository or CI state, automation, merge
+   mechanics, or a merge result does not grant that authority.
 7. After the repository transition, retrieve the integrated identity and
    preserve the promotion decision and provenance. Rejected, demoted,
    withdrawn, and superseded material retains its historical status under the
@@ -281,9 +281,33 @@ provenance vocabulary:
 The human promotion decision may share a pull request with implementation when
 the approval-identity rules in
 [`review-packet.md`](review-packet.md#approval-identity-and-ownership) are
-satisfied. It must state that the exact artifact is promoted and what reusable
-guidance becomes authoritative; ordinary approval or merge without that record
-is not doctrine promotion.
+satisfied. The decision must unambiguously accept the exact reviewed artifact
+and its established normative effect, but it does not require the literal words
+`promote` or `promotion`, a fixed sentence form, or a second authorization.
+
+After every required promotion prerequisite is satisfied, one explicit human
+instruction may both constitute that promotion decision and authorize merge of
+the exact reviewed artifact. This combined interpretation is valid only when
+the current context makes the human intent, exact artifact, unchanged semantic
+identity, and accepted normative effect unambiguous. The durable workflow
+record may faithfully record both effects of that existing instruction; making
+the record must not require the human to repeat the decision.
+
+Do not infer the combined decision from generic approval, an ambiguous
+referent, a changed artifact identity, incomplete review, unresolved findings,
+an applicable re-review that has not completed, automation-originated action,
+or non-human evidence. Keep promotion and merge authority separate or fail
+closed when either intent is unclear. A merge operation or result never creates
+promotion authority independently of the explicit human decision it executes.
+
+| Current context and instruction | Doctrine-promotion result |
+| --- | --- |
+| Required review and disposition are complete for exact unchanged head `H`; the human explicitly instructs merge of that reviewed PR | The instruction may be recorded as promotion of `H` and merge authorization without a second formulaic statement |
+| Exact reviewed material PR `P` and dependent PR `E` are established with their order; the human explicitly instructs merge of both | The instruction may promote `P` and authorize both merges in the established order |
+| Governed review or finding disposition remains incomplete | Merge wording does not waive the prerequisite; promotion and merge remain blocked |
+| Review covered `H1`, but the proposed semantic artifact is now `H2` | Do not extend the decision to `H2`; apply the normal changed-identity and re-review contract |
+| More than one candidate artifact is in context and the referent is unclear | Do not choose an artifact on the human's behalf; resolve the ambiguity before promotion or merge |
+| CI, a reviewer verdict, mergeability, tool capability, or automation is the only positive signal | No human doctrine-promotion authority exists |
 
 ### Classification examples
 
