@@ -46,12 +46,11 @@ human-owned approval record. Link the human decision to that identity and state
 the authority it grants and the next action it permits.
 
 Execution systems may prepare a packet and identify the approval being
-requested. They may faithfully record the authority already expressed by an
-explicit human instruction when its decision, exact artifact, and granted
-authority are unambiguous, but they must not author, mutate, backfill, broaden,
-or silently infer human approval. For the narrower case where one human
-instruction may constitute doctrine promotion and merge authorization, apply
-[`feature-lifecycle.md#doctrine-promotion`](feature-lifecycle.md#doctrine-promotion).
+requested, but must not author, mutate, backfill, broaden, or silently infer the
+human approval record. They may faithfully record unambiguous authority already
+expressed by an explicit human instruction under the owning workflow; apply
+[`feature-lifecycle.md#doctrine-promotion`](feature-lifecycle.md#doctrine-promotion)
+for doctrine promotion and merge authorization.
 Capability, successful execution, validation, status fields, receipts, or the
 absence of objections cannot be interpreted as approval. The human role and
 decision ownership remain defined in
