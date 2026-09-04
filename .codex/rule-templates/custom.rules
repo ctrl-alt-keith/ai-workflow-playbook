@@ -1,0 +1,74 @@
+# The writable-root sandbox is the primary filesystem boundary. Commands that
+# do not match these rules fall through to that sandbox; this file grants no
+# additional execution authority outside it.
+
+# Local operations that can discard uncommitted work unexpectedly.
+prefix_rule(pattern=["git", "reset", "--hard"], decision="prompt")
+prefix_rule(pattern=["git", "clean", ["-f", "--force"]], decision="prompt")
+prefix_rule(
+    pattern=[
+        "git",
+        ["switch", "checkout"],
+        ["-f", "--force", "--discard-changes"],
+    ],
+    decision="prompt",
+)
+prefix_rule(
+    pattern=["git", "worktree", "remove", ["-f", "--force"]],
+    decision="prompt",
+)
+
+# Remote destructive mutations and human-controlled GitHub transitions.
+prefix_rule(
+    pattern=["git", "push", ["-f", "--force", "--force-with-lease", "--delete"]],
+    decision="prompt",
+)
+prefix_rule(pattern=["gh", "pr", ["close", "merge"]], decision="prompt")
+prefix_rule(
+    pattern=[
+        "gh",
+        "repo",
+        [
+            "archive",
+            "create",
+            "delete",
+            "edit",
+            "rename",
+            "transfer",
+        ],
+    ],
+    decision="prompt",
+)
+prefix_rule(
+    pattern=["gh", "repo", "deploy-key", ["add", "delete"]],
+    decision="prompt",
+)
+prefix_rule(
+    pattern=["gh", "release", ["create", "delete", "edit", "upload"]],
+    decision="prompt",
+)
+
+# Credential, security, and general-purpose remote mutation surfaces.
+prefix_rule(
+    pattern=["gh", "auth", ["login", "logout", "refresh", "setup-git", "token"]],
+    decision="prompt",
+)
+prefix_rule(
+    pattern=["gh", ["secret", "variable"], ["delete", "remove", "set"]],
+    decision="prompt",
+)
+prefix_rule(
+    pattern=["gh", "api"],
+    decision="forbidden",
+    justification="Use a supported high-level gh command or approved connector instead of raw GitHub API access.",
+)
+
+# A nested Codex process must not silently escape the configured sandbox.
+prefix_rule(
+    pattern=["codex", "--dangerously-bypass-approvals-and-sandbox"],
+    decision="prompt",
+)
+prefix_rule(
+    pattern=["codex", ["-s", "--sandbox"], "danger-full-access"],
+    decision="prompt",
+)

@@ -401,6 +401,23 @@ compensate by adding a broad `mkdir` or `mkdir -p` prefix allow rule: prefix
 matching cannot establish containment for every operand or resolved path.
 Preserve approval or fail closed, and report the runtime limitation.
 
+### User-Layer Approval Policy
+
+Use the portable
+[`custom.rules`](../../.codex/rule-templates/custom.rules) template for the
+operator's general Codex user-layer policy. Writable-root sandboxing is the
+primary filesystem boundary; the template adds restrictions only for a small
+set of destructive or external authority boundaries, and unmatched commands
+fall through to sandbox policy. It contains no `allow` rules and grants no
+authority outside the sandbox.
+
+Raw `gh api` access is forbidden in favor of a supported high-level `gh`
+command or an approved connector. Report a capability gap when neither route
+can establish a materially necessary fact. A documented lower-level exception
+requires an explicit operator change to this deny rule; agents do not bypass
+it. The template does not install itself into `~/.codex/rules/custom.rules`;
+workstation reconciliation remains a separate post-merge action.
+
 ### Child-Process Login Identity
 
 When Codex launches a child CLI whose authentication or runtime behavior
