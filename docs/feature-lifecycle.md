@@ -287,10 +287,10 @@ human intent are unambiguous. The decision is semantic: it requires neither
 promotion-specific wording nor duplicate authorization, and its durable record
 may faithfully record the existing instruction.
 
-Do not infer that combined authority from generic approval, an ambiguous
-referent, changed identity, an incomplete prerequisite, automation, or
-non-human evidence. Those cases remain separate or fail closed; merge execution
-never supplies missing promotion authority.
+Do not infer that combined authority from generic approval, ambiguity in the
+referent, human intent, or normative effect, changed identity, an incomplete
+prerequisite, automation, or non-human evidence. Those cases remain separate or
+fail closed; merge execution never supplies missing promotion authority.
 
 ### Classification examples
 
