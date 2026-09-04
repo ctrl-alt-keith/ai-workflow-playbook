@@ -37,6 +37,13 @@ independent review additionally uses
 and the controller-side adapter for the invoking executor; each adapter governs
 its own run boundary.
 
+### Claude Chat-to-Cowork projection
+
+Apply the shared
+[`interactive-to-execution consent boundary`](../core-model.md#interactive-to-execution-transition-consent):
+in this adapter, it governs Claude Chat-to-Cowork transitions. Independently
+initiated Cowork remains governed by its own invocation and authority contract.
+
 ## Hydration Transport By Surface
 
 Persistent instructions trigger hydration but do not prove success or source

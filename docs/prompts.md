@@ -30,9 +30,11 @@ Apply the core model's
 [`interactive and execution surface`](core-model.md#interactive-and-execution-surfaces)
 roles. Keep discussion, judgment, clarification, steering, review, and
 disposition interactive. Use an execution surface once a bounded outcome needs
-tools, mutation, validation, or evidence production. The matching adapter owns
-each concrete product mapping; difficulty, model choice, and product identity
-do not select the role.
+tools, mutation, validation, or evidence production. When that requires a
+transition from an interactive surface, apply the shared
+[consent boundary](core-model.md#interactive-to-execution-transition-consent).
+The matching adapter owns each concrete product mapping; difficulty, model
+choice, and product identity do not select the role.
 
 Keep these dimensions distinct:
 

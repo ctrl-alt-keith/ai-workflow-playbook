@@ -65,11 +65,19 @@ repository execution posture and
 [`maintenance-automations.md`](../maintenance-automations.md) when locality or
 unattended-work guidance is activated.
 
+### Chat-to-Work projection
+
+Apply the shared
+[`interactive-to-execution consent boundary`](../core-model.md#interactive-to-execution-transition-consent):
+in this adapter, it governs Chat-to-Work transitions. Codex remains the distinct
+repository executor selected through explicit delegation; authoring or
+presenting a Codex prompt does not select Work.
+
 ### Surface-role projection
 
 Under the core
 [`surface roles`](../core-model.md#interactive-and-execution-surfaces), Chat is
-interactive and Work is the execution surface for bounded general-purpose
+interactive and Work is an execution surface for bounded general-purpose
 outcomes. A Codex task combines an interactive thread with a repository
 execution workspace. Work returns consequential results to Chat for review and
 disposition by default; Codex returns them to its interactive thread unless
