@@ -10,32 +10,28 @@ docs.
 
 ## Surface And Invocation Routing
 
-Classify the concrete run from its observed repository locality, not only from
-the Claude product label. Apply the
-[`Surface Classes`](../core-model.md#surface-classes) vocabulary as follows:
+Map each concrete capability through the core
+[`surface roles`](../core-model.md#interactive-and-execution-surfaces) and
+[`locality classes`](../core-model.md#surface-classes):
 
-- **Claude Chat** is conversational. It has no repository filesystem.
+- **Claude Chat** is an interactive, conversational surface with no repository
+  filesystem.
   **Instructions for Claude** apply account-wide to conversations, while
   project instructions apply only inside that project. Repository files arrive
   through explicitly selected GitHub content, project knowledge, or another
   currently observed retrieval route, so current source retrieval is
   best-effort per thread rather than guaranteed by the instruction surface.
-- **Claude Cowork** is agentic-remote by default because a session has no
-  guaranteed repository locality. A concrete Cowork session with an active
-  desktop-connected local folder has repository locality for that connected
-  folder and can satisfy the agentic-local startup contract while the
-  connection remains available. A cloud-only or scheduled session without
-  current repository access remains agentic-remote.
-- **Claude Code** is agentic-local when a CLI or desktop Code session has the
-  repository filesystem. A remote Code session is agentic-remote until its
-  current repository source and repo-local instructions are available through
-  the execution environment.
+- **Claude Cowork** combines interactive steering with bounded execution. It is
+  agentic-remote by default, or agentic-local for an active desktop-connected
+  repository folder while that connection remains available.
+- **Claude Code** combines interactive and execution roles when human-driven;
+  a controller-launched run is an execution surface. It is agentic-local with
+  the repository filesystem and otherwise agentic-remote until current source
+  and repo-local instructions are available.
 
-Initiation is a separate axis. Chat is normally human-initiated. Scheduled
-Cowork tasks are unattended; Dispatch tasks are human-initiated assignments
-whose execution does not require the initiating human to remain present.
-Claude Code can be human-interactive or controller-launched. Human-interactive
-Code uses the ordinary repository sections below. A controller-launched
+Initiation remains separate: scheduled Cowork is unattended, Dispatch is a
+human assignment whose execution does not require the human to remain present,
+and Claude Code may be interactive or controller-launched. Controller-launched
 independent review additionally uses
 [`Governed read-only reviewer launch`](#governed-read-only-reviewer-launch)
 and the controller-side adapter for the invoking executor; each adapter governs

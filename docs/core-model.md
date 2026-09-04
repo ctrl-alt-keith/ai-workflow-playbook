@@ -195,22 +195,20 @@ semantic change.
 - Summarize changes, evidence, and open questions
 - Help capture reusable patterns after delivery
 
-## Interactive Control And Bounded Execution
+## Interactive And Execution Surfaces
 
-Interactive control and bounded execution are semantic roles, not universal
-product identities or authority classes. An interactive controller supports
-human-led clarification, scoping, authority decisions, decomposition,
-steering, review, and disposition. A bounded executor performs a defined
-outcome under an explicit execution contract. Difficult or consequential
-reasoning may remain with the controller while it is still interactive
-judgment; a bounded deliverable and execution contract, not difficulty or
-model choice, establish the execution handoff.
+Interactive and execution surfaces are semantic roles, not product identities
+or authority classes. Interactive surfaces support conversation, intent,
+steering, judgment, review, disposition, and final human-controlled closure.
+Execution surfaces perform bounded tool-backed work, mutation, validation, and
+evidence production under an explicit execution contract.
 
-The controller does not become canonical, universally authoritative, or a
-required intermediary for every workflow. Human direction and the source that
-owns each fact or decision retain their existing authority. Independently
-initiated or automated work may begin under another owning contract without an
-interactive controller.
+A product may expose either or both roles. Route by task shape and current
+capability, not vendor, product, difficulty, or model choice. Consequential
+completion decisions normally return to the interactive surface unless an
+owning workflow explicitly places that authority elsewhere. The interactive
+surface is not canonical or a required intermediary; human direction and each
+fact or decision's owning source retain authority.
 
 A semantic handoff declares the current bounded action, the existing human
 authority and its owning reference, the sources and constraints that apply,
@@ -224,13 +222,12 @@ resolved.
 
 ### Independent Review As A Third Role
 
-Independent review is a semantic role in the same sense as interactive control
-and bounded execution: it is scoped to a run rather than to a product, vendor,
-model, effort setting, or thread. A reviewer produces evidence about work it
-did not itself produce.
+Independent review is likewise scoped to a run rather than to a product,
+vendor, model, effort setting, or thread. A reviewer produces evidence about
+work it did not itself produce.
 
-This section establishes only that the role exists alongside interactive
-control and bounded execution.
+This section establishes only that the role exists alongside interactive and
+execution surfaces.
 [`external-ai-reviewer.md`](external-ai-reviewer.md) remains the canonical
 owner of what independence requires, how a reviewer is selected, and how
 reviewer failure or substitution is handled. Do not restate those requirements

@@ -1,13 +1,13 @@
 # Codex Adapter
 
-This adapter records Codex-specific deltas on top of the core playbook. Apply
-it to Codex runs wherever Codex is the selected executor. The adapter boundary
-follows the selected Codex run or executor and does not depend on how a
-particular client packages that surface. It records the specialized repository
-mechanics for that distinct run/executor boundary. Use it with `docs/start-here.md`,
-`docs/core-model.md`, `docs/source-first-retrieval.md`,
-`docs/repo-readiness.md`, and the target repo's `AGENTS.md`; do not treat it as
-a second copy of those rules.
+This adapter records Codex-specific deltas on top of the core playbook. A Codex
+task combines an interactive thread for steering and disposition with an
+execution workspace for bounded repository work, validation, and evidence.
+Apply the core
+[`surface roles`](../core-model.md#interactive-and-execution-surfaces) to the
+concrete capability in use. Use this adapter with `docs/start-here.md`,
+`docs/core-model.md`, `docs/source-first-retrieval.md`, `docs/repo-readiness.md`,
+and repo-local `AGENTS.md`; do not treat it as a second copy of those rules.
 
 ## GPT-5.6 Model And Reasoning Routing
 

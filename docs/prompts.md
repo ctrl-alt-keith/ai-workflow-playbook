@@ -26,26 +26,19 @@ engineering, not methodology or architecture evidence.
 
 ## Task-Shape Surface Selection And Thin Handoffs
 
-Select a target surface or execution role by semantic role, execution locality,
-required tools, and deliverable. Keep work with an interactive controller while
-the next useful result is discussion, judgment, clarification, steering, or
-review. Move to a general-purpose bounded executor when a bounded multi-step
-outcome or non-repository deliverable has emerged. Move to a repository
-executor when completion materially depends on repository locality, terminal
-commands, tests, version control, worktrees, commits, pull requests, or code
-review.
-
-Difficulty, model tier, and reasoning setting do not select a surface. A task
-changes surface only after a bounded outcome and execution contract have
-emerged. Ordinary discussion, brainstorming, and conceptual work remain
-lightweight and do not inherit repository ceremony. The matching target adapter
-owns each concrete product or executor projection.
+Apply the core model's
+[`interactive and execution surface`](core-model.md#interactive-and-execution-surfaces)
+roles. Keep discussion, judgment, clarification, steering, review, and
+disposition interactive. Use an execution surface once a bounded outcome needs
+tools, mutation, validation, or evidence production. The matching adapter owns
+each concrete product mapping; difficulty, model choice, and product identity
+do not select the role.
 
 Keep these dimensions distinct:
 
 | Dimension | Meaning |
 | --- | --- |
-| Interaction surface | Where a human discusses, steers, reviews, or delegates. |
+| Surface role | Interactive or execution. |
 | Executor identity | The runtime or agent that performs the bounded work. |
 | Task shape | Interactive reasoning, a general delegated outcome, or repository execution. |
 | Model or reasoning choice | An execution setting that does not by itself change semantic role. |

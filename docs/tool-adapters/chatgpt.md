@@ -65,27 +65,23 @@ repository execution posture and
 [`maintenance-automations.md`](../maintenance-automations.md) when locality or
 unattended-work guidance is activated.
 
-### Interactive control-plane projection
+### Surface-role projection
 
-Chat is the normal interactive control plane for human-led clarification,
-scoping, authority decisions, decomposition, steering, review, and disposition.
-Work is the preferred ChatGPT surface for a bounded general-purpose multi-step
-outcome or non-repository deliverable. Codex is the preferred distinct
-repository-oriented executor when completion materially depends on repository
-locality, terminal commands, tests, Git, worktrees, commits, pull requests, or
-code review. Hard reasoning may remain in Chat while the task is still
-interactive; difficulty, model tier, or reasoning setting does not select Work
-or Codex.
+Under the core
+[`surface roles`](../core-model.md#interactive-and-execution-surfaces), Chat is
+interactive and Work is the execution surface for bounded general-purpose
+outcomes. A Codex task combines an interactive thread with a repository
+execution workspace. Work returns consequential results to Chat for review and
+disposition by default; Codex returns them to its interactive thread unless
+another owning workflow places that authority elsewhere.
 
 Use the shared routing, source-refresh, thin-envelope, and target-shaping rules
 in
 [`prompts.md`](../prompts.md#task-shape-surface-selection-and-thin-handoffs).
-For a Work handoff, project the bounded outcome, permitted connected sources
-and tools, output checks, and return-to-Chat boundary. For a Codex handoff, add
-the exact repository locality, repository tools, canonical validation, PR
-delivery, and stop-before-merge boundary. When either handoff points to a
-governed package, verify its exact identity through the connected app before
-relying on it; a mutable folder or conversation memory is not a substitute.
+Work handoffs name the bounded outcome, permitted sources and tools, output
+checks, and return boundary. Codex handoffs add repository locality, validation,
+PR delivery, and stop-before-merge. Verify any governed package identity before
+relying on it.
 
 ## Connected apps, approvals, and consequential actions
 
