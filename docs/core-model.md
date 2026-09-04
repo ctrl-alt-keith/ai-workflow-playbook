@@ -129,14 +129,10 @@ capability or authentication limits, unexpected state, unresolved risk or
 blocker, a required human decision, or cleanup residue. Report the material
 exception and its consequence rather than the complete forensic history.
 
-This post-execution projection does not suppress progress updates or mandatory
-transition-time receipts required by a specialized workflow. In particular,
-receipts required by the
-[Issue-Owned File-Backed Handoff Prose-DAG Pilot](prompts.md#issue-owned-file-backed-handoff-prose-dag-pilot)
-must still be emitted at their transition boundaries; they need not be replayed
-again after successful downstream execution. A handoff may therefore carry
-more execution and verification detail than the later successful completion
-report.
+This post-execution projection does not suppress progress updates or evidence
+that a specialized workflow requires at a material transition. A handoff may
+therefore carry more identity and verification detail than the later successful
+completion report.
 
 ## Authority Follows The Question
 

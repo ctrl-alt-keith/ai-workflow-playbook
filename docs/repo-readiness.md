@@ -184,7 +184,7 @@ out-of-scope operations retain no residual execution eligibility.
 A request whose bounded deliverable is a prompt or machine handoff selects
 orchestration/prompt-authoring mode for the current controller. Representative
 requests include `Prompt me to ...`, `Create the Codex prompt`, `Kick this off
-with Codex`, `Give me the handoff`, and `Put this prompt in Dropbox`. These are
+with Codex`, `Give me the handoff`, and `Create the handoff record`. These are
 regression examples, not a phrase-matching classifier: the semantic deliverable
 controls. Once selected, the controller may perform only the reads needed to
 construct the prompt and the exact issue-owned preservation and delivery
@@ -476,9 +476,8 @@ not because they look temporary:
 - **Attempt-local disposable scratch** is private, short-lived mechanics for
   one material attempt with no required post-attempt role. Use
   **attempt-local scratch** after this definition. It can hold one-off
-  extraction, command staging, generated runners, transient conversion,
-  prompt-retrieval copies, and ephemeral subprocess material when their loss
-  cannot impair recovery.
+  extraction, command staging, generated runners, transient conversion, and
+  ephemeral subprocess material when their loss cannot impair recovery.
 - **Crash residue** is surviving material from an interrupted attempt. It is
   untrusted, never recovery state, and never reusable.
 - **Legacy workspace scratch** is the historical persistent routing pattern

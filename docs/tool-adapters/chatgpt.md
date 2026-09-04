@@ -118,113 +118,49 @@ setting and the exact action contract as runtime evidence; this repository
 cannot configure either one or infer that a general permission setting waives
 a more specific action requirement.
 
-When the current Dropbox `create_folder` or `create_file` action contract, as
-observed 2026-09-03, unconditionally requires the assistant to present the
-exact mutation plan and obtain explicit confirmation in chat, that contract
-owns the prerequisite for the attempt. The original `prompt me` request
-remains sufficient task authorization under the Playbook, but it precedes the
-required plan and therefore cannot satisfy that post-plan connector
-confirmation. Apply the shared pilot's
-existing `BLOCKED` and correction path until the prerequisite is satisfied;
-do not reinterpret the interruption as missing task authority, add another
-approval gate, or switch the machine recipient to inline prompt delivery.
-
 ### Recipient-Capability Prompt Presentation
 
-Apply the complete shared
+Apply the shared
 [`prompt delivery decision model`](../prompts.md#prompt-delivery-decision-model),
 with the transport rules in
 [`cross-executor prompt presentation`](../prompts.md#cross-executor-prompt-presentation).
-Apply its shared
-[`prompt freeze and transport-only latch`](../prompts.md#prompt-freeze-and-transport-only-latch)
-without restating their state, evidence, or action mappings here. ChatGPT
-consumes the frozen decision record and projects only its selected connector
-actions and response surface.
+For a qualifying small canonical-text prompt whose ChatGPT or Claude recipient
+has a permitted Airtable route, use the shared
+[`Airtable canonical-text handoff`](../prompts.md#airtable-canonical-text-handoff)
+and emit its compact external envelope. Do not add file preview,
+download-link, or attempt-local retrieval steps.
 
-For a machine execution recipient with qualified Dropbox retrieval and a
-permitted destination, the model selects `file-backed` presentation. This
-includes `qualified-with-known-limitation`: retain and report the diagnostic,
-but do not reinterpret it as route disqualification. Use the authorized file
-route, present the card produced by the write when available, and immediately
-provide the target-shaped handoff. A separate preview or open action remains
-optional under the connected-app rules above. Do not wait for prompt approval
-or require the operator to open a preview. If the selected create action has
-the post-plan confirmation contract described above, pause on that external
-prerequisite and resume the shared transport path after it is satisfied;
-confirmation authorizes only its file operation. File-card and preview behavior
-is product-dependent runtime evidence, so recheck the relevant action.
+For a human execution recipient, use the existing
+[two-block inline renderer](#prompt-presentation). If Airtable capability for a
+machine recipient is unknown, inspect or attempt it before resolving the route.
+Material prompts also apply the durable profile below; routine prompts do not
+inherit it from transport.
 
-For the explicitly activated CAK-209 normal-use Codex trial, ChatGPT applies the
-shared
-[`Issue-Owned File-Backed Handoff Prose-DAG Pilot`](../prompts.md#issue-owned-file-backed-handoff-prose-dag-pilot)
-and presents its transition receipts as operator-visible metadata outside the
-receiver's copyable handoff.
+Route failure and terminal blocking remain owned by the canonical decision
+model. ChatGPT must preserve the owning failure reason rather than choose
+another renderer.
 
-For a human execution recipient, or a machine execution recipient whose
-inspected capability state permits inline fallback, the model selects `inline`
-presentation and the existing
-[two-block inline renderer](#prompt-presentation). If access is unknown,
-inspect or attempt it before resolving the route. Material prompts also apply
-the durable profile below; routine prompts do not inherit it from transport.
+### Airtable Connector Projection
 
-Route failure, bounded capability re-evaluation, fallback, and terminal
-blocking remain owned by the canonical decision model. ChatGPT must preserve
-the current record and owning failure reason rather than reinterpret a
-diagnostic, repeat re-entry, or choose another renderer.
+Resolve the permitted base, table, and required field IDs through current
+Airtable actions. When ChatGPT is the producer, create one record with the five
+shared fields and capture the returned record ID and creation time. Use the
+frozen payload length and digest in both the record and the external envelope;
+never update the record after handoff.
 
-### Dropbox Preview And Minimal Executor Handoff
-
-When optional operator preview is selected, complete the shared pre-link checks,
-then call Dropbox `file_preview` with `file_paths` containing the exact
-`file_id` returned by the write. Use the exact returned namespace path only
-when no file ID is available; never strip its namespace prefix. Present the
-tool-produced widget before the final `download_link` call.
-
-The preview call and connector metadata are not a visibly rendered preview.
-Do not substitute `open_in_dropbox_url`, copy or share links, thumbnail URLs,
-or metadata for the widget, and claim visible rendering only when the operator
-actually sees it. Preview remains optional and does not gate the handoff.
-
-Keep the complete prompt in Dropbox. Outside the optional widget, emit only the
-normal concise operator metadata and one compact retrieval, verification, and
-execution bootstrap shown below; do not summarize or reproduce the prompt.
-
-Thread routing: [FRESH THREAD | SAME THREAD | CHILD TASK]
-
-Recommended model: [model]
-
-Recommended reasoning level: [level]
-
-Reason:
-[one concise task-specific explanation]
-
-```text
-Download: [fresh single-use raw-download URL]
-Dropbox ID: [exact returned file ID]
-Attempt directory basename: prompt-retrieval.XXXXXXXX
-Local filename: prompt.md
-Expected bytes: [byte count]
-Expected SHA-256: [digest]
-Execute: Download exactly once with a direct argv/process invocation into the qualified private attempt-local directory, verify the exact identity, byte count, and SHA-256, then execute the complete prompt file.
-Stop: Fail closed on retrieval, identity, size, or SHA-256 mismatch. Do not reconstruct the prompt from chat.
-```
+When ChatGPT is the consumer, call the table record-list action with the exact
+`recordIds` constraint from the envelope. Require exactly one returned record,
+then apply the shared field, canonical-text, byte-length, and SHA-256 checks.
+Do not use `search_records`, key search, or an update/upsert action for normal
+retrieval.
 
 ### Issue-Owned Durable Prompt Capture And Handoff
 
 Apply the shared
 [`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile).
-For Dropbox's qualified provider-checksum route, compute `content_hash` from
-the frozen rendered bytes using Dropbox's documented algorithm. Apply the
-owning storage contract's absent-create and collision rules; extracted
-connector text is not exact-byte readback.
-
-After the shared pre-link identity, path, containment, and revision checks,
-optionally preview the file, then call `download_link` once. Its returned file
-ID, path, stored size, and `content_hash` complete the provider-integrity
-comparison. Report `PRESERVED` only after they match, leave the same non-empty
-URL unconsumed for the executor, and otherwise use the shared raw-readback
-fallback. The qualified checksum route performs no controller verification
-content download.
+Use the same exact Airtable record and external envelope as the normal route;
+the profile adds material-prompt identity and evidence requirements, not a
+second storage object or delivery ceremony.
 
 ## Workspace Agents
 
@@ -287,13 +223,13 @@ the applicable prompt and downstream-context contract.
 
 ### Prompt presentation
 
-Consume only the current frozen record from the shared
+Consume the current selection from the shared
 [prompt delivery decision model](../prompts.md#prompt-delivery-decision-model).
-Its presentation and renderer selections are final inputs to this client
-projection: `file-backed` uses the thin handoff, `blocked` renders no complete
-prompt, and conceptual fragments remain lightweight.
+Its presentation is final input to this client projection: an Airtable route
+uses the thin handoff, a blocked route renders no complete prompt, and
+conceptual fragments remain lightweight.
 
-For `inline` plus `canonical-inline-two-block`, emit the shared operator
+For the canonical inline two-block presentation, emit the shared operator
 metadata and complete executable prompt as two consecutive fenced blocks with
 no assistant prose before, between, or after them. Keep the executable block
 independently usable and represent embedded examples without nested fences.

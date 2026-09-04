@@ -410,29 +410,28 @@ and the GitHub route in
 ### Issue-Owned Durable Prompt Retrieval
 
 Apply the shared
+[`Airtable canonical-text handoff`](../prompts.md#airtable-canonical-text-handoff)
+and the
 [`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
-when Claude Code receives an exact issue-owned prompt. Direct provider
-consumption is qualified only when the current Claude surface can retrieve raw
-bytes and the required provider identity metadata through a permitted,
-observed route. Do not infer that qualification from connector presence,
-extracted text, a synced folder, or another actor's successful retrieval.
+when Claude receives an exact issue-owned prompt through a currently permitted
+Airtable route. Use the external envelope's exact base, table, and record IDs;
+retrieve with the connector's exact `recordIds` constraint and require exactly
+one result. Do not use fuzzy search or key lookup as the retrieval route.
 
-Otherwise use one private OS-managed executor-attempt copy produced by an
-authorized controller or operator, bind the launch to its exact path, size,
-SHA-256, and text format, and record whether Claude computed the digest or used
-controller-bound evidence. A direct-provider limitation does not block a
-successful exact attempt-local route. A synchronized mount, exchange root, or
-retained attempt copy is not durable provider identity.
+Apply the shared canonical-text, field, byte-length, and SHA-256 verification
+before acceptance. If the record is missing, duplicated, stale, transformed,
+truncated, or mismatched, fail closed. Do not substitute a local file
+or reconstructed chat text.
 
 After acceptance, choose tools, permission mode, and session persistence from
 the owning task or narrower reviewer contract; prompt retrieval alone does not
 make execution read-only or grant substantive authority.
 
-Preserve the profile's distinct evidence identities, then clean up only the
-private attempt copy under
-[`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state). Concrete
-provider, account, destination, retention, and visibility values remain outside
-this adapter.
+When Claude produces the handoff, create one new five-field Airtable record,
+capture the returned record ID and creation time, and emit the shared external
+envelope. Never update a frozen record; corrections create a new record and
+carry predecessor lineage externally. Concrete provider, account, destination,
+retention, and visibility values remain outside this adapter.
 
 ## Claude Model, Thinking, And Thread Routing
 
