@@ -69,10 +69,9 @@ unattended-work guidance is activated.
 
 Apply the shared
 [`interactive-to-execution consent boundary`](../core-model.md#interactive-to-execution-transition-consent):
-Chat may offer Work, but it may start Work only after a direct operator request
-or explicit acceptance of the offer. Codex remains the distinct repository
-executor selected through explicit delegation; authoring or presenting a Codex
-prompt does not select Work.
+in this adapter, it governs Chat-to-Work transitions. Codex remains the distinct
+repository executor selected through explicit delegation; authoring or
+presenting a Codex prompt does not select Work.
 
 ### Surface-role projection
 

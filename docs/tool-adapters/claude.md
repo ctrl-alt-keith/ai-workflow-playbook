@@ -41,9 +41,8 @@ its own run boundary.
 
 Apply the shared
 [`interactive-to-execution consent boundary`](../core-model.md#interactive-to-execution-transition-consent):
-Claude Chat may offer Cowork, but it may start Cowork only after a direct
-operator request or explicit acceptance of the offer. Independently initiated
-Cowork remains governed by its own invocation and authority contract.
+in this adapter, it governs Claude Chat-to-Cowork transitions. Independently
+initiated Cowork remains governed by its own invocation and authority contract.
 
 ## Hydration Transport By Surface
 
