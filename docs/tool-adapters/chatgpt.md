@@ -77,89 +77,15 @@ code review. Hard reasoning may remain in Chat while the task is still
 interactive; difficulty, model tier, or reasoning setting does not select Work
 or Codex.
 
-This is a default task-shape projection, not a claim that Chat is canonical,
-universally authoritative, or required to mediate every workflow. Chat and
-Work remain nested surfaces under one ChatGPT adapter. Use the shared routing,
-surface-transition, thin-envelope, and target-shaping rules in
+Use the shared routing, source-refresh, thin-envelope, and target-shaping rules
+in
 [`prompts.md`](../prompts.md#task-shape-surface-selection-and-thin-handoffs).
-
-When a handoff points to an exact package through a connected app, treat access
-as runtime evidence. Inspect or attempt retrieval of the named manifest or
-sealed-package identity before claiming it is accessible, and verify the exact
-identity before relying on its payload. Listing a folder or reaching a mutable
-package root proves neither exact-package access nor current authority. If the
-identity cannot be accessed, resolved, or verified, fail closed or return an
-explicit non-authorizing partial result without reconstructing it from Chat or
-Work memory.
-
-#### Work-shaped handoff
-
-Project the shared thin-envelope semantics for a delegated general-purpose
-outcome by emphasizing permitted connected sources and tools, output form,
-quality checks, and the return-to-Chat boundary:
-
-```text
-Target: Work — bounded general-purpose outcome
-Outcome: [source-backed non-repository deliverable]
-Governed payload: [exact manifest or sealed-package identity]
-Human direction and authority: [bounded declaration, owning reference, prohibitions]
-Refresh: [mutable sources to retrieve from their owners]
-Tools and locality: [permitted connected sources and execution location]
-Validation and output: [quality checks and deliverable form]
-Return boundary: [return to Chat for review or stop condition]
-```
-
-#### Codex-shaped handoff
-
-Project the shared thin-envelope semantics for repository execution by adding
-exact repository locality, terminal and Git tools, canonical validation,
-delivery, and the stop-before-merge boundary:
-
-```text
-Target: Codex — repository execution
-Outcome: [bounded repository change or review]
-Repository and locality: [repository, worktree, branch, relevant surface]
-Governed payload: [exact manifest or sealed-package identity]
-Human direction and authority: [bounded declaration, owning reference, prohibitions]
-Refresh: [repository, GitHub, planning, and provider facts to re-read]
-Tools: [terminal, tests, Git, worktrees, commits, PR, or code review as applicable]
-Validation and delivery: [canonical command, outputs, commit/push/PR expectation]
-Stop boundary: [including no merge or other prohibited transition]
-```
-
-These shapes project the shared owner in
-[`prompts.md`](../prompts.md#task-shape-surface-selection-and-thin-handoffs);
-they do not redefine its package, authority, source-refresh, or failure
-semantics.
-
-#### Examples
-
-1. **Difficult architecture discussion remains in Chat.** The human and Chat
-   are still comparing authority boundaries and tradeoffs. No bounded
-   deliverable or execution contract exists, so difficulty does not trigger a
-   move to Work or Codex.
-2. **Source-backed report moves from Chat to Work.** Chat establishes the
-   question and authority boundary, then sends the Work-shaped envelope with
-   an exact manifest identity, current source-refresh instructions, output
-   checks, and return-to-Chat boundary. The complete recoverable package is not
-   pasted into conversation.
-3. **Repository implementation moves from Chat to Codex.** Chat establishes a
-   bounded repository outcome, then sends the Codex-shaped envelope with the
-   exact sealed-package identity, repository and worktree expectations,
-   terminal and Git tools, canonical validation, PR delivery, and a
-   stop-before-merge boundary.
-4. **Discussion becomes delegated execution.** A task begins in Chat as an
-   open-ended product discussion. It stays there until the human selects a
-   bounded comparison report with accepted sources and review criteria; only
-   then does it move to Work.
-5. **Worker result returns to Chat.** Work returns the report identity,
-   validation evidence, limitations, and output—not new authority. Chat is
-   again the interactive surface for human review, interpretation,
-   disposition, or next-step selection.
-6. **Package reference fails closed.** A target receives only a mutable folder,
-   or the named manifest is inaccessible, stale, digest-mismatched, or
-   ambiguous. It stops the affected work or reports a non-authorizing partial
-   result without rebuilding the missing payload from conversation memory.
+For a Work handoff, project the bounded outcome, permitted connected sources
+and tools, output checks, and return-to-Chat boundary. For a Codex handoff, add
+the exact repository locality, repository tools, canonical validation, PR
+delivery, and stop-before-merge boundary. When either handoff points to a
+governed package, verify its exact identity through the connected app before
+relying on it; a mutable folder or conversation memory is not a substitute.
 
 ## Connected apps, approvals, and consequential actions
 
@@ -207,28 +133,9 @@ with the transport rules in
 [`cross-executor prompt presentation`](../prompts.md#cross-executor-prompt-presentation).
 Apply its shared
 [`prompt freeze and transport-only latch`](../prompts.md#prompt-freeze-and-transport-only-latch)
-without copying the state or action allowlist into this adapter. ChatGPT
-consumes that canonical frozen state and projects only the selected connector
+without restating their state, evidence, or action mappings here. ChatGPT
+consumes the frozen decision record and projects only its selected connector
 actions and response surface.
-Record the human operator or viewer and the executable prompt's execution
-recipient as independent stage outputs before inspecting capability. The fact
-that the operator asks to receive, view, or be given a handoff is evidence
-about the operator-facing surface; it does not replace a resolved Codex,
-Claude, Work, or other machine execution recipient with the human viewer.
-Representative framing such as `prompt me`, `show me the Codex handoff`, and
-`give me the prompt` remains upstream semantic evidence rather than a
-transport selector or downstream renderer input.
-
-Build stage 5 qualification only from the shared model's closed current-route
-evidence record: the observed current runtime route, its route class and exact
-identity, and the current owning route-qualification contract. Keep a
-delegated task's target capability, acceptance criteria, desired future state,
-implementation intent, prompt body, and explanatory rationale outside that
-record. The fact that the delegated work is meant to strengthen or repair the
-same capability does not make the route carrying that work unqualified. Do not
-convert such task-target evidence into `route-disqualified` or `unresolved`;
-only the current owning contract's classification of a current-route
-observation may produce route disqualification.
 
 For a machine execution recipient with qualified Dropbox retrieval and a
 permitted destination, the model selects `file-backed` presentation. This
@@ -256,30 +163,10 @@ presentation and the existing
 inspect or attempt it before resolving the route. Material prompts also apply
 the durable profile below; routine prompts do not inherit it from transport.
 
-Owner retrieval and output conformance remain separate checks. Only when the
-frozen stage 5 record identifies a selected qualified Dropbox or file route
-and the owning contract classifies a new failure against that same route class
-and exact destination identity, with its reason, as `route-disqualified` before
-a qualified prompt handoff is
-complete may ChatGPT apply the canonical decision model's bounded capability
-re-evaluation rule. A known non-disqualifying limitation is retained as
-diagnostic evidence and does not activate re-entry. Sequence the owned failure
-classification, the single downstream-only re-evaluation, and then the
-terminal mapping from the resulting stage 5 state. Record there that bounded
-re-evaluation was consumed. A newly qualified and permitted file route remains
-file-backed only when its exact identity differs from the failed route; retain
-the old failure as prior evidence, not as a disqualification of the new route.
-Reasserting the same failed identity cannot force another file-backed attempt.
-When no new file route qualifies and the owning contract
-permits inline fallback, preserve the two-block complete-prompt shape and
-report the disqualification reason outside the copyable blocks. If the
-re-evaluated route also fails, stop blocked with that new reason rather than
-re-entering or relabeling the failure as unresolved. Consume only the current
-stage 5 record; a superseded pre-re-evaluation record cannot restart the bound.
-When the governing exact-byte or durable contract prohibits that fallback,
-preserve the target-shaped handoff with an explicit blocked state and stop. Do
-not degrade the required prompt or handoff into unconstrained status prose
-merely because one downstream prerequisite failed.
+Route failure, bounded capability re-evaluation, fallback, and terminal
+blocking remain owned by the canonical decision model. ChatGPT must preserve
+the current record and owning failure reason rather than reinterpret a
+diagnostic, repeat re-entry, or choose another renderer.
 
 ### Dropbox Preview And Minimal Executor Handoff
 
@@ -396,55 +283,18 @@ the applicable prompt and downstream-context contract.
 
 ### Prompt presentation
 
-Consume the frozen stage outputs from the shared
+Consume only the current frozen record from the shared
 [prompt delivery decision model](../prompts.md#prompt-delivery-decision-model).
-ChatGPT must not reclassify the produced artifact, replace the execution
-recipient with the operator or viewer, or reconsider transport from request
-wording or diagnostic limitations during rendering. The final application
-executes the selected file-backed, inline, lightweight, or blocked action from
-that record; it cannot select another renderer. Before any complete-prompt
-renderer or delivery application is eligible, ChatGPT must materially realize
-the complete current stage-5-through-7 state as one frozen decision record and
-pass that record as the only delivery-decision input. Loose route,
-qualification, presentation, or renderer fields; task prose; diagnostics;
-rationale; and conversational context are not application inputs. Missing,
-incomplete, stale, mismatched, or superseded records select no complete-prompt
-renderer and fail closed. This explicit state boundary need not be displayed,
-persisted, or implemented as a second workflow engine. Keep genuinely conceptual
-fragments and incomplete snippets lightweight through the model's
-`lightweight` renderer.
+Its presentation and renderer selections are final inputs to this client
+projection: `file-backed` uses the thin handoff, `blocked` renders no complete
+prompt, and conceptual fragments remain lightweight.
 
-Do not begin either inline block unless `presentation-selection` produced
-`inline` and `renderer-selection` produced `canonical-inline-two-block`.
-`file-backed` uses only the thin-handoff renderer, and `blocked` uses no
-complete-prompt renderer. When the model legitimately selects inline
-presentation for a complete, copy-ready prompt or downstream handoff, present
-the shared operator-metadata block followed immediately by the complete
-executable block as consecutive copyable code blocks, with no intervening
-prose. The shared canonical renderer controls the entire response surface:
-emit no assistant-authored material before, between, or after the two blocks.
-Do not add a copy instruction, navigation breadcrumb, Markdown separator,
-prose label, or line-continuation escaping artifact. Keep the executable block
-complete without metadata so the operator can copy only that block. This rule
-applies only after the shared model has selected inline presentation; it does
-not change classification, recipient, capability, Dropbox-backed routing, or
-the treatment of quoted prompts, source excerpts, incomplete fragments, and
-conceptual discussion. ChatGPT-targeted prompts resolve the
-shared naming placeholder to nothing. This adapter does not ask ChatGPT to
-rename itself or report a naming limitation. A downstream visible name may be
-selected only when the downstream target executor adapter explicitly supports
-executor-applied naming.
-
-Bounded route re-evaluation must complete stages 5 through 7 again, freeze one
-new current record, and supersede the prior record before application resumes.
-Neither application nor bounded re-entry may consume the stale or superseded
-record. A `file-backed` record therefore cannot reach the inline renderer, while
-a legitimate `inline` record still reaches the canonical two-block surface.
-
-Do not nest Markdown code fences inside the executable block; represent any
-embedded example with indentation or plain text. Optimize this client rendering
-for reliable copy/paste without changing the shared prompt meaning in
-[`prompts.md`](../prompts.md).
+For `inline` plus `canonical-inline-two-block`, emit the shared operator
+metadata and complete executable prompt as two consecutive fenced blocks with
+no assistant prose before, between, or after them. Keep the executable block
+independently usable and represent embedded examples without nested fences.
+ChatGPT-targeted prompts resolve the shared thread-name placeholder to nothing;
+only a downstream adapter that explicitly supports naming may add it.
 
 ## Generated artifacts
 

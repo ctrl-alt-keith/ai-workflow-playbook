@@ -408,219 +408,22 @@ def reroute_after_capability_failure(
 
 
 class PromptDeliveryDecisionModelTests(unittest.TestCase):
-    def test_docs_define_one_ordered_model_with_explicit_stage_outputs(self):
+    def test_docs_publish_the_evaluator_stage_order(self):
         prompts = PROMPTS.read_text(encoding="utf-8")
         section = prompts[
             prompts.index("## Prompt Delivery Decision Model") : prompts.index(
                 "## Cross-Executor Prompt Presentation"
             )
         ]
-        normalized_section = " ".join(section.split())
-
-        positions = [section.index(f"`{stage}`") for stage in STAGES]
-        self.assertEqual(positions, sorted(positions))
-        for output in (
-            "`no-prompt`",
-            "`complete-executable`",
-            "`machine-executor`",
-            "`unresolved`",
-            "`qualified-file-route`",
-            "`inline-route`",
-            "`file-backed`",
-            "`canonical-inline-two-block`",
-            "`blocked`",
-            "`qualified-with-known-limitation`",
-            "`route-disqualified`",
-        ):
-            self.assertIn(output, section)
-        self.assertIn(
-            "must not re-read conversational wording to replace that output",
-            normalized_section,
-        )
-        self.assertIn(
-            "operator or viewer separate from the executable prompt's execution recipient",
-            normalized_section,
-        )
-        self.assertIn(
-            "same delivery attempt may perform exactly one capability re-evaluation",
-            normalized_section,
-        )
-        self.assertIn(
-            "Preserve the stage 1 through 4 outputs unchanged",
-            normalized_section,
-        )
-        self.assertIn(
-            "executes the selected action",
-            normalized_section,
-        )
-        self.assertIn(
-            "must not inspect diagnostic state to substitute the canonical inline renderer",
-            normalized_section,
-        )
-        self.assertIn(
-            "Stage 5 has a closed evidence-provenance boundary",
-            normalized_section,
-        )
-        self.assertIn(
-            "accepts only observations about the current runtime route, classified "
-            "by the current owning route-qualification contract",
-            normalized_section,
-        )
-        self.assertIn(
-            "desired future capability, implementation intent, prompt body, or "
-            "explanatory rationale is not current-route evidence",
-            normalized_section,
-        )
-        self.assertIn(
-            "Only that owning-contract classification may create route "
-            "disqualification",
-            normalized_section,
-        )
-        self.assertIn(
-            "Route selection and exact identity when applicable: "
-            "`qualified-file-route`, `inline-route`, "
-            "`inline-fallback-permitted`, or `blocked`; separate qualification:",
-            normalized_section,
-        )
-        self.assertIn(
-            "Stage 4 `unresolved` means the execution recipient was not resolved; "
-            "stage 5 `unresolved` means capability or transport never qualified",
-            normalized_section,
-        )
-        self.assertIn(
-            "classify the observed failure as route-disqualifying under its owning "
-            "contract against the same route class and exact identity selected in "
-            "the frozen stage 5 record",
-            normalized_section,
-        )
-        self.assertIn(
-            "prior route failure does not preempt a file route with a different "
-            "exact identity",
-            normalized_section,
-        )
-        self.assertIn(
-            "superseded failure only as a prior route-disqualification record",
-            normalized_section,
-        )
-        self.assertIn(
-            "Record in the new stage 5 output that the bounded re-evaluation was "
-            "consumed",
-            normalized_section,
-        )
-        self.assertIn(
-            "terminate as `blocked` with that newly observed `route-disqualified` "
-            "reason",
-            normalized_section,
-        )
-        self.assertIn(
-            "Every later application failure consumes only that current record",
-            normalized_section,
-        )
-        self.assertIn(
-            "stages 5 through 7 must be materially realized as one complete frozen "
-            "decision record",
-            normalized_section,
-        )
-        self.assertIn(
-            "must not accept loose stage fields or reconstruct them from task prose, "
-            "diagnostics, rationale, or conversational context",
-            normalized_section,
-        )
-        self.assertIn(
-            "An absent, incomplete, stale, mismatched, or superseded record fails "
-            "closed with no complete-prompt renderer",
-            normalized_section,
-        )
-        self.assertIn(
-            "A caller cannot bypass the record and request a complete-prompt renderer "
-            "directly",
-            normalized_section,
-        )
-        self.assertIn(
-            "A stale or superseded record cannot restart application or bounded re-entry",
-            normalized_section,
-        )
-        for mapping in (
-            "`complete-executable` plus a `machine-executor` and "
-            "`qualified-file-route` selects `file-backed` presentation",
-            "`complete-executable` plus a human execution recipient resolves "
-            "`inline-route`, then selects `inline` presentation",
-            "`complete-executable` plus `inline-fallback-permitted` selects "
-            "`inline` presentation",
-            "An `unresolved` execution recipient resolves transport to `blocked`",
-        ):
-            self.assertIn(mapping, normalized_section)
-
-    def test_docs_define_bounded_issue_owned_codex_handoff_pilot(self):
-        prompts = PROMPTS.read_text(encoding="utf-8")
-        heading = "### Issue-Owned File-Backed Handoff Prose-DAG Pilot"
-        pilot = prompts[
-            prompts.index(heading) : prompts.index(
-                "## Cross-Executor Prompt Presentation"
-            )
+        rows = [line for line in section.splitlines() if line.startswith("| ")]
+        documented_stages = [
+            row.split("|")[2].strip().strip("`")
+            for row in rows
+            if row.split("|")[1].strip().isdigit()
         ]
-        opening = pilot[: pilot.index("Once explicitly activated")]
-        normalized_pilot = " ".join(pilot.split())
-        normalized_opening = " ".join(opening.split())
-
-        states = (
-            "PROMPT_READY",
-            "ROUTE_QUALIFIED",
-            "PROMPT_STORED",
-            "ARTIFACT_VERIFIED",
-            "HANDOFF_EMITTED",
-        )
-        positions = [pilot.index(state) for state in states]
-        self.assertEqual(positions, sorted(positions))
-        self.assertIn("Any unmet prerequisite -> BLOCKED", pilot)
-        self.assertIn("Human correction -> new revision", pilot)
-        self.assertIn("[from] -> [to] | [succeeded | blocked]", pilot)
-        self.assertIn("Ineligible:", pilot)
-        self.assertIn("Correction:", pilot)
-        self.assertIn(
-            "does not replace, repeat, or recompute any of the eight stages",
-            normalized_pilot,
-        )
-        for semantic_anchor in (
-            "enter the graph at `PROMPT_READY`",
-            "route qualification",
-            "activation prerequisite",
-            "`PROMPT_READY -> ROUTE_QUALIFIED`",
-            "resulting frozen decision record",
-            "qualified file route",
-            "`file-backed` presentation",
-            "`thin-handoff` renderer",
-            "`PROMPT_READY -> BLOCKED`",
-            "`blocked` presentation",
-            "no complete-prompt renderer",
-            "inline complete-prompt fallback",
-            "retroactively remove the attempt from the graph",
-        ):
-            self.assertIn(semantic_anchor, normalized_opening)
-
-        self.assertLess(
-            normalized_opening.index("enter the graph at `PROMPT_READY`"),
-            normalized_opening.index("After graph entry"),
-        )
-        self.assertLess(
-            normalized_opening.index("`PROMPT_READY -> ROUTE_QUALIFIED`"),
-            normalized_opening.index("`PROMPT_READY -> BLOCKED`"),
-        )
+        self.assertEqual(documented_stages, list(STAGES))
 
     def test_resolved_codex_semantics_exclude_request_wording(self):
-        prompts = PROMPTS.read_text(encoding="utf-8")
-        decision_section = prompts[
-            prompts.index("## Prompt Delivery Decision Model") : prompts.index(
-                "## Cross-Executor Prompt Presentation"
-            )
-        ]
-        for representative_request in (
-            "`prompt me`",
-            "`show me the machine handoff`",
-            "`give me the prompt`",
-        ):
-            self.assertIn(representative_request, decision_section)
-
         base = DeliveryCase(
             produces_prompt=True,
             complete_executable=True,

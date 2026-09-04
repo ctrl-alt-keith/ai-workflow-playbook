@@ -823,93 +823,23 @@ as informational or advisory evidence, not as an unstated requirement.
 
 ### Solo-Operator Iteration Economics
 
-For solo-operated workflows, choose the validation loop that answers the
-current question fastest without hiding real risk.
+Choose the fastest validation loop that answers the current question without
+hiding material risk. Use integration-heavy checks while establishing
+end-to-end workflow, governance, or trust-boundary behavior. Once the failure
+is deterministic, move routine iteration into faithful local fixtures and
+return to broader environments at milestones.
 
-Early integration-heavy validation is appropriate when the work is still
-proving workflow semantics, validating governance or trust boundaries, or
-establishing confidence in a new pipeline. Full environment checks,
-cross-system exercises, live smoke tests, and review environments are useful
-while the question is whether the workflow behaves correctly end to end.
+Keep tightly coupled diagnosis, correction, and hardening in one coherent PR
+when they share review scope, validation, and rollback. Split when ownership,
+risk, validation, merge timing, or revert strategy diverges; do not create
+ceremony PRs or let multi-pass work become unrelated cleanup.
 
-Once failures are mostly deterministic parsing, integration, normalization,
-state-transition, deployment, or automation behavior, move the primary
-iteration loop into fast local regression fixtures. Use representative
-real-world examples as a regression corpus where useful, keep those fixtures
-deterministic, and reserve full-environment validation for milestone checks,
-boundary checks, or confidence revalidation after meaningful changes.
-
-Review, replay, staging, or live-like environments validate usefulness and
-operational fit; implementation repositories absorb noisy iteration. Use those
-broader environments for milestone validation, governance or trust-boundary
-review, promotion decisions, and durable provenance. Use the implementation
-repository for deterministic reproduction, fixture iteration, bounded
-corrections, and observability or debugging loops.
-
-Bounded hardening may require multiple tightly coupled passes before opening a
-pull request. Keep those passes in one PR when each pass directly enables or
-validates the next: detect an observed issue or failure mode, preserve evidence
-through tests, fixtures, logs, or metadata, apply a bounded correction, then
-validate non-regression and live behavior where appropriate.
-
-This pattern applies across implementation domains: parsers and extractors,
-API integrations, schema migrations, deployment workflows, infrastructure
-automation, CI/CD hardening, observability and debugging loops,
-synchronization or reconciliation systems, and state repair or recovery logic.
-
-Prefer one coherent PR per reviewable outcome. In solo-operator or
-low-coordination contexts, multiple meaningful commits inside that PR can
-preserve phase-level auditability when work naturally progresses through
-foundation, hardening, docs, tests, provider-source verification, or follow-up
-refinement. Do not split into ceremony PRs solely to expose internal phases.
-Split the work when review scope, risk, ownership, validation path, merge
-timing, or rollback or revert strategy diverges.
-
-In solo-operator workflows, prefer completing the coherent task before opening
-the PR when it is safe to do so. Avoid stopping after a diagnostic-only partial
-implementation when the safe bounded correction is part of the same task and
-can be validated locally.
-
-Pause and confirm before external discovery or crawling, destructive behavior,
-irreversible state changes, ambiguous automation decisions,
-security/trust-boundary expansion, or high-blast-radius architectural change.
-Multi-pass hardening is not permission for grab-bag PRs, unrelated cleanup,
-repo-hopping, or hidden scope expansion.
-
-Intermediate passes should leave evidence through fixtures or tests where
-useful. The final PR should include the relevant docs, tests, live checks, and
-non-regression evidence, and should explain the phases and why they form one
-cohesive task.
-
-For ingestion, extraction, ETL, scraping, OCR, export/import, and normalization
-systems, the source-shape hardening lifecycle in
-[`knowledge-ingestion-patterns.md`](knowledge-ingestion-patterns.md#source-shape-hardening-lifecycle)
-is one application of this broader rule. New source types should become
-diagnostic, review-ready, and promotion-capable inside the implementation
-repository before they become routine replay inputs.
-
-If broader validation repeatedly produces unchanged review outcomes, stop
-accumulating low-yield evidence PRs. Move the failing behavior into the
-implementation repository, make it a deterministic fixture or regression case
-there, and iterate until the output crosses the relevant reviewability,
-operability, or safety threshold. Return to broader validation for milestone
-verification, promotion review, live confidence checks, or retained-content
-decisions.
-
-Warning signs that broad validation has become a rabbit hole:
-
-- repeated full-environment loops with little workflow learning
-- high-latency validation cycles that slow each small correction
-- deterministic bugs discovered only after broad integration runs
-- review, replay, or live-check artifacts quietly becoming the de facto
-  regression suite
-- evidence PRs adding provenance without changing the review, release,
-  retention, or promotion decision
-
-The preferred steady state is fast local fixtures for day-to-day correction, a
-representative real-world regression corpus where useful, explicit milestone
-checkpoints, and occasional broad revalidation to confirm the local loop still
-reflects end-to-end behavior.
+If broad validation repeatedly produces the same outcome, stop accumulating
+evidence and reproduce the failing behavior in the implementation repository.
+Use review, replay, staging, or live environments to confirm operational fit,
+not as the day-to-day regression suite. Specialized ingestion work may apply
+the same principle through the
+[`source-shape hardening lifecycle`](knowledge-ingestion-patterns.md#source-shape-hardening-lifecycle).
 
 ### Minimum `make check` Coverage By Repo Type
 

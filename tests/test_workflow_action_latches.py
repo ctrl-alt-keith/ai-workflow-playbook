@@ -5,9 +5,9 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DOCS = ROOT / "docs"
 REPO_READINESS = ROOT / "docs" / "repo-readiness.md"
 PROMPTS = ROOT / "docs" / "prompts.md"
-START_HERE = ROOT / "docs" / "start-here.md"
 REVIEW_PACKET = ROOT / "docs" / "review-packet.md"
 CHATGPT_ADAPTER = ROOT / "docs" / "tool-adapters" / "chatgpt.md"
 
@@ -269,21 +269,24 @@ class PromptHandoffEvidence:
 
 
 class WorkflowActionLatchTests(unittest.TestCase):
-    def test_docs_assign_each_latch_to_one_existing_owner(self):
-        repo_readiness = REPO_READINESS.read_text(encoding="utf-8")
-        prompts = PROMPTS.read_text(encoding="utf-8")
-        start_here = START_HERE.read_text(encoding="utf-8")
-        review_packet = REVIEW_PACKET.read_text(encoding="utf-8")
-        chatgpt = CHATGPT_ADAPTER.read_text(encoding="utf-8")
+    def test_each_latch_has_one_canonical_heading_owner(self):
+        expected_owners = {
+            "### Interaction-mode action eligibility latch": REPO_READINESS,
+            "### Prompt freeze and transport-only latch": PROMPTS,
+            "### Connector-sufficient review latch": REVIEW_PACKET,
+        }
+        markdown = {
+            path: path.read_text(encoding="utf-8") for path in DOCS.rglob("*.md")
+        }
 
-        self.assertIn("### Interaction-mode action eligibility latch", repo_readiness)
-        self.assertIn("### Prompt freeze and transport-only latch", prompts)
-        self.assertIn("### Connector-sufficient review latch", review_packet)
-        self.assertIn("do not rediscover or re-probe that same action", start_here)
+        for heading, expected_owner in expected_owners.items():
+            owners = {path for path, contents in markdown.items() if heading in contents}
+            self.assertEqual(owners, {expected_owner}, heading)
+
         self.assertIn(
-            "prompt freeze and transport-only latch", chatgpt.lower()
+            "prompts.md#prompt-freeze-and-transport-only-latch",
+            CHATGPT_ADAPTER.read_text(encoding="utf-8").lower(),
         )
-        self.assertNotIn("PROMPT_DESIGN -> PROMPT_FROZEN", chatgpt)
 
     def test_prompt_authoring_allowlist_is_model_independent(self):
         for model_route in ("stronger", "lower-cost"):

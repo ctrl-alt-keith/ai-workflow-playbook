@@ -7,6 +7,21 @@ Repository tasks translate those role boundaries into the interaction modes in
 implementation, review/audit, and orchestration/prompt-authoring. Select the
 mode before acting so the AI role matches the human's intended delegation.
 
+## Playbook Philosophy
+
+The Playbook exists to make AI-assisted work more reliable, proportional, and
+understandable without making ordinary work harder. Add workflow only when it
+prevents a demonstrated failure or preserves an important authority, evidence,
+execution, or safety boundary. Prefer the smallest reusable rule with one
+canonical owner, and remove duplication, obsolete ceremony, and explanatory
+machinery when they no longer improve behavior.
+
+Use one maintenance test: does the change reduce ambiguity or protect a real
+boundary enough to justify its complexity? A change should leave the Playbook
+easier to apply correctly, not merely more completely specified. Incidents are
+evidence for improving an underlying rule, not permanent doctrine or an archive
+of every failure and fix.
+
 ## Operating Principles
 
 These principles apply to AI-assisted work whose evidence, authority, review,
@@ -348,36 +363,3 @@ reconstructing the applicable contract, current authority, accepted inputs,
 completed work, and next permitted action, then revalidating any mutable source
 state. If that contract cannot be reconstructed or no longer applies, stored
 history cannot silently authorize continuation.
-
-## Workflow
-
-The default loop is:
-
-1. Align on the goal and the current phase.
-2. Let AI execute the next bounded unit of work.
-3. Validate outputs against the contract, tests, or review criteria.
-4. Tighten based on feedback.
-5. Capture reusable learning before the next arc begins.
-
-## Feedback Loops
-
-Reliable AI-assisted work depends on short feedback loops:
-
-- Execution loop: produce a change, then validate it quickly
-- Review loop: summarize what changed so a human can inspect the right things
-- Capture loop: turn proven practice into reusable guidance before context fades
-
-Use [`trust-topology.md`](trust-topology.md) as an optional vocabulary when the
-confidence level, validation evidence, or promotion path for a reusable pattern
-is unclear.
-
-## Discipline
-
-Speed is only useful when paired with disciplined execution. This model assumes:
-
-- Clear scope boundaries
-- Frequent validation
-- Explicit pauses when uncertainty increases
-- Written capture of reusable lessons
-
-Without those controls, AI work tends to drift, overproduce, or hide weak reasoning behind fluent output.

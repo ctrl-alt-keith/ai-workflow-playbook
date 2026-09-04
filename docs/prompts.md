@@ -468,42 +468,15 @@ recipient of a prompt that is semantically directed to a machine executor.
 | 7 | `renderer-selection` | Frozen presentation selection | `lightweight`, `thin-handoff`, `canonical-inline-two-block`, or `none` | Inline rendering is reachable only from `inline`; a renderer cannot change upstream state. |
 | 8 | `delivery-outcome` | Current complete frozen stage-5-through-7 decision record and selected renderer result | Executed selected delivery action plus its evidence, or explicit fallback or blocked result | Apply only the record's presentation and renderer selection. Emit only the selected surface and preserve the owning failure contract. |
 
-Stage 5 has a closed evidence-provenance boundary. Its qualification evidence
-record accepts only observations about the current runtime route, classified
-by the current owning route-qualification contract against the named route
-class and exact identity. A delegated task's target state, acceptance
-requirement, desired future capability, implementation intent, prompt body, or
-explanatory rationale is not current-route evidence and must not enter this
-record. Those inputs may shape the delegated implementation prompt, but they
-cannot create `route-disqualified` or `unresolved` transport state. If the task
-is intended to strengthen, replace, or repair the same capability area, stage
-5 still classifies the route that exists now from its current observation and
-owning contract. Only that owning-contract classification may create route
-disqualification; excluded task-target evidence is rejected rather than
-reinterpreted as a current-route failure.
-
-Route qualification and route diagnostics are separate fields in the decision
-record. `qualified-with-known-limitation` retains the limitation and its owning
-evidence while keeping the selected route qualified. `route-disqualified`
-means the owning contract explicitly makes the observed failure incompatible
-with a named route class and exact route or destination identity and records
-the owning reason separately from diagnostic limitations. A current route-
-disqualification record controls a `route-disqualified` qualification. When
-re-evaluation selects a different route or remains unresolved, preserve the
-superseded failure only as a prior route-disqualification record; it does not
-describe or disqualify the newly selected route. At initial stage 5 resolution,
-an owning contract may reject an evaluated candidate route without implying
-that route was previously selected. Downstream re-entry, however, requires the
-frozen stage 5 record to show a selected `qualified` or
-`qualified-with-known-limitation` route and the new owning-contract failure to
-identify that same route class, exact identity, and reason. A later
-presentation, renderer, or application layer must not promote a diagnostic
-limitation into `route-disqualified` or use it to select a different transport.
-Stage 4 `unresolved` means the execution recipient was not resolved; stage 5
-`unresolved` means capability or transport never qualified or remains
-unresolved. A route that never qualified is not a route that was selected and
-later disqualified, and a caller assertion cannot supply the missing frozen
-selection.
+Stage 5 accepts only current runtime-route observations classified by the
+owning route-qualification contract against the named route class and exact
+identity. Task goals, desired capabilities, prompt content, and implementation
+rationale cannot qualify or disqualify the route. Keep qualification,
+diagnostics, and owning-contract disqualification as separate fields:
+`qualified-with-known-limitation` remains qualified, while
+`route-disqualified` requires the owning contract's exact route identity and
+reason. Stage 4 `unresolved` concerns the recipient; stage 5 `unresolved`
+concerns capability or transport.
 
 Apply these terminal mappings deterministically:
 
@@ -538,44 +511,18 @@ Apply these terminal mappings deterministically:
   the bounded re-evaluation sequence below; its resulting stage 5 state drives
   this terminal mapping.
 
-The final delivery application consumes the current complete frozen decision
-record and executes the selected action. A caller cannot bypass the record and
-request a complete-prompt renderer directly. For `file-backed`, the record
-makes inline rendering unreachable: application invokes the selected file
-route and returns the thin handoff. It must not inspect diagnostic state to
-substitute the canonical inline renderer. For `inline`, it invokes only the
-canonical inline renderer recorded through the legitimate inline decision.
-Application failure may enter the bounded re-evaluation rule below, but
-application itself cannot recompute transport.
+Delivery consumes only the current complete frozen decision record. A caller
+cannot request another renderer directly or use diagnostics to bypass the
+record's file-backed, inline, lightweight, or blocked mapping.
 
-The once-per-stage rule applies within one evaluation. If a selected route
-becomes explicitly `route-disqualified` before delivery completes, the same
-delivery attempt may perform exactly one capability re-evaluation. A known
-non-disqualifying limitation does not activate re-entry. Preserve the stage 1
-through 4 outputs unchanged and activate only stages 5 through 8 against the
-newly observed capability state. The sequence is: classify the observed
-failure as route-disqualifying under its owning contract against the same
-route class and exact identity selected in the frozen stage 5 record, perform
-the one downstream-only re-evaluation, then apply the terminal mapping from the
-new stage 5 state. The prior route failure does not preempt a file route with a
-different exact identity that the new capability evidence qualifies and
-permits; that route remains `file-backed` and carries the old failure only as
-prior evidence. Reasserting qualification for the same failed identity does
-not create a new route and follows the owning fallback or blocked mapping.
-Record in the new stage 5 output that the bounded re-evaluation was consumed.
-When no new file route qualifies, apply only the owning fallback or blocked
-mapping and preserve the prior disqualification reason. If the re-evaluated
-route also fails, terminate as `blocked` with that newly observed
-`route-disqualified` reason; do not re-enter again, relabel the selected route
-as merely `unresolved`, or recompute the artifact, viewer, or execution
-recipient. If capability instead remains unresolved, retain the prior failure
-reason as evidence while the new stage 5 qualification remains `unresolved`.
-After downstream re-evaluation resolves stages 5 through 7, materialize a new
-complete frozen decision record before application continues and supersede the
-prior record. Every later application failure consumes only that current
-record. A stale or superseded record cannot restart application or bounded
-re-entry, and replaying a superseded pre-re-evaluation record is not another
-valid delivery transition.
+If the owning contract disqualifies a selected route before delivery completes,
+the attempt may re-run stages 5 through 8 once while preserving stages 1
+through 4. The failure must name the same selected route class and identity.
+Freeze a superseding record before resuming; a different newly qualified route
+may proceed with the old failure retained as prior evidence, while the same
+failed identity follows the owning fallback or blocked rule. A second route
+failure terminates as `blocked`; stale records cannot restart delivery or
+re-entry.
 
 Conversational wording is evidence available to the production,
 classification, and recipient-resolution stages. It is not a lookup table and
@@ -774,13 +721,11 @@ the operator or viewer identity:
   [connector-availability rule](start-here.md#connector-availability-is-runtime-evidence)
   before choosing this fallback.
 
-Preview is not raw-byte verification, approval, a send gate, delivery evidence,
-executor acknowledgement, a coordination state, or authority. A connector
-confirmation needed after the exact create or preview plan is an external
-runtime prerequisite. It authorizes only the named connector operation, does
-not repair missing task authorization, and is not a separate prompt-approval
-workflow. A Playbook-authorized operation remains blocked when that prerequisite
-is unsatisfied; Playbook prose cannot waive it.
+Preview is not verification, approval, delivery evidence, acknowledgement, or
+authority. Connector-mandated confirmation follows the external-prerequisite
+boundary in the
+[`prompt freeze and transport-only latch`](#prompt-freeze-and-transport-only-latch);
+it does not become a separate prompt-approval workflow.
 
 Prompt governance is a separate selection. A material prompt that passes its
 admission test additionally applies the
