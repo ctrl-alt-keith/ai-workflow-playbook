@@ -309,7 +309,7 @@ redefine those identities or turn them into authority.
 
 The Playbook-owned machine-readable anchors and canonicalization vectors are:
 
-- [`prompt-contract-semantic-anchors-v3.json`](prompt-contract-semantic-anchors-v3.json)
+- [`prompt-contract-semantic-anchors-v4.json`](prompt-contract-semantic-anchors-v4.json)
 - [`prompt-contract-canonicalization-vectors-v1.json`](prompt-contract-canonicalization-vectors-v1.json)
 
 They are semantic anchors and conformance evidence, not an operational workflow
@@ -360,318 +360,91 @@ and incomplete fragments remain lightweight.
 
 ## Prompt Delivery Decision Model
 
-This is the canonical compositional decision model for prompt delivery. Within
-one decision evaluation, run each activated stage once in the declared order
-and carry its explicit output forward in one decision record. A later stage may
-consume an earlier output, but it must not re-read conversational wording to
-replace that output or infer a different artifact, viewer, recipient, or
-transport. Rendering begins only after presentation has been selected.
+Keep prompt delivery small and deterministic. Classify the produced artifact,
+resolve the execution recipient independently from the human viewer, and then
+select one presentation:
 
-For a complete prompt, stages 5 through 7 must be materially realized as one
-complete frozen decision record before any complete-prompt renderer or delivery
-application is eligible. The record contains the resolved route and
-qualification state, exact route identity when applicable, diagnostics and
-re-entry state, presentation, and renderer. Renderer and application entry
-points consume that record as their only delivery-decision input; they must not
-accept loose stage fields or reconstruct them from task prose, diagnostics,
-rationale, or conversational context. An absent, incomplete, stale, mismatched,
-or superseded record fails closed with no complete-prompt renderer. Material
-realization is a semantic state boundary: it does not require a durable
-artifact, provider-visible object, UI disclosure, or a second workflow engine.
+- no prompt: no delivery action;
+- conceptual fragment: lightweight conversational presentation;
+- complete prompt for a human recipient: the canonical inline two-block
+  presentation;
+- qualifying small canonical-text prompt for a ChatGPT or Claude machine
+  recipient with a permitted Airtable route: the Airtable record handoff below;
+  or
+- missing, unresolved, or mismatched recipient, route, destination, or required
+  identity: a clear blocked result with no alternate renderer.
 
-The decision record keeps the human operator or viewer separate from the
-executable prompt's execution recipient. The operator or viewer receives
-metadata, a file surface, or a handoff; the execution recipient consumes the
-executable prompt. Human visibility, a request to receive or see a handoff,
-and the presence of operator metadata do not make the human the execution
-recipient of a prompt that is semantically directed to a machine executor.
+Do not use request wording, operator visibility, or an available file provider
+to override the resolved recipient and route. A file provider is not a fallback for a
+qualifying small canonical-text handoff. A separately authorized workflow may
+select file-backed delivery only when its payload actually requires arbitrary
+bytes or provider file identity, revision, or checksum behavior.
 
-| Order | Stage | Required input | Explicit output | Invariant |
-| --- | --- | --- | --- | --- |
-| 1 | `artifact-production` | Current human intent and the artifact actually being produced | `no-prompt` or `prompt-produced` | Do not enter prompt delivery when no prompt artifact is being produced. |
-| 2 | `artifact-classification` | Produced artifact plus authoritative readiness intent | `conceptual-fragment` or `complete-executable` | Classify produced semantics, not request vocabulary; freeze the result. |
-| 3 | `operator-viewer-resolution` | Current interaction and orchestration context | Explicit human or orchestration viewer identity | Viewer identity controls the operator-facing surface only. |
-| 4 | `execution-recipient-resolution` | Executable body, target surface, task shape, and human direction | Explicit recipient identity and `human` or `machine-executor` class, or `unresolved` with reason | Resolve independently from the viewer; do not infer it from who asked the question or default ambiguity to the human viewer. |
-| 5 | `capability-and-transport-resolution` | Frozen recipient identity; a current route-qualification evidence record that binds the current runtime route observation, route class and exact identity, and current owning qualification contract; authority; and permitted destination | Route selection and exact identity when applicable: `qualified-file-route`, `inline-route`, `inline-fallback-permitted`, or `blocked`; separate qualification: `qualified`, `qualified-with-known-limitation`, `route-disqualified`, or `unresolved`; non-disqualifying diagnostics; current or prior owning-contract route-disqualification records; and whether bounded re-evaluation was consumed | Inspect or attempt unknown capability; retain known limitations without treating them as route-disqualifying unless the owning contract says they are. Never invent a destination or weaken an exact-byte contract. |
-| 6 | `presentation-selection` | Frozen artifact class, recipient class, and route resolution | `lightweight`, `file-backed`, `inline`, or `blocked` | Qualified machine execution selects file-backed delivery; operator visibility cannot override it. |
-| 7 | `renderer-selection` | Frozen presentation selection | `lightweight`, `thin-handoff`, `canonical-inline-two-block`, or `none` | Inline rendering is reachable only from `inline`; a renderer cannot change upstream state. |
-| 8 | `delivery-outcome` | Current complete frozen stage-5-through-7 decision record and selected renderer result | Executed selected delivery action plus its evidence, or explicit fallback or blocked result | Apply only the record's presentation and renderer selection. Emit only the selected surface and preserve the owning failure contract. |
+### Airtable canonical-text handoff
 
-Stage 5 accepts only current runtime-route observations classified by the
-owning route-qualification contract against the named route class and exact
-identity. Task goals, desired capabilities, prompt content, and implementation
-rationale cannot qualify or disqualify the route. Keep qualification,
-diagnostics, and owning-contract disqualification as separate fields:
-`qualified-with-known-limitation` remains qualified, while
-`route-disqualified` requires the owning contract's exact route identity and
-reason. Stage 4 `unresolved` concerns the recipient; stage 5 `unresolved`
-concerns capability or transport.
+This section owns the shared ChatGPT/Claude handoff contract. Adapters map its
+operations to the connector actions exposed by each executor; they do not copy
+or redefine these rules.
 
-Apply these terminal mappings deterministically:
+Use one new Airtable record per producer attempt with these required fields:
 
-- `no-prompt` ends the evaluation after `artifact-production`. Do not activate
-  classification, viewer, recipient, capability, presentation, renderer, or
-  delivery stages and do not emit a prompt-delivery result.
-- `conceptual-fragment` selects `lightweight` presentation and the lightweight
-  renderer without machine-delivery ceremony.
-- `complete-executable` plus a `machine-executor` and
-  `qualified-file-route` selects `file-backed` presentation and the
-  `thin-handoff` renderer. The complete executable prompt is not rendered
-  inline. This mapping is unchanged when the route qualification is
-  `qualified-with-known-limitation`; retain and surface the diagnostic without
-  changing the route, presentation, or renderer.
-- `complete-executable` plus a human execution recipient resolves
-  `inline-route`, then selects `inline` presentation and the
-  `canonical-inline-two-block` renderer.
-- `complete-executable` plus `inline-fallback-permitted` selects `inline`
-  presentation and the `canonical-inline-two-block` renderer, while preserving
-  the observed file-route limitation outside the copyable blocks when the
-  client surface permits it.
-- An `unresolved` execution recipient resolves transport to `blocked` with the
-  resolution reason and selects no complete-prompt renderer. Never treat an
-  unresolved recipient as the human viewer to obtain an inline route.
-- `blocked` selects no complete-prompt renderer. Emit the owning explicit
-  blocked result; do not turn the block into convenient inline delivery or
-  unconstrained status prose.
-- At initial stage 5 resolution, `route-disqualified` follows the owning
-  fallback or blocked contract. It may select `inline-fallback-permitted` only
-  when that fallback is explicitly permitted; otherwise it resolves `blocked`.
-  When a selected route becomes disqualified during application, first apply
-  the bounded re-evaluation sequence below; its resulting stage 5 state drives
-  this terminal mapping.
+- `Handoff Key`
+- `Payload`
+- `Payload Bytes`
+- `SHA-256`
+- `Producer`
 
-Delivery consumes only the current complete frozen decision record. A caller
-cannot request another renderer directly or use diagnostics to bypass the
-record's file-backed, inline, lightweight, or blocked mapping.
+Freeze `Payload` as UTF-8 without a BOM, with LF line endings and an explicitly
+declared final-newline state. `Payload Bytes` is the length of those exact bytes
+and `SHA-256` is their lowercase whole-payload digest. Create the record once
+and never update it. A correction creates a new key and record; its external
+envelope names the predecessor when applicable.
 
-If the owning contract disqualifies a selected route before delivery completes,
-the attempt may re-run stages 5 through 8 once while preserving stages 1
-through 4. The failure must name the same selected route class and identity.
-Freeze a superseding record before resuming; a different newly qualified route
-may proceed with the old failure retained as prior evidence, while the same
-failed identity follows the owning fallback or blocked rule. A second route
-failure terminates as `blocked`; stale records cannot restart delivery or
-re-entry.
+After creation, hand over an external envelope containing the exact base ID,
+table ID, returned record ID, expected handoff key, text format and final-
+newline rule, expected byte length, expected SHA-256, producer executor and
+attempt identity, and predecessor identity when applicable. Airtable's shared
+user identity and the declared `Producer` field do not authenticate the
+executor; executor attribution remains external attempt evidence.
 
-Conversational wording is evidence available to the production,
-classification, and recipient-resolution stages. It is not a lookup table and
-must not be matched through a phrase whitelist or blacklist. Once those stages
-have resolved their semantic outputs, capability, presentation, and renderer
-selection consume only the decision record. Representative requests such as
-`prompt me`, `show me the machine handoff`, and `give me the prompt` remain
-upstream evidence; they are neither transport selectors nor repeated inputs to
-the downstream stages.
+The consumer retrieves by exact record ID, never by fuzzy search or key lookup,
+and requires exactly one result with the expected key and field set. It
+re-encodes the returned payload under the declared text rules, independently
+recomputes byte length and SHA-256, and requires agreement among the recomputed
+values, stored fields, and external envelope. Missing, multiple, stale,
+transformed, truncated, or mismatched content fails closed. Key lookup is
+diagnostic only.
 
-### Prompt freeze and transport-only latch
-
-Apply the interaction-mode action eligibility latch in
-[`repo-readiness.md`](repo-readiness.md#interaction-mode-action-eligibility-latch)
-before this delivery latch. This section constrains action eligibility around
-the canonical decision model and the existing file-backed handoff pilot; it is
-not a second delivery controller, graph, or prompt architecture.
-
-Use this semantic progression for an issue-owned machine-executor handoff:
-
-```text
-PROMPT_DESIGN -> PROMPT_FROZEN -> DROPBOX_TRANSPORT_ONLY
-```
-
-- `PROMPT_DESIGN` permits the selected source reads and prompt construction
-  authorized by orchestration/prompt-authoring mode.
-- `PROMPT_FROZEN` means the complete rendered bytes and their exact identity
-  are fixed for the attempt. Transport, diagnostics, preview, or operator
-  presentation may not revise them.
-- `DROPBOX_TRANSPORT_ONLY` begins when the frozen stages 5 through 7 record
-  selects the qualified issue-owned Dropbox route, file-backed presentation,
-  and thin-handoff renderer. It remains active through the selected delivery
-  outcome or a named blocked state.
-
-In `DROPBOX_TRANSPORT_ONLY`, the eligible operations are limited to the owning
-storage and transport contract: create the issue folder if absent, create one
-absent prompt file, verify provider identity and exact content or qualified
-integrity evidence, preview only when the selected presentation requires it,
-mint one fresh download link, and emit the compact retrieval handoff. The
-complete prompt stays out of chat. Repository or GitHub mutation, Linear
-mutation, unrelated provider or authentication changes, downstream execution,
-source hydration, repository analysis, prompt redesign or polish, issue
-editing, and inline complete-prompt rendering are ineligible. A failed
-ineligible action does not make an alternate syntax or retry eligible; this is
-an action-class boundary, not a rigid global tool-call cap.
-
-Do not invent a fresh Playbook approval for a routine Dropbox operation already
-authorized by the current human instruction and owning storage contract. This
-does not waive a confirmation that the current connector action contract
-requires after presenting its exact mutation plan. That confirmation is an
-external runtime prerequisite for the connector operation, not missing task
-authorization or a prompt-approval gate. Reuse successful connector-action
-evidence under the current
-[`connector-availability rule`](start-here.md#connector-availability-is-runtime-evidence);
-do not rediscover an already successful same action without one of that rule's
-recheck triggers.
-
-An operator correction replaces the incompatible active envelope and resumes
-from the nearest still-valid verified state. A material change to prompt
-requirements returns to `PROMPT_DESIGN` and produces a new frozen revision. A
-delivery or presentation correction that does not change prompt requirements
-retains the exact `PROMPT_FROZEN` bytes, invalidates incompatible pending
-renderers or actions, and enters or resumes `DROPBOX_TRANSPORT_ONLY` without
-replaying source hydration, capability discovery, or prompt design.
-
-Immediately before the external Dropbox write, surface one concise
-operator-visible transition stating that the prompt is frozen, Dropbox
-transport-only mode is active, and unrelated GitHub, Linear, and repository
-mutations are ineligible. This is observability under
-[`core-model.md`](core-model.md#operator-observability), not a permission
-request or per-tool narration.
-
-For the Prose-DAG pilot below, `PROMPT_FROZEN` satisfies the frozen-body part
-of `PROMPT_READY`; the pilot still performs its existing entry and route
-qualification. Once `ROUTE_QUALIFIED` selects the file-backed record,
-`DROPBOX_TRANSPORT_ONLY` constrains the eligible operations through
-`HANDOFF_EMITTED` or `BLOCKED`. The pilot graph and its transition receipts
-remain the execution record; these latches do not add another DAG.
-
-### Issue-Owned File-Backed Handoff Prose-DAG Pilot
-
-This pilot is opt-in for a normal-use trial. For an explicitly activated
-attempt, enter the graph at `PROMPT_READY` once its prerequisites hold: the
-canonical decision model has resolved a complete executable prompt for the one
-machine recipient named by the activating adapter, the governing issue and
-intended issue-owned destination are known, and the prompt body is frozen for
-this attempt. Entry at `PROMPT_READY` precedes route qualification. A qualified
-route, existing destination, destination permission, or required write
-capability is not an activation prerequisite.
-
-After graph entry, the canonical decision model resolves stages 5 through 7
-once. The `PROMPT_READY -> ROUTE_QUALIFIED` transition consumes the resulting
-frozen decision record when it selects a qualified file route, `file-backed`
-presentation, and the `thin-handoff` renderer. If route, destination,
-permission, or required-capability qualification instead fails, record
-`PROMPT_READY -> BLOCKED`, select `blocked` presentation with no complete-prompt
-renderer, and keep every downstream graph transition and inline complete-prompt
-fallback ineligible. That failure does not retroactively remove the attempt
-from the graph. The pilot does not replace, repeat, or recompute any of the
-eight stages. A record with another selection outside an explicitly activated
-attempt remains under the canonical decision model and does not enter this
-graph. No recipient is eligible unless its adapter explicitly activates this
-pilot.
-
-When the current connector action contract mandates explicit confirmation
-after its exact create plan is presented, the original handoff request still
-supplies task authorization but cannot satisfy that later runtime prerequisite.
-Record `PROMPT_READY -> BLOCKED` before any create action, name the connector-
-mandated confirmation as the blocker, and keep inline rendering and unrelated
-mutations ineligible. Ask only for the confirmation the connector contract
-requires; do not ask whether the prompt or Dropbox workflow is approved again.
-After confirmation, issue a correction revision that retains `PROMPT_READY`,
-the frozen prompt identity, recipient, issue destination, and all still-current
-route evidence, then resume qualification and transport. Do not repeat source
-hydration or prompt design, and do not add a confirmation-specific graph state.
-
-Once explicitly activated, use this fixed last-mile graph:
-
-```text
-PROMPT_READY
-    -> ROUTE_QUALIFIED
-    -> PROMPT_STORED
-    -> ARTIFACT_VERIFIED
-    -> HANDOFF_EMITTED
-
-Any unmet prerequisite -> BLOCKED
-Human correction -> new revision, retaining the nearest still-valid state
-```
-
-- `PROMPT_READY` means the complete prompt, machine execution recipient,
-  governing issue, destination intent, and frozen body are resolved.
-- `ROUTE_QUALIFIED` means the current Dropbox route, acting account,
-  destination permission, and required capability were inspected or
-  successfully exercised. Inline complete-prompt rendering is ineligible.
-- `PROMPT_STORED` means one issue-owned Dropbox object was created and its
-  provider identity was captured under the existing durable handoff profile.
-- `ARTIFACT_VERIFIED` means current provider identity and applicable integrity
-  evidence were re-observed and matched before handoff creation.
-- `HANDOFF_EMITTED` means the operator received the selected compact
-  target-shaped retrieval handoff without the complete prompt body. It is
-  terminal success for this delivery attempt.
-- `BLOCKED` means one named prerequisite or action failed. Take no downstream
-  transition or delivery action.
-
-For every material transition in an activated attempt, surface one compact
-operator-visible receipt at the transition boundary. Keep it outside both the
-stored prompt and the receiver's copyable execution instructions:
-
-```text
-Issue-owned file-backed handoff pilot | revision [n]
-[from] -> [to] | [succeeded | blocked]
-Basis: [decisive observed prerequisite or exact block reason] | Action: [selected action]
-Ineligible: [actions excluded by this transition] | Next: [eligible transition or terminal state]
-Correction: supersedes revision [n]; retains [nearest valid state]; invalidates [state or pending action]
-```
-
-Include the correction line only after human correction, and increment the
-revision. A successful receipt relies only on observed provider or connector
-facts where they are decisive; it must not invent evidence. It records
-execution-state evidence, grants no authority, performs no lifecycle
-transition, and contains no complete prompt body, secret, or hidden reasoning.
-
-The observed action must match the selected action and transition. Treat a
-wrong transition, an unsupported prerequisite, an action contradiction, a
-stale or superseded revision, or an omitted receipt as a visible pilot failure.
-A correct `BLOCKED` receipt names the failure and leaves downstream actions
-ineligible. This vocabulary is only for this pilot, not a general incident
-taxonomy, retry model, or workflow framework. Ordinary chat, prompt authoring,
-conceptual fragments, human-recipient inline delivery, and non-pilot handoffs
-do not inherit it.
+This protocol relies on append-only behavior rather than Airtable-enforced key
+uniqueness or record immutability. It creates no extra lifecycle states,
+approval gate, fallback ladder, or storage abstraction.
 
 ## Cross-Executor Prompt Presentation
 
-This section supplies the transport and presentation rules consumed by stages
-5 through 8 of the canonical decision model. The model applies symmetrically
-when one executor produces a complete prompt for another: each direction is
-governed by the same shared presentation and handoff contract.
+This section applies the decision model symmetrically when one executor
+produces a complete prompt for another: each direction is governed by the same
+shared presentation and handoff contract.
 
-For any complete prompt, select presentation by the execution recipient's
-currently qualified capability and permitted destination, independently of
-the operator or viewer identity:
+For a qualifying small canonical-text ChatGPT/Claude machine handoff, apply the
+[Airtable contract](#airtable-canonical-text-handoff) and provide the target-
+shaped thin envelope without reproducing the complete prompt in chat. For a
+human execution recipient, use the matching adapter's canonical inline
+presentation. Inspect unknown connector capability before selection; if the
+required Airtable route or identity is unavailable, fail clearly rather than
+switching to file-backed delivery or reconstructing the prompt in chat.
 
-- When the machine execution recipient has a qualified Dropbox retrieval route
-  and the current storage contract supplies a permitted destination, place the
-  prompt in a Dropbox-backed file, present the file surface produced by that
-  operation, and immediately provide the target-shaped
-  [thin semantic handoff](#thin-semantic-handoff-envelope) without reproducing
-  the complete prompt. A known non-disqualifying limitation remains diagnostic
-  evidence and does not change this selected action. A separate preview or
-  open action is optional under the matching client adapter and does not block
-  the handoff or require prompt approval.
-- For a human execution recipient, or when the machine execution recipient has
-  no qualified Dropbox route and the owning contract permits inline fallback,
-  present the complete prompt inline through the matching client adapter. When
-  access is unknown, apply the
-  [connector-availability rule](start-here.md#connector-availability-is-runtime-evidence)
-  before choosing this fallback.
-
-Preview is not verification, approval, delivery evidence, acknowledgement, or
-authority. Connector-mandated confirmation follows the external-prerequisite
-boundary in the
-[`prompt freeze and transport-only latch`](#prompt-freeze-and-transport-only-latch);
-it does not become a separate prompt-approval workflow.
-
-Prompt governance is a separate selection. A material prompt that passes its
-admission test additionally applies the
+Prompt governance remains a separate selection. A material prompt that passes
+its admission test additionally applies the
 [`issue-owned durable rendered-prompt handoff profile`](prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile).
 Complete that profile before reporting preservation or providing an
-exact-identity handoff. A routine prompt delivered through a file does not
-thereby acquire its durable capture, recovery, replay, receipt,
-immutable-version, or governance ceremony. When no permitted file destination
-exists, use inline presentation only when the owning fallback contract permits
-it; otherwise emit the explicit blocked result rather than inventing a storage
-surface.
+exact-identity handoff. Routine handoffs do not acquire material-prompt
+governance merely because Airtable carries them.
 
 ## Quick Navigation
 
 - [Task-Shape Surface Selection And Thin Handoffs](#task-shape-surface-selection-and-thin-handoffs)
 - [Prompt Delivery Decision Model](#prompt-delivery-decision-model)
-- [Issue-Owned File-Backed Handoff Prose-DAG Pilot](#issue-owned-file-backed-handoff-prose-dag-pilot)
+- [Airtable Canonical-Text Handoff](#airtable-canonical-text-handoff)
 - [Cross-Executor Prompt Presentation](#cross-executor-prompt-presentation)
 - [Repository Implementation Task](#repository-implementation-task)
 - [Parallel Batch Add-On](#parallel-batch-add-on)
@@ -953,37 +726,38 @@ Attach this external delivery envelope only after the executable rendered
 prompt has been deterministically frozen and the six-condition admission test in
 [`prompt-contracts.md`](prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
 passes and the owning storage contract permits exact durable retention. Resolve
-provider, account, namespace, and issue-path values from that narrower owner;
-do not embed them in the referenced rendered prompt. This envelope is not part
-of the referenced rendered-prompt bytes or rendered-prompt digest. It is an
-add-on to the delivery packet, not an instruction to append self-identity to the
-executable prompt.
+the permitted Airtable base and table from that narrower owner; do not embed
+them in the referenced rendered prompt. This envelope is not part of the
+referenced rendered-prompt bytes or rendered-prompt digest.
 
 ```text
 External issue-owned durable prompt delivery envelope:
 - Boundary: this envelope is not part of the referenced rendered-prompt bytes or rendered-prompt digest
 - Governing issue and authority reference: [planning identity and current human authority]
-- Exact durable identity: [immutable human locator, provider locator, object identity, size, SHA-256, provider revision when exposed or explicit unavailable status, and provider content hash when available]
+- Airtable identity: base [base ID]; table [table ID]; record [exact returned record ID]
+- Expected handoff key: [key]
+- Canonical payload: UTF-8; no BOM; LF line endings; final newline [present | absent]
+- Expected payload bytes: [byte count]
+- Expected SHA-256: [lowercase digest]
+- Producer attempt: [executor and attempt identity]
+- Predecessor: [none or prior record and attempt identity]
 - Admission result: [six conditions passed, with privacy, visibility, retention, and natural owner]
-- Delivery policy: retrieve the durable object directly through a qualified route; otherwise use one private executor-owned attempt-local exact retrieval
-- Prohibited delivery: no exchange root, mutable alias, shadow durable copy, or copy/paste claim of byte identity
-- Identity timing: derive final size, SHA-256, provider identity evidence, and delivery route only after the rendered prompt is frozen; never embed a placeholder self-digest
+- Identity timing: derive the key, byte length, SHA-256, and record identity only after the rendered prompt is frozen
 
 Receiver verification:
-- Verify raw or attempt-local bytes, size, SHA-256, UTF-8, no BOM, LF endings, and the declared final-newline rule before acceptance.
+- Retrieve exactly one record by the exact record ID; do not use fuzzy search or key lookup as retrieval.
+- Require the expected key and five-field record, re-encode the payload, and independently verify byte length, SHA-256, UTF-8, no BOM, LF endings, and the declared final-newline rule before acceptance.
 - Re-read current authority and mutable repository, provider, and planning state from their owners before execution.
-- Fail closed on collision, mismatch, missing identity, prohibited retention, unsupported required capability, or ambiguous authority.
+- Fail closed on a missing, multiple, stale, transformed, truncated, or mismatched record, prohibited retention, unsupported required capability, or ambiguous authority.
 
 Evidence:
-- Keep operator metadata, this envelope, durable prompt, producing receipt, delivery evidence, acknowledgement, executor attempt, attempt receipt, output, and human disposition as separate identities.
+- Keep operator metadata, this envelope, Airtable record, rendered prompt, producing receipt, delivery evidence, executor attempt, attempt receipt, output, and human disposition as separate identities when required.
 - Every admitted prompt write has exactly one distinct producing receipt.
-- Record only observed PRESERVED, DELIVERED, ACCEPTED, STARTED, COMPLETED, FAILED, or UNKNOWN states under the minimum predicates in the canonical profile; never infer acceptance from delivery, start from acceptance, or human acceptance or authority from completion.
-- Every prompt, path, hash, delivery, receipt, validation result, and successful execution transfers zero authority.
+- The shared Airtable user and `Producer` field do not authenticate the executor; keep executor attribution in external attempt evidence.
+- Every prompt, record, hash, delivery, receipt, validation result, and successful execution transfers zero authority.
 
-Cleanup:
-- Preserve required delivery and attempt evidence, then remove only the private attempt-local retrieval when the attempt no longer depends on it.
-- Revalidate containment and identity and fail closed on the shared cleanup conditions in `repo-readiness.md#repo-local-workflow-state`.
-- Do not delete or rewrite the durable prompt and do not create recurring cleanup automation.
+Correction:
+- Never update or delete the frozen record. Create a new record and key and carry predecessor lineage in this external envelope.
 ```
 
 ## Implementation Delivery Add-On

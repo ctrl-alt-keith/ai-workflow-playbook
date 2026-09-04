@@ -7,7 +7,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
-ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v3.json"
+ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v4.json"
+HISTORICAL_V3_ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v3.json"
 HISTORICAL_V2_ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v2.json"
 LEGACY_V1_ANCHOR_PATH = DOCS / "prompt-contract-semantic-anchors-v1.json"
 VECTOR_PATH = DOCS / "prompt-contract-canonicalization-vectors-v1.json"
@@ -29,6 +30,9 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.anchor = json.loads(ANCHOR_PATH.read_text(encoding="utf-8"))
+        cls.historical_v3_anchor = json.loads(
+            HISTORICAL_V3_ANCHOR_PATH.read_text(encoding="utf-8")
+        )
         cls.historical_v2_anchor = json.loads(
             HISTORICAL_V2_ANCHOR_PATH.read_text(encoding="utf-8")
         )
@@ -40,8 +44,17 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         self.assertEqual(
             self.anchor["artifact_type"], "prompt_contract_semantic_anchors"
         )
-        self.assertEqual(self.anchor["anchor_version"], "3.0.0")
-        self.assertEqual(self.anchor["compatibility_major"], 3)
+        self.assertEqual(self.anchor["anchor_version"], "4.0.0")
+        self.assertEqual(self.anchor["compatibility_major"], 4)
+
+        self.assertEqual(self.historical_v3_anchor["anchor_version"], "3.0.0")
+        self.assertEqual(self.historical_v3_anchor["compatibility_major"], 3)
+        historical_v3_bytes = HISTORICAL_V3_ANCHOR_PATH.read_bytes()
+        self.assertEqual(len(historical_v3_bytes), 12604)
+        self.assertEqual(
+            hashlib.sha256(historical_v3_bytes).hexdigest(),
+            "b448601611b63fba505640b917f27e23c2d7fb61816ebd32ffd7a305dcb709c7",
+        )
 
         self.assertEqual(self.historical_v2_anchor["anchor_version"], "2.0.0")
         self.assertEqual(self.historical_v2_anchor["compatibility_major"], 2)
@@ -78,7 +91,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         supersession = self.anchor["supersession"]
         self.assertEqual(
             supersession["supersedes_for_new_compatible_selection"],
-            HISTORICAL_V2_ANCHOR_PATH.name,
+            HISTORICAL_V3_ANCHOR_PATH.name,
         )
         self.assertIs(
             supersession["historical_consumers_remain_pinned_to_recorded_major"],
@@ -86,21 +99,21 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         )
         self.assertIs(supersession["implicit_major_adoption_prohibited"], True)
 
-        historical_v2_supersession = self.historical_v2_anchor["supersession"]
+        historical_v3_supersession = self.historical_v3_anchor["supersession"]
         self.assertEqual(
-            historical_v2_supersession[
+            historical_v3_supersession[
                 "supersedes_for_new_compatible_selection"
             ],
-            LEGACY_V1_ANCHOR_PATH.name,
+            HISTORICAL_V2_ANCHOR_PATH.name,
         )
         self.assertIs(
-            historical_v2_supersession[
+            historical_v3_supersession[
                 "historical_consumers_remain_pinned_to_recorded_major"
             ],
             True,
         )
         self.assertIs(
-            historical_v2_supersession["implicit_major_adoption_prohibited"],
+            historical_v3_supersession["implicit_major_adoption_prohibited"],
             True,
         )
 
@@ -150,6 +163,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         for path in (
             LEGACY_V1_ANCHOR_PATH,
             HISTORICAL_V2_ANCHOR_PATH,
+            HISTORICAL_V3_ANCHOR_PATH,
             ANCHOR_PATH,
             VECTOR_PATH,
         ):
@@ -229,115 +243,91 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
     def test_issue_owned_durable_handoff_profile(self):
         profile = self.anchor["issue_owned_durable_handoff_profile"]
         self.assertEqual(len(profile["admission_conditions"]), 6)
+        self.assertEqual(profile["route"], "exact_airtable_record")
         self.assertEqual(
-            profile["delivery_routes"],
+            profile["qualification"],
+            "small_canonical_text_for_chatgpt_or_claude",
+        )
+        self.assertEqual(
+            profile["record_fields"],
             [
-                "qualified_direct_durable_object_retrieval",
-                "private_executor_owned_attempt_local_exact_retrieval",
+                "Handoff Key",
+                "Payload",
+                "Payload Bytes",
+                "SHA-256",
+                "Producer",
             ],
         )
         self.assertEqual(
             set(profile["evidence_identities"]),
             {
-                "durable_rendered_prompt",
+                "rendered_prompt",
+                "airtable_record",
+                "external_handoff_envelope",
                 "producing_receipt",
                 "delivery_operation",
-                "executor_acknowledgement",
                 "executor_attempt",
                 "attempt_receipt",
                 "executor_output",
                 "human_disposition",
             },
         )
+        attempt = profile["record_attempt"]
         for key in (
-            "containment_verification_required",
-            "exact_byte_size_and_sha256_required",
-            "provider_content_hash_recorded_when_available",
-            "provider_object_identity_required",
-            "provider_revision_recorded_when_available",
-            "provider_revision_unavailability_recorded_when_not_exposed",
-            "provider_revision_must_not_be_fabricated",
+            "one_new_record_per_attempt",
+            "frozen_record_never_updated",
+            "correction_creates_new_key_and_record",
+            "predecessor_lineage_external",
+            "key_uniqueness_not_assumed",
+            "record_immutability_not_assumed",
         ):
-            self.assertTrue(profile["durable_capture"][key])
-        self.assertNotIn(
-            "raw_provider_readback_required", profile["durable_capture"]
-        )
-        self.assertNotIn(
-            "provider_revision_required", profile["durable_capture"]
-        )
+            self.assertTrue(attempt[key])
 
-        integrity = profile["integrity_verification"]
+        envelope_fields = set(profile["external_envelope_fields"])
         self.assertEqual(
-            integrity["allowed_routes"],
-            [
-                "exact_raw_provider_readback",
-                "qualified_local_bytes_provider_checksum",
-            ],
+            envelope_fields,
+            {
+                "base_id",
+                "table_id",
+                "record_id",
+                "expected_handoff_key",
+                "utf8_no_bom_lf_and_final_newline_rule",
+                "expected_payload_bytes",
+                "expected_sha256",
+                "producer_executor_and_attempt_identity",
+                "predecessor_identity_when_applicable",
+            },
         )
-        qualified = integrity["qualified_local_bytes_provider_checksum"]
+
+        verification = profile["consumer_verification"]
         for key in (
-            "authoritative_stored_size_matches_frozen_local_byte_length",
-            "created_and_reobserved_provider_object_identity_matches",
-            "provider_checksum_algorithm_officially_documented_for_local_to_stored_equality",
-            "provider_checksum_computed_from_same_frozen_local_bytes",
-            "provider_reported_checksum_matches_local_provider_checksum",
-            "whole_file_sha256_kept_distinct_from_provider_checksum",
+            "retrieve_by_exact_record_id",
+            "fuzzy_or_key_search_as_retrieval_prohibited",
+            "exactly_one_result_required",
+            "expected_key_and_field_set_required",
+            "payload_reencoded_under_declared_text_rules",
+            "byte_length_and_sha256_independently_recomputed",
+            "recomputed_stored_and_external_values_must_agree",
+            "missing_multiple_stale_transformed_truncated_or_mismatched_fails_closed",
         ):
-            self.assertTrue(qualified[key])
-        self.assertFalse(qualified["raw_provider_readback_required_after_qualified_match"])
-        self.assertTrue(
-            integrity[
-                "unavailable_incomplete_ambiguous_or_unqualified_route_fails_closed"
-            ]
-        )
+            self.assertTrue(verification[key])
 
-        envelope = profile["delivery_envelope"]
+        attribution = profile["attribution"]
+        self.assertTrue(attribution["shared_airtable_user_is_not_executor_identity"])
+        self.assertTrue(attribution["producer_field_is_declared_metadata"])
         self.assertTrue(
-            envelope["external_to_referenced_rendered_prompt_bytes_and_digest"]
+            attribution["executor_attribution_remains_external_attempt_evidence"]
         )
-        self.assertTrue(
-            envelope["rendered_prompt_frozen_before_final_identity_derivation"]
-        )
-        self.assertTrue(
-            envelope["placeholder_self_identity_in_rendered_prompt_prohibited"]
-        )
-
-        producing_receipt = profile["producing_receipt"]
-        self.assertTrue(
-            producing_receipt["exactly_one_per_admitted_artifact_write"]
-        )
-        self.assertIn("attempt_receipt", producing_receipt["distinct_from"])
-        self.assertTrue(
-            producing_receipt[
-                "exact_reconciliation_reuses_or_repairs_to_exactly_one_receipt"
-            ]
-        )
-
-        reconciliation = profile["exact_reconciliation"]
-        for key in (
-            "limited_to_prior_ambiguous_absent_create_result",
-            "same_frozen_target_and_provider_object_identity_required",
-            "raw_readback_exact_match_required",
-            "no_second_write_proven",
-            "preexisting_object_without_these_facts_is_collision",
-        ):
-            self.assertTrue(reconciliation[key])
-
-        requirements = profile["coordination_state_requirements"]
-        self.assertEqual(set(requirements), set(profile["coordination_states"]))
-        self.assertIn("delivery_alone_insufficient", requirements["ACCEPTED"])
-        self.assertIn(
-            "acknowledgement_alone_insufficient", requirements["STARTED"]
-        )
-        self.assertIn(
-            "does_not_imply_correctness_human_acceptance_merge_release_or_adoption",
-            requirements["COMPLETED"],
-        )
-        self.assertIn("no_later_state_inferred", requirements["UNKNOWN"])
-        self.assertEqual(len(profile["admission_fail_closed_triggers"]), 5)
-        self.assertFalse(profile["transport_cleanup"]["delete_durable_prompt"])
-        self.assertFalse(
-            profile["transport_cleanup"]["requires_recurring_cleanup_automation"]
+        self.assertEqual(
+            set(profile["prohibited_normal_route_mechanics"]),
+            {
+                "file_provider_fallback",
+                "file_preview",
+                "download_link",
+                "attempt_local_prompt_download",
+                "mutable_record_update",
+                "copy_paste_as_exact_identity",
+            },
         )
 
     def test_reasoning_versioning_transport_and_fresh_selection(self):
@@ -368,11 +358,11 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
         )
 
         transport = self.anchor["transport_invariants"]
-        self.assertTrue(transport["fallback_changes_delivery_only"])
         self.assertEqual(
-            transport["selection_rule"],
-            "first_currently_available_permitted_route_in_declared_order",
+            transport["qualifying_small_canonical_text_route"],
+            "airtable_exact_record",
         )
+        self.assertTrue(transport["file_provider_is_not_normal_route_or_fallback"])
         self.assertIn("authority_handling", transport["must_preserve"])
 
     def test_anchor_excludes_repository_specific_operational_schema(self):
@@ -409,6 +399,7 @@ class PromptContractSemanticAnchorTests(unittest.TestCase):
 
         canonical_doc = (DOCS / "prompt-contracts.md").read_text(encoding="utf-8")
         self.assertIn(ANCHOR_PATH.name, canonical_doc)
+        self.assertIn(HISTORICAL_V3_ANCHOR_PATH.name, canonical_doc)
         self.assertIn(HISTORICAL_V2_ANCHOR_PATH.name, canonical_doc)
         self.assertIn(LEGACY_V1_ANCHOR_PATH.name, canonical_doc)
         self.assertIn(VECTOR_PATH.name, canonical_doc)

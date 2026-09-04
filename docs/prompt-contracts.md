@@ -13,16 +13,16 @@ owning repository may implement those mechanics under its local contract, but
 the implementation must preserve the boundaries defined here.
 
 The current versioned machine-readable companion for new selections is
-[`prompt-contract-semantic-anchors-v3.json`](prompt-contract-semantic-anchors-v3.json).
+[`prompt-contract-semantic-anchors-v4.json`](prompt-contract-semantic-anchors-v4.json).
 The historical
+[`prompt-contract-semantic-anchors-v3.json`](prompt-contract-semantic-anchors-v3.json),
 [`prompt-contract-semantic-anchors-v2.json`](prompt-contract-semantic-anchors-v2.json)
 and
 [`prompt-contract-semantic-anchors-v1.json`](prompt-contract-semantic-anchors-v1.json)
-remain immutable for compatibility-major v2 and v1 consumers. Version 3
-supersedes version 2 for new explicit compatible selection, while version 2
-continues to supersede version 1 within its recorded lineage. No consumer
-adopts a new major implicitly; replay and historical consumers remain pinned
-to their recorded v1 or v2 identity and exact bytes.
+remain immutable for their recorded consumers. Version 4 supersedes version
+3 for new explicit compatible selection; each earlier major retains its
+recorded lineage. No consumer adopts a new major implicitly; replay and
+historical consumers remain pinned to their recorded identity and exact bytes.
 RFC 8785 conformance cases are in
 [`prompt-contract-canonicalization-vectors-v1.json`](prompt-contract-canonicalization-vectors-v1.json).
 
@@ -397,20 +397,16 @@ fails closed and records diagnostic evidence when possible.
 
 Use this profile when exact rendered-prompt bytes become a dependency for an
 executor attempt, review, recovery, or replay. It is a compatible operational
-profile of the prompt contract and governed-artifact lifecycle, not a
-provider-specific storage schema, prompt-management platform, or requirement
-to preserve routine prompts.
+profile of the prompt contract and governed-artifact lifecycle. For qualifying
+small canonical-text ChatGPT/Claude handoffs, it uses the shared
+[`Airtable canonical-text handoff`](prompts.md#airtable-canonical-text-handoff).
+It is not a general Airtable artifact store, prompt-management platform, or
+requirement to preserve routine prompts.
 
 The candidate and storage-admission boundaries are inherited from
-[`Governed Artifact Capture`](evidence-lifecycle.md#governed-artifact-capture),
-and baseline capture mechanics are inherited from
-[`Direct Durable Capture`](evidence-lifecycle.md#direct-durable-capture). The
-conditions below project those owners onto rendered prompts and narrow capture
-with the dated-and-versioned name, no-autorename, provider identity,
-capability-conditional revision evidence, and content-hash requirements. They
-also add prompt-specific delivery,
-attempt-evidence, recovery, and cleanup semantics without creating a second
-governed-artifact owner.
+[`Governed Artifact Capture`](evidence-lifecycle.md#governed-artifact-capture).
+The conditions below project that owner onto rendered prompts and add only the
+prompt-specific identity, evidence, and recovery boundaries.
 
 ### Admission
 
@@ -441,54 +437,34 @@ that owner's storage contract before retention. Do not place non-issue material
 under an issue-like path, invent a planning issue solely to obtain storage, or
 introduce a new durable root merely for naming symmetry.
 
-When no existing owner qualifies, a routine prompt remains ordinary chat or
-attempt-local disposable mechanics as applicable. A prompt whose exact durable
-identity is required for an authorized downstream dependency fails storage
-admission until a natural durable owner is established; importance does not
-authorize an improvised destination. Another owner may define a narrower
-compatible profile, but it must preserve the semantic, identity, authority,
-verification, and fail-closed boundaries here rather than treating this
-issue-owned profile as a generic container.
+When no existing owner qualifies, a routine prompt follows the ordinary
+delivery decision model and does not gain material-prompt retention merely
+because Airtable carries it. A prompt whose exact durable identity is required
+for an authorized downstream dependency fails storage admission until a
+natural durable owner is established; importance does not authorize an
+improvised destination. Another owner may define a narrower compatible profile,
+but it must preserve the semantic, identity, authority, verification, and
+fail-closed boundaries here rather than treating this issue-owned profile as a
+generic container.
 
 ### One durable identity
 
-The owning storage contract selects one immutable issue-owned destination for
-the rendered prompt. Create it with one writer, a semantic versioned and dated
-name, absent-create semantics, no overwrite, and no autorename. Corrections use
-a new immutable version with predecessor lineage; do not create mutable
-`latest`, `current`, or status-driven aliases.
+The rendered prompt bytes are the canonical `Payload` under the shared
+Airtable contract. The owning storage contract selects the permitted base and
+table; reusable doctrine and adapters do not embed account-specific IDs.
 
-New text prompts use UTF-8 without a byte-order mark, LF line endings, an
-explicit final-newline rule, exact byte size, and whole-file SHA-256 over the
-exact rendered bytes. Freeze those local bytes before upload and derive every
-local identity value from that frozen byte sequence.
-
-After absent-create succeeds, prove preservation by exact raw-byte readback or
-by a qualified comparison of the same frozen local bytes with authoritative
-provider object identity, stored size, containment, and an officially
-documented provider checksum. Missing or mismatched required identity, size,
-checksum, or containment evidence fails closed. When the provider-integrity
-route is unavailable, incomplete, ambiguous, or unqualified, raw readback
-remains required.
-
-Record provider revision when the owning provider exposes it. Otherwise record
-explicitly that revision evidence is unavailable; never fabricate a revision
-or treat another identifier as its substitute. Provider checksums and ordinary
-whole-file SHA-256 remain distinct algorithms and evidence and must never be
-compared directly or described as equivalent.
-
-The owning storage contract, rather than this provider-neutral profile, defines
-the concrete provider, account, namespace, issue-path grammar, privacy,
-visibility, and retention values. Do not copy those project-specific values
-into reusable doctrine or executor adapters.
+Create one new record per attempt and never update it. Corrections use a new
+record and handoff key with predecessor lineage in the external envelope. The
+returned record ID is the provider identity for that attempt, but it is not
+proof of immutable content or unique key enforcement.
 
 ### External delivery envelope
 
 Freeze the exact rendered-prompt bytes before deriving their final size,
-SHA-256, provider object identity, provider revision evidence, or delivery
-route. Record those derived identities in an external delivery envelope or in
-delivery and producing-receipt evidence. The envelope is not part of the
-referenced rendered-prompt bytes or rendered-prompt digest.
+SHA-256, handoff key, record identity, or delivery route. Record those derived
+identities in the shared external Airtable handoff envelope or in delivery and
+producing-receipt evidence. The envelope is not part of the referenced
+rendered-prompt bytes or rendered-prompt digest.
 
 Do not embed a placeholder digest or other provisional self-identity in the
 rendered prompt and later describe it as the final identity. A copied,
@@ -499,100 +475,34 @@ Keep operator metadata, the external delivery envelope, rendered prompt,
 producing receipt, delivery evidence, and attempt receipt as separate
 boundaries. The semantic prompt contract remains separate from all of them.
 
-### Delivery
+### Delivery and evidence
 
-There is no separate durable exchange, handoff, inbox, registry, or transport
-root. Select delivery in this order:
+The producer creates and verifies one Airtable record, then emits the shared
+external envelope. The consumer retrieves that exact record ID and independently
+verifies the returned text before accepting it. Do not add a file download,
+preview, shared link, local retrieval copy, or file-provider fallback to this route.
 
-1. the executor retrieves the exact issue-owned durable object directly through
-   a currently qualified connector or provider route; or
-2. one private OS-managed executor-owned attempt-local retrieval carries the
-   same exact bytes when direct provider retrieval is unavailable or
-   unqualified.
+Keep the rendered prompt, Airtable record, external envelope, producing
+receipt, delivery evidence, executor attempt, attempt receipt, output, and
+human disposition distinct when the governing workflow requires those
+identities. A record, envelope, digest, or successful read grants no authority.
 
-The fallback is disposable transport mechanics, not a second durable artifact,
-planning surface, queue, registry, or authority source. Operator-mediated exact
-retrieval is permitted when the controller can verify the provider object and
-the executor can verify the local bytes. Copy/paste is not an exact-byte route
-unless the result is rendered, admitted, and identified as a new prompt.
+### Recovery and fresh execution
 
-Before acceptance, the receiving attempt verifies the durable identity,
-delivery identity, local byte size and SHA-256 where a local copy exists,
-encoding, BOM state, line endings, final-newline rule, and current authority.
-Fallback changes delivery only; it cannot change prompt bytes, semantic
-meaning, validation, provenance, evidence, authority handling, or required
-capabilities.
-
-### Evidence and coordination states
-
-Keep separate identities for:
-
-- the durable rendered prompt;
-- the producing receipt;
-- the delivery operation;
-- executor acknowledgement;
-- executor attempt;
-- attempt receipt;
-- executor output; and
-- human disposition.
-
-Every admitted durable prompt write inherits the requirement for exactly one
-distinct producing receipt from
-[`Producing Receipt And Compact Delivery`](evidence-lifecycle.md#producing-receipt-and-compact-delivery).
-It is not the rendered prompt, delivery evidence, executor acknowledgement,
-attempt receipt, output, or human disposition.
-
-`Reconciled exact` is limited to recovery after an ambiguous result from a
-prior absent-create attempt: the same frozen target and provider object identity
-already exist, raw readback exact-matches the intended bytes and identity, and
-the recovery proves that no second write occurred. Reuse the prior write's one
-producing receipt when it is verified; if that write completed without a
-receipt, recovery creates exactly one and records the ambiguity and lineage. A
-pre-existing object without those facts is a collision, not reconciliation.
-
-The smallest sufficient coordination evidence may report the following states
-only when their minimum predicates are met:
-
-| State | Minimum evidence |
-| --- | --- |
-| `PRESERVED` | One durable object was created and exact integrity was proved by raw provider readback or a qualified local-byte/provider-checksum comparison, or a prior ambiguous absent-create was reconciled exact under the raw-readback rule above; identity, size, format, digest or provider checksum as applicable, and containment matched. |
-| `DELIVERED` | One delivery operation identifies the exact rendered prompt, selected route, intended target, and observed delivery result. |
-| `ACCEPTED` | The receiving executor explicitly acknowledges the prompt identity; delivery alone is insufficient. |
-| `STARTED` | One unique executor attempt actually began; acknowledgement alone is insufficient. |
-| `COMPLETED` | The attempt reached a terminal successful execution result and records the output identity where applicable. Completion does not imply correctness, human acceptance, merge, release, or adoption. |
-| `FAILED` | A bounded failure class, attempt or delivery identity, and last verified state are recorded. |
-| `UNKNOWN` | Required evidence is unavailable; no later state is inferred. |
-
-Each state describes observed evidence under its owning operation; it is not
-workflow approval, lifecycle authority, transition permission, or evidence
-that a later state occurred. Preserve an append-only attempt receipt that binds
-the contract, prompt, selected route, delivery evidence, consumed digest,
-acting identity, current authority result, output identity, and terminal
-outcome as applicable.
-
-### Recovery, fresh execution, and cleanup
-
-Recovery follows the owning planning decision to the immutable rendered-prompt
-identity, delivery evidence, executor attempt receipt, and executor output,
-then freshly retrieves current repository, provider, planning, and authority
-state from their owners. Historical prompt bytes and receipts remain historical
-evidence; they never become current authority or current mutable state.
+Recovery follows the owning planning decision to the exact record and envelope,
+delivery evidence, executor attempt receipt, and executor output, then freshly
+retrieves current repository, provider, planning, and authority state from
+their owners. Historical records and receipts remain historical evidence; they
+never become current authority or current mutable state.
 
 Fresh execution selects current compatible inputs under current authority.
 Replay uses the recorded contract and exact historical inputs under the replay
 rules above. Do not present a new execution as replay when any required
 historical identity is missing or mismatched.
 
-This profile creates no durable transport object to clean. Remove only the
-private attempt-local retrieval after the attempt no longer depends on it and
-required delivery and attempt evidence is preserved. Revalidate containment and
-identity, and fail closed on the shared cleanup conditions in
-[`repo-readiness.md`](repo-readiness.md#repo-local-workflow-state). Never delete
-or rewrite the durable prompt as transport cleanup, and do not infer recurring
-cleanup or hygiene automation from this bounded rule.
-
-Preservation, delivery, acknowledgement, hashes, provider state, validation,
-receipts, execution, and cleanup transfer zero authority.
+Do not update or delete a frozen record as transport cleanup. Preservation,
+delivery, acknowledgement, hashes, provider state, validation, receipts, and
+execution transfer zero authority.
 
 ## Semantic Versioning
 

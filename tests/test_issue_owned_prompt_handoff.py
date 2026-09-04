@@ -19,9 +19,14 @@ def markdown_section(path, heading):
 class IssueOwnedPromptHandoffTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.owner_heading = "## Issue-Owned Durable Rendered-Prompt Handoff Profile"
-        cls.owner_link = (
+        cls.profile_heading = "## Issue-Owned Durable Rendered-Prompt Handoff Profile"
+        cls.profile_link = (
             "prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile"
+        )
+        cls.airtable_heading = "### Airtable canonical-text handoff"
+        cls.airtable_link = "prompts.md#airtable-canonical-text-handoff"
+        cls.airtable_contract = markdown_section(
+            DOCS / "prompts.md", cls.airtable_heading
         )
         cls.adapter_profiles = tuple(
             markdown_section(DOCS / relative_path, heading)
@@ -40,17 +45,23 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
                 ),
             )
         )
-        cls.bootstrap = markdown_section(
-            DOCS / "tool-adapters/chatgpt.md",
-            "### Dropbox Preview And Minimal Executor Handoff",
-        )
 
-    def test_prompt_contract_is_the_unique_profile_owner(self):
-        owners = []
-        for path in DOCS.rglob("*.md"):
-            if self.owner_heading in path.read_text(encoding="utf-8"):
-                owners.append(path.relative_to(DOCS).as_posix())
-        self.assertEqual(owners, ["prompt-contracts.md"])
+    def test_shared_rules_and_material_profile_each_have_one_owner(self):
+        markdown = {
+            path: path.read_text(encoding="utf-8") for path in DOCS.rglob("*.md")
+        }
+        profile_owners = [
+            path.relative_to(DOCS).as_posix()
+            for path, contents in markdown.items()
+            if self.profile_heading in contents
+        ]
+        airtable_owners = [
+            path.relative_to(DOCS).as_posix()
+            for path, contents in markdown.items()
+            if self.airtable_heading in contents
+        ]
+        self.assertEqual(profile_owners, ["prompt-contracts.md"])
+        self.assertEqual(airtable_owners, ["prompts.md"])
 
         for relative_path in (
             "evidence-lifecycle.md",
@@ -59,50 +70,79 @@ class IssueOwnedPromptHandoffTests(unittest.TestCase):
             "tool-adapters/claude.md",
             "tool-adapters/chatgpt.md",
         ):
-            contents = (DOCS / relative_path).read_text(encoding="utf-8").lower()
-            self.assertIn(self.owner_link, contents, relative_path)
+            contents = markdown[DOCS / relative_path].lower()
+            self.assertIn(self.profile_link, contents, relative_path)
+
+        for relative_path in (
+            "tool-adapters/codex.md",
+            "tool-adapters/claude.md",
+            "tool-adapters/chatgpt.md",
+        ):
+            contents = markdown[DOCS / relative_path].lower()
+            self.assertIn(self.airtable_link, contents, relative_path)
+
+    def test_shared_contract_has_exact_fields_and_attempt_rules(self):
+        fields = (
+            "`Handoff Key`",
+            "`Payload`",
+            "`Payload Bytes`",
+            "`SHA-256`",
+            "`Producer`",
+        )
+        field_block = self.airtable_contract[
+            self.airtable_contract.index("required fields:") :
+            self.airtable_contract.index("Freeze `Payload`")
+        ]
+        for field in fields:
+            self.assertEqual(field_block.count(field), 1, field)
+
+        for requirement in (
+            "one new Airtable record per producer attempt",
+            "never update it",
+            "correction creates a new key and record",
+            "retrieves by exact record ID",
+            "recomputes byte length and SHA-256",
+            "fails closed",
+        ):
+            self.assertIn(requirement.lower(), self.airtable_contract.lower())
 
     def test_reusable_projections_do_not_embed_provider_configuration(self):
         delivery_envelope = markdown_section(
             DOCS / "prompts.md",
             "## Issue-Owned Durable Prompt Delivery Envelope Add-On",
         )
-        for section in (delivery_envelope, *self.adapter_profiles):
+        for section in (
+            self.airtable_contract,
+            delivery_envelope,
+            *self.adapter_profiles,
+        ):
             self.assertNotRegex(section, re.compile(r"ns:\d+//"))
-            self.assertNotRegex(section, re.compile(r"\bid:[A-Za-z0-9_-]+"))
+            self.assertNotRegex(section, re.compile(r"\bapp[A-Za-z0-9]{10,}\b"))
+            self.assertNotRegex(section, re.compile(r"\btbl[A-Za-z0-9]{10,}\b"))
             self.assertNotRegex(
                 section,
                 re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"),
             )
 
-    def test_chatgpt_handoff_has_one_bounded_bootstrap(self):
-        block_start = self.bootstrap.index("```text")
-        metadata = self.bootstrap[:block_start]
-        blocks = re.findall(r"```[^\n]*\n(.*?)\n```", self.bootstrap, re.DOTALL)
-        self.assertEqual(len(blocks), 1)
-        executable = blocks[0]
-
-        for field in (
-            "Thread routing:",
-            "Recommended model:",
-            "Recommended reasoning level:",
-            "Reason:",
+    def test_prompt_handoff_drops_file_delivery_ceremony(self):
+        combined = "\n".join(
+            (
+                self.airtable_contract,
+                markdown_section(
+                    DOCS / "prompts.md",
+                    "## Issue-Owned Durable Prompt Delivery Envelope Add-On",
+                ),
+                *self.adapter_profiles,
+            )
+        ).lower()
+        for obsolete in (
+            "download link",
+            "attempt-local",
+            "prompt preview",
+            "provider file id",
+            "transport-only latch",
         ):
-            self.assertIn(field, metadata)
-            self.assertNotIn(field, executable)
-
-        fields = dict(
-            line.split(":", 1)
-            for line in executable.splitlines()
-            if ":" in line
-        )
-        self.assertLessEqual(len([line for line in executable.splitlines() if line]), 8)
-        self.assertTrue(
-            {"Download", "Attempt directory basename", "Local filename", "Execute"}
-            <= fields.keys()
-        )
-        for key in ("Attempt directory basename", "Local filename"):
-            self.assertRegex(fields[key].strip(), re.compile(r"\A[A-Za-z0-9._-]+\Z"))
+            self.assertNotIn(obsolete, combined)
 
 
 if __name__ == "__main__":
