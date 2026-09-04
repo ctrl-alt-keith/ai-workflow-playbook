@@ -75,6 +75,18 @@ class GlobalBootstrapTests(unittest.TestCase):
         ):
             self.assertFalse((PROJECTIONS / removed_copy).exists())
 
+    def test_router_projects_chat_work_latch_to_adapter_owner(self) -> None:
+        contents = ROUTER.read_text(encoding="utf-8")
+        normalized = " ".join(contents.split())
+
+        self.assertIn("remain in Chat unless", normalized)
+        self.assertIn("explicitly asks", normalized)
+        self.assertIn("explicitly accepts", normalized)
+        self.assertIn("docs/tool-adapters/chatgpt.md", contents)
+        self.assertNotIn("task complexity", contents.lower())
+        self.assertNotIn("browser", contents.lower())
+        self.assertNotIn("file work", contents.lower())
+
     def test_validator_accepts_exact_blocks_with_unrelated_local_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

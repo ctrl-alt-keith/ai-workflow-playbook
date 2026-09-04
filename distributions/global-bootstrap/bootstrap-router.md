@@ -1,5 +1,9 @@
 # AI Workflow Playbook Bootstrap
 
+On a ChatGPT Chat surface, remain in Chat unless the operator explicitly asks
+to use Work or explicitly accepts an offered Work transition. The complete
+rule is owned by `docs/tool-adapters/chatgpt.md`.
+
 Before the first project action, and again only when the task/repository
 materially changes, retrieve the current `docs/start-here.md` from
 `ctrl-alt-keith/ai-workflow-playbook` and follow its routing and startup
