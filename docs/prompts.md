@@ -26,26 +26,19 @@ engineering, not methodology or architecture evidence.
 
 ## Task-Shape Surface Selection And Thin Handoffs
 
-Select a target surface or execution role by semantic role, execution locality,
-required tools, and deliverable. Keep work with an interactive controller while
-the next useful result is discussion, judgment, clarification, steering, or
-review. Move to a general-purpose bounded executor when a bounded multi-step
-outcome or non-repository deliverable has emerged. Move to a repository
-executor when completion materially depends on repository locality, terminal
-commands, tests, version control, worktrees, commits, pull requests, or code
-review.
-
-Difficulty, model tier, and reasoning setting do not select a surface. A task
-changes surface only after a bounded outcome and execution contract have
-emerged. Ordinary discussion, brainstorming, and conceptual work remain
-lightweight and do not inherit repository ceremony. The matching target adapter
-owns each concrete product or executor projection.
+Apply the core model's
+[`interactive and execution surface`](core-model.md#interactive-and-execution-surfaces)
+roles. Keep discussion, judgment, clarification, steering, review, and
+disposition interactive. Use an execution surface once a bounded outcome needs
+tools, mutation, validation, or evidence production. The matching adapter owns
+each concrete product mapping; difficulty, model choice, and product identity
+do not select the role.
 
 Keep these dimensions distinct:
 
 | Dimension | Meaning |
 | --- | --- |
-| Interaction surface | Where a human discusses, steers, reviews, or delegates. |
+| Surface role | Interactive or execution. |
 | Executor identity | The runtime or agent that performs the bounded work. |
 | Task shape | Interactive reasoning, a general delegated outcome, or repository execution. |
 | Model or reasoning choice | An execution setting that does not by itself change semantic role. |
@@ -85,27 +78,12 @@ that state instead of reproducing it. Include, as applicable:
 - required locality and tools;
 - validation, outputs, and completion or stop boundary.
 
-These are semantic fields, not an operational package schema. The pointed
-package may preserve the complete contract, accepted inputs, source and
-artifact identities, prior decisions, receipts, validation evidence, and a
-recorded next permitted action. The target must retrieve and verify the exact
-manifest or sealed-package identity before relying on that payload. For
-material execution, use the exact identity evidence required by the owning
-package contract, such as an immutable path plus digest, file identity, attempt
-identity, or version. A mutable issue directory, package root, or bare folder
-path is navigation only; it is not the governing package identity.
-
-The envelope declares human direction, bounded authority, and the owning
-authority reference but creates zero authority itself. Stored contracts,
-next-action statements, paths, digests, packages, prompts, receipts,
-validation, and successful retrieval also create or transfer zero authority. A
-recorded next action remains historical or asserted instruction until the
-current acting identity and live authority are verified from their owner.
-
-If the exact package identity is inaccessible, unresolved, stale, mismatched,
-or ambiguous, stop before affected execution or return an explicit
-non-authorizing partial result. Do not reconstruct missing contract, authority,
-or evidence from conversation memory.
+These are semantic fields, not a package schema. Verify the exact identity
+required by the owning package contract before relying on its payload; a mutable
+directory or bare folder path is navigation only. The envelope declares bounded
+authority and its live owning reference but creates none. If package identity
+or current authority is unavailable, stale, mismatched, or ambiguous, stop the
+affected execution rather than reconstructing it from conversation.
 
 ### Target-shaped projections
 
@@ -181,16 +159,6 @@ Do not use a keyword-only rule: `proposal` and `design` do not prohibit a
 repository artifact when the human explicitly requests a design document or
 proposal pull request. Conversely, recorded later implementation intent does
 not authorize Git in the discussion phase.
-
-### Provider-neutral examples
-
-| Situation | Explicit kickoff boundary |
-| --- | --- |
-| Ready kickoff | Current authority and prerequisites pass, so the controller may advance the governing task, preserve the exact downstream prompt and receipt under the applicable evidence contract, verify their identities, and return the handoff. It performs none of the delegated repository execution. |
-| Blocked kickoff | A prerequisite or authority check fails. The controller does not falsely advance the task; it may record the exact blocker when that task-owned write is useful and authorized. No downstream execution is implied. |
-| Architecture thread | The controller may write and preserve the task-owned decision package. Architecture adoption remains a separate human decision against the reviewed package identity. |
-| Destructive workflow | The controller may produce and preserve a read-only manifest. Deletion remains separately human-approved and is not authorized by the manifest. |
-| Delegated repository implementation | The controller may preserve the downstream prompt and task-owned planning evidence. The repository executor owns repository mutation only under its own bounded authority and prerequisites. |
 
 ## Thread Routing And Configuration Continuity
 
@@ -331,38 +299,19 @@ patch that requires the operator to splice text into an older prompt.
 
 ## Prompt Contract Identity
 
-For material execution that may be reviewed, recovered, or replayed, apply the
-canonical semantics in [`prompt-contracts.md`](prompt-contracts.md). Keep the
-immutable semantic prompt contract separate from the append-only attempt
-receipt and from the exact rendered prompt bytes.
-
-The immutable semantic contract is created and hashed before hydration or
-rendering. It defines meaning, compatibility, validation, authority-reference,
-reasoning, transport, evidence, and fail-closed requirements without including
-selected or derived digests. The attempt receipt references that contract and
-records selected sources, derived identities, delivery, current safety-policy
-observation, live-authority outcome, validation, and execution evidence.
-
-The prompt carries bounded instruction and evidence; it does not own canonical
-doctrine, durable workflow state, evidence acceptance, or approval. Prompt
-text, contract digests, validation success, receipts, checkpoints, and
-transport delivery cannot grant authority. The execution or adoption layer
-must re-read live durable authority immediately before action.
-
-Fresh attempts select compatible inputs once and keep them immutable. Replay
-resolves the recorded contract and exact inputs without reading current mutable
-sources or silently upgrading an adapter, renderer, validator, reasoning
-recommendation, or fallback policy. Replay reproduces authorized inputs, not
-deterministic model output.
+For material execution that may be reviewed, recovered, or replayed, apply
+[`prompt-contracts.md`](prompt-contracts.md). It owns the separation among the
+immutable semantic contract, rendered bytes, append-only attempt receipt,
+authority references, fresh selection, and replay. This template layer does not
+redefine those identities or turn them into authority.
 
 The Playbook-owned machine-readable anchors and canonicalization vectors are:
 
 - [`prompt-contract-semantic-anchors-v3.json`](prompt-contract-semantic-anchors-v3.json)
 - [`prompt-contract-canonicalization-vectors-v1.json`](prompt-contract-canonicalization-vectors-v1.json)
 
-They encode semantic anchors and conformance evidence only. They are not an
-operational schema, prompt generator, hydrator, renderer, receipt, or workflow
-engine.
+They are semantic anchors and conformance evidence, not an operational workflow
+schema.
 
 Use lint-safe placeholders such as `[repository]`, `[validation_path]`, or
 backticked tokens in Markdown templates. Angle-bracket placeholders can be
@@ -393,41 +342,19 @@ Reason:
 
 ## Produced-Artifact Classification
 
-Explicit human readiness or classification language is authoritative input to
-this classification. When the human requests an exact, complete, executable,
-ready to run, final, ready to paste, ready to execute, or complete runnable
-prompt or handoff, do not weaken that classification with assistant-authored
-framing such as `illustrative`, `sample-only`, `conceptual`, `provisional`,
-`rough`, or `not finalized`. Apply the complete-prompt presentation and
-transport contract unless a stronger safety, authority, or capability
-constraint requires refusal or an explicit blocked result. If unresolved facts
-prevent a truthful ready-to-run artifact, resolve them from their owners or
-return that explicit blocked result; do not silently downgrade the artifact.
+Classify the artifact actually produced before choosing presentation. Explicit
+human readiness language is authoritative input, but request words such as
+`example`, `sample`, `roughly`, `preview`, or `demo` do not make an otherwise
+complete or substantially executable artifact conceptual. A substantially
+executable artifact supplies enough task, scope, constraints, sources,
+validation, and stop information for a downstream executor to act.
 
-Classify the artifact actually produced before choosing its presentation. The
-user's request framing can describe the desired level of detail, but words such
-as `example`, `sample`, `roughly`, `formatting`, `preview`, or `demo` do not
-make a produced artifact conceptual when it is complete or substantially
-executable for a downstream executor. This includes framing such as `show me
-the format`, `sample prompt`, or `example implementation prompt`.
-
-A produced artifact is substantially executable when it gives a downstream
-executor enough concrete task, scope, constraint, source, validation, and stop
-information to act as a prompt rather than merely illustrating a phrase or
-layout. Resolve known repository, task, and other required prompt-local values;
-do not retain a known-value placeholder to avoid this classification.
-
-Classify a complete or substantially executable artifact as a complete prompt
-for presentation and transport. That classification is the output of the
-delivery model's first two stages and must not be reinterpreted by recipient,
-capability, presentation, or renderer selection. This preserves the matching
-adapter's concrete model and reasoning metadata and the inline two-block shape
-when inline presentation is the selected route.
-
-Keep genuinely conceptual discussion, quoted source material, isolated
-snippets, and incomplete fragments lightweight. They are not complete prompts
-solely because they concern prompt design, and do not require file-backed
-transport.
+Resolve known prompt-local values and classify complete or substantially
+executable output as a complete prompt in stages 1 and 2 below. Later recipient,
+capability, presentation, or renderer selection cannot downgrade it. If missing
+facts prevent a truthful ready-to-run artifact, resolve them or return the
+owning blocked result. Genuine discussion, quoted material, isolated snippets,
+and incomplete fragments remain lightweight.
 
 ## Prompt Delivery Decision Model
 
@@ -468,42 +395,15 @@ recipient of a prompt that is semantically directed to a machine executor.
 | 7 | `renderer-selection` | Frozen presentation selection | `lightweight`, `thin-handoff`, `canonical-inline-two-block`, or `none` | Inline rendering is reachable only from `inline`; a renderer cannot change upstream state. |
 | 8 | `delivery-outcome` | Current complete frozen stage-5-through-7 decision record and selected renderer result | Executed selected delivery action plus its evidence, or explicit fallback or blocked result | Apply only the record's presentation and renderer selection. Emit only the selected surface and preserve the owning failure contract. |
 
-Stage 5 has a closed evidence-provenance boundary. Its qualification evidence
-record accepts only observations about the current runtime route, classified
-by the current owning route-qualification contract against the named route
-class and exact identity. A delegated task's target state, acceptance
-requirement, desired future capability, implementation intent, prompt body, or
-explanatory rationale is not current-route evidence and must not enter this
-record. Those inputs may shape the delegated implementation prompt, but they
-cannot create `route-disqualified` or `unresolved` transport state. If the task
-is intended to strengthen, replace, or repair the same capability area, stage
-5 still classifies the route that exists now from its current observation and
-owning contract. Only that owning-contract classification may create route
-disqualification; excluded task-target evidence is rejected rather than
-reinterpreted as a current-route failure.
-
-Route qualification and route diagnostics are separate fields in the decision
-record. `qualified-with-known-limitation` retains the limitation and its owning
-evidence while keeping the selected route qualified. `route-disqualified`
-means the owning contract explicitly makes the observed failure incompatible
-with a named route class and exact route or destination identity and records
-the owning reason separately from diagnostic limitations. A current route-
-disqualification record controls a `route-disqualified` qualification. When
-re-evaluation selects a different route or remains unresolved, preserve the
-superseded failure only as a prior route-disqualification record; it does not
-describe or disqualify the newly selected route. At initial stage 5 resolution,
-an owning contract may reject an evaluated candidate route without implying
-that route was previously selected. Downstream re-entry, however, requires the
-frozen stage 5 record to show a selected `qualified` or
-`qualified-with-known-limitation` route and the new owning-contract failure to
-identify that same route class, exact identity, and reason. A later
-presentation, renderer, or application layer must not promote a diagnostic
-limitation into `route-disqualified` or use it to select a different transport.
-Stage 4 `unresolved` means the execution recipient was not resolved; stage 5
-`unresolved` means capability or transport never qualified or remains
-unresolved. A route that never qualified is not a route that was selected and
-later disqualified, and a caller assertion cannot supply the missing frozen
-selection.
+Stage 5 accepts only current runtime-route observations classified by the
+owning route-qualification contract against the named route class and exact
+identity. Task goals, desired capabilities, prompt content, and implementation
+rationale cannot qualify or disqualify the route. Keep qualification,
+diagnostics, and owning-contract disqualification as separate fields:
+`qualified-with-known-limitation` remains qualified, while
+`route-disqualified` requires the owning contract's exact route identity and
+reason. Stage 4 `unresolved` concerns the recipient; stage 5 `unresolved`
+concerns capability or transport.
 
 Apply these terminal mappings deterministically:
 
@@ -538,44 +438,18 @@ Apply these terminal mappings deterministically:
   the bounded re-evaluation sequence below; its resulting stage 5 state drives
   this terminal mapping.
 
-The final delivery application consumes the current complete frozen decision
-record and executes the selected action. A caller cannot bypass the record and
-request a complete-prompt renderer directly. For `file-backed`, the record
-makes inline rendering unreachable: application invokes the selected file
-route and returns the thin handoff. It must not inspect diagnostic state to
-substitute the canonical inline renderer. For `inline`, it invokes only the
-canonical inline renderer recorded through the legitimate inline decision.
-Application failure may enter the bounded re-evaluation rule below, but
-application itself cannot recompute transport.
+Delivery consumes only the current complete frozen decision record. A caller
+cannot request another renderer directly or use diagnostics to bypass the
+record's file-backed, inline, lightweight, or blocked mapping.
 
-The once-per-stage rule applies within one evaluation. If a selected route
-becomes explicitly `route-disqualified` before delivery completes, the same
-delivery attempt may perform exactly one capability re-evaluation. A known
-non-disqualifying limitation does not activate re-entry. Preserve the stage 1
-through 4 outputs unchanged and activate only stages 5 through 8 against the
-newly observed capability state. The sequence is: classify the observed
-failure as route-disqualifying under its owning contract against the same
-route class and exact identity selected in the frozen stage 5 record, perform
-the one downstream-only re-evaluation, then apply the terminal mapping from the
-new stage 5 state. The prior route failure does not preempt a file route with a
-different exact identity that the new capability evidence qualifies and
-permits; that route remains `file-backed` and carries the old failure only as
-prior evidence. Reasserting qualification for the same failed identity does
-not create a new route and follows the owning fallback or blocked mapping.
-Record in the new stage 5 output that the bounded re-evaluation was consumed.
-When no new file route qualifies, apply only the owning fallback or blocked
-mapping and preserve the prior disqualification reason. If the re-evaluated
-route also fails, terminate as `blocked` with that newly observed
-`route-disqualified` reason; do not re-enter again, relabel the selected route
-as merely `unresolved`, or recompute the artifact, viewer, or execution
-recipient. If capability instead remains unresolved, retain the prior failure
-reason as evidence while the new stage 5 qualification remains `unresolved`.
-After downstream re-evaluation resolves stages 5 through 7, materialize a new
-complete frozen decision record before application continues and supersede the
-prior record. Every later application failure consumes only that current
-record. A stale or superseded record cannot restart application or bounded
-re-entry, and replaying a superseded pre-re-evaluation record is not another
-valid delivery transition.
+If the owning contract disqualifies a selected route before delivery completes,
+the attempt may re-run stages 5 through 8 once while preserving stages 1
+through 4. The failure must name the same selected route class and identity.
+Freeze a superseding record before resuming; a different newly qualified route
+may proceed with the old failure retained as prior evidence, while the same
+failed identity follows the owning fallback or blocked rule. A second route
+failure terminates as `blocked`; stale records cannot restart delivery or
+re-entry.
 
 Conversational wording is evidence available to the production,
 classification, and recipient-resolution stages. It is not a lookup table and
@@ -774,13 +648,11 @@ the operator or viewer identity:
   [connector-availability rule](start-here.md#connector-availability-is-runtime-evidence)
   before choosing this fallback.
 
-Preview is not raw-byte verification, approval, a send gate, delivery evidence,
-executor acknowledgement, a coordination state, or authority. A connector
-confirmation needed after the exact create or preview plan is an external
-runtime prerequisite. It authorizes only the named connector operation, does
-not repair missing task authorization, and is not a separate prompt-approval
-workflow. A Playbook-authorized operation remains blocked when that prerequisite
-is unsatisfied; Playbook prose cannot waive it.
+Preview is not verification, approval, delivery evidence, acknowledgement, or
+authority. Connector-mandated confirmation follows the external-prerequisite
+boundary in the
+[`prompt freeze and transport-only latch`](#prompt-freeze-and-transport-only-latch);
+it does not become a separate prompt-approval workflow.
 
 Prompt governance is a separate selection. A material prompt that passes its
 admission test additionally applies the

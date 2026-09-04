@@ -7,6 +7,21 @@ Repository tasks translate those role boundaries into the interaction modes in
 implementation, review/audit, and orchestration/prompt-authoring. Select the
 mode before acting so the AI role matches the human's intended delegation.
 
+## Playbook Philosophy
+
+The Playbook exists to make AI-assisted work more reliable, proportional, and
+understandable without making ordinary work harder. Add workflow only when it
+prevents a demonstrated failure or preserves an important authority, evidence,
+execution, or safety boundary. Prefer the smallest reusable rule with one
+canonical owner, and remove duplication, obsolete ceremony, and explanatory
+machinery when they no longer improve behavior.
+
+Use one maintenance test: does the change reduce ambiguity or protect a real
+boundary enough to justify its complexity? A change should leave the Playbook
+easier to apply correctly, not merely more completely specified. Incidents are
+evidence for improving an underlying rule, not permanent doctrine or an archive
+of every failure and fix.
+
 ## Operating Principles
 
 These principles apply to AI-assisted work whose evidence, authority, review,
@@ -180,22 +195,20 @@ semantic change.
 - Summarize changes, evidence, and open questions
 - Help capture reusable patterns after delivery
 
-## Interactive Control And Bounded Execution
+## Interactive And Execution Surfaces
 
-Interactive control and bounded execution are semantic roles, not universal
-product identities or authority classes. An interactive controller supports
-human-led clarification, scoping, authority decisions, decomposition,
-steering, review, and disposition. A bounded executor performs a defined
-outcome under an explicit execution contract. Difficult or consequential
-reasoning may remain with the controller while it is still interactive
-judgment; a bounded deliverable and execution contract, not difficulty or
-model choice, establish the execution handoff.
+Interactive and execution surfaces are semantic roles, not product identities
+or authority classes. Interactive surfaces support conversation, intent,
+steering, judgment, review, disposition, and final human-controlled closure.
+Execution surfaces perform bounded tool-backed work, mutation, validation, and
+evidence production under an explicit execution contract.
 
-The controller does not become canonical, universally authoritative, or a
-required intermediary for every workflow. Human direction and the source that
-owns each fact or decision retain their existing authority. Independently
-initiated or automated work may begin under another owning contract without an
-interactive controller.
+A product may expose either or both roles. Route by task shape and current
+capability, not vendor, product, difficulty, or model choice. Consequential
+completion decisions normally return to the interactive surface unless an
+owning workflow explicitly places that authority elsewhere. The interactive
+surface is not canonical or a required intermediary; human direction and each
+fact or decision's owning source retain authority.
 
 A semantic handoff declares the current bounded action, the existing human
 authority and its owning reference, the sources and constraints that apply,
@@ -209,13 +222,12 @@ resolved.
 
 ### Independent Review As A Third Role
 
-Independent review is a semantic role in the same sense as interactive control
-and bounded execution: it is scoped to a run rather than to a product, vendor,
-model, effort setting, or thread. A reviewer produces evidence about work it
-did not itself produce.
+Independent review is likewise scoped to a run rather than to a product,
+vendor, model, effort setting, or thread. A reviewer produces evidence about
+work it did not itself produce.
 
-This section establishes only that the role exists alongside interactive
-control and bounded execution.
+This section establishes only that the role exists alongside interactive and
+execution surfaces.
 [`external-ai-reviewer.md`](external-ai-reviewer.md) remains the canonical
 owner of what independence requires, how a reviewer is selected, and how
 reviewer failure or substitution is handled. Do not restate those requirements
@@ -348,36 +360,3 @@ reconstructing the applicable contract, current authority, accepted inputs,
 completed work, and next permitted action, then revalidating any mutable source
 state. If that contract cannot be reconstructed or no longer applies, stored
 history cannot silently authorize continuation.
-
-## Workflow
-
-The default loop is:
-
-1. Align on the goal and the current phase.
-2. Let AI execute the next bounded unit of work.
-3. Validate outputs against the contract, tests, or review criteria.
-4. Tighten based on feedback.
-5. Capture reusable learning before the next arc begins.
-
-## Feedback Loops
-
-Reliable AI-assisted work depends on short feedback loops:
-
-- Execution loop: produce a change, then validate it quickly
-- Review loop: summarize what changed so a human can inspect the right things
-- Capture loop: turn proven practice into reusable guidance before context fades
-
-Use [`trust-topology.md`](trust-topology.md) as an optional vocabulary when the
-confidence level, validation evidence, or promotion path for a reusable pattern
-is unclear.
-
-## Discipline
-
-Speed is only useful when paired with disciplined execution. This model assumes:
-
-- Clear scope boundaries
-- Frequent validation
-- Explicit pauses when uncertainty increases
-- Written capture of reusable lessons
-
-Without those controls, AI work tends to drift, overproduce, or hide weak reasoning behind fluent output.

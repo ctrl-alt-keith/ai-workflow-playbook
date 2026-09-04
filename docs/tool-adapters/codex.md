@@ -1,24 +1,13 @@
 # Codex Adapter
 
-This adapter records Codex-specific deltas on top of the core playbook. Apply
-it to Codex runs wherever Codex is the selected executor. The adapter boundary
-follows the selected Codex run or executor and does not depend on how a
-particular client packages that surface. It records the specialized repository
-mechanics for that distinct run/executor boundary. Use it with `docs/start-here.md`,
-`docs/core-model.md`, `docs/source-first-retrieval.md`,
-`docs/repo-readiness.md`, and the target repo's `AGENTS.md`; do not treat it as
-a second copy of those rules.
-
-## Codex-Specific Quirks
-
-- Codex can move quickly from brief to implementation, so phase boundaries need
-  to be explicit.
-- Codex works best with narrow tasks, named constraints, and a clear validation
-  path.
-- Codex can produce fluent summaries that still require source inspection and
-  human judgment on scope, tradeoffs, and completion.
-- Small tasks stay small when they extend an existing documented seam and avoid
-  new abstractions unless clearly required.
+This adapter records Codex-specific deltas on top of the core playbook. A Codex
+task combines an interactive thread for steering and disposition with an
+execution workspace for bounded repository work, validation, and evidence.
+Apply the core
+[`surface roles`](../core-model.md#interactive-and-execution-surfaces) to the
+concrete capability in use. Use this adapter with `docs/start-here.md`,
+`docs/core-model.md`, `docs/source-first-retrieval.md`, `docs/repo-readiness.md`,
+and repo-local `AGENTS.md`; do not treat it as a second copy of those rules.
 
 ## GPT-5.6 Model And Reasoning Routing
 
@@ -96,20 +85,9 @@ For a CHILD TASK, independently select the lowest-cost sufficient model and
 effort for that bounded child and retain the child evidence required by the
 governing workflow.
 
-If a lower-capability SAME THREAD encounters an escalation trigger, delegate
-the unresolved question to a bounded stronger child or make an explicit
-fresh-thread transition where supported; do not silently mutate the parent. If
-a stronger SAME THREAD reaches mechanical follow-up, it may delegate lint,
-hashes, inventories, fixture execution, or evidence packaging to a cheaper
-child without changing the parent. This default preserves context and decision
-continuity, reproducibility, execution provenance, and qualification
-boundaries; it does not claim that an in-thread configuration change necessarily
-harms quality.
-
-For reviews, preserve reviewer independence separately from model capability.
-Keep the selected substantive external reviewer (for example, qualified Claude)
-when the review contract requires it. Internal or mechanical review follows
-this matrix; Sol is not automatic for a narrow, deterministic fallback.
+When a SAME THREAD crosses a capability boundary, use a bounded child or an
+explicit fresh-thread transition rather than silently changing the parent.
+Preserve reviewer independence separately from model capability.
 
 ### Visible Thread Names
 
@@ -134,29 +112,9 @@ control, Codex applies that exact name itself before substantive work. If the
 control is unavailable, Codex continues the substantive task and reports the
 limitation; naming remains non-blocking and navigation only.
 
-The CAK-106 experience supports this split as observed workflow evidence, not
-a benchmark: protocol ambiguity, authority architecture, controller semantics,
-and architecture synthesis justified stronger reasoning, while repeated focused
-validation, hashes/inventories, Git checks, fixture execution, evidence
-packaging, and review-follow-up plumbing were plausible Terra or Luna work. Do
-not infer quantitative savings without measured usage evidence.
-
-For a Codex task using any selected model, prefer a compact, outcome-oriented
-task envelope that:
-
-- names the current work layer for a long task: research, design,
-  implementation, review, or coordination
-- states observable success criteria, constraints, dependencies, permissions,
-  stop conditions, and the boundary of completion
-- points to the governing playbook and repo-local sources instead of copying
-  their doctrine into the prompt
-- requires validation output or other direct evidence before completion is
-  claimed
-
-Do not add generic instructions such as "think step by step," "be thorough,"
-or "minimize tool calls." Describe the outcome and evidence that matter. A
-changed model string or a successful tool call is progress evidence, not proof
-that the task is complete.
+Use compact outcome-oriented task envelopes from [`prompts.md`](../prompts.md)
+and resolve only the Codex-specific model, effort, naming, and execution fields
+here. Do not copy shared doctrine or add generic reasoning instructions.
 
 ## Goal Mode
 
@@ -343,38 +301,15 @@ timing invariant across repositories; it is not a per-turn retrieval rule.
 
 Before repo-scoped work:
 
-- Apply the domain-independent operating principles in
-  [`core-model.md`](../core-model.md#operating-principles). The items below are
-  Codex execution deltas, not a separate statement of those principles.
-- Apply the interaction mode preflight in
-  [`repo-readiness.md`](../repo-readiness.md#interaction-mode-preflight).
-- Confirm the Codex project, execution container, current directory, and git
-  state match the repository and branch or worktree named in the task.
-- If the task targets a different repository, an unclear worktree, or a
-  cross-repo comparison while the current context is repo-scoped, pause and
-  confirm before editing.
-- Apply the source-first retrieval model in
-  [`source-first-retrieval.md`](../source-first-retrieval.md): retrieve or
-  revalidate authoritative repository, PR, issue, file, CI, log, artifact, and
-  external-state sources before relying on them.
-- Apply the runtime verification rule in
-  [`start-here.md`](../start-here.md#connector-availability-is-runtime-evidence);
-  do not infer that a connector capability is absent because its tool has not
-  been loaded or inspected. Follow the shared GitHub command-selection rule in
-  [`repo-readiness.md`](../repo-readiness.md#command-form-and-intent-visibility).
-- For policy-sensitive changes, apply the repo-family alignment check in
-  [`repo-readiness.md`](../repo-readiness.md#repo-family-policy-alignment)
-  before implementation.
-- For governance, CI, release, or review-process changes, apply the governance
-  operating model in
-  [`repo-readiness.md`](../repo-readiness.md#governance-operating-model):
-  distinguish safety and integrity protections from coordination overhead
-  before proposing new gates or widening existing ones.
-- Treat summaries, completion reports, memory, pasted descriptions, generated
-  notes, and local branch state as navigation only until the relevant source
-  has been inspected.
-- If required source state is unavailable, report it as unknown or blocked
-  instead of inferring from conversation.
+Apply the repository floor and task-activated owners selected by
+[`start-here.md`](../start-here.md). Confirm the Codex project, execution
+container, current directory, and Git state match the named repository and
+worktree before editing. Use
+[`source-first-retrieval.md`](../source-first-retrieval.md) for current source
+state and [`repo-readiness.md`](../repo-readiness.md) for interaction mode,
+policy alignment, command form, validation, and delivery. Stop on a repository,
+worktree, authority, or required-source mismatch rather than inferring through
+it.
 
 Codex should not treat vague repair language as permission to mutate a repo
 when the surrounding context indicates advisory review, audit, orchestration, or
@@ -414,62 +349,14 @@ the canonical decision model: default to one Codex thread for one coherent
 review surface, fan out only when worker lanes are bounded before launch, and
 keep integration or merge decisions with the orchestrator or human.
 
-The ecosystem-level scaling direction prefers one top-level orchestration
-prompt that delegates safe parallel work through explicit task envelopes. For
-Codex, treat this as a compatibility constraint as well as a workflow
-preference: some Codex execution surfaces reject or cannot reliably honor
-requests for full-history conversation forking with explicit worker roles.
-
-Codex prompts should therefore avoid asking workers to inherit the complete chat
-history, parent-agent role, implicit project state, or hidden constraints. Do
-not rely on phrases such as "fork this conversation" or "use the same role and
-context as above" as the source of authority for worker behavior.
-
-Before child dispatch, the controller resolves current startup activation for
-the bounded child task, establishes the repository floor, resolves every
-child-activated canonical owner or source, and identifies exact source or
-evidence identities when required. The controller places the selected
-references or bounded retrieval instructions in the child envelope and retains
-ownership of the judgment that the context and source set is sufficient.
-
-Prefer standalone worker prompts that include:
-
-- repository and working directory
-- interaction mode and expected deliverable
-- goal, scope, and explicit exclusions
-- relevant source evidence or retrieval instructions
-- repo-family policy alignment expectations for policy-sensitive changes
-- constraints, validation path, and stop conditions
-- branch, worktree, file-surface, or non-overlap expectations
-- reporting expectations for summary, validation, blockers, and residual risks
-
-The child may retrieve exact controller-selected sources, inspect its bounded
-assigned repository, issue, PR, or file surface, and report unavailable,
-stale, conflicting, or insufficient named sources or a newly encountered
-workflow or source activation trigger. It may not turn "read whatever you
-need" into self-authorized broad hydration; certify sufficiency from
-confidence, task success, inherited full, partial, or no conversation history,
-visible files, filesystem access, tool access, or successful retrieval; or
-silently widen the source set, workflow, scope, or authority.
-
-When a child encounters a newly activated owner or source, it reports the
-trigger under its stop/report contract. The controller re-runs activation
-routing and sends a bounded follow-up, reissues the task, handles the work
-directly, or stops the lane; the child does not independently widen itself and
-declare the new set sufficient.
-
-Worker authority stops at the assigned task envelope. A worker may implement,
-validate, commit, and open or prepare the requested PR surface. It should not
-merge, enable auto-merge, update other workers' branches, absorb unassigned
-issues, or continue into downstream reconciliation unless the human explicitly
-authorizes that specific step. Context transfer, sandbox or permission
-inheritance, filesystem visibility, and execution capability do not widen this
-authority. Reconciliation remains controller-owned under
+Some Codex surfaces cannot reliably inherit a full conversation with explicit
+worker roles. Give each child a standalone bounded envelope from
+[`prompts.md`](../prompts.md), including the selected repository, sources,
+scope, authority, validation, delivery, and stop boundary. The controller owns
+startup activation and context sufficiency; a child reports newly activated or
+missing sources instead of widening its own source set. Worker authority ends
+at the envelope, and reconciliation remains controller-owned under
 [`orchestration-and-parallelism.md`](../orchestration-and-parallelism.md).
-
-This is a Codex execution quirk, not a universal playbook rule. Other adapters
-may describe different context-passing mechanisms when their execution surfaces
-support them, but Codex orchestration should remain self-contained by default.
 
 ## Command Execution
 
@@ -607,64 +494,25 @@ as though the reviewer performed that verification.
 
 ## Workflow-State Progress Rendering
 
-This is the Codex rendering of the core model's
-[`Operator Observability`](../core-model.md#operator-observability) guidance; it
-does not redefine that guidance. For material proposal-first or multi-stage
-work, report observable workflow state instead of narrating model activity.
-Keep updates concise and include only what helps the human understand or verify
-the current boundary:
+Apply the core model's
+[`Operator Observability`](../core-model.md#operator-observability) guidance.
+Report Codex-visible phase, source, validation, artifact, blocker, and stop
+state that changes what the operator should trust or do; aggregate routine
+success and do not narrate hidden reasoning.
 
-- current phase and exact artifact identities;
-- satisfied prerequisites and the evidence that satisfied them;
-- substantive findings, disposition counts, and unresolved findings;
-- material capability gaps and actor-to-source verification attribution;
-- invariants and scope exclusions that remain preserved;
-- unmet transition criteria; and
-- the exact next permitted action or stop condition.
-
-For bounded bulk work, aggregate routine successful operations instead of
-narrating each item, and keep complete item results in the owning durable
-evidence. Surface blockers and human gates promptly. Honor a mid-run
-presentation preference without restarting when the active runtime supports
-it. When the client displays tool output that Codex cannot suppress, avoid
-duplicating it in model-authored updates and report the limitation without
-claiming control.
-
-Successful tool calls, model output, validation, and progress text are evidence
-of activity, not proof of completion or authority. Re-read current sources at
-source-first and post-merge boundaries rather than rendering stale planned
-state. Do not expose or request private chain-of-thought; workflow progress is
-grounded in artifacts, source state, decisions, validation, and receipts.
-
-## Governed Artifact Capture
+## Governed Artifact Capture Projection
 
 Apply the shared contract in
-[`evidence-lifecycle.md#governed-artifact-capture`](../evidence-lifecycle.md#governed-artifact-capture);
-this adapter only projects it onto Codex execution. Before retaining bytes,
-use source-first retrieval to verify the candidate and the owning workflow's
-storage admission, destination, and narrower constraints.
-
-After admission, use one writer and exclusive no-overwrite creation. Read the
-result back immediately and verify exact bytes, size, SHA-256, declared text
-format, final-newline state, and containment where applicable. Report exact
-capability gaps. Describe distinct evidence as `evidenced separately` without
-implying an independent actor.
-
-Select the smallest permitted durable append-only producing-receipt surface
-that remains sufficient for recovery. Return a compact conversation summary;
-chat is not the producing receipt. Do not substitute chat, scratch, unverified
-transport, or a Git commit for required durable retention.
-
-This adapter owns no artifact taxonomy, storage destination, planning state,
-provider state, or human decision. Capture and receipt evidence transfer zero
-authority.
+[`evidence-lifecycle.md#governed-artifact-capture`](../evidence-lifecycle.md#governed-artifact-capture)
+and the owning workflow's storage constraints. Codex supplies the permitted
+write, exact verification, receipt, and compact report; it does not select a
+new owner or turn capture evidence into authority.
 
 ## External API Claims
 
-When code, tests, docs, risks, or user-facing claims depend on external public
-API behavior, apply the engineering baseline's official-source expectation.
-For Codex, that means checking official docs, references, changelogs, or release
-notes when tool access is available instead of relying on model memory.
+Apply the official-source requirement in
+[`engineering-baseline.md`](../engineering-baseline.md#public-api-baselines)
+when a Codex task depends on external API behavior.
 
 ## Local Permissions
 
@@ -979,20 +827,6 @@ is not an arbitrary destructive command. This does not delegate the decision
 that a target is disposable. Do not use autonomy to widen scope, reinterpret
 intent, or take ownership of merge, release, tag, uncertain deletion,
 security-sensitive, permissions-sensitive, or policy-interpretation decisions.
-
-## Stop Conditions
-
-Pause and ask for human input when:
-
-- the repo, project, branch, or worktree context appears wrong
-- the requested scope is ambiguous or has shifted
-- required source state cannot be retrieved or verified
-- more than one valid path exists and the choice depends on human judgment
-- validation fails in a way that suggests broader work than requested
-- the next step is merge, release, tag, destructive, externally visible, or
-  permissions-sensitive
-- the work touches sensitive auth, secrets, permissions, or policy
-  interpretation
 
 ## Delivery Notes
 
