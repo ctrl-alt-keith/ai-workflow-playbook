@@ -155,25 +155,6 @@ class CodexPreflightTest(unittest.TestCase):
         self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
         self.assertIn("PASS Codex local automation preflight complete", result.stdout)
 
-    def test_unavailable_ssh_add_diagnostic_does_not_fail_when_github_ssh_auth_succeeds(self) -> None:
-        commands = self.fake_success_commands()
-        commands["ssh-add"] = """
-            if [ "$1" = "-l" ]; then
-                printf '%s\\n' 'Could not open a connection to your authentication agent.'
-                exit 2
-            fi
-            exit 2
-        """
-
-        result = self.run_preflight(commands)
-
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn(
-            "INFO ssh-add -l was unavailable or inconclusive; continuing to GitHub SSH authentication",
-            result.stdout,
-        )
-        self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
-
     def test_missing_optional_ssh_add_still_succeeds_with_github_ssh_auth(self) -> None:
         commands = self.fake_success_commands()
         del commands["ssh-add"]

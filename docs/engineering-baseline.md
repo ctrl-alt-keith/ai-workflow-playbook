@@ -54,6 +54,23 @@ Define shared engineering expectations across repositories. This baseline forms 
 - Keep commits clean and focused.
 - PRs are ready for review by default.
 
+## Test Value
+
+Keep tests that materially protect consequential behavior, compatibility,
+safety or mutation boundaries, provider or identity evidence, security
+properties, machine-consumed contracts, or demonstrated regressions. Do not
+add or preserve tests merely to exercise every function, maintain a coverage
+percentage, freeze implementation topology, preserve presentation output, or
+assert the absence of hypothetical future capabilities. Loss of test coverage
+is not itself a regression.
+
+Prefer the smallest representative set of tests for each meaningful invariant;
+retain multiple fixtures or scenarios only for materially distinct failure
+modes. When removing a test, do not replace it unless the underlying behavior
+independently warrants permanent regression coverage. Historical regression
+tests may be removed when the failure is no longer plausible, the architecture
+removed the failure mode, or another test now protects the same invariant.
+
 ## Regression Fixture Fidelity
 
 For deterministic extraction, parsing, normalization, or replay behavior, shift

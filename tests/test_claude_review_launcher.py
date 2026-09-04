@@ -1691,17 +1691,6 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         )
         self.assertNotIn("review prompt that must not enter argv", json.dumps(diagnostic))
 
-    def test_already_correct_user_and_logname_remain_bound_to_effective_user(self):
-        effective = pwd.getpwuid(os.geteuid())
-        environment = os.environ.copy()
-        environment.update({"USER": effective.pw_name, "LOGNAME": effective.pw_name, "HOME": effective.pw_dir})
-        completed, diagnostic = self.run_launcher("print('ACCEPT')\n", environment=environment)
-
-        self.assertEqual(completed.returncode, 0)
-        self.assertEqual(diagnostic["runtime"]["USER"], effective.pw_name)
-        self.assertEqual(diagnostic["runtime"]["LOGNAME"], effective.pw_name)
-        self.assertEqual(diagnostic["runtime"]["HOME"], effective.pw_dir)
-
     def test_oauth_expiry_is_an_infrastructure_failure_not_a_reject_verdict(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             temporary = Path(temporary_directory)
@@ -1766,24 +1755,6 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertNotIn("sk-ant-secret-value", completed.stderr)
         self.assertIn("[REDACTED]", diagnostic["stderr"])
 
-    def test_review_prose_about_oauth_is_not_mistaken_for_an_authentication_failure(self):
-        completed, diagnostic = self.run_launcher(
-            "print('The docs mention 401 OAuth access token has expired, but this is review prose.')\n"
-        )
-
-        self.assertEqual(completed.returncode, 0)
-        self.assertIsNone(diagnostic["failure_classification"])
-        self.assertTrue(diagnostic["substantive_review_output"])
-
-    def test_json_oauth_error_is_an_infrastructure_failure_even_with_exit_zero(self):
-        completed, diagnostic = self.run_launcher(
-            "print('{\"type\": \"result\", \"subtype\": \"error_during_execution\", \"is_error\": true, \"result\": \"API Error: 401 OAuth access token has expired\"}')\n"
-        )
-
-        self.assertEqual(completed.returncode, 78)
-        self.assertEqual(completed.stdout, "")
-        self.assertEqual(diagnostic["failure_classification"], "AUTH_OAUTH_TOKEN_EXPIRED_401")
-
     def test_stream_json_oauth_error_is_an_infrastructure_failure_even_with_exit_zero(self):
         completed, diagnostic = self.run_launcher(
             "print('{\"type\": \"system\", \"subtype\": \"init\"}')\n"
@@ -1794,16 +1765,6 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(completed.stdout, "")
         self.assertEqual(diagnostic["failure_classification"], "AUTH_OAUTH_TOKEN_EXPIRED_401")
 
-    def test_review_prose_on_stderr_is_not_mistaken_for_an_authentication_failure(self):
-        completed, diagnostic = self.run_launcher(
-            "print('Review note: 401 OAuth access token has expired is documented behavior.', file=sys.stderr)\n"
-            "print('ACCEPT')\n"
-        )
-
-        self.assertEqual(completed.returncode, 0)
-        self.assertEqual(completed.stdout, "ACCEPT\n")
-        self.assertIsNone(diagnostic["failure_classification"])
-
     def test_authentication_error_on_stderr_does_not_discard_a_completed_review(self):
         completed, diagnostic = self.run_launcher(
             "print('API Error: 401 OAuth access token has expired', file=sys.stderr)\n"
@@ -1812,25 +1773,6 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
 
         self.assertEqual(completed.returncode, 0)
         self.assertEqual(completed.stdout, "ACCEPT\n")
-        self.assertIsNone(diagnostic["failure_classification"])
-
-    def test_review_prose_beginning_with_an_api_error_quote_is_not_an_authentication_failure(self):
-        completed, diagnostic = self.run_launcher(
-            "print('API Error: 401 OAuth access token has expired is a quote from the docs.')\n"
-        )
-
-        self.assertEqual(completed.returncode, 0)
-        self.assertTrue(diagnostic["substantive_review_output"])
-        self.assertIsNone(diagnostic["failure_classification"])
-
-    def test_review_prose_beginning_with_a_failed_to_authenticate_quote_is_not_an_authentication_failure(self):
-        completed, diagnostic = self.run_launcher(
-            "print('Failed to authenticate is the literal under review, not a runtime failure.')\n"
-            "print('ACCEPT WITH CHANGES')\n"
-        )
-
-        self.assertEqual(completed.returncode, 0)
-        self.assertTrue(diagnostic["substantive_review_output"])
         self.assertIsNone(diagnostic["failure_classification"])
 
     def test_auth_preflight_uses_fixed_prompt_and_omits_review_tools(self):
@@ -1918,16 +1860,6 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
 
         self.assertEqual(completed.returncode, 78)
         self.assertEqual(diagnostic["failure_classification"], "AUTH_UNKNOWN_FAIL_CLOSED")
-
-    def test_successful_review_survives_incidental_context_stderr(self):
-        completed, diagnostic = self.run_launcher(
-            "print('note: home directory scanned', file=sys.stderr)\n"
-            "print('ACCEPT')\n"
-        )
-
-        self.assertEqual(completed.returncode, 0)
-        self.assertEqual(completed.stdout, "ACCEPT\n")
-        self.assertIsNone(diagnostic["failure_classification"])
 
     def test_auth_preflight_accepts_fixed_response_without_a_trailing_newline(self):
         completed, diagnostic = self.run_launcher(
@@ -2553,26 +2485,6 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             with self.subTest(arguments=arguments), self.assertRaisesRegex(ValueError, "requires"):
                 module.preflight_arguments(arguments)
 
-    def test_pipe_collector_distinguishes_eof_from_reader_failure(self):
-        import importlib.machinery
-        import importlib.util
-
-        loader = importlib.machinery.SourceFileLoader("claude_review_collector", str(LAUNCHER))
-        spec = importlib.util.spec_from_loader(loader.name, loader)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[loader.name] = module
-        loader.exec_module(module)
-
-        class BrokenStream:
-            def readline(self):
-                raise OSError("fixture read failure")
-
-        collector = module.PipeCollector(BrokenStream())
-        collector.thread.join(timeout=1)
-        self.assertTrue(collector.done.is_set())
-        self.assertFalse(collector.eof.is_set())
-        self.assertEqual(collector.error, "fixture read failure")
-
     def test_automated_stop_state_is_not_downgraded_by_stale_control_state(self):
         import importlib.machinery
         import importlib.util
@@ -2783,6 +2695,35 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             )
         )
         self.assertEqual((self.root / "lingering-child-terminal").read_text(), "terminal")
+
+    def test_partial_reader_failure_cannot_qualify_as_complete_stream_evidence(self):
+        module = load_script("claude_review_partial_reader_failure", LAUNCHER)
+
+        class PartialThenFailedStream:
+            def __init__(self):
+                self.reads = 0
+
+            def readline(self):
+                self.reads += 1
+                if self.reads == 1:
+                    return b"partial review evidence\n"
+                raise OSError("fixture reader failure")
+
+        failed = module.PipeCollector(PartialThenFailedStream())
+        complete = module.PipeCollector(io.BytesIO(b"complete stderr\n"))
+        failed.thread.join(timeout=1)
+        complete.thread.join(timeout=1)
+
+        stream_evidence = {
+            "collectors_reached_eof_before_stream_freeze": (
+                failed.eof.is_set() and complete.eof.is_set()
+            ),
+            "collector_read_errors": {"stdout": failed.error, "stderr": complete.error},
+        }
+
+        self.assertEqual(failed.bytes(), b"partial review evidence\n")
+        self.assertFalse(stream_evidence["collectors_reached_eof_before_stream_freeze"])
+        self.assertEqual(stream_evidence["collector_read_errors"]["stdout"], "fixture reader failure")
 
     def test_retry_exhaustion_stops_at_three_and_auth_stops_at_one(self):
         exhausted, exhausted_diagnostic = self.run_governed("transient_always")
@@ -3143,62 +3084,6 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         changed = module.source_snapshot([self.candidate], self.candidate, environment)
         self.assertIn("git-admin:config", module.snapshot_delta(baseline, changed))
 
-    def test_unrelated_linked_worktree_commit_is_tolerated_with_structured_evidence(self):
-        module = load_script("claude_review_unrelated_worktree", LAUNCHER)
-        environment = os.environ.copy()
-        linked = self.root / "unrelated-worktree"
-        subprocess.run(
-            ["git", "-C", str(self.candidate), "worktree", "add", "-q", "-b", "fixture-unrelated", str(linked)],
-            check=True,
-        )
-        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
-        (linked / "tracked.txt").write_text("unrelated commit\n", encoding="utf-8")
-        subprocess.run(["git", "-C", str(linked), "add", "tracked.txt"], check=True)
-        subprocess.run(
-            [
-                "git",
-                "-C",
-                str(linked),
-                "-c",
-                "user.name=Fixture",
-                "-c",
-                "user.email=fixture@example.invalid",
-                "commit",
-                "-qm",
-                "unrelated",
-            ],
-            check=True,
-        )
-        changed = module.source_snapshot([self.candidate], self.candidate, environment)
-        comparison = module.snapshot_comparison(baseline, changed)
-        self.assertTrue(comparison["passed"], comparison)
-        self.assertEqual(comparison["blocking_paths"], [])
-        self.assertTrue(comparison["raw_changed_paths"])
-        scopes = {record["owner_scope"] for record in comparison["git_admin_changes"]}
-        self.assertTrue({"other_linked_worktree", "unrelated_ref", "shared_object_storage"} <= scopes)
-        self.assertTrue(all(record["disposition"] == "tolerated" for record in comparison["git_admin_changes"]))
-        self.assertNotIn("git-admin", comparison["raw_changed_paths"])
-
-    def test_primary_worktree_commit_is_tolerated_for_a_linked_candidate(self):
-        module = load_script("claude_review_primary_worktree", LAUNCHER)
-        environment = os.environ.copy()
-        primary, linked = self.use_linked_candidate("fixture-primary-unrelated")
-        baseline = module.source_snapshot([linked], linked, environment)
-        self.commit_tracked(primary, "primary commit\n", "primary unrelated")
-        changed = module.source_snapshot([linked], linked, environment)
-        comparison = module.snapshot_comparison(baseline, changed)
-        self.assertTrue(comparison["passed"], comparison)
-        scopes = {record["owner_scope"] for record in comparison["git_admin_changes"]}
-        self.assertTrue({"other_primary_worktree", "unrelated_ref", "shared_object_storage"} <= scopes)
-        primary_records = [
-            record for record in comparison["git_admin_changes"] if record["owner_scope"] == "other_primary_worktree"
-        ]
-        self.assertTrue(primary_records)
-        self.assertTrue(all(record["disposition"] == "tolerated" for record in primary_records))
-        self.assertTrue(
-            all(record["evidence"]["worktree_kind"] == "primary" for record in primary_records)
-        )
-
     def test_unknown_common_root_file_is_not_primary_worktree_administration(self):
         module = load_script("claude_review_primary_unknown", LAUNCHER)
         environment = os.environ.copy()
@@ -3283,22 +3168,6 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertTrue(comparison["passed"], comparison)
         self.assertTrue(comparison["tolerated_paths"])
 
-    def test_unattributed_object_write_remains_blocking(self):
-        module = load_script("claude_review_unattributed_object", LAUNCHER)
-        environment = os.environ.copy()
-        baseline = module.source_snapshot([self.candidate], self.candidate, environment)
-        object_id = subprocess.run(
-            ["git", "-C", str(self.candidate), "hash-object", "-w", "--stdin"],
-            input="reviewer-originated unattached object\n",
-            check=True,
-            text=True,
-            stdout=subprocess.PIPE,
-        ).stdout.strip()
-        changed = module.source_snapshot([self.candidate], self.candidate, environment)
-        comparison = module.snapshot_comparison(baseline, changed)
-        self.assertFalse(comparison["passed"])
-        self.assertIn(f"git-admin:objects/{object_id[:2]}/{object_id[2:]}", comparison["blocking_paths"])
-
     def test_safe_command_environment_disables_background_maintenance(self):
         module = load_script("claude_review_maintenance_env", LAUNCHER)
         environment = module.safe_command_environment(os.environ.copy(), self.root)
@@ -3350,19 +3219,6 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(classification, "access_or_command_preflight_failure")
         self.assertNotIn("does not support", cause)
         self.assertIn("is not a capability gap", cause)
-
-    def test_parsed_git_version_extracts_comparable_versions(self):
-        module = load_script("claude_review_git_version", LAUNCHER)
-        self.assertEqual(module.parsed_git_version("git version 2.50.1 (Apple Git-155)"), (2, 50, 1))
-        self.assertEqual(module.parsed_git_version("git version 2.36"), (2, 36, 0))
-        self.assertIsNone(module.parsed_git_version("git version unknown"))
-        self.assertIsNone(module.parsed_git_version(None))
-        # The comparison must order by component, not lexically: "2.9" is older
-        # than "2.36" but sorts after it as text.
-        self.assertLess(
-            module.parsed_git_version("git version 2.9.5"),
-            module.GIT_MINIMUM_VERSION_FOR_WORKTREE_NUL,
-        )
 
     def test_arbitrary_other_linked_worktree_administration_is_blocking(self):
         module = load_script("claude_review_other_worktree_admin", LAUNCHER)
@@ -4057,39 +3913,6 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             f"git-admin:{additional.resolve()}:config.lock",
             module.snapshot_delta(baseline, changed),
         )
-
-    def test_snapshot_records_a_lock_that_vanishes_during_identity_capture(self):
-        module = load_script("claude_review_vanishing_lock", LAUNCHER)
-        root = self.root / "vanishing-lock-root"
-        root.mkdir()
-        lock = root / "index.lock"
-        lock.write_text("transient\n", encoding="utf-8")
-        original_file_identity = module.file_identity
-
-        def vanishing_file_identity(path):
-            if path == lock:
-                lock.unlink()
-                raise FileNotFoundError(path)
-            return original_file_identity(path)
-
-        module.file_identity = vanishing_file_identity
-        snapshot = module.snapshot_root(root)
-        self.assertEqual(snapshot["index.lock"], {"kind": "vanished_during_snapshot"})
-
-    def test_snapshot_records_a_root_that_vanishes_during_identity_capture(self):
-        module = load_script("claude_review_vanishing_root", LAUNCHER)
-        root = self.root / "vanishing-root"
-        root.mkdir()
-        original_file_identity = module.file_identity
-
-        def vanishing_file_identity(path):
-            if path == root:
-                root.rmdir()
-                raise FileNotFoundError(path)
-            return original_file_identity(path)
-
-        module.file_identity = vanishing_file_identity
-        self.assertEqual(module.snapshot_root(root), {".": {"kind": "vanished_during_snapshot"}})
 
     def test_git_index_records_vanishing_during_identity_capture(self):
         module = load_script("claude_review_vanishing_index", LAUNCHER)

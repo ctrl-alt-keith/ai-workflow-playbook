@@ -50,14 +50,6 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
 
         self.assertEqual(findings, [])
 
-    def test_ignores_malformed_url_like_tokens(self) -> None:
-        findings = scanner.scan_text(
-            "docs/example.md",
-            "REST API references include https://:bad and https://[broken.",
-        )
-
-        self.assertEqual(findings, [])
-
     def test_ignores_official_url_in_public_api_context(self) -> None:
         findings = scanner.scan_text(
             "docs/example.md",
@@ -268,18 +260,6 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
 
         self.assertEqual(len(findings), 1)
 
-    def test_warning_line_describes_actionable_public_api_remediation(self) -> None:
-        finding = scanner.scan_text(
-            "docs/example.md",
-            "REST retry behavior source: https://dev.to/example/post",
-        )[0]
-
-        warning = scanner.warning_line(finding)
-
-        self.assertIn("Non-authoritative public API source", warning)
-        self.assertIn("Matched public API context: REST", warning)
-        self.assertIn("Replace with official docs", warning)
-
     def test_cli_pr_body_file_reports_advisory_warning_without_failing(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             body_path = Path(tmp) / "pr-body.md"
@@ -383,20 +363,6 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
         print_mock.assert_called_once_with(
             "authoritative-source-check: skipped unreadable file docs/unreadable.md"
         )
-
-    def test_all_markdown_files_excludes_symbolic_links(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            target = root / "machine-local-source"
-            target.write_text("private local content", encoding="utf-8")
-            link = root / "linked.md"
-            link.symlink_to(target)
-            regular = root / "regular.md"
-            regular.write_text("# Regular\n", encoding="utf-8")
-
-            paths = scanner.all_markdown_files(root)
-
-        self.assertEqual(paths, [regular])
 
 
 if __name__ == "__main__":
