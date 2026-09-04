@@ -12,27 +12,13 @@ generator, state store, schema implementation, or lifecycle orchestrator. An
 owning repository may implement those mechanics under its local contract, but
 the implementation must preserve the boundaries defined here.
 
-The current versioned machine-readable companion for new selections is
-[`prompt-contract-semantic-anchors-v4.json`](prompt-contract-semantic-anchors-v4.json).
-The historical
-[`prompt-contract-semantic-anchors-v3.json`](prompt-contract-semantic-anchors-v3.json),
-[`prompt-contract-semantic-anchors-v2.json`](prompt-contract-semantic-anchors-v2.json)
-and
-[`prompt-contract-semantic-anchors-v1.json`](prompt-contract-semantic-anchors-v1.json)
-remain immutable for their recorded consumers. Version 4 supersedes version
-3 for new explicit compatible selection; each earlier major retains its
-recorded lineage. No consumer adopts a new major implicitly; replay and
-historical consumers remain pinned to their recorded identity and exact bytes.
-RFC 8785 conformance cases are in
-[`prompt-contract-canonicalization-vectors-v1.json`](prompt-contract-canonicalization-vectors-v1.json).
-
 ## Semantic Layers
 
 Keep these layers distinct:
 
 | Layer | Responsibility |
 | --- | --- |
-| Semantic meaning | Immutable prompt-contract purpose, phase, mode, guarantees, compatibility, authority references, validation requirements, and expected evidence. |
+| Semantic meaning | Immutable prompt-contract purpose, phase, mode, guarantees, authority references, validation requirements, and expected evidence. |
 | Selected attempt inputs | Exact sources and implementations selected once for a fresh attempt or resolved exactly for replay. |
 | Derived evidence | Source manifest, hydrated context, validation results, digests, checkpoint lineage, and append-only attempt receipt. |
 | Executor representation | Product-neutral requirements mapped by a representation adapter and emitted by a deterministic renderer. |
@@ -62,8 +48,6 @@ The durable artifact classes are:
 
 Material implementations must keep distinct identities for:
 
-- schema version;
-- canonicalization scheme and version;
 - semantic prompt contract;
 - validation profile;
 - validator;
@@ -79,18 +63,15 @@ Material implementations must keep distinct identities for:
 - runtime safety-policy observation.
 
 An identity names one boundary only. A contract digest is not a rendered
-prompt digest, a schema version is not an adapter version, and a transport
-selection is not the transport policy.
+prompt digest, and a transport selection is not the transport policy.
 
 ## Immutable Contract Boundary
 
 Create and hash the immutable semantic contract before hydration or rendering.
 The contract may include:
 
-- contract identity and semantic version;
-- schema and canonicalization requirements;
+- contract identity;
 - purpose, phase, and mode;
-- compatibility constraints;
 - source ownership classes and reference requirements;
 - authority-source references and the non-authoritative asserted action;
 - required capabilities and product-neutral reasoning class;
@@ -153,7 +134,7 @@ failed attempt valid, or authorize another attempt.
 A source manifest is an ordered inventory of exact source identities and byte
 references selected for one attempt. It records provenance and selection; it
 does not create source authority. Selection comes from declared ownership and
-compatibility constraints, never opportunistic filesystem discovery.
+task constraints, never opportunistic filesystem discovery.
 
 ### Hydrated context
 
@@ -188,40 +169,9 @@ that profile. Both are selected once for a fresh attempt, recorded in the
 receipt, and exact-matched for replay. Validation output is evidence; neither
 the profile, validator, nor a passing result grants authority.
 
-## Canonicalization And Digests
+## Exact Rendered Prompt Bytes
 
-### Structured identities
-
-Structured semantic-contract, source-manifest, hydrated-context, receipt, and
-checkpoint bodies use the JSON Canonicalization Scheme in
-[RFC 8785](https://www.rfc-editor.org/rfc/rfc8785.html), identified as
-`RFC8785-JCS`, canonicalization version `1`.
-
-The requirements are:
-
-- input satisfies the I-JSON constraints in
-  [RFC 7493](https://www.rfc-editor.org/rfc/rfc7493.html);
-- canonical output is UTF-8 with no byte-order mark;
-- object ordering, primitive serialization, and escaping follow RFC 8785;
-- Unicode strings preserve their exact code-point sequences; no NFC, NFD, or
-  other Unicode normalization occurs;
-- invalid Unicode, including unpaired surrogates, is rejected;
-- duplicate object names, non-finite numbers, and numeric values that cannot be
-  represented compatibly by the declared I-JSON/JCS constraints are rejected;
-- no insignificant whitespace is emitted; and
-- an unknown or incompatible canonicalization major fails before identity
-  production or comparison.
-
-Hash canonical UTF-8 bytes with SHA-256. The textual digest form is
-`sha256:<64 lowercase hexadecimal characters>`.
-
-Do not reinterpret or rewrite historical prompt hashes. A historical digest
-continues to identify the exact byte boundary under which it was created.
-
-### Rendered prompt bytes
-
-Rendered prompt bytes are not JCS. New deterministic renderers must declare and
-enforce:
+Deterministic renderers must declare and enforce:
 
 - UTF-8 encoding;
 - no byte-order mark;
@@ -238,21 +188,18 @@ contract explicitly assigns them another identity.
 A fresh execution creates a new attempt under current authority and the
 accepted operational contract.
 
-- The semantic contract declares compatibility and selection constraints.
+- The semantic contract declares selection constraints.
 - Exact source blobs, hydrator, representation adapter, renderer,
   validation profile, validator, model recommendation metadata, and transport
   inputs are selected once for the new attempt.
 - Selection completes before hydration and the selected identities are
   immutable for that attempt.
-- Schema and canonicalization majors match exactly.
-- Semantic sources and implementations fall within explicit compatible ranges.
-- A new major is never adopted implicitly.
 - Missing, ambiguous, duplicated, conflicting, stale, out-of-range, or
   guarantee-weakening inputs fail closed.
 
-"Current compatible" means eligible at new-attempt selection time. It never
-means a moving dependency within an attempt. Drift may justify a later fresh
-attempt, but it cannot mutate an existing fresh attempt or replay.
+Eligibility is resolved at new-attempt selection time. It never creates a
+moving dependency within an attempt. Drift may justify a later fresh attempt,
+but it cannot mutate an existing fresh attempt or replay.
 
 ## Replay
 
@@ -261,8 +208,7 @@ does not promise deterministic executor or model output.
 
 Replay exact-matches:
 
-- semantic-contract digest and version;
-- schema and canonicalization identities;
+- semantic-contract digest;
 - source bytes and references plus source-manifest digest;
 - hydrated-context digest;
 - hydrator;
@@ -396,7 +342,7 @@ fails closed and records diagnostic evidence when possible.
 ## Issue-Owned Durable Rendered-Prompt Handoff Profile
 
 Use this profile when exact rendered-prompt bytes become a dependency for an
-executor attempt, review, recovery, or replay. It is a compatible operational
+executor attempt, review, recovery, or replay. It is an operational
 profile of the prompt contract and governed-artifact lifecycle. For qualifying
 small canonical-text ChatGPT/Claude handoffs, it uses the shared
 [`Airtable canonical-text handoff`](prompts.md#airtable-canonical-text-handoff).
@@ -406,7 +352,10 @@ requirement to preserve routine prompts.
 The candidate and storage-admission boundaries are inherited from
 [`Governed Artifact Capture`](evidence-lifecycle.md#governed-artifact-capture).
 The conditions below project that owner onto rendered prompts and add only the
-prompt-specific identity, evidence, and recovery boundaries.
+prompt-specific identity, evidence, and recovery boundaries. For this profile,
+the shared Airtable record creation and consumer checks replace the write and
+verification mechanics in `Direct Durable Capture`; they do not weaken its
+candidate, privacy, visibility, retention, ownership, or fail-closed boundaries.
 
 ### Admission
 
@@ -442,50 +391,28 @@ delivery decision model and does not gain material-prompt retention merely
 because Airtable carries it. A prompt whose exact durable identity is required
 for an authorized downstream dependency fails storage admission until a
 natural durable owner is established; importance does not authorize an
-improvised destination. Another owner may define a narrower compatible profile,
+improvised destination. Another owner may define a narrower profile,
 but it must preserve the semantic, identity, authority, verification, and
 fail-closed boundaries here rather than treating this issue-owned profile as a
 generic container.
 
-### One durable identity
+### Airtable projection
 
-The rendered prompt bytes are the canonical `Payload` under the shared
-Airtable contract. The owning storage contract selects the permitted base and
-table; reusable doctrine and adapters do not embed account-specific IDs.
+Apply the shared Airtable record and envelope exactly as defined in
+[`prompts.md`](prompts.md#airtable-canonical-text-handoff). The owning storage
+contract selects the permitted base and table; reusable doctrine and adapters
+do not embed account-specific IDs. This profile adds no second prompt object,
+delivery route, or verification procedure.
 
-Create one new record per attempt and never update it. Corrections use a new
-record and handoff key with predecessor lineage in the external envelope. The
-returned record ID is the provider identity for that attempt, but it is not
-proof of immutable content or unique key enforcement.
-
-### External delivery envelope
-
-Freeze the exact rendered-prompt bytes before deriving their final size,
-SHA-256, handoff key, record identity, or delivery route. Record those derived
-identities in the shared external Airtable handoff envelope or in delivery and
-producing-receipt evidence. The envelope is not part of the referenced
-rendered-prompt bytes or rendered-prompt digest.
-
-Do not embed a placeholder digest or other provisional self-identity in the
-rendered prompt and later describe it as the final identity. A copied,
-reformatted, or otherwise changed prompt is not byte-identical; when admitted,
-it receives a new deterministic rendering and exact identity.
-
-Keep operator metadata, the external delivery envelope, rendered prompt,
-producing receipt, delivery evidence, and attempt receipt as separate
-boundaries. The semantic prompt contract remains separate from all of them.
+Keep the semantic prompt contract, rendered prompt, Airtable record, external
+envelope, producing receipt, delivery evidence, and attempt receipt as separate
+identities when the governing workflow requires them. None supplies authority.
 
 ### Delivery and evidence
 
-The producer creates and verifies one Airtable record, then emits the shared
-external envelope. The consumer retrieves that exact record ID and independently
-verifies the returned text before accepting it. Do not add a file download,
-preview, shared link, local retrieval copy, or file-provider fallback to this route.
-
-Keep the rendered prompt, Airtable record, external envelope, producing
-receipt, delivery evidence, executor attempt, attempt receipt, output, and
-human disposition distinct when the governing workflow requires those
-identities. A record, envelope, digest, or successful read grants no authority.
+Record the delivery operation, executor attempt, attempt receipt, output, and
+human disposition separately when the governing workflow requires them. A
+successful delivery or verification grants no authority.
 
 ### Recovery and fresh execution
 
@@ -495,31 +422,13 @@ retrieves current repository, provider, planning, and authority state from
 their owners. Historical records and receipts remain historical evidence; they
 never become current authority or current mutable state.
 
-Fresh execution selects current compatible inputs under current authority.
+Fresh execution selects current inputs under current authority.
 Replay uses the recorded contract and exact historical inputs under the replay
 rules above. Do not present a new execution as replay when any required
 historical identity is missing or mismatched.
 
-Do not update or delete a frozen record as transport cleanup. Preservation,
-delivery, acknowledgement, hashes, provider state, validation, receipts, and
-execution transfer zero authority.
-
-## Semantic Versioning
-
-Use semantic versions to classify meaning and exact digests to identify bytes:
-
-- **Major**: changes authority, lifecycle meaning, guarantees, replay,
-  compatibility-major behavior, or fallback semantics.
-- **Minor**: changes executor-visible imperative instruction wording, adds new
-  required behavior, or adds compatible semantic meaning.
-- **Patch**: strictly non-behavioral formatting, comments, or metadata that is
-  invisible to the executor and changes no contract behavior.
-
-Any executor-visible imperative wording change is at least Minor. A parity
-check supplies classification evidence; it does not grant the classification.
-Changed approved bytes remain subject to the owning reviewed-identity and
-approval-retention rules, including CAK-62 rules where they apply. A version
-label never preserves approval by itself.
+Preservation, delivery, acknowledgement, hashes, provider state, validation,
+receipts, and execution transfer zero authority.
 
 ## Mandatory Failure Boundary
 
@@ -529,10 +438,9 @@ condition includes:
 - missing contract, source, state receipt, authority reference, selected
   identity, or required evidence;
 - a contract/receipt boundary violation or derived digest in the contract;
-- digest, exact-byte, schema-major, canonicalization-major, source-range,
-  validator/profile, or checkpoint-lineage mismatch;
-- invalid Unicode, duplicate names, non-finite or incompatible numbers,
-  malformed JSON, encoding mismatch, or rendered-byte policy violation;
+- digest, exact-byte, source-range, validator/profile, or checkpoint-lineage
+  mismatch;
+- encoding mismatch or rendered-byte policy violation;
 - stale, ambiguous, duplicated, conflicting, or out-of-range input;
 - unavailable replay dependency or replay selection drift;
 - absent mandatory executor capability;
@@ -542,8 +450,8 @@ condition includes:
   capabilities, or authority controls;
 - an attempt to mutate lifecycle state, emit authorization, drive a transition,
   or orchestrate phases; or
-- deterministic canonicalization, hydration, adaptation, or rendering that
-  disagrees for identical inputs.
+- deterministic hydration, adaptation, or rendering that disagrees for
+  identical inputs.
 
 Failure may emit a non-authorizing diagnostic receipt. It must not repair,
 upgrade, transition, authorize, or execute.
@@ -553,8 +461,8 @@ upgrade, transition, authorize, or execute.
 This semantic contract deliberately does not define an operational schema,
 serializer implementation, hydrator implementation, renderer template,
 attempt receipt instance, workflow state shape, or repository-specific path.
-Those belong to the implementing repository and must pin this Playbook-owned
-semantic version and exact artifact identities.
+Those belong to the implementing repository and must preserve the applicable
+boundaries and exact artifact identities.
 
 ## Architecture Provenance
 

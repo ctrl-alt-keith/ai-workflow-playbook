@@ -307,14 +307,6 @@ immutable semantic contract, rendered bytes, append-only attempt receipt,
 authority references, fresh selection, and replay. This template layer does not
 redefine those identities or turn them into authority.
 
-The Playbook-owned machine-readable anchors and canonicalization vectors are:
-
-- [`prompt-contract-semantic-anchors-v4.json`](prompt-contract-semantic-anchors-v4.json)
-- [`prompt-contract-canonicalization-vectors-v1.json`](prompt-contract-canonicalization-vectors-v1.json)
-
-They are semantic anchors and conformance evidence, not an operational workflow
-schema.
-
 Use lint-safe placeholders such as `[repository]`, `[validation_path]`, or
 backticked tokens in Markdown templates. Angle-bracket placeholders can be
 interpreted as inline HTML by Markdown tooling.
@@ -375,16 +367,22 @@ select one presentation:
   identity: a clear blocked result with no alternate renderer.
 
 Do not use request wording, operator visibility, or an available file provider
-to override the resolved recipient and route. A file provider is not a fallback for a
-qualifying small canonical-text handoff. A separately authorized workflow may
-select file-backed delivery only when its payload actually requires arbitrary
-bytes or provider file identity, revision, or checksum behavior.
+to override the resolved recipient and route. A file provider is not a fallback
+for a qualifying small canonical-text handoff. A separately authorized workflow
+may select file-backed delivery only when its payload actually requires
+arbitrary bytes or provider file identity, revision, or checksum behavior.
 
 ### Airtable canonical-text handoff
 
 This section owns the shared ChatGPT/Claude handoff contract. Adapters map its
 operations to the connector actions exposed by each executor; they do not copy
 or redefine these rules.
+
+A handoff qualifies as small canonical text when the frozen payload fits
+unchanged in one `Payload` long-text field and within the current connector's
+single-record request and response limits. The permitted Airtable route owns
+that runtime limit check. Payloads that do not qualify remain outside this
+normal text route; they do not trigger a fallback from it.
 
 Use one new Airtable record per producer attempt with these required fields:
 

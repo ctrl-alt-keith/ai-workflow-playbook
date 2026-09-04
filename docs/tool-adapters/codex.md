@@ -234,7 +234,7 @@ checked 2026-08-10.
 ## Prompt-Contract Mapping
 
 Codex is an executor representation, not the owner of shared prompt meaning.
-For a versioned material prompt:
+For a material prompt:
 
 - preserve the immutable semantic contract and exact attempt-selected inputs;
 - map product-neutral capabilities and reasoning class into supported Codex
@@ -246,13 +246,6 @@ For a versioned material prompt:
   or delivered prompt as authorization; and
 - require the execution or adoption layer to re-read live durable authority
   and verify the acting identity immediately before action.
-
-The current Playbook artifacts
-[`prompt-contract-semantic-anchors-v4.json`](../prompt-contract-semantic-anchors-v4.json)
-and
-[`prompt-contract-canonicalization-vectors-v1.json`](../prompt-contract-canonicalization-vectors-v1.json)
-define shared anchors and conformance inputs. They do not implement a Codex
-renderer, validator, receipt, or transport.
 
 ### Issue-Owned Durable Prompt Retrieval
 
@@ -266,12 +259,17 @@ currently permitted connector route. Require exactly one result and verify the
 expected key and field set before re-encoding the payload and independently
 checking its byte length and SHA-256.
 
+This receiver projection does not add Codex to the normal ChatGPT/Claude route
+selected by the shared decision model. It applies only when a narrower
+authorized contract supplies Codex an envelope that uses the same Airtable
+record format and verification rules.
+
 Fail closed on a missing, multiple, stale, transformed, truncated, or mismatched
-record. Do not substitute a local download, another delivery route, or reconstructed chat
-text. Record the delivery operation and Codex attempt separately from the
-record and envelope; neither supplies authority. Concrete provider, account,
-destination, retention, and visibility policy stay in their owning contract,
-not this adapter.
+record. Do not substitute a local download, another delivery route, or
+reconstructed chat text. Record the delivery operation and Codex attempt
+separately from the record and envelope; neither supplies authority. Concrete
+provider, account, destination, retention, and visibility policy stay in their
+owning contract, not this adapter.
 
 ## Startup Deltas
 

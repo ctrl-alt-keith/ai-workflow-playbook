@@ -73,11 +73,11 @@ requires renewed approval. When the semantic effect is uncertain, treat the
 prior approval as invalid rather than letting an execution system classify the
 change on the human's behalf.
 
-For versioned material prompts, apply the classification rules in
-[`prompt-contracts.md#semantic-versioning`](prompt-contracts.md#semantic-versioning).
-Any executor-visible imperative wording change is at least Minor. A parity
-check is classification evidence only; changed approved bytes remain subject
-to the owning reviewed-identity and approval-retention rules.
+For material prompts, an executor-visible imperative wording change changes the
+reviewed meaning unless the owning review contract explicitly permits it as a
+bounded non-semantic correction. A parity check is evidence only; changed
+approved bytes remain subject to the owning reviewed-identity and
+approval-retention rules.
 
 ## Independent Review Findings And Re-Review
 

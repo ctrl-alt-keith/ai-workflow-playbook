@@ -420,7 +420,7 @@ one result. Do not use fuzzy search or key lookup as the retrieval route.
 
 Apply the shared canonical-text, field, byte-length, and SHA-256 verification
 before acceptance. If the record is missing, duplicated, stale, transformed,
-truncated, or mismatched, fail closed. Do not substitute a local file,
+truncated, or mismatched, fail closed. Do not substitute a local file
 or reconstructed chat text.
 
 After acceptance, choose tools, permission mode, and session persistence from

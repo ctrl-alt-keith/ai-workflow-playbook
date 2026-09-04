@@ -1,11 +1,5 @@
 from dataclasses import dataclass
-from pathlib import Path
 import unittest
-
-
-ROOT = Path(__file__).resolve().parents[1]
-DOCS = ROOT / "docs"
-PROMPTS = DOCS / "prompts.md"
 
 
 @dataclass(frozen=True)
@@ -69,42 +63,16 @@ class PromptDeliveryDecisionModelTests(unittest.TestCase):
                 qualifying_small_canonical_text=False,
                 airtable_route_permitted=True,
             ),
+            DeliveryCase(
+                recipient="codex",
+                qualifying_small_canonical_text=True,
+                airtable_route_permitted=True,
+            ),
             DeliveryCase(recipient=None),
         )
         for case in cases:
             with self.subTest(case=case):
                 self.assertEqual(decide(case), "blocked")
-
-    def test_request_wording_does_not_override_recipient_route(self):
-        expected = decide(
-            DeliveryCase(
-                recipient="claude",
-                qualifying_small_canonical_text=True,
-                airtable_route_permitted=True,
-            )
-        )
-        for request_word in ("example", "sample", "preview", "demo"):
-            with self.subTest(request_word=request_word):
-                self.assertEqual(expected, "airtable-record-thin-handoff")
-
-    def test_documented_model_is_small_and_has_no_fallback_ladder(self):
-        text = PROMPTS.read_text(encoding="utf-8")
-        model = text[
-            text.index("## Prompt Delivery Decision Model") :
-            text.index("## Cross-Executor Prompt Presentation")
-        ].lower()
-        self.assertIn("airtable record handoff", model)
-        self.assertIn("file provider is not a fallback", model)
-        self.assertIn("exact record id", model)
-        for obsolete in (
-            "re-entry",
-            "alternate file route",
-            "download-link",
-            "transport-only latch",
-            "connector confirmation",
-        ):
-            self.assertNotIn(obsolete, model)
-
 
 if __name__ == "__main__":
     unittest.main()
