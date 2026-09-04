@@ -25,6 +25,11 @@ Define shared engineering expectations across repositories. This baseline forms 
   - Do not create wrapper scripts, aggregation scripts, secondary audit
     engines, parser forks, or validation-semantic copies that partially
     reimplement canonical tooling.
+  - Tests presented as implementation coverage must exercise repository-owned
+    executable behavior or externally meaningful interfaces. A helper, model,
+    validator, workflow, or protocol implementation that exists only in the
+    test suite is scaffolding, not evidence that repository implementation
+    semantics are covered.
 - Repository isolation
   - One repository per PR.
   - One dedicated worktree per implementation change.
