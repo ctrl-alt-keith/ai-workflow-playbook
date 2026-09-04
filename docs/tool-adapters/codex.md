@@ -415,44 +415,6 @@ hard-code a workstation username into reusable commands or configuration, and
 do not force this normalization on child CLIs without evidence that their
 behavior depends on login identity.
 
-### Playbook-Managed Recursive Cleanup
-
-Direct `rm` and `rm -rf` remain approval-gated. When recursive cleanup is
-appropriate and every target is already known to be a disposable directory
-beneath the current repository worktree, prefer the reviewed enforcement
-control:
-
-```sh
-~/.local/bin/codex-safe-rm -rf -- TARGET [TARGET ...]
-```
-
-The reusable `~` spelling above denotes the fixed location under the effective
-operator's account home. The installer exposes no alternate production
-destination. Enforcement's generated active rule must render and bind the
-exact resolved absolute executable path; it must not use `~`, `$HOME`, or
-`PATH` as runtime authority.
-
-The control validates the fixed invocation grammar and every operand, enforces
-containment beneath the invocation working directory, rejects `.git`, prevents
-symlink escape, rejects top-level files and symlinks, and safely ignores missing
-directories. The executable source and its install, verification, and
-source-focused tests belong to this Playbook at
-[`scripts/codex-safe-rm`](../../scripts/codex-safe-rm) and
-[`scripts/install-codex-safe-rm`](../../scripts/install-codex-safe-rm).
-Enforcement owns the consumer policy and rule surface; it must not carry a
-second executable source or installer.
-
-The control establishes invocation and containment safety. It does not decide
-whether a directory is disposable. Do not use it to bypass approval when a
-target is uncertain, valuable, or part of a broader destructive operation.
-Human judgment still owns what may be deleted.
-
-Installation, verification, and activation through Codex rules are separate
-operator steps. The presence of this guidance does not make the helper a
-prerequisite for every Codex workflow. If the reviewed control is unavailable
-or not activated, keep recursive removal approval-gated rather than substituting
-an unreviewed wrapper.
-
 ## GitHub And PR Evidence
 
 - Before repo- or PR-dependent work, verify GitHub access instead of relying on
@@ -821,12 +783,9 @@ Codex should continue without pausing when the scope is clear, the repo context
 matches the task, required sources are available, validation can run, and no
 human-gated decision is next.
 
-Routine cleanup of known disposable repo-local directories through the reviewed
-`codex-safe-rm` control is an enforcement-backed operation within this lane; it
-is not an arbitrary destructive command. This does not delegate the decision
-that a target is disposable. Do not use autonomy to widen scope, reinterpret
-intent, or take ownership of merge, release, tag, uncertain deletion,
-security-sensitive, permissions-sensitive, or policy-interpretation decisions.
+Do not use autonomy to widen scope, reinterpret intent, or take ownership of
+merge, release, tag, uncertain deletion, security-sensitive,
+permissions-sensitive, or policy-interpretation decisions.
 
 ## Delivery Notes
 

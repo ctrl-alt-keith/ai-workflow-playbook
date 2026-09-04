@@ -62,18 +62,7 @@ is authoritative for reusable workflow guidance and Enforcement should be
 updated to match. Not every Playbook rule needs enforcement, and not every
 Enforcement Capability should be promoted into doctrine.
 
-### Enforcement Control Ownership
-
-For reviewed operational controls such as
-[`codex-safe-rm`](https://github.com/ctrl-alt-keith/ai-workflow-enforcement/blob/main/docs/codex-safe-rm.md),
-`ai-workflow-enforcement` currently hosts the helper implementation, threat
-model, installation and verification mechanisms, Codex rule fixtures, and
-tests. The Playbook is authoritative for the reusable behavioral guidance,
-workflow expectations, delegation boundaries, and operator guidance for using
-that control. Link to the Enforcement documentation for mechanics instead of
-copying implementation details into the Playbook.
-
-When these or other repositories exchange artifacts, use the lightweight
+When repositories exchange artifacts, use the lightweight
 [`repo-to-repo interface contract pattern`](repo-to-repo-interface-contracts.md)
 and the qualified terms in the
 [`cross-repo architecture glossary`](cross-repo-glossary.md). Repository-local

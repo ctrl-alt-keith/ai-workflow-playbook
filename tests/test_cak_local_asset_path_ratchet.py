@@ -47,10 +47,6 @@ EXPECTED_LOCAL_REFERENCES = {
     ),
     (
         "docs/tool-adapters/codex.md",
-        "~/.local/bin/codex-safe-rm -rf -- TARGET [TARGET ...]",
-    ),
-    (
-        "docs/tool-adapters/codex.md",
         "installer publishes the stable command `~/.local/bin/claude-review` with one",
     ),
     (
@@ -60,10 +56,6 @@ EXPECTED_LOCAL_REFERENCES = {
     (
         "scripts/install-claude-review",
         'return effective_user_home() / ".local" / "bin"',
-    ),
-    (
-        "scripts/install-codex-safe-rm",
-        'return resolved_home / ".local" / "bin" / CONTROL_NAME',
     ),
 }
 
