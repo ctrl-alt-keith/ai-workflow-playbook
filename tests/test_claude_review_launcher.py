@@ -1840,6 +1840,8 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             "assert sys.argv[sys.argv.index('--tools') + 1] == ''\n"
             "assert '--model' in sys.argv\n"
             "assert '--effort' in sys.argv\n"
+            "assert os.environ['CLAUDE_CODE_DISABLE_AUTO_MEMORY'] == '1'\n"
+            "assert os.environ['CLAUDE_CODE_DISABLE_CLAUDE_MDS'] == '1'\n"
             "assert not os.path.exists('.git')\n"
             "print('CLAUDE_AUTH_OK')\n",
             auth_preflight=True,
