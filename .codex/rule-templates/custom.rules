@@ -6,11 +6,11 @@
 prefix_rule(pattern=["git", "reset", "--hard"], decision="prompt")
 prefix_rule(pattern=["git", "clean", ["-f", "--force"]], decision="prompt")
 prefix_rule(
-    pattern=["git", "switch", ["-f", "--discard-changes"]],
-    decision="prompt",
-)
-prefix_rule(
-    pattern=["git", "checkout", ["-f", "--force"]],
+    pattern=[
+        "git",
+        ["switch", "checkout"],
+        ["-f", "--force", "--discard-changes"],
+    ],
     decision="prompt",
 )
 prefix_rule(
@@ -32,14 +32,15 @@ prefix_rule(
             "archive",
             "create",
             "delete",
-            "deploy-key",
             "edit",
             "rename",
-            "set-default",
-            "sync",
             "transfer",
         ],
     ],
+    decision="prompt",
+)
+prefix_rule(
+    pattern=["gh", "repo", "deploy-key", ["add", "delete"]],
     decision="prompt",
 )
 prefix_rule(

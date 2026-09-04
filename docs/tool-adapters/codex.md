@@ -405,43 +405,17 @@ Preserve approval or fail closed, and report the runtime limitation.
 
 Use the portable
 [`custom.rules`](../../.codex/rule-templates/custom.rules) template for the
-operator's general Codex user-layer policy. The writable-root sandbox remains
-the primary filesystem boundary: ordinary repository work inside an authorized
-root receives no extra rule decision, while an attempt outside those roots
-still follows the sandbox approval path. The template therefore contains no
-`allow` rules and cannot grant commands authority to run outside the sandbox.
+operator's general Codex user-layer policy. Writable-root sandboxing is the
+primary filesystem boundary; the template adds restrictions only for a small
+set of destructive or external authority boundaries, and unmatched commands
+fall through to sandbox policy. It contains no `allow` rules and grants no
+authority outside the sandbox.
 
-The small restrictive set protects boundaries that remain meaningful inside or
-beyond a writable root: local Git forms that can unexpectedly discard
-uncommitted work, force or delete pushes in their canonical direct form,
-human-controlled PR transitions, repository administration, release
-publication, credential or security mutation, and nested Codex sandbox bypass.
-Raw `gh api` access is forbidden as an unnecessary provider escape hatch; use
-the supported high-level `gh` command or approved connector that owns the fact.
-If neither can establish a materially necessary fact, report the capability gap
-instead of dropping to REST or GraphQL. Normal rebase, merge, cherry-pick,
-revert, commit, branch and tag manipulation, worktree maintenance, copy, sync,
-move, directory creation, and directory removal deliberately have no matching
-rule. They proceed without an extra approval when the sandbox permits them.
-
-Prefix rules cannot safely distinguish every destructive `git push` spelling
-after arbitrary global options, remote names, or refspecs. Do not compensate
-with credential-helper or remote-name copies, and do not add a broad `git push`
-allow rule: unmatched forms retain the sandbox's default authority boundary.
-The current rule engine also does not inspect the command string passed through
-`zsh`, `bash`, or `sh`. A generic shell prompt would penalize routine contained
-operations such as a wrapped `cp`, so shell command modes also fall through to
-the sandbox instead of receiving copied rules. This means nested operations
-cannot be selectively gated by this template: keep ordinary repository and
-provider operations in the direct command forms required above, never use a
-shell wrapper to evade a direct deny, and leave unmatched wrapper containment
-to the sandbox.
-
-After this template is reviewed and merged, replacing
-`~/.codex/rules/custom.rules` with its exact bytes is a separate local
-reconciliation action. Validate the installed rule with `codex execpolicy
-check`, then restart Codex before relying on it. This repository change does
-not silently modify the active user-layer file.
+Raw `gh api` access is forbidden in favor of a supported high-level `gh`
+command or an approved connector. Report a capability gap when neither route
+can establish a materially necessary fact. The template does not install
+itself into `~/.codex/rules/custom.rules`; workstation reconciliation remains a
+separate post-merge action.
 
 ### Child-Process Login Identity
 
