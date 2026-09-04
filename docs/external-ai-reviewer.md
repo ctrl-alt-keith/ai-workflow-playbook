@@ -254,7 +254,7 @@ termination and never authorizes a replacement attempt.
 
 Use [`review-packet.md#independent-review-findings-and-re-review`](review-packet.md#independent-review-findings-and-re-review)
 for finding disposition and the decision between no re-review, focused
-re-review, and a fresh proposal with full review. Do not duplicate those
+re-review, and a fresh artifact with full review. Do not duplicate those
 semantics in a provider adapter or reviewer prompt.
 
 ## When To Use an External AI Reviewer

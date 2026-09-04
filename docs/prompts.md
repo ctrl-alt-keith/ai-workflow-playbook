@@ -137,30 +137,28 @@ controller's declared boundary, not prompt-contract machinery: hydrators,
 adapters, renderers, validators, receipts, and checkpoints remain unable to
 drive lifecycle state or orchestration.
 
-### Repository-topology authorization check
+### Repository mutation and decision-boundary check
 
-Before a generated prompt or handoff requires implementation mode, a worktree,
-branch, repository edit, commit, push, or pull request, identify the current
-human direction or narrower owning-workflow rule that authorizes repository
-mutation in the current phase. Apply the canonical decision rule in
-[`repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces`](repo-readiness.md#current-phase-mutation-authority-and-proposal-surfaces).
-Do not infer repository-mutation authority from future implementation intent,
-planning or design authority, materiality, an independent-review requirement,
-an issue-owned evidence write, or the usefulness of durable collaboration.
+Before a generated prompt or handoff requires implementation mode or Git
+mutation, identify the current human direction or narrower owning-workflow rule
+that authorizes it. Apply the canonical decision rule in
+[`repo-readiness.md#repository-mutation-and-decision-boundaries`](repo-readiness.md#repository-mutation-and-decision-boundaries).
 
-When current intent is discussion-first and repository mutation is not
-authorized, select review/audit or orchestration/prompt-authoring mode for the
-current phase. Omit Git topology and state the zero-repository-mutation stop
-boundary. Return a compact proposal in the active interaction, or direct a
-substantial proposal through the existing governed-artifact capture and owning
-storage-admission contract when exact identity is required for review, handoff,
-recovery, or independent review and regeneration or interaction-only retention
-would weaken that dependency. Stop for the human decision.
+A direct request to implement and open a pull request should produce one
+focused implementation branch and pull request unless the human explicitly
+requests another artifact or a narrowly applicable workflow requires one.
+Materiality, design work, or an independent-review requirement may add a
+semantic decision or review boundary, but does not independently add a design
+document, staging branch, or proposal-only pull request. Put required review or
+approval against the exact implementation artifact when the owning workflow
+permits it.
 
-Do not use a keyword-only rule: `proposal` and `design` do not prohibit a
-repository artifact when the human explicitly requests a design document or
-proposal pull request. Conversely, recorded later implementation intent does
-not authorize Git in the discussion phase.
+When current intent asks only for discussion, design, a specification, or a
+review, select review/audit or orchestration/prompt-authoring mode and omit
+implementation topology. Create a separate repository artifact only when it is
+explicitly requested or narrowly required, and keep its authority distinct
+from later implementation authority. Do not infer current repository mutation
+from recorded future intent.
 
 ## Thread Routing And Configuration Continuity
 

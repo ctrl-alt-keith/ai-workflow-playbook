@@ -112,14 +112,14 @@ verdicts remain evidence for the human decision. None grants implementation,
 merge, release, or other transition authority.
 
 After corrections, ask: **Is the original review still applicable to the
-frozen proposal or artifact?** Record one of three outcomes and the reason:
+reviewed artifact?** Record one of three outcomes and the reason:
 
 - no re-review when bounded corrections preserve the reviewed scope,
   ownership, claims, authority, acceptance criteria, omissions, and delivery
   topology;
 - focused re-review when a material part of those surfaces changed but the
-  artifact remains recognizably the same proposal or implementation; or
-- a fresh proposal and full review when the corrected artifact is no longer
+  artifact remains recognizably the same work; or
+- a fresh artifact and full review when the corrected artifact is no longer
   meaningfully the same reviewed work.
 
 Do not require another review merely because bytes changed, and do not skip one
@@ -286,11 +286,11 @@ observation, maturity, disposition, target, and exact implementation artifact
 or commit so a reviewer can trace the rule without copying the complete
 retrospective into the doctrine file.
 
-State which material was frozen before implementation, which items remained
-open questions or were otherwise not promoted, and whether the implementation
-preserved the reviewed decision. Keep the evidence artifact and implementation
-lifecycle distinct; neither a retrospective nor its summary grants approval to
-merge the doctrine change.
+Identify the exact artifact reviewed for promotion, which items remained open
+questions or were otherwise not promoted, and whether that artifact is the
+implementation identity or an earlier reviewed decision. Keep evidence and
+implementation state distinct even when they share one pull request; neither a
+retrospective nor its summary grants approval to merge the doctrine change.
 
 ## What The Human Should Focus On
 

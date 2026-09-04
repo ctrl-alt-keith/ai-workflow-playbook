@@ -47,8 +47,8 @@ ordinary chat, brainstorming, or conceptual discussion procedural.
 - **Use a proportional decision boundary before consequential execution.**
   Increase design, review, or approval separation with ambiguity, risk,
   authority sensitivity, and irreversibility. Small, obvious, reversible work
-  should not inherit unnecessary ceremony. Repository proposal-first delivery
-  remains owned by [`feature-lifecycle.md`](feature-lifecycle.md).
+  should not inherit unnecessary ceremony. Repository lifecycle and delivery
+  mechanics remain owned by [`feature-lifecycle.md`](feature-lifecycle.md).
 - **Validate or verify before relying on consequential conclusions.** Choose
   checks that match the claim and risk. Passing validation is evidence about
   what was checked; it is not acceptance, approval, or broader authority.
