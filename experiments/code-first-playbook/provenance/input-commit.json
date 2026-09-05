@@ -1,0 +1,82 @@
+{
+  "binding_method": "exact git object bytes compared at explicit bind; no current HEAD substitution",
+  "files": {
+    "cases/baseline.json": {
+      "bytes": 367,
+      "sha256": "3d8d654ed7ad216db764680d96de97748006cdd2021cfa7ac73891ca9025b545"
+    },
+    "compiler/__init__.py": {
+      "bytes": 74,
+      "sha256": "ba50b938c8f92519a5da1320576c88e77893b08df8e618235d37fced195b7629"
+    },
+    "compiler/diff.py": {
+      "bytes": 3032,
+      "sha256": "b9b8fa579a4b9f4cb6a7d7f9ce49b82cc483e938a8b843b78472b9ac0cfa4270"
+    },
+    "compiler/load.py": {
+      "bytes": 3736,
+      "sha256": "a7c06aa2fe172f2490e2058b0e85b4b18eea4bf4501d5cc79f3d80ac7eaf0056"
+    },
+    "compiler/model.py": {
+      "bytes": 6685,
+      "sha256": "10f90e099017c70ddbfa7eb009ce14fee1b1782fc66d015d071ea12a3c2bf3f1"
+    },
+    "compiler/provenance.py": {
+      "bytes": 4935,
+      "sha256": "f185f2b5ba1a57343ad49b752948c7d79eb333248a6d0a983b4812f9bdf52e78"
+    },
+    "compiler/select.py": {
+      "bytes": 8196,
+      "sha256": "3397aa2ddb0f486f776c05a2ed04539a88b2d5c945ab4d7d6965a7b866d14476"
+    },
+    "compiler/validate.py": {
+      "bytes": 9473,
+      "sha256": "2c2e5996e717c7dae05b16d62486f90ced5f127b0808dd4c5aef21b5173494bb"
+    },
+    "pilot.py": {
+      "bytes": 7172,
+      "sha256": "699cff2aac33fbf2798dea08c43f12044eb436ece14c59b23f7ad4ca0daca008"
+    },
+    "profiles/startup-retrieval.json": {
+      "bytes": 233,
+      "sha256": "51c52ec76df45e66c00b33641ca841f83a01c0b4f741d81aef1beb0fce60237b"
+    },
+    "provenance/predecessor.json": {
+      "bytes": 7293,
+      "sha256": "1a10899b20e03d0ef040ef53c78ce3a58d66448cb79292c5e1428bbad97c5000"
+    },
+    "provenance/sources.json": {
+      "bytes": 8744,
+      "sha256": "45c208c963f5677d4bc3a3cc007f3dedcec7567732d5ecc2a293e3814678041d"
+    },
+    "renderers/__init__.py": {
+      "bytes": 74,
+      "sha256": "89cb1d29f37060cf0dbafae93425b5085b1ea96a80066baa12fa9e056af2ff2b"
+    },
+    "renderers/ai.py": {
+      "bytes": 205,
+      "sha256": "659fe69233bb78ff9bdd9617cf6a5b79a62776ae7ff89f90996255bd6a603db9"
+    },
+    "renderers/clauses.py": {
+      "bytes": 5350,
+      "sha256": "537b388aa8102b5e32240594e030ea95f2353035019a0215d3c4a2e9286f2464"
+    },
+    "renderers/operator_sre.py": {
+      "bytes": 178,
+      "sha256": "ba11840cee8745b14ef6a35186ef188c14a6a2824b175f5cd2af499c8a63609b"
+    },
+    "renderers/support.py": {
+      "bytes": 173,
+      "sha256": "93f4f113d1aa68c0a66ebc93c22022ef95b0b59263c80008fbc5ddbd70a4ac0e"
+    },
+    "requirements.txt": {
+      "bytes": 14,
+      "sha256": "0969da99a0bc2a1b71ed50584560f4588a37567ac63af3ddbaf3c4617ca5621a"
+    },
+    "semantics/startup.yaml": {
+      "bytes": 11724,
+      "sha256": "b37d9919f4cef49a7cd888f028bd197417a6815188dff87de2cbc79840750510"
+    }
+  },
+  "input_commit": "1324f7f481d241e41778a2edc753b1bd1a495755"
+}

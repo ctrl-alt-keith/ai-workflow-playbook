@@ -58,7 +58,8 @@ code-first-render: ## Generate non-operational review previews.
 	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py render
 
 code-first-diff: ## Exercise the two bounded semantic edit rounds.
-	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py diff
+	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py diff --old-bundle cases/baseline.json --bundle cases/edit-round-1.json
+	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py diff --old-bundle cases/edit-round-1.json --bundle cases/edit-round-2.json
 
 code-first-rehearse: ## Report simulation-only authority-transition rehearsal.
 	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py rehearse

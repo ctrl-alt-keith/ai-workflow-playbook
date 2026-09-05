@@ -129,8 +129,8 @@ records:
   owner: source.start
   status: active
   references: []
-  definition: Identity of the one concrete operation under review in the synthetic pilot context. It does
-    not denote all repository work or authorize dispatch.
+  definition: Identity of one bounded mutation and its immediately required readbacks in the current synthetic
+    review. No dispatch authority.
   type: enum
   values:
   - current-operation
@@ -414,47 +414,7 @@ records:
   - source.retrieval
   - source.start
   does: |
-    Before repository-scoped code, documentation, research, planning, leadership,
-    read-only review, audit, advice, architecture/workflow analysis, PR or issue
-    recommendations, and "what changed?" or "what next?" requests:
-
-    1. Read this page, `docs/core-model.md`, and
-       `docs/engineering-baseline.md`.
-
-    2. Read the target repository's repo-local `AGENTS.md`.
-
-    3. Apply the matching executor adapter. Codex runs must apply
-       `docs/tool-adapters/codex.md`; Claude runs must apply
-       `docs/tool-adapters/claude.md`; repository-scoped ChatGPT runs must apply
-       `docs/tool-adapters/chatgpt.md`.
-
-    4. Identify the repository or workspace's primary purpose.
-
-    5. Select the interaction mode from `docs/repo-readiness.md`: implementation,
-       review/audit, or orchestration/prompt-authoring.
-
-    6. Identify the canonical source for the rule, behavior, or state being used.
-
-    7. Apply `docs/source-first-retrieval.md` before stateful repository reasoning.
-       When connector capability matters, apply
-       [Connector availability is runtime evidence](#connector-availability-is-runtime-evidence)
-       without changing repository hydration or instruction discovery.
-
-    8. For policy-sensitive changes, apply the repo-family alignment check in
-       `docs/repo-readiness.md`.
-
-    9. Confirm command form and execution settings for planned commands.
-
-    10. Identify the canonical validation, review, or inspection path.
-
-    11. Act only after these checks are clear, or report the blocker, uncertainty,
-        capability gap, or missing context.
-
-    Controller-owned context sufficiency is determined from canonical routing for
-    the current task. The controller or other workflow owner must establish that
-    the repository floor and every activated document are present; a child or
-    delegated worker's own selection or belief that it has enough context cannot
-    establish sufficiency.
+    Read start-here only.
   parameters:
   - name: operation
     type: term.operation
@@ -515,8 +475,9 @@ records:
   owner: source.start
   status: active
   references: []
-  body: All numbered startup requirements are represented as one obligation with explicit full canonical
-    reads; adapter selection and repo-family conditions remain unprojected judgments.
+  body: 'All numbered startup requirements are represented as one obligation with explicit full canonical
+    reads; adapter selection and repo-family conditions remain unprojected judgments. Example for discussion:
+    navigation can be shorter than the required source set.'
 - id: pb.startup-floor
   kind: rule
   owner: source.start
@@ -681,9 +642,13 @@ records:
   references: []
   unit: pb.conditional-activation
   when:
-    is:
-    - fact.repository_work
-    - true
+    all:
+    - is:
+      - fact.repository_work
+      - true
+    - is:
+      - fact.material_change
+      - true
   effect:
     actor: controller
     modality: must
@@ -871,17 +836,9 @@ records:
     starts: Successful complete repository startup
     persists_within: Repository conventions; never frozen mutable facts or activated source set
     ends_when:
-      any:
-      - any:
-        - is:
-          - fact.leaves_repository_work
-          - true
-        - is:
-          - fact.repository_changed
-          - true
-      - is:
-        - fact.human_style_override
-        - true
+      is:
+      - fact.repository_changed
+      - true
   failure:
     when:
       is:

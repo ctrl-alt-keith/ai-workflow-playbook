@@ -681,9 +681,13 @@ records:
   references: []
   unit: pb.conditional-activation
   when:
-    is:
-    - fact.repository_work
-    - true
+    all:
+    - is:
+      - fact.repository_work
+      - true
+    - is:
+      - fact.material_change
+      - true
   effect:
     actor: controller
     modality: must
@@ -871,17 +875,9 @@ records:
     starts: Successful complete repository startup
     persists_within: Repository conventions; never frozen mutable facts or activated source set
     ends_when:
-      any:
-      - any:
-        - is:
-          - fact.leaves_repository_work
-          - true
-        - is:
-          - fact.repository_changed
-          - true
-      - is:
-        - fact.human_style_override
-        - true
+      is:
+      - fact.repository_changed
+      - true
   failure:
     when:
       is:

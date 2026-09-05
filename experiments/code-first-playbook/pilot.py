@@ -13,14 +13,15 @@ from compiler.select import select
 from compiler.diff import semantic_diff
 from compiler.provenance import (read_json, inputs, binding, identity, compare, write_outputs)
 from renderers import ai, operator_sre, support
-from renderers.clauses import clauses
+from renderers.clauses import clauses,audit
 
 ROOT = Path(__file__).resolve().parent
 
 
 def compile_bundle(root, bundle_path):
     bundle = read_json(root, bundle_path)
-    shape(bundle, {'semantics','profile','as_of','context','observations','acquisitions','request_complete_contract'})
+    shape(bundle, {'semantics','profile','as_of','context','observations','acquisitions','request_complete_contract','evaluation_only'})
+    require(type(bundle['evaluation_only']) is bool,'explicit evaluation status')
     require(bundle['request_complete_contract'] is False, 'pilot cannot provide complete executor contract')
     shape(bundle['context'], {'task','attempt','repository','context'})
     require(all(type(v) is str and v for v in bundle['context'].values()), 'exact context required')
@@ -28,13 +29,17 @@ def compile_bundle(root, bundle_path):
     records, diagnostics = validate(modules, locations)
     acquisitions = {}
     for entry in bundle['acquisitions']:
-        shape(entry, {'path','sha256'})
+        shape(entry, {'path','sha256','artifact_path'})
         raw = safe_path(root,entry['path']).read_bytes()
         require(digest(raw) == entry['sha256'], 'acquisition raw-byte mismatch')
         evidence = read_json(root,entry['path'])
+        artifact=safe_path(root,entry['artifact_path']).read_bytes()
+        require(evidence['artifact_id']=='synthetic:'+entry['artifact_path'] and
+                evidence['sha256']==digest(artifact),'synthetic acquisition artifact mismatch')
         require(evidence['id'] not in acquisitions, 'duplicate acquisition ID')
         acquisitions[evidence['id']] = evidence
     selected = select(records,bundle['observations'],bundle['context'],bundle['as_of'],acquisitions,diagnostics)
+    selected['source_revisions']={u['path']:u['revision'] for u in read_json(root,'provenance/sources.json')['units']}
     profile = read_json(root,bundle['profile'])
     shape(profile, {'operator-sre','support'})
     for layout in profile.values():
@@ -49,7 +54,7 @@ def compile_bundle(root, bundle_path):
 def generate(root, bundle_path):
     bundle, records, locations, selected, profile = compile_bundle(root,bundle_path)
     sources = read_json(root,'provenance/sources.json')
-    binding(root,sources,records)
+    binding(root,sources,None if bundle['evaluation_only'] else records)
     provenance = identity(root,bundle_path,bundle,records,locations)
     normative = clauses(selected)
     outputs = {'ai/startup-retrieval.json': ai.render(selected,normative,provenance),
@@ -58,14 +63,17 @@ def generate(root, bundle_path):
                'coverage.json':canonical({'status':'mapped_only_external_reads_required','source_bindings':sources,
                                            'selection':selected,'clause_ids':[c['id'] for c in normative]})}
     outputs['index.md'] = (f"# CAK-233 generated shadow previews\n\nExisting Playbook prose remains operationally canonical. No execution or adoption.\n\nInput commit: `{provenance['input_commit']}`.\n\n- [AI structured clauses](ai/startup-retrieval.json)\n- [Operator/SRE cards](operator-sre/startup-retrieval.md)\n- [Support triage](support/startup-retrieval.md)\n- [Coverage and external owners](coverage.json)\n- [Exact producing identities](provenance.json)\n- [Semantic source](../semantics/startup.yaml)\n\nIncomplete executor contract. Completion grants no authority; permission is not evaluated.\n").encode()
+    for audience,path in [('ai','ai/startup-retrieval.json'),('operator-sre','operator-sre/startup-retrieval.md'),('support','support/startup-retrieval.md')]:
+        audit(outputs[path],audience,normative)
     outputs['provenance.json'] = canonical({**provenance,'outputs':{p:{'sha256':digest(raw),'bytes':len(raw)} for p,raw in sorted(outputs.items())},'self_hash':'not_recursive; final PR receipt binds this file'})
     return outputs
 
 
-def bind(root,bundle_path,commit):
+def bind(root,bundle_path,commit,additional=()):
     require(commit and len(commit)==40 and all(c in '0123456789abcdef' for c in commit), 'explicit commit required')
-    bundle = read_json(root,bundle_path)
-    files = inputs(root,bundle_path,bundle)
+    files = {}
+    for path in [bundle_path]+list(additional):
+        files.update(inputs(root,path,read_json(root,path)))
     repo=root.parents[1]
     for path, item in files.items():
         raw=subprocess.run(['git','show',f'{commit}:experiments/code-first-playbook/{path}'],cwd=repo,check=True,capture_output=True).stdout
@@ -80,10 +88,11 @@ def main():
     parser.add_argument('--bundle',default='cases/baseline.json')
     parser.add_argument('--destination',default='.build/preview')
     parser.add_argument('--input-commit')
+    parser.add_argument('--additional-bundle',action='append',default=[])
     parser.add_argument('--old-bundle')
     args=parser.parse_args()
     try:
-        if args.command=='bind': result=bind(ROOT,args.bundle,args.input_commit)
+        if args.command=='bind': result=bind(ROOT,args.bundle,args.input_commit,args.additional_bundle)
         elif args.command=='validate':
             _,records,_,selected,_=compile_bundle(ROOT,args.bundle)
             result={'status':'valid_shadow','rules':len(selected['rules']),'diagnostics':selected['diagnostics'],'permission':'not_evaluated'}

@@ -55,4 +55,9 @@ def semantic_diff(old, new, old_locations=None, new_locations=None):
                        "affected_ids": sorted(impacted), "affected_rules": rules,
                        "affected_outputs": ["ai/startup-retrieval.json", "operator-sre/startup-retrieval.md",
                                             "support/startup-retrieval.md"] if rules else []})
+        if category == 'source_location_changed':
+            # A copied evaluation bundle moves every file. Preserve relocation
+            # evidence without mislabeling that noise as normative fan-out.
+            events[-1].update(old=None,new=None,impact='source_provenance_only',affected_ids=[],
+                              affected_rules=[],affected_outputs=[],direct_reference_sites=[])
     return {"status": "evidence_only", "events": events, "permission": "not_evaluated"}

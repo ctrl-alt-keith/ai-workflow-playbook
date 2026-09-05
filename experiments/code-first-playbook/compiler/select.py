@@ -14,6 +14,7 @@ def timestamp(value):
 def qualify(records, observations, context, as_of, acquisitions):
     """The outside acquisition layer owns truth/authentication; inputs bind its record."""
     require(type(observations) is list, "observations list required")
+    shape(context, {'task','attempt','repository','context'})
     now = timestamp(as_of)
     grouped, fixed, reports = {}, {}, {}
     for obs in observations:
@@ -25,7 +26,8 @@ def qualify(records, observations, context, as_of, acquisitions):
         require(obs["state"] in STATES, "unknown observation state")
         require(obs["resolution_class"] == fact["resolution_class"], "forged resolution upgrade")
         require(obs["evaluator"] in fact["evaluators"], "unpermitted evaluator claim")
-        require(obs["state"] != "known" or typed(obs["value"], fact), "mistyped observation")
+        require(obs["value"] is None or typed(obs["value"], fact), "mistyped observation")
+        require(obs["state"] != "known" or obs['value'] is not None, "known value required")
         require(type(obs["diagnostics"]) is list, "observation diagnostics")
         require(obs["state"] == "known" or bool(obs["diagnostics"]), "state reason required")
         require(type(obs["rationale"]) is str, "observation rationale")
@@ -48,13 +50,14 @@ def qualify(records, observations, context, as_of, acquisitions):
             evidence = acquisitions[obs["basis"]]
             shape(evidence, {"id", "source", "fact_id", "value", "evaluator", "scope",
                              "observed_at", "checked_claim", "verified", "artifact_id", "sha256"})
-            require(evidence["source"] in fact["sources"] and evidence["fact_id"] == fid
+            require(evidence['id']==obs['basis'] and evidence["source"] in fact["sources"] and evidence["fact_id"] == fid
                     and evidence["evaluator"] == obs["evaluator"]
                     and evidence["value"] == obs["value"] and type(evidence["value"]) is type(obs["value"])
                     and evidence["scope"] == obs["scope"]
                     and evidence["observed_at"] == obs["freshness"]["observed_at"]
                     and evidence["verified"] is True and bool(evidence["checked_claim"])
-                    and bool(evidence["artifact_id"]) and len(evidence["sha256"]) == 64,
+                    and bool(evidence["artifact_id"]) and type(evidence['sha256']) is str
+                    and len(evidence["sha256"]) == 64 and all(c in '0123456789abcdef' for c in evidence['sha256']),
                     "evidence qualification mismatch")
             qualified = state == "known"
         grouped.setdefault(fid, []).append({"observation": obs, "state": state, "qualified": qualified})
@@ -114,6 +117,8 @@ def select(records, observations, context, as_of, acquisitions, diagnostics=()):
                     reasons[target].append(reason)
                 if target not in selected:
                     selected.add(target); pending.append(target)
+                if target in excluded:
+                    excluded[target]['retained_as_required_dependency'] = True
     # Retain vocabulary and external boundaries transitively. Reference-only edges
     # do not activate rules: an unselected referenced rule is an explicit boundary.
     included, external_rules = set(selected), set()

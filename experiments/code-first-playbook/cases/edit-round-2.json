@@ -7,12 +7,12 @@
     "repository": "ai-workflow-playbook",
     "task": "CAK-233-synthetic"
   },
-  "evaluation_only": false,
+  "evaluation_only": true,
   "observations": [],
   "profile": "profiles/startup-retrieval.json",
   "request_complete_contract": false,
   "semantics": [
-    "semantics/startup.yaml",
-    "semantics/source-retrieval.yaml"
+    "cases/edit-round-2/startup.yaml",
+    "cases/edit-round-2/source-retrieval.yaml"
   ]
 }

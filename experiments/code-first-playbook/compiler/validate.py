@@ -37,6 +37,10 @@ def validate(modules, locations, enforce_scope=True):
         kind = r.get("kind")
         require(kind in FIELDS, f"unsupported record kind: {kind}")
         shape(r, COMMON | FIELDS[kind])
+        require(r['owner'] == modules[locations[rid]['module']]['owner'], 'record outside semantic module owner')
+        for field in ('definition','path','question','does','body'):
+            if field in r:
+                require(type(r[field]) is str and bool(r[field].strip()), f'{rid}.{field}: nonempty text required')
         require(r["status"] in ("active", "deprecated", "retired"), "invalid status")
         strings(r["references"])
         require(r["owner"] in records and records[r["owner"]]["kind"] == "source", "owner required")
@@ -65,6 +69,7 @@ def validate(modules, locations, enforce_scope=True):
             for p in r["parameters"]:
                 shape(p, {"name", "type", "required"})
                 require(type(p["required"]) is bool and type(p["name"]) is str, "parameter type")
+                require(p['type'] in records and records[p['type']]['kind']=='term', 'parameter domain must be term')
                 names.append(p["name"])
             require(len(names) == len(set(names)), "duplicate parameter")
         if kind == "rule":
@@ -73,6 +78,7 @@ def validate(modules, locations, enforce_scope=True):
             require(type(r["effect"]["actor"]) is str and r["effect"]["actor"], "actor")
             for key in ("requires", "before", "context"):
                 strings(r[key])
+            require(type(r['activates']) is list and type(r['overrides']) is list, 'edge list required')
             for edge in r["activates"]:
                 shape(edge, {"target", "when"})
             for edge in r["overrides"]:
@@ -101,6 +107,8 @@ def validate(modules, locations, enforce_scope=True):
                     f"active dependency on retired ID at {rid}.{site}")
     prerequisites, precedence, failures = {}, {}, {}
     for rid, r in rules.items():
+        require(all(records[x]['kind'] in ('source','rule') for x in r['requires']), 'requires source or rule')
+        require(all(records[x['target']]['kind'] in ('source','rule') for x in r['activates']), 'activates source or rule')
         action = records[r["effect"]["action"]]
         require(action["kind"] == "action" and action["action_kind"] == "behavior", "effect action")
         shape(r["effect"]["parameters"], {p["name"] for p in action["parameters"] if p["required"]},
@@ -123,6 +131,9 @@ def validate(modules, locations, enforce_scope=True):
         for edge in r["overrides"]:
             require(edge["target"] in rules and records[edge["source"]]["kind"] == "source",
                     "override target/source")
+            target=rules[edge['target']]
+            require(edge['question']==r['authority_ref']['question']==target['authority_ref']['question'],
+                    'override question outside bounded owner scope')
         if "inherits" in r["failure"]:
             target = r["failure"]["inherits"]
             require(target in rules, "failure inheritance rule required")
@@ -137,6 +148,9 @@ def validate(modules, locations, enforce_scope=True):
     for graph, label in ((prerequisites, "prerequisite"), (precedence, "precedence"),
                          (failures, "failure inheritance")):
         acyclic(graph, label)
+    for rid,r in records.items():
+        if r['kind']=='fact':
+            require(all(records[s]['kind']=='source' for s in r['sources']), 'fact sources must be sources')
     # Action ordering is checked separately from rule prerequisite semantics.
     ordering = {}
     for r in rules.values():

@@ -27,6 +27,7 @@ def inputs(root, bundle_path, bundle):
     paths += [str(p.relative_to(root)) for folder in ('compiler', 'renderers')
               for p in sorted((root/folder).glob('*.py'))]
     paths += [x['path'] for x in bundle['acquisitions']]
+    paths += [x['artifact_path'] for x in bundle['acquisitions']]
     return {p: {'sha256': digest(safe_path(root, p).read_bytes()),
                 'bytes': safe_path(root, p).stat().st_size} for p in sorted(paths)}
 
@@ -57,10 +58,11 @@ def identity(root, bundle_path, bundle, records, locations):
     require(len(bound['input_commit']) == 40 and all(c in '0123456789abcdef' for c in bound['input_commit']),
             'explicit immutable input commit required')
     actual = inputs(root, bundle_path, bundle)
-    require(actual == bound['files'], 'working input differs from exact input-commit binding; rebind explicitly')
+    require(all(bound['files'].get(p)==v for p,v in actual.items()), 'working input differs from exact input-commit binding; rebind explicitly')
     semantic = {i:r for i,r in records.items() if r['kind'] != 'context'}
     context = {i:r for i,r in records.items() if r['kind'] == 'context'}
     return {'input_commit': bound['input_commit'], 'raw_inputs': actual,
+            'source_fidelity':'hypothetical evaluation edit; not baseline parity' if bundle['evaluation_only'] else 'frozen mapped baseline',
             'semantic_sha256': digest(canonical(semantic)), 'context_sha256': digest(canonical(context)),
             'profile_sha256': actual[bundle['profile']]['sha256'],
             'compiler_sha256': digest(canonical({p:v for p,v in actual.items() if p.startswith('compiler/') or p=='pilot.py'})),
