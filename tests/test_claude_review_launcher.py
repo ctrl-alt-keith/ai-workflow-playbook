@@ -2969,6 +2969,14 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             snapshot["receipts"][2]["provider_tool_correlation_id"],
             snapshot["receipts"][4]["provider_tool_correlation_id"],
         )
+        self.assertNotEqual(
+            module.correlation_identity("session", "same-provider-id"),
+            module.correlation_identity("tool", "same-provider-id"),
+        )
+        self.assertEqual(
+            module.correlation_identity("session", "same-provider-id"),
+            module.correlation_identity("session", "same-provider-id"),
+        )
         for key in (
             "provider_session_correlation_id",
             "provider_event_correlation_id",
