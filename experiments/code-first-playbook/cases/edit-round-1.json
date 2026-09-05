@@ -1,0 +1,18 @@
+{
+  "acquisitions": [],
+  "as_of": "2026-09-05T05:00:00Z",
+  "context": {
+    "attempt": "baseline",
+    "context": "shadow-1",
+    "repository": "ai-workflow-playbook",
+    "task": "CAK-233-synthetic"
+  },
+  "evaluation_only": true,
+  "observations": [],
+  "profile": "profiles/startup-retrieval.json",
+  "request_complete_contract": false,
+  "semantics": [
+    "cases/edit-round-1/startup.yaml",
+    "cases/edit-round-1/source-retrieval.yaml"
+  ]
+}

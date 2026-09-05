@@ -1,0 +1,1081 @@
+{
+  "complete_execution_contract": false,
+  "operational_owner": "existing_playbook_prose",
+  "status": "frozen_fixture_not_freshness",
+  "units": [
+    {
+      "blocks": [
+        {
+          "clause": null,
+          "disposition": "supporting",
+          "external_source": null,
+          "index": 1,
+          "lines": [
+            232,
+            232
+          ],
+          "predecessor_normalized_sha256": "22b7ee71066746e447ecf5172ebda0ce2cc6e17aee878ed263a3953ab8d583d8",
+          "sha256": "a900edcedce907bc474136535a52998fc3a712a65d688190d75adddad38f71b6",
+          "text": "### Required Repository Startup Contract\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 2,
+          "lines": [
+            234,
+            236
+          ],
+          "predecessor_normalized_sha256": "a011b7c2376341b80ad84266bb5ed982b90ef70a0dd0bfa628d14d00642e478e",
+          "sha256": "63b5b470781fe29226c4789417f88595a5dd4d31cfcc99251f7d60d13a1885ea",
+          "text": "Before repository-scoped code, documentation, research, planning, leadership,\nread-only review, audit, advice, architecture/workflow analysis, PR or issue\nrecommendations, and \"what changed?\" or \"what next?\" requests:\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 3,
+          "lines": [
+            238,
+            239
+          ],
+          "predecessor_normalized_sha256": "fc614e025a2f3ff9bee9b4367682dd5d5f90e1f549e313bfddae29c017ca7a94",
+          "sha256": "b542bb78cfa4408a07b72b4374e78b2ae602dea80866a70c5aed8c9469e94374",
+          "text": "1. Read this page, `docs/core-model.md`, and\n   `docs/engineering-baseline.md`.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 4,
+          "lines": [
+            240,
+            240
+          ],
+          "predecessor_normalized_sha256": "ca1c44f8bc82c54930148a5dd3c81784f1eef28237c18a272a9e817e7e690372",
+          "sha256": "b5ea0fd6038aa07092952c70f3f799811fe6ce84df43e38f5bd605be495fbb39",
+          "text": "2. Read the target repository's repo-local `AGENTS.md`.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 5,
+          "lines": [
+            241,
+            244
+          ],
+          "predecessor_normalized_sha256": "3d8e732668d5e8c9e366edbbe8d8666977fb4b41e4fd638fad95674e055b30e4",
+          "sha256": "9942e7eb25b327e61f0aed98cb1c76a3f99bd27caa0f4abe5124414bf7ea25b5",
+          "text": "3. Apply the matching executor adapter. Codex runs must apply\n   `docs/tool-adapters/codex.md`; Claude runs must apply\n   `docs/tool-adapters/claude.md`; repository-scoped ChatGPT runs must apply\n   `docs/tool-adapters/chatgpt.md`.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 6,
+          "lines": [
+            245,
+            245
+          ],
+          "predecessor_normalized_sha256": "95abdb235ecc141c469bedc1e5d0547f6e308ec88e28bb8bbf10788834a47580",
+          "sha256": "7b1aa2f233bb5a90f15837afec93853ffd8a1185559b494df102752611cc9542",
+          "text": "4. Identify the repository or workspace's primary purpose.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 7,
+          "lines": [
+            246,
+            247
+          ],
+          "predecessor_normalized_sha256": "66465f84ed537bcfd7b89b39967ec3e8a37073c2616e32be140078b632220ba8",
+          "sha256": "7778b15b587e9a32594b05bc5b00bcf1a64b318188df0243c61660a2edcb88e2",
+          "text": "5. Select the interaction mode from `docs/repo-readiness.md`: implementation,\n   review/audit, or orchestration/prompt-authoring.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 8,
+          "lines": [
+            248,
+            248
+          ],
+          "predecessor_normalized_sha256": "5663421fd78dd5b2bbd131105f7d2c35d21713753095383ebd75d71ccf4f50af",
+          "sha256": "7e77d6419aafe69db585d074c7e6450c967ac68c76f8c8b8f92c0ef955145e24",
+          "text": "6. Identify the canonical source for the rule, behavior, or state being used.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 9,
+          "lines": [
+            249,
+            252
+          ],
+          "predecessor_normalized_sha256": "10b780540425142b71cf40e5c9911c9bbe6cd237a27db08b19a2e602b9319282",
+          "sha256": "4fcfbf00da206d5019b9cb192cabf7099f14aff66db3c7f7e3cfadb248bf305e",
+          "text": "7. Apply `docs/source-first-retrieval.md` before stateful repository reasoning.\n   When connector capability matters, apply\n   [Connector availability is runtime evidence](#connector-availability-is-runtime-evidence)\n   without changing repository hydration or instruction discovery.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 10,
+          "lines": [
+            253,
+            254
+          ],
+          "predecessor_normalized_sha256": "b8975a4cecbf4f367fd957ea39bcaceabc84a5405e28a17b5bb1cb722051ca34",
+          "sha256": "b0b946ce9e5b89333ff02a73dc2e373faf1e7274f1b49292ca05b0a10b28be5b",
+          "text": "8. For policy-sensitive changes, apply the repo-family alignment check in\n   `docs/repo-readiness.md`.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 11,
+          "lines": [
+            255,
+            255
+          ],
+          "predecessor_normalized_sha256": "062bebc2689009666185267da80bac9920916185efa99c8052110d1a90f80207",
+          "sha256": "f6f15279d03d1787b6ca26bb2b2cf6c583a722fc07073dcfdb513b28cc775131",
+          "text": "9. Confirm command form and execution settings for planned commands.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 12,
+          "lines": [
+            256,
+            256
+          ],
+          "predecessor_normalized_sha256": "d6b4c9873c9354d0890a986c10378bb03dbefa19dc48a974a66aa59f74453222",
+          "sha256": "1432d817e7e4833fae19b56bf02fc9432bf384e0a256740b5be070b63369e8bf",
+          "text": "10. Identify the canonical validation, review, or inspection path.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 13,
+          "lines": [
+            257,
+            258
+          ],
+          "predecessor_normalized_sha256": "d7c4dbc105d33320157af44c5dc15e54ef5ad1b1268a424aa409b389715fa97e",
+          "sha256": "777c04b3b5e1a1e93acb17190826fe26026114a5a1af89361605f9401d42c5c7",
+          "text": "11. Act only after these checks are clear, or report the blocker, uncertainty,\n    capability gap, or missing context.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 14,
+          "lines": [
+            260,
+            264
+          ],
+          "predecessor_normalized_sha256": "9697a57a4d51ba8eb40da15b343bf92da81493a47823df897d516e57dfbfca54",
+          "sha256": "ebd3a9a9ce60ccad0cec2d4fba9e6cf83841aff021b97e1f6af7731e46e6b470",
+          "text": "Controller-owned context sufficiency is determined from canonical routing for\nthe current task. The controller or other workflow owner must establish that\nthe repository floor and every activated document are present; a child or\ndelegated worker's own selection or belief that it has enough context cannot\nestablish sufficiency.\n"
+        }
+      ],
+      "heading": "### Required Repository Startup Contract",
+      "path": "docs/start-here.md",
+      "predecessor_section_sha256": "0fe1c8511e798b57becf5ab4c42e2af7b919587ad1669e3ee94bcfa72cd1b368",
+      "revision": "da7a7dcb056239ac4193d1d44500c606488621f2",
+      "sha256": "5e0e59ec0e340319cf5a67c680fe4de4b2b994e51ad0a2e550683485cb73c9f2",
+      "unit": "pb.startup-floor"
+    },
+    {
+      "blocks": [
+        {
+          "clause": null,
+          "disposition": "supporting",
+          "external_source": null,
+          "index": 1,
+          "lines": [
+            319,
+            319
+          ],
+          "predecessor_normalized_sha256": "b41b37dcf7b067d79159dec415c93743aa919a9fba79b6b9aecdc230f8d901ce",
+          "sha256": "b4d74e4f8e4ed9d9650f2b9cf78333738d32a4c24d2c8386bf4ac897c3980e01",
+          "text": "### Conditional Repository Guidance\n"
+        },
+        {
+          "clause": "action.conditional-activation/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 2,
+          "lines": [
+            321,
+            325
+          ],
+          "predecessor_normalized_sha256": "5d13600fae3f74dfb80d9c4d7e820fba7524fcad0b62fc68b119d93ce31e99d3",
+          "sha256": "add822d033e902d07b20b7e1b9e6eb8065523843aab324faa2a1962690f577f4",
+          "text": "Read `docs/maintenance-automations.md` only when repository work touches\nrecurring automation design or review, execution-locality classification,\nautomation prompt authoring, fleet-wide maintenance, governance or drift\nautomation, scheduled inspection or correction, autonomous-maintenance\narchitecture, or automation authority, evidence, scope, and safety contracts.\n"
+        },
+        {
+          "clause": "action.conditional-activation/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 3,
+          "lines": [
+            327,
+            330
+          ],
+          "predecessor_normalized_sha256": "bc1d3e213064ae40e7b6199582d767e072f9348f1f5f7bc10f0be6df73958d6e",
+          "sha256": "4afd66ecf3cb61ea58722fe7a07e95b91796505d6adc9446bdd641990507f237",
+          "text": "Read `docs/feature-lifecycle.md` when the current authorized action first enters\nfeature-delivery planning or execution; use its activation boundary to\ndistinguish intent, prerequisite workflow ownership, and implementation\neligibility.\n"
+        },
+        {
+          "clause": "action.conditional-activation/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 4,
+          "lines": [
+            332,
+            335
+          ],
+          "predecessor_normalized_sha256": "5c3185915d5e666ee1890c86de76eec055960b0810bec8817201e71ed5700cf7",
+          "sha256": "fac0b0f97ed8f1c5e2522dad0bba7daf242e8dffb2305ef08fd1d174fab19a9f",
+          "text": "Read `docs/ai-workflow-ecosystem.md`,\n`docs/repo-to-repo-interface-contracts.md`, and\n`docs/cross-repo-glossary.md` only when the work involves multiple\nrepositories, cross-repository interfaces, or architectural terminology.\n"
+        },
+        {
+          "clause": "action.conditional-activation/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 5,
+          "lines": [
+            337,
+            339
+          ],
+          "predecessor_normalized_sha256": "45aba180bc5fe3375a3cfe5d46b19ed6f6d7fd245cc0e29d08fc93aad990d17f",
+          "sha256": "12ccfebc354127fc5e6c1631cce25618026cdc7e0317b552b8a18c32b9f9f7c0",
+          "text": "Ordinary repository implementation, review, issue triage, and \"what changed?\"\nwork do not require those specialized documents unless their triggers also\napply.\n"
+        }
+      ],
+      "heading": "### Conditional Repository Guidance",
+      "path": "docs/start-here.md",
+      "predecessor_section_sha256": "2bf103defcb379cd0027a11f221b57905bb86ccc8d6f715ff03a4bbf4011321b",
+      "revision": "da7a7dcb056239ac4193d1d44500c606488621f2",
+      "sha256": "5e0e59ec0e340319cf5a67c680fe4de4b2b994e51ad0a2e550683485cb73c9f2",
+      "unit": "pb.conditional-activation"
+    },
+    {
+      "blocks": [
+        {
+          "clause": null,
+          "disposition": "supporting",
+          "external_source": null,
+          "index": 1,
+          "lines": [
+            266,
+            266
+          ],
+          "predecessor_normalized_sha256": "dc06372d4295facefc59afb458c96f949919c5968b8b3d1feae0445301188004",
+          "sha256": "7ae7b815f112447d8f8d1b543f9b3d9d1852b0f78a4538022e019eb93fdfee95",
+          "text": "### Required Repository Invariants\n"
+        },
+        {
+          "clause": null,
+          "disposition": "external",
+          "external_source": "source.start",
+          "index": 2,
+          "lines": [
+            268,
+            268
+          ],
+          "predecessor_normalized_sha256": "9083795f7046139d8ff9218cf1868ab4bee69f153e29d64cfbc97bbab9cf38b9",
+          "sha256": "f2129c6df666de00fa05910f1f241f5f0a5ab902022a77a967ebea5b90180d0c",
+          "text": "- `ai-workflow-playbook` is the canonical source for reusable workflow rules.\n"
+        },
+        {
+          "clause": "action.mode-persistence/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 3,
+          "lines": [
+            269,
+            280
+          ],
+          "predecessor_normalized_sha256": "4d001f6bf595b911270d6b8e4359190f72bf41d85171673d545b2939c9f28dc2",
+          "sha256": "ca93b7bb7b6920869398deb4146a105dd4a3f39c6626c951aafcb903e677bd76",
+          "text": "- Successful repository hydration is a mode transition, not only an\n  information-retrieval event. After the required repository startup contract\n  succeeds, repository operating mode remains active for the rest of the\n  repository work. Plans, reviews, implementation prompts, validation\n  summaries, completion reports, and other artifacts must continue to use the\n  repository-native conventions established by the governing repository\n  sources without requiring the human to restate them. This invariant does not\n  freeze a specific template or layout; the canonical artifact conventions may\n  evolve. Repository operating mode ends only when the interaction clearly\n  leaves repository work or the human explicitly requests a different artifact\n  style. Moving to another repository requires applying that repository's\n  startup contract before assuming its native conventions.\n"
+        },
+        {
+          "clause": "action.mode-persistence/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 4,
+          "lines": [
+            281,
+            290
+          ],
+          "predecessor_normalized_sha256": "437d799aae396551fbadfd7631b8ca075fa0a21bf86faeacf88f660b6c33a6a8",
+          "sha256": "0a9a4b9acf63d3f17240cdf83c28b9afc85029b32fd26a251ce37ab156c00e75",
+          "text": "- Repository operating-mode persistence does not freeze the task-specific\n  activated source set. When a task materially changes interaction mode,\n  artifact type, workflow, authoritative-source requirements, execution\n  locality, target executor, or authority boundary, re-evaluate activation\n  routing and compare the changed task's required-source set with the currently\n  activated set. Reuse the still-current repository floor and owners, retrieve\n  only newly required owners before answering, planning, drafting, or acting,\n  and do not blanket-rehydrate ordinary follow-ups. If a newly required owner\n  cannot be retrieved, fail closed for the affected conclusion or artifact;\n  memory, summaries, and convenient examples are not substitutes.\n"
+        },
+        {
+          "clause": null,
+          "disposition": "external",
+          "external_source": "source.start",
+          "index": 5,
+          "lines": [
+            291,
+            295
+          ],
+          "predecessor_normalized_sha256": "236ec1e71f1d85ad9fef625f67ec70e8db47a3d2c14a8fa3500a5a67c7e084dd",
+          "sha256": "1df7de0c8eed283db67061ef60727ffab859a599ac8025c3c626f2e42e49acb7",
+          "text": "- Activation and application are separate stages. Successfully retrieving an\n  owner does not prove its contract was applied. Validate the resulting\n  behavior against the activated contract, and if a later prerequisite blocks\n  the preferred path, preserve the owner's failure, fallback, or presentation\n  contract rather than degrading into unconstrained prose.\n"
+        },
+        {
+          "clause": null,
+          "disposition": "external",
+          "external_source": "source.start",
+          "index": 6,
+          "lines": [
+            296,
+            298
+          ],
+          "predecessor_normalized_sha256": "0785f1c2e797f795dc72e4c9f1f437ba0a3ee2ef37744f758906d3fb7bda05a9",
+          "sha256": "4bb76ef7367468304726b55cd44d66922a1f4793fe06a64acee11fdc4642dd7b",
+          "text": "- `docs/prompt-contracts.md` owns shared prompt-contract meaning; implementing\n  repositories own operational schemas, hydration, rendering, receipts, and\n  validation code.\n"
+        },
+        {
+          "clause": null,
+          "disposition": "external",
+          "external_source": "source.start",
+          "index": 7,
+          "lines": [
+            299,
+            301
+          ],
+          "predecessor_normalized_sha256": "20daf9fbeca9024c8c6e9e21cfe77657b224630f010c7ca5e08f5a9fa68447b0",
+          "sha256": "ce9226679f45fb99ebddf56c971fa5855e0d52ffda629630476870b2242f6c6e",
+          "text": "- Repo-local `AGENTS.md` is the repository execution layer. Playbook changes\n  and `AGENTS.md` edits are separate work types; edit `AGENTS.md` only with\n  explicit authorization or when that update is the task's primary purpose.\n"
+        },
+        {
+          "clause": null,
+          "disposition": "external",
+          "external_source": "source.start",
+          "index": 8,
+          "lines": [
+            302,
+            305
+          ],
+          "predecessor_normalized_sha256": "7f2377eb1f650e3e4fc1735d8ec8b3649ddcd609052667399462029f29a73f5d",
+          "sha256": "703637234a2f2083bc5ed6b72308422cb1cd82e4c6e7dab868d2d915c0daab00",
+          "text": "- Deterministic repository triggers run before conversational interpretation.\n  Apply `docs/source-first-retrieval.md`; summaries, snapshots, memory, pasted\n  descriptions, and generated notes are navigation rather than proof of\n  current repository state.\n"
+        },
+        {
+          "clause": null,
+          "disposition": "external",
+          "external_source": "source.start",
+          "index": 9,
+          "lines": [
+            306,
+            309
+          ],
+          "predecessor_normalized_sha256": "d5a4268e8de8dc8d9216bdb0661c1717a102f98a3d470a1f2acec9b02a8e87f4",
+          "sha256": "e2c21d29bed6b836827b24c07cf02f3a770e1c1e122280cb36442bb6a77d087d",
+          "text": "- When referenced repository state was not directly verified, state\n  `unknown → referenced repo state was not verified`. If retrieval was missed\n  and remains available, recover by performing it and correcting or marking\n  prior assumptions as unverified.\n"
+        },
+        {
+          "clause": null,
+          "disposition": "external",
+          "external_source": "source.start",
+          "index": 10,
+          "lines": [
+            310,
+            312
+          ],
+          "predecessor_normalized_sha256": "cbe4faa3beaa9c7d32fd08aa6d1c0395f94eb05751551bf7b1a8aed1cc717657",
+          "sha256": "b7c9a833a5d222764bc6192c9444785141c1d2651ba76ba5092f3ddfa8b1feb1",
+          "text": "- If the human asks for a concrete operational action and the required tools,\n  authority, and context are available, perform it before discussing\n  speculative workflow improvements.\n"
+        },
+        {
+          "clause": null,
+          "disposition": "external",
+          "external_source": "source.start",
+          "index": 11,
+          "lines": [
+            313,
+            314
+          ],
+          "predecessor_normalized_sha256": "3b7421b457bc5c6f2c1951967046b707ab2ca96dbdb796f83e062187d637c771",
+          "sha256": "d61299914fe0c4d6770f365f9f9fe59ce422c90e9ca9b639ce239d7eba4efe67",
+          "text": "- Only documented files under `docs/tool-adapters/` are authoritative for\n  executor-specific workflow behavior.\n"
+        },
+        {
+          "clause": null,
+          "disposition": "external",
+          "external_source": "source.start",
+          "index": 12,
+          "lines": [
+            315,
+            317
+          ],
+          "predecessor_normalized_sha256": "716ae3b1877e2ab7ff4693fd50b3c70b72c650ea15fa7cc696cdb4613d5ff469",
+          "sha256": "c8602c4afaedeabb008594cdc121f19717616ec0c64396e01f373c374af2034d",
+          "text": "- Incubation, staging, runtime artifacts, generated snapshots, copied custom\n  instructions, local workspace instructions, and temporary operational notes\n  are noncanonical unless deliberately promoted into the Playbook.\n"
+        }
+      ],
+      "heading": "### Required Repository Invariants",
+      "path": "docs/start-here.md",
+      "predecessor_section_sha256": "0c919a8128691d9f235e263cb658ed15affc429702b60698b608ca02a5d67816",
+      "revision": "da7a7dcb056239ac4193d1d44500c606488621f2",
+      "sha256": "5e0e59ec0e340319cf5a67c680fe4de4b2b994e51ad0a2e550683485cb73c9f2",
+      "unit": "pb.mode-persistence"
+    },
+    {
+      "blocks": [
+        {
+          "clause": null,
+          "disposition": "supporting",
+          "external_source": null,
+          "index": 1,
+          "lines": [
+            118,
+            118
+          ],
+          "predecessor_normalized_sha256": "f2277c0dc10ce150141890ef35acb77fb37e302d250091b0ec574bc5b09af6fa",
+          "sha256": "1d3bcbd49b48f1d0499f227785fcb73a7b841b4bf8f4d3bfad6851ce7c301aea",
+          "text": "## Triggers\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 2,
+          "lines": [
+            120,
+            121
+          ],
+          "predecessor_normalized_sha256": "81e8517692b07ff4af62a9b0aaea6bfcc2993b0a19c8dd4eb5cfe63aada54a04",
+          "sha256": "d48a3f3b83930ccc92ab9c6a806c065d902c0aed09abd8b22c5fe698c6c37615",
+          "text": "Classify triggers before using prior conversation, summaries, memory, or pasted\ndescriptions to reason about repository state.\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 3,
+          "lines": [
+            123,
+            124
+          ],
+          "predecessor_normalized_sha256": "d4e3cc28fb7a8052d259158a25d72603b2c5b3e53685500f237a704d1916f9f0",
+          "sha256": "514c74784c9f1b28d572bb37ae7401d11dd846c3a1278ba3e8e352eaf84f69dd",
+          "text": "Mandatory source-first triggers require authoritative retrieval before\nstateful reasoning or recommendations:\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 4,
+          "lines": [
+            126,
+            128
+          ],
+          "predecessor_normalized_sha256": "a634d415043cc249b1b174110d9719c6b0247e2350194024936bab615e6c3b93",
+          "sha256": "048b2b78622c9d9662f399e772c5e22fd076d2effc91ca9289fc0a53403c96d1",
+          "text": "- GitHub pull request URLs, pull request numbers, or requests such as \"review\n  this PR\", \"review directly\", \"take a look\", \"check this PR\", \"continue this\n  PR\", or \"is this ready?\"\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 5,
+          "lines": [
+            129,
+            130
+          ],
+          "predecessor_normalized_sha256": "8e4d20c33d6738518fd8a41bed30d6a5ffe40fc3eb627204387e2db70891c21a",
+          "sha256": "3511b99d0dcd5730ac01688194148d6df12802f52ae909fbb209e40d24467cac",
+          "text": "- GitHub issue URLs, issue numbers, or requests such as \"continue from this\n  issue\", \"implement this issue\", or \"what is left on this issue?\"\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 6,
+          "lines": [
+            131,
+            131
+          ],
+          "predecessor_normalized_sha256": "5adb747c9145fa5e1c020215148b15259247d34e588fedd333b5083f7082dd19",
+          "sha256": "2bb98cef7f536373b014981d06091084c40c301c1a2a2b3b8456f54aa71cb9b2",
+          "text": "- repository identifiers, repository URLs, or local repository paths\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 7,
+          "lines": [
+            132,
+            133
+          ],
+          "predecessor_normalized_sha256": "d930da911a7c6ec0f486c36988ba1b27ffdf14340afd374c602fff10e1c3babb",
+          "sha256": "f1b56e7a5b246c1bb0c92b1fd31f5d0dd5e835aeec6a24109e9b1a75ca433af8",
+          "text": "- repo-aware advisory or evaluation requests where a repository is explicitly\n  named and the answer depends on that repository's actual state\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 8,
+          "lines": [
+            134,
+            134
+          ],
+          "predecessor_normalized_sha256": "7af1674f9d34bd19b2e637d41769cc4b2342162e4e671086334f5f22fde692c6",
+          "sha256": "a7e3c2b7f37b6dbc9ea1544b87f08cbd8675a683eafb7be39a655743c6916388",
+          "text": "- branch names, refs, tags, commit SHAs, comparison ranges, or release refs\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 9,
+          "lines": [
+            135,
+            136
+          ],
+          "predecessor_normalized_sha256": "467d3102720d2c6de617440d165e5e6ec1e133fbcbeef93b70532523b84f7531",
+          "sha256": "7784e25d3c3a6303999c53bb339de03f3885f4efb154e7115edbb9bbc3d74e2c",
+          "text": "- requests to assess mergeability, CI status, review state, changed files,\n  issue closure, validation status, or current implementation scope\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 10,
+          "lines": [
+            137,
+            140
+          ],
+          "predecessor_normalized_sha256": "63299a79900971f937f9882b9f498ecaa7c9ed6f465a762cd6922d4bfc7c1a08",
+          "sha256": "adcbcb4c3827764cab83105df5854dfc316309b80b615064946b13600f66c7db",
+          "text": "- requests involving PRs, issues, branches, workflows, checks, validation\n  state, merge sequencing, or implementation quality; treat these as mandatory\n  source-first triggers and select the appropriate repo-readiness interaction\n  mode rather than defaulting to conversational analysis\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 11,
+          "lines": [
+            141,
+            142
+          ],
+          "predecessor_normalized_sha256": "3173730525811122867311ba29c6a579d8287d0113cf63c3f0e45a0e40e7dac1",
+          "sha256": "3ba2a555f280e59f6d40b051aa0cfdde68616e940c47a1c709e47687d007d197",
+          "text": "- claims or requested changes that depend on current external provider,\n  public API, SDK, CLI, package, or hosted-platform behavior\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 12,
+          "lines": [
+            144,
+            146
+          ],
+          "predecessor_normalized_sha256": "e33a86e45a1b89dc35cfe179f1c7a54403bee9a6e11446ac1e618b52421f2c2b",
+          "sha256": "dd087a445699157be55551888934c316e3ef9ca8b2a867cba490a5b6f7c82321",
+          "text": "Optional triggers may guide retrieval when the next action depends on current\nstate, but they do not require source inspection for purely conversational\nanswers:\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 13,
+          "lines": [
+            148,
+            149
+          ],
+          "predecessor_normalized_sha256": "94125dde5c1f6031737049463c6602276b825c7d450a33e96cd6f37756bb203a",
+          "sha256": "18772f683a54e09dedb4c81ed6e183fac405dedeaa91262a4f9a0da25d6f41e9",
+          "text": "- pasted summaries, completion reports, copied diffs, screenshots, or release\n  notes without a live artifact identifier\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 14,
+          "lines": [
+            150,
+            152
+          ],
+          "predecessor_normalized_sha256": "04683ff578629be6eb763bcf224604751aee936857b620a2450b377719cb9cb7",
+          "sha256": "acc13f8eb67a94da9bcd31435fbf579ae18da5d46e3507e70ed056fd2c6217dc",
+          "text": "- references to earlier conversation, prior work, a remembered plan, previous\n  operational synthesis, or broad repository names without a state-dependent\n  action\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 15,
+          "lines": [
+            153,
+            153
+          ],
+          "predecessor_normalized_sha256": "31f4cdf9e5590c79b9ed91e3b6959c72885910423074fe099e1aadd95fc30bb4",
+          "sha256": "e67a1dceb51ca5bc2a18624139a8f12a79aa5e02a554f90a6a7c08316f654b23",
+          "text": "- conceptual questions about workflow patterns, review posture, or tradeoffs\n"
+        },
+        {
+          "clause": "action.retrieval-triggers/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 16,
+          "lines": [
+            155,
+            159
+          ],
+          "predecessor_normalized_sha256": "b4318ef9f9167e292f7b385651b1428a428d99a02c8103d660be289bb252feae",
+          "sha256": "b9088954b0d346de1f2d24a3a1d63e44538033b0adaa01ed4585286da46a3dd3",
+          "text": "Ambiguous cases must be resolved before stateful conclusions. If \"continue\",\n\"the branch\", \"the PR\", or similar wording points to a clear source, inspect\nthat source. If the target is unclear, ask a narrow clarifying question or\nreport the missing identifier. Do not fill the gap with conversational\ninference.\n"
+        }
+      ],
+      "heading": "## Triggers",
+      "path": "docs/source-first-retrieval.md",
+      "predecessor_section_sha256": "d23154881ca4e9da490b6868baf3127965547dc384c7e34d9df752375f765718",
+      "revision": "da7a7dcb056239ac4193d1d44500c606488621f2",
+      "sha256": "268bf852561925cfce08b4381a07b3cdc635d8b8d59ea49e4e83a64ca9d6d211",
+      "unit": "pb.retrieval-triggers"
+    },
+    {
+      "blocks": [
+        {
+          "clause": null,
+          "disposition": "supporting",
+          "external_source": null,
+          "index": 1,
+          "lines": [
+            288,
+            288
+          ],
+          "predecessor_normalized_sha256": "891f544e6e82f5cbfac2d08384e0603f621cf11496b4d608cc0a2353e7424c90",
+          "sha256": "4e9689a342880d8eb8c12b45680458f95bab699a6688a15815a9e5d4b23b657f",
+          "text": "## Verification Gate\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 2,
+          "lines": [
+            290,
+            290
+          ],
+          "predecessor_normalized_sha256": "95b85641cfb6bdbca21528ba9dbfdb410d2296781cb1652c180324556af81c8e",
+          "sha256": "9e9fde18121478b25d6310893117a8679ddc3ebcef3e849620acad91d001f697",
+          "text": "Use this gate whenever a mandatory trigger is present:\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 3,
+          "lines": [
+            292,
+            292
+          ],
+          "predecessor_normalized_sha256": "3107ed2a355a17cacf9af59673be713351b0e512ed06f5a8e0028029cf455719",
+          "sha256": "1366331f918f614186973d6485f371cb376bdc638441d9aa1352ff7a2cdfd566",
+          "text": "- Trigger: name the artifact or request that activated retrieval.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 4,
+          "lines": [
+            293,
+            293
+          ],
+          "predecessor_normalized_sha256": "8fdd0158a0de288ef5322bf14ecaedb48ae35eb78d0ebb9ca90893862bdf8114",
+          "sha256": "cf16ae609e9206f1569da9ec234c32fb60334bf2df2b7a4566737feb180e511a",
+          "text": "- Source: name the authoritative source used for current state.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 5,
+          "lines": [
+            294,
+            294
+          ],
+          "predecessor_normalized_sha256": "a31f65a38705437581ec68584e9754d57880bb1fa21acc9ebbed1b32e6c89b53",
+          "sha256": "9b163dc5a14ac6c9993eccaed3213751e45eea3d0a1c3848449d764a37314692",
+          "text": "- Checks: list the state checks required by the task.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 6,
+          "lines": [
+            295,
+            295
+          ],
+          "predecessor_normalized_sha256": "c73a5931da22ac8c6421ae06150e6c1e8a4d8d5b6f95971704c301ae99b27ee1",
+          "sha256": "845ab88feab272050070de429b4a6a97736d337d5e6cff59b7ea082bde399c2b",
+          "text": "- Result: mark the gate `verified`, `partial`, or `blocked`.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 7,
+          "lines": [
+            296,
+            296
+          ],
+          "predecessor_normalized_sha256": "fd8b8079649403e70f9291c3c67cfbf1aa40b27bb9efc4141bd6b475ac5b76e2",
+          "sha256": "7eca869bc6d9923ac57d8ad1b97257e9d8ed2a7d0e174f117c1b2e2d6db9d828",
+          "text": "- Unknowns: state anything required for the task that remains unverified.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 8,
+          "lines": [
+            298,
+            299
+          ],
+          "predecessor_normalized_sha256": "08986acb33a522265d2a654d4263ad973b8c9f8ba14ede56b72b5bedbe6430a0",
+          "sha256": "f5a8950d12131fc65a5d7ac4d75c1a4ddcc269bbcd677f44e1ee6f9fb65b1344",
+          "text": "If direct verification did not happen, say exactly:\n`unknown → referenced repo state was not verified`.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 9,
+          "lines": [
+            301,
+            301
+          ],
+          "predecessor_normalized_sha256": "ba9387dce78c4cbcb08b868ba27c6e034d4cc6cbb05f1b1ed9e06ffe7c37379f",
+          "sha256": "220db1a77d23cb64ca4d95296374571885df79cf846f6d9c3b61d61f100ed0c1",
+          "text": "Acceptable authoritative sources depend on the claim:\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 10,
+          "lines": [
+            303,
+            304
+          ],
+          "predecessor_normalized_sha256": "dcaf1853d39f32acbf08a80b5f9a1dba644f2dc8b66201d4303a425878202a94",
+          "sha256": "db59145bf0808ab4b391894758cf9fdd2a551dd6b25729b8a505ac37693f0085",
+          "text": "- Repository files, local `git` state, and checked-out refs are authoritative\n  for the inspected local worktree only.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 11,
+          "lines": [
+            305,
+            306
+          ],
+          "predecessor_normalized_sha256": "ca2023f8f002933fb72d70576734ceceb9aaa88460f3e704d5b097f719e4f904",
+          "sha256": "c458260d5787e0d02fdcf98daab749d325bc77cae56c9673832ced97b2568acf",
+          "text": "- GitHub PRs, issues, review threads, CI, mergeability, and branch metadata are\n  authoritative for current remote PR and issue state.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 12,
+          "lines": [
+            307,
+            308
+          ],
+          "predecessor_normalized_sha256": "79ecd48f4120cbc96b64bebe7694250bd6ad0b8df1cfa674920c1ec2bccbdb7d",
+          "sha256": "c9f4a570855405d6bb1aa56a0e170bb82a01346b7bcddf09cfa0472420898735",
+          "text": "- CI systems and validation command output are authoritative for the checks\n  they actually ran.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 13,
+          "lines": [
+            309,
+            310
+          ],
+          "predecessor_normalized_sha256": "0504f53021fda959c50c6bcc5b400129d5118937e35393cd03c1638e66581462",
+          "sha256": "0cdb14f99b707617052be035d6ef3398436f8829af57088eeccd635e2e3e979c",
+          "text": "- Official provider documentation, schemas, SDK docs, CLI docs, changelogs, or\n  release notes are authoritative for external public API behavior.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 14,
+          "lines": [
+            312,
+            316
+          ],
+          "predecessor_normalized_sha256": "22cae7fdac0155ac3ae8ccf3ff6ff3db21dc9985370ca9fb46920dbf7af56377",
+          "sha256": "738e1ad192f59dc2a5a88e50b3f1881e2c69f803df2dc90016de739a266c1f47",
+          "text": "For pull requests and issues, do not infer implementation quality, scope, risk,\nmerge readiness, or correctness from titles, summaries, commit messages,\nreported check status, or conversational descriptions. Inspect changed files,\nvalidation or check state, scope boundaries, and overlap or conflict risk\ndirectly.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 15,
+          "lines": [
+            318,
+            321
+          ],
+          "predecessor_normalized_sha256": "17184e6f85a4e2e650b35db15d991fed291629b734f94bfcaeb832ec69a2340b",
+          "sha256": "76cc9220c341dc20d907f09ea9c8109ab8240ace45f8cc76ea0cda1bb0905e5d",
+          "text": "If the required source is unavailable, blocked, or access is declined, stop the\nstateful workflow and report the blocker. Do not provide readiness,\nmergeability, approval, closure, or implementation-completeness conclusions\nfrom secondhand context.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 16,
+          "lines": [
+            323,
+            325
+          ],
+          "predecessor_normalized_sha256": "06d87a34df072174800a1c41e5d6dac0879c07d94cca82818ca956f2cfd91116",
+          "sha256": "f4c4b76b02a34aac6dd513bb26b46b6d1ea5f7db77314629e25e838aa712e491",
+          "text": "If only part of the source can be verified, return a partial result. Separate\nverified facts from unknowns, avoid recommendations that depend on missing\nstate, and say what retrieval would complete the gate.\n"
+        },
+        {
+          "clause": "action.claim-verification/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 17,
+          "lines": [
+            327,
+            330
+          ],
+          "predecessor_normalized_sha256": "fcafd493896f67716e9b75ef2538b7a5716fc3d4cbe5aa8078d34dd0b8b0970a",
+          "sha256": "67dd0ec8d59b92514a61af643eb1d291b379150cd553fd7fd76fe4d9e25edc66",
+          "text": "If local and remote state disagree, state which source supports each fact and\nwhich one controls the decision. For repository completion, GitHub PR and issue\nstate usually controls remote readiness, while local `git` state controls only\nthe current checkout.\n"
+        }
+      ],
+      "heading": "## Verification Gate",
+      "path": "docs/source-first-retrieval.md",
+      "predecessor_section_sha256": "9c7ccc062aa19127db2c29660386fa6f5b26115494bf10c13d9451b163325928",
+      "revision": "da7a7dcb056239ac4193d1d44500c606488621f2",
+      "sha256": "268bf852561925cfce08b4381a07b3cdc635d8b8d59ea49e4e83a64ca9d6d211",
+      "unit": "pb.claim-verification"
+    },
+    {
+      "blocks": [
+        {
+          "clause": null,
+          "disposition": "supporting",
+          "external_source": null,
+          "index": 1,
+          "lines": [
+            341,
+            341
+          ],
+          "predecessor_normalized_sha256": "1237cb3128050707a499c1e2850a080b6e767487e1247b945f6749273983a29e",
+          "sha256": "f79ce0ec1bcb212d4ad3163809c2ed34dcdf44cf60ba26da6cd02a54b20f556b",
+          "text": "## Recovery\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 2,
+          "lines": [
+            343,
+            344
+          ],
+          "predecessor_normalized_sha256": "20e9c5d05fdf7af11c82d5c86443514a8c54237d8ce5a4da2ce588b1dad5fe30",
+          "sha256": "436a6022ba6b2327373dda89fe4fd35174fc74d6baddca4a9eb63d0f2d11b87e",
+          "text": "Recovery is required when source-first ordering has already been missed. This\nincludes:\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 3,
+          "lines": [
+            346,
+            347
+          ],
+          "predecessor_normalized_sha256": "81cf2fd8d0275328193276237f73350b6207a518d24d4430a6ab144a9ec20558",
+          "sha256": "b9124bb4579929f7eb27e1e49fdd5dcb4a4a21da0c34671e6e9b6ade65003452",
+          "text": "- the assistant answered before opening the referenced PR, issue, repository,\n  branch, commit, path, or provider source\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 4,
+          "lines": [
+            348,
+            348
+          ],
+          "predecessor_normalized_sha256": "437bbcb0be7c065d471280058be3ea5e8b4ea9917c5517b3e32f99be9e3a97b0",
+          "sha256": "e7d74e9805c95dd05b014549f780ae3752ed5a9951e5ddda0ba0792d43505fae",
+          "text": "- conversational continuity outran verification\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 5,
+          "lines": [
+            349,
+            349
+          ],
+          "predecessor_normalized_sha256": "d859e344426fd907ec5431a14d8681c8053a8865e218f70da41966a77135e5b1",
+          "sha256": "65a8cb5badeadcde40c66d41134cd502126785a38c115d9cb2eb6b3a4808bf25",
+          "text": "- inferred state was used before retrieval\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 6,
+          "lines": [
+            350,
+            350
+          ],
+          "predecessor_normalized_sha256": "faf8df4647e0c07a0c9f697cc744928d0167fd62e75850ea86a93cbb8612d665",
+          "sha256": "2012601f9d8debec97948ca36701b618ad86ecbec25bcecf116d4bd11c82272a",
+          "text": "- a human explicitly calls out missing source inspection\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 7,
+          "lines": [
+            351,
+            351
+          ],
+          "predecessor_normalized_sha256": "a9f2986b4678400a65914ad8e3a644f6a8c2873e2969bd4c0b5de7de847cd294",
+          "sha256": "9ff5c17bfb808a1b7d8b90b11b6760d95edc853e487237a8fa52ca2996a1cea5",
+          "text": "- conversational context conflicts with authoritative state\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 8,
+          "lines": [
+            353,
+            354
+          ],
+          "predecessor_normalized_sha256": "87cb2089e8712aa4e986b8c6ba07765586be2f658ed5e14d0886dee2e6c4f035",
+          "sha256": "86efbf5079394143790fe41d1dfa67f997fb89336969c2295695669894ea81e8",
+          "text": "When retrieval remains available, recovery restores verified state before\nconversational repair:\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 9,
+          "lines": [
+            356,
+            356
+          ],
+          "predecessor_normalized_sha256": "5c6b9048ac196f4e8942c47f3a18d29643e880d77f342e85cb9ab53405245fab",
+          "sha256": "14390a17a59f1cb8dd7714c65e246cfdd0d83fe3c63750d1df80635e0fc99d8c",
+          "text": "1. Halt continuity reasoning.\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 10,
+          "lines": [
+            357,
+            357
+          ],
+          "predecessor_normalized_sha256": "6c959759ec203c4ebd57a7dd6106edaf1f8d14076f4e1ec283899f0f4e98d1ca",
+          "sha256": "9a9ec83e19c1239fbd648af73dde0d0bca65661fa1cfce899e07b8e28afb1531",
+          "text": "2. Identify every unresolved mandatory trigger.\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 11,
+          "lines": [
+            358,
+            358
+          ],
+          "predecessor_normalized_sha256": "863e8e9471fc8b2dea8217ed9d2c1c78b40dc371be0a007ceeb93831ea9d300f",
+          "sha256": "e2a6733e3e2cdeeb43e96fec848995ea553d3f779c847dda3ce0b558e0ee7b86",
+          "text": "3. Retrieve the authoritative source state for those triggers.\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 12,
+          "lines": [
+            359,
+            359
+          ],
+          "predecessor_normalized_sha256": "a00ad72bd6ea9f3786dc922adcdc3051d6e9818d78c45af9a4bf6681acb18e30",
+          "sha256": "d6f754ead1021d2bcbcbed8343580e64c403196eed02ebb47f52f646ca084254",
+          "text": "4. Discard, correct, or mark unverified any assumptions made before retrieval.\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 13,
+          "lines": [
+            360,
+            360
+          ],
+          "predecessor_normalized_sha256": "01eaf0342c475f66557c39262f5daeeb9baa199af1ae07c14a6e4cb53eeda761",
+          "sha256": "c93db2a2292b58dd8771fdcf9806ec08e4973cb81ea574bcc5516d74622cd403",
+          "text": "5. Resume from the restored verified state and stated unknowns.\n"
+        },
+        {
+          "clause": "action.retrieval-recovery/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 14,
+          "lines": [
+            362,
+            365
+          ],
+          "predecessor_normalized_sha256": "7418d8a517cb01625767a4029cc438bab7bc71e18f5cbaca3a9f293147c7b632",
+          "sha256": "c1eefe25eddeeb3daa819f4fdb7b5a8b28d417cbee4cff82bd28f27684f29271",
+          "text": "Acknowledgment alone is not recovery. Explaining the violation is not\nremediation. Recovery must perform the missing retrieval or inspection when it\nis available, then explain only remaining blockers, uncertainty, or corrections\nthat still matter after inspection.\n"
+        }
+      ],
+      "heading": "## Recovery",
+      "path": "docs/source-first-retrieval.md",
+      "predecessor_section_sha256": "3a4a964657abf467584095aa3e6fe64bca2874355b5b14885bde4eec09c38da9",
+      "revision": "da7a7dcb056239ac4193d1d44500c606488621f2",
+      "sha256": "268bf852561925cfce08b4381a07b3cdc635d8b8d59ea49e4e83a64ca9d6d211",
+      "unit": "pb.retrieval-recovery"
+    }
+  ]
+}

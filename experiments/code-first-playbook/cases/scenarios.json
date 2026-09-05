@@ -1,0 +1,126 @@
+{
+  "frozen_before_results": true,
+  "scope": "Synthetic checks are not live reliability trials",
+  "cases": [
+    {
+      "id": "01",
+      "name": "first-startup",
+      "expected": "Startup floor conditional; no digest establishes application."
+    },
+    {
+      "id": "02",
+      "name": "ordinary-continuation",
+      "expected": "Persistence retains still-current conventions; no frozen mutable state."
+    },
+    {
+      "id": "03",
+      "name": "material-change",
+      "expected": "New repository/activated owners remain unresolved obligations."
+    },
+    {
+      "id": "04",
+      "name": "specialized-owner-unknown",
+      "expected": "Conditional owner reads visible, not definitely active."
+    },
+    {
+      "id": "05",
+      "name": "live-trigger-summary",
+      "expected": "Mandatory source trigger and external current owner retained."
+    },
+    {
+      "id": "06",
+      "name": "partial-verification",
+      "expected": "Unknown result cannot yield readiness or complete contract."
+    },
+    {
+      "id": "07",
+      "name": "rejected-transport-alternative",
+      "expected": "Qualified available route remains recovery, no premature all-route failure."
+    },
+    {
+      "id": "08",
+      "name": "all-routes-unavailable",
+      "expected": "Stop affected conclusions and name exact gap."
+    },
+    {
+      "id": "09",
+      "name": "judgment-false",
+      "expected": "Repository work=false and material change=false do not prune any obligations."
+    },
+    {
+      "id": "10",
+      "name": "stale-context",
+      "expected": "Old context observation remains stale and non-pruning."
+    },
+    {
+      "id": "11",
+      "name": "omitted-unavailable",
+      "expected": "Unknown and unavailable remain distinct and visible."
+    },
+    {
+      "id": "12",
+      "name": "duplicate-conflict",
+      "expected": "Conflicting observations retained; no last-write-wins."
+    },
+    {
+      "id": "13",
+      "name": "forged-qualification",
+      "expected": "Resolution upgrade and fabricated evidence reference rejected."
+    },
+    {
+      "id": "14",
+      "name": "scope-freshness",
+      "expected": "Evidence mismatch cannot widen scope or prune."
+    },
+    {
+      "id": "15",
+      "name": "false-conjunct-proof",
+      "expected": "Qualified observed false conjunct excludes independently of judgment, with exact proof."
+    },
+    {
+      "id": "16",
+      "name": "required-inapplicable",
+      "expected": "Required rule retained despite independent false activation."
+    },
+    {
+      "id": "17",
+      "name": "judgment-all-paths",
+      "expected": "not/all/any, edges, failure, lifetime and completion never discharge judgment."
+    },
+    {
+      "id": "18",
+      "name": "external-closure",
+      "expected": "All adapters, interaction-mode and action-latch remain external; no complete startup."
+    },
+    {
+      "id": "19",
+      "name": "graph-retirement",
+      "expected": "Retired active references and meaningful cycles rejected; reference cycles accepted."
+    },
+    {
+      "id": "20",
+      "name": "action-definition",
+      "expected": "Changed action with stable rules yields definition event and declared fan-out."
+    },
+    {
+      "id": "21",
+      "name": "term-boundary",
+      "expected": "Imported term and boundary/evidence definition changes fan out; unrelated control unaffected."
+    },
+    {
+      "id": "22",
+      "name": "normative-context",
+      "expected": "Normative-to-context is removal; context-only and old/new deleted-reference impacts distinct."
+    },
+    {
+      "id": "23",
+      "name": "renderer-output-corruption",
+      "expected": "Dropped exception, changed modality, invented fallback, stale/hand-edit/missing/extra detected."
+    },
+    {
+      "id": "24",
+      "name": "authority-rehearsal",
+      "expected": "Forward, compiler/content rollback, inadequacy and reverse preserve one mock owner; stale/incomplete blocked."
+    }
+  ]
+}
