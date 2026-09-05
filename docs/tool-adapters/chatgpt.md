@@ -137,11 +137,6 @@ machine recipient is unknown, inspect or attempt it before resolving the route.
 Material prompts also apply the durable profile below; routine prompts do not
 inherit it from transport.
 
-Treat `show me`, `give me`, and `prompt me` as operator-presentation wording,
-not as a recipient override. When the request clearly names a machine executor,
-keep the human who manually instantiates that run as its viewer or launcher and
-apply the shared machine-recipient selection unchanged.
-
 Route failure and terminal blocking remain owned by the canonical decision
 model. ChatGPT must preserve the owning failure reason rather than choose
 another renderer.
@@ -234,10 +229,6 @@ Consume the current selection from the shared
 Its presentation is final input to this client projection: an Airtable route
 uses the thin handoff, a blocked route renders no complete prompt, and
 conceptual fragments remain lightweight.
-
-After a successful Airtable handoff, report only the useful operator
-configuration and the required external envelope. Do not duplicate the stored
-prompt or routine storage and verification mechanics in chat.
 
 For the canonical inline two-block presentation, emit the shared operator
 metadata and complete executable prompt as two consecutive fenced blocks with

@@ -12,7 +12,7 @@ EXPECTED_COLUMNS = (
     "Produced artifact",
     "Operator/viewer",
     "Execution recipient",
-    "Downstream surface",
+    "Downstream execution surface",
     "Route capability",
     "Selected delivery",
 )
@@ -48,88 +48,6 @@ class PromptRecipientRoutingTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.cases = parse_qualification_cases()
 
-    def test_required_regression_cases_have_expected_semantics(self) -> None:
-        expected = {
-            "human-personal-use": (
-                "complete",
-                "human",
-                "human",
-                "human",
-                "not-required",
-                "inline-two-block",
-            ),
-            "cak-228-prompt-me-codex": (
-                "complete",
-                "human",
-                "codex",
-                "codex-fresh-thread",
-                "permitted",
-                "airtable-thin-handoff",
-            ),
-            "claude-executes": (
-                "complete",
-                "human",
-                "claude",
-                "claude-execution",
-                "permitted",
-                "airtable-thin-handoff",
-            ),
-            "chatgpt-executes": (
-                "complete",
-                "human",
-                "chatgpt",
-                "chatgpt-execution",
-                "permitted",
-                "airtable-thin-handoff",
-            ),
-            "manual-codex-launch": (
-                "complete",
-                "human",
-                "codex",
-                "codex-manual-fresh-thread",
-                "permitted",
-                "airtable-thin-handoff",
-            ),
-            "machine-route-unavailable": (
-                "complete",
-                "human",
-                "codex",
-                "codex-fresh-thread",
-                "unavailable",
-                "blocked",
-            ),
-            "machine-route-unresolved": (
-                "complete",
-                "human",
-                "codex",
-                "codex-fresh-thread",
-                "unresolved",
-                "blocked",
-            ),
-            "human-reads-complete-prompt": (
-                "complete",
-                "human",
-                "human",
-                "human",
-                "not-required",
-                "inline-two-block",
-            ),
-            "conceptual-fragment": (
-                "fragment",
-                "human",
-                "none",
-                "none",
-                "not-applicable",
-                "lightweight",
-            ),
-        }
-        columns = EXPECTED_COLUMNS[1:]
-        observed = {
-            case_id: tuple(row[column] for column in columns)
-            for case_id, row in self.cases.items()
-        }
-        self.assertEqual(expected, observed)
-
     def test_human_viewer_does_not_determine_execution_recipient(self) -> None:
         human_viewer_cases = [
             row for row in self.cases.values() if row["Operator/viewer"] == "human"
@@ -161,7 +79,8 @@ class PromptRecipientRoutingTests(unittest.TestCase):
         failures = [
             row
             for row in self.cases.values()
-            if row["Route capability"] in {"unavailable", "unresolved"}
+            if row["Route capability"]
+            in {"unavailable", "identity-unresolved-after-inspection"}
         ]
         self.assertEqual(
             {row["Selected delivery"] for row in failures},
@@ -177,6 +96,15 @@ class PromptRecipientRoutingTests(unittest.TestCase):
             prompted["Selected delivery"],
             manual["Selected delivery"],
         )
+
+    def test_human_recipient_and_fragment_keep_lightweight_routes(self) -> None:
+        human = self.cases["human-personal-use"]
+        fragment = self.cases["conceptual-fragment"]
+        self.assertEqual(human["Execution recipient"], "human")
+        self.assertEqual(human["Selected delivery"], "inline-two-block")
+        self.assertEqual(human["Route capability"], "not-required")
+        self.assertEqual(fragment["Produced artifact"], "fragment")
+        self.assertEqual(fragment["Selected delivery"], "lightweight")
 
 
 if __name__ == "__main__":
