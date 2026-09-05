@@ -1,0 +1,2619 @@
+{
+  "complete": false,
+  "consumer": {
+    "canonical_reads": [
+      "src.start",
+      "src.core",
+      "src.agents",
+      "src.codex",
+      "src.baseline",
+      "src.retrieval",
+      "src.readiness"
+    ],
+    "capabilities": [
+      "activates",
+      "all",
+      "any",
+      "authority",
+      "before",
+      "canonical-reads",
+      "completion_boundary",
+      "eq",
+      "external-authority",
+      "fallback",
+      "in",
+      "invariant",
+      "not",
+      "overrides",
+      "present",
+      "prohibition",
+      "refers_to",
+      "requirement",
+      "requires",
+      "three-valued",
+      "trigger",
+      "typed-effects"
+    ],
+    "id": "read-only-repository-design",
+    "live_consumption": false,
+    "mode": "read_only_design",
+    "schema_version": 1,
+    "scope": "Read-only repository design analysis; reports candidate constraints and unknown facts. No execution, authority inference, startup replacement or operating-state mutation."
+  },
+  "evaluation_cases": [
+    {
+      "expected": [
+        "Read and apply current floor, matching adapter and activated owners before dependent work; controller verifies sufficiency."
+      ],
+      "forbidden": [
+        "A projection digest satisfies startup; worker self-report establishes sufficiency."
+      ],
+      "id": "case.startup",
+      "scenario": "Repository-dependent design analysis starts; floor or activated owner has not been read/applied.",
+      "sources": [
+        "src.startup-floor",
+        "src.core",
+        "src.retrieval"
+      ]
+    },
+    {
+      "expected": [
+        "Retain unknown activation and name missing fact; read narrower canonical owner; do not activate specialized owners from nouns alone."
+      ],
+      "forbidden": [
+        "Unknown is false; ordinary repository work activates every specialized owner."
+      ],
+      "id": "case.conditional",
+      "scenario": "Actual work may touch maintenance, feature delivery or cross-repository semantics; one trigger fact is unknown.",
+      "sources": [
+        "src.conditional-activation",
+        "src.core",
+        "src.retrieval"
+      ]
+    },
+    {
+      "expected": [
+        "Preserve conventions across ordinary continuation; reevaluate activated owners at material change; new repository requires new startup."
+      ],
+      "forbidden": [
+        "Repeat the entire bootstrap on every tool call; freeze mutable facts; style override grants a source-read exemption."
+      ],
+      "id": "case.persistence",
+      "scenario": "Startup succeeded; ordinary continuation then a material mode/artifact/source change arrives.",
+      "sources": [
+        "src.mode-persistence",
+        "src.core",
+        "src.retrieval"
+      ]
+    },
+    {
+      "expected": [
+        "Classify actual mandatory/optional/ambiguous triggers; retrieve source for stateful conclusions; resolve unclear referents."
+      ],
+      "forbidden": [
+        "Reason from the summary before inspection; require state retrieval for unrelated conceptual chat."
+      ],
+      "id": "case.triggers",
+      "scenario": "A live PR, ref or repository-dependent advice request conflicts with an old summary; a second case is purely conceptual.",
+      "sources": [
+        "src.retrieval-triggers",
+        "src.core",
+        "src.retrieval"
+      ]
+    },
+    {
+      "expected": [
+        "Report partial/blocked scope and unknowns; keep local and hosted ownership distinct; stop conclusions needing missing evidence."
+      ],
+      "forbidden": [
+        "Infer readiness/completeness from check summaries or a clean checkout."
+      ],
+      "id": "case.verification",
+      "scenario": "Some claim-specific sources are verified but a materially required source remains unavailable.",
+      "sources": [
+        "src.claim-verification",
+        "src.core",
+        "src.retrieval"
+      ]
+    },
+    {
+      "expected": [
+        "Halt continuity, retrieve through qualified permitted connector, verify current source, correct assumptions, resume bounded work. With no permitted route, stop affected work."
+      ],
+      "forbidden": [
+        "Treat one transport rejection as source unavailability; bypass the denied API; explain recovery without doing retrieval."
+      ],
+      "id": "case.recovery",
+      "scenario": "Mandatory retrieval was missed. Required bootstrap source exists; raw API transport is rejected; approved GitHub file connector remains available.",
+      "sources": [
+        "src.retrieval-recovery",
+        "src.core",
+        "src.retrieval"
+      ]
+    },
+    {
+      "expected": [
+        "Resolve semantic deliverable and eligible action classes: orchestration for handoff, implementation for explicit delegated changes."
+      ],
+      "forbidden": [
+        "A handoff request starts downstream implementation; tool capability supplies consent."
+      ],
+      "id": "case.mode",
+      "scenario": "Human requests a complete execution handoff; another scenario explicitly requests implementation and PR delivery.",
+      "sources": [
+        "src.interaction-mode",
+        "src.core",
+        "src.retrieval"
+      ]
+    },
+    {
+      "expected": [
+        "Invalidate incompatible queued actions before the next tool call; use explicit newly authorized action classes only; honor review source owner."
+      ],
+      "forbidden": [
+        "Retry a failed forbidden action with another command; preserve residual authority from older envelope."
+      ],
+      "id": "case.latch",
+      "scenario": "Implementation has queued a mutation; current human instruction narrows this to connector-sufficient review.",
+      "sources": [
+        "src.action-latch",
+        "src.core",
+        "src.retrieval"
+      ]
+    }
+  ],
+  "pilot_units": [
+    "startup-floor",
+    "conditional-activation",
+    "mode-persistence",
+    "retrieval-triggers",
+    "claim-verification",
+    "retrieval-recovery",
+    "interaction-mode",
+    "action-latch"
+  ],
+  "rules": [
+    {
+      "consequence": {
+        "kind": "obligation",
+        "meaning": "Before repository-scoped work, read start-here, core model, baseline, target AGENTS and matching adapter; identify purpose, mode, canonical owner, source-first requirements, policy-family alignment when relevant, command form and canonical validation/review. The controller establishes context sufficiency; act only once all checks are clear.",
+        "term": "startup-path",
+        "value": "canonical_reads_first"
+      },
+      "dependencies": [
+        {
+          "relation": "requires",
+          "target": "src.start"
+        },
+        {
+          "relation": "requires",
+          "target": "src.core"
+        },
+        {
+          "relation": "requires",
+          "target": "src.baseline"
+        },
+        {
+          "relation": "requires",
+          "target": "src.agents"
+        },
+        {
+          "relation": "requires",
+          "target": "src.readiness"
+        },
+        {
+          "relation": "requires",
+          "target": "src.retrieval"
+        },
+        {
+          "relation": "requires",
+          "target": "src.codex"
+        },
+        {
+          "relation": "requires",
+          "target": "src.claude"
+        },
+        {
+          "relation": "requires",
+          "target": "src.chatgpt"
+        },
+        {
+          "relation": "before",
+          "target": "pb.claim-verification"
+        }
+      ],
+      "execution_qualified": false,
+      "failure": {
+        "fallback_sources": [
+          "src.start",
+          "src.retrieval"
+        ],
+        "mode": "defined",
+        "operation": "Repository-scoped action",
+        "response": "Report the exact unresolved prerequisite, source or authority gap and stop affected action; successful retrieval alone does not establish application.",
+        "when": {
+          "eq": [
+            "startup_ready",
+            false
+          ]
+        }
+      },
+      "id": "pb.startup-floor",
+      "interpretation": "All numbered startup requirements are represented as one obligation with explicit full canonical reads; adapter selection and repo-family conditions remain unprojected judgments.",
+      "kind": "requirement",
+      "owner": {
+        "question": "startup-path",
+        "source": "src.startup-floor"
+      },
+      "persistence": {
+        "retains": "Complete target-specific startup floor and task-activated owners",
+        "starts": "Entry before repository-scoped action",
+        "terminates_when": {
+          "any": [
+            {
+              "eq": [
+                "leaves_repository_work",
+                true
+              ]
+            },
+            {
+              "eq": [
+                "repository_changed",
+                true
+              ]
+            }
+          ]
+        }
+      },
+      "source": "src.startup-floor",
+      "status": "candidate",
+      "superseded_by": null,
+      "supporting_sources": [
+        "src.core"
+      ],
+      "validation": [
+        "case.startup"
+      ],
+      "when": {
+        "eq": [
+          "repository_work",
+          true
+        ]
+      }
+    },
+    {
+      "consequence": {
+        "kind": "routing",
+        "meaning": "Evaluate each conditional owner from actual task semantics. Maintenance triggers activate maintenance guidance; entry into feature-delivery planning/execution activates lifecycle, whose narrower boundary controls; cross-repository/interface/terminology work activates the three architecture owners. Ordinary repository work alone does not activate specialized guidance.",
+        "term": "activation-path",
+        "value": "evaluate_owned_triggers"
+      },
+      "dependencies": [
+        {
+          "relation": "activates",
+          "target": "src.maintenance",
+          "when": {
+            "eq": [
+              "maintenance_scope",
+              true
+            ]
+          }
+        },
+        {
+          "relation": "activates",
+          "target": "src.lifecycle",
+          "when": {
+            "eq": [
+              "feature_delivery_current",
+              true
+            ]
+          }
+        },
+        {
+          "relation": "activates",
+          "target": "src.ecosystem",
+          "when": {
+            "eq": [
+              "cross_repository_scope",
+              true
+            ]
+          }
+        },
+        {
+          "relation": "activates",
+          "target": "src.interfaces",
+          "when": {
+            "eq": [
+              "cross_repository_scope",
+              true
+            ]
+          }
+        },
+        {
+          "relation": "activates",
+          "target": "src.glossary",
+          "when": {
+            "eq": [
+              "cross_repository_scope",
+              true
+            ]
+          }
+        },
+        {
+          "relation": "requires",
+          "target": "src.start"
+        }
+      ],
+      "execution_qualified": false,
+      "failure": {
+        "fallback_sources": [
+          "src.start"
+        ],
+        "mode": "defined",
+        "operation": "Affected analysis or artifact",
+        "response": "Retain unknown activations and required context; inspect canonical routing before relying on selection. Stop affected work if a required owner remains unavailable.",
+        "when": {
+          "eq": [
+            "source_available",
+            false
+          ]
+        }
+      },
+      "id": "pb.conditional-activation",
+      "interpretation": "Task Routing, Repository Read Order and narrower activation rules remain explicit canonical reads; no claim of startup closure.",
+      "kind": "trigger",
+      "owner": {
+        "question": "activation-path",
+        "source": "src.conditional-activation"
+      },
+      "persistence": {
+        "retains": "Still-current floor plus newly activated owners",
+        "starts": "At startup and material changes",
+        "terminates_when": {
+          "any": [
+            {
+              "eq": [
+                "leaves_repository_work",
+                true
+              ]
+            },
+            {
+              "eq": [
+                "repository_changed",
+                true
+              ]
+            }
+          ]
+        }
+      },
+      "source": "src.conditional-activation",
+      "status": "candidate",
+      "superseded_by": null,
+      "supporting_sources": [
+        "src.core"
+      ],
+      "validation": [
+        "case.conditional"
+      ],
+      "when": {
+        "eq": [
+          "repository_work",
+          true
+        ]
+      }
+    },
+    {
+      "consequence": {
+        "kind": "retention",
+        "meaning": "After successful startup, continue repository-native conventions across plans, reviews, implementation prompts, validation and completion artifacts. Do not freeze template/layout. Ordinary follow-ups reuse still-current sources. Material changes re-evaluate activated owners; retrieve newly required owners before dependent work. New repository requires its own startup.",
+        "term": "repository-conventions",
+        "value": "retain_with_refresh"
+      },
+      "dependencies": [
+        {
+          "relation": "requires",
+          "target": "pb.startup-floor"
+        },
+        {
+          "relation": "requires",
+          "target": "pb.conditional-activation"
+        },
+        {
+          "relation": "refers_to",
+          "target": "src.start"
+        }
+      ],
+      "execution_qualified": false,
+      "failure": {
+        "fallback_sources": [
+          "src.start"
+        ],
+        "mode": "defined",
+        "operation": "Affected conclusion or artifact after activation changes",
+        "response": "Fail closed if a newly required owner cannot be retrieved; preserve its failure/fallback/presentation contract. Memory, summaries and convenient examples are not substitutes.",
+        "when": {
+          "eq": [
+            "source_available",
+            false
+          ]
+        }
+      },
+      "id": "pb.mode-persistence",
+      "interpretation": "Only the two persistence/activation-refresh bullets are projected. Other invariants in this section are inventoried as unprojected canonical reads. Style override ends artifact-convention persistence, not source obligations.",
+      "kind": "invariant",
+      "owner": {
+        "question": "repository-conventions",
+        "source": "src.mode-persistence"
+      },
+      "persistence": {
+        "retains": "Repository conventions; never frozen mutable facts or activated source set",
+        "starts": "Successful complete repository startup",
+        "terminates_when": {
+          "any": [
+            {
+              "any": [
+                {
+                  "eq": [
+                    "leaves_repository_work",
+                    true
+                  ]
+                },
+                {
+                  "eq": [
+                    "repository_changed",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "eq": [
+                "human_style_override",
+                true
+              ]
+            }
+          ]
+        }
+      },
+      "source": "src.mode-persistence",
+      "status": "candidate",
+      "superseded_by": null,
+      "supporting_sources": [
+        "src.core"
+      ],
+      "validation": [
+        "case.persistence"
+      ],
+      "when": {
+        "eq": [
+          "startup_succeeded",
+          true
+        ]
+      }
+    },
+    {
+      "consequence": {
+        "kind": "obligation",
+        "meaning": "Classify mandatory, optional and ambiguous triggers before continuity. Live PR/issue identifiers, repository paths, refs, state-dependent advice, checks/review/completion and provider-behavior claims require source-first retrieval before stateful reasoning. Pure conceptual discussion without state dependence need not retrieve. Resolve ambiguous referents before conclusions; ask narrowly or report the missing identifier.",
+        "term": "retrieval-order",
+        "value": "classify_before_continuity"
+      },
+      "dependencies": [
+        {
+          "relation": "activates",
+          "target": "pb.claim-verification",
+          "when": {
+            "eq": [
+              "mandatory_trigger",
+              true
+            ]
+          }
+        },
+        {
+          "relation": "requires",
+          "target": "src.retrieval"
+        },
+        {
+          "relation": "before",
+          "target": "pb.claim-verification"
+        }
+      ],
+      "execution_qualified": false,
+      "failure": {
+        "fallback_sources": [
+          "src.retrieval",
+          "src.codex"
+        ],
+        "mode": "defined",
+        "operation": "Stateful reasoning",
+        "response": "Report missing identifiers or unavailable mandatory source and stop dependent conclusions. Do not substitute conversational inference; use another permitted qualified route where available.",
+        "when": {
+          "eq": [
+            "source_available",
+            false
+          ]
+        }
+      },
+      "id": "pb.retrieval-triggers",
+      "interpretation": "Trigger classification is an externally supplied judgment anchored to the full Triggers section. The pilot does not infer it from a phrase classifier.",
+      "kind": "trigger",
+      "owner": {
+        "question": "retrieval-order",
+        "source": "src.retrieval-triggers"
+      },
+      "persistence": {
+        "retains": "Source ownership and mandatory retrieval checks for the current claim",
+        "starts": "Before continuity reasoning about current repository facts",
+        "terminates_when": {
+          "any": [
+            {
+              "eq": [
+                "leaves_repository_work",
+                true
+              ]
+            },
+            {
+              "eq": [
+                "repository_changed",
+                true
+              ]
+            }
+          ]
+        }
+      },
+      "source": "src.retrieval-triggers",
+      "status": "candidate",
+      "superseded_by": null,
+      "supporting_sources": [
+        "src.core"
+      ],
+      "validation": [
+        "case.triggers"
+      ],
+      "when": {
+        "eq": [
+          "repository_work",
+          true
+        ]
+      }
+    },
+    {
+      "consequence": {
+        "kind": "completion_condition",
+        "meaning": "Name trigger, authoritative owner, necessary checks, result and unknowns. Local files/Git establish inspected checkout facts; GitHub owns hosted PR/check state; executed validation owns its checks; official sources own external behavior. Inspect PR/issue changes and scope, not summaries. No direct inspection means unknown; partial results preserve unknowns and prohibit conclusions needing missing evidence. Resolve local/remote disagreement by the question's owner.",
+        "term": "claim-evidence",
+        "value": "report_verified_partial_blocked"
+      },
+      "dependencies": [
+        {
+          "relation": "requires",
+          "target": "src.retrieval"
+        },
+        {
+          "relation": "requires",
+          "target": "src.core"
+        },
+        {
+          "relation": "requires",
+          "target": "src.review"
+        }
+      ],
+      "execution_qualified": false,
+      "failure": {
+        "fallback_sources": [
+          "src.retrieval"
+        ],
+        "mode": "defined",
+        "operation": "Readiness, mergeability, approval, closure or implementation-completeness claims",
+        "response": "Report verified facts separately from unknowns. Stop the stateful workflow if a materially required source remains unavailable through permitted routes; no summary-based recommendation.",
+        "when": {
+          "eq": [
+            "verification_complete",
+            false
+          ]
+        }
+      },
+      "id": "pb.claim-verification",
+      "interpretation": "The required unverified-state literal and all claim-dependent inspection details stay in the exact canonical read; rendering is not proof those checks ran.",
+      "kind": "requirement",
+      "owner": {
+        "question": "claim-evidence",
+        "source": "src.claim-verification"
+      },
+      "persistence": {
+        "retains": "Claim-specific verified/partial/blocked evidence boundary",
+        "starts": "When a mandatory retrieval trigger is present",
+        "terminates_when": {
+          "any": [
+            {
+              "eq": [
+                "leaves_repository_work",
+                true
+              ]
+            },
+            {
+              "eq": [
+                "repository_changed",
+                true
+              ]
+            }
+          ]
+        }
+      },
+      "source": "src.claim-verification",
+      "status": "candidate",
+      "superseded_by": null,
+      "supporting_sources": [
+        "src.core"
+      ],
+      "validation": [
+        "case.verification"
+      ],
+      "when": {
+        "eq": [
+          "mandatory_trigger",
+          true
+        ]
+      }
+    },
+    {
+      "consequence": {
+        "kind": "obligation",
+        "meaning": "Halt continuity reasoning; identify all unresolved mandatory triggers; retrieve their authoritative sources; discard, correct or mark earlier assumptions unverified; resume from verified state and explicit unknowns. Acknowledgment/explanation alone is not remediation. Perform available retrieval before conversational repair.",
+        "term": "recovery-path",
+        "value": "retrieve_then_correct"
+      },
+      "dependencies": [
+        {
+          "relation": "requires",
+          "target": "src.retrieval"
+        },
+        {
+          "relation": "requires",
+          "target": "src.start"
+        },
+        {
+          "relation": "requires",
+          "target": "src.codex"
+        },
+        {
+          "relation": "refers_to",
+          "target": "pb.claim-verification"
+        }
+      ],
+      "execution_qualified": false,
+      "failure": {
+        "fallback_sources": [
+          "src.retrieval",
+          "src.codex",
+          "src.start"
+        ],
+        "mode": "defined",
+        "operation": "Recovery-dependent conclusion",
+        "response": "If no permitted qualified authoritative route remains, stop affected stateful conclusions and name the gap. A disallowed raw API transport with an available approved connector requires connector recovery, not premature failure.",
+        "when": {
+          "eq": [
+            "source_available",
+            false
+          ]
+        }
+      },
+      "id": "pb.retrieval-recovery",
+      "interpretation": "Bootstrap transport recovery combines this unit with unprojected Minimum-Sufficient Retrieval and Codex raw-API policy. No new transport permission or fallback ladder is introduced.",
+      "kind": "fallback",
+      "owner": {
+        "question": "recovery-path",
+        "source": "src.retrieval-recovery"
+      },
+      "persistence": {
+        "retains": "Recovery obligation until retrieval and correction are complete",
+        "starts": "Missed mandatory source-first ordering",
+        "terminates_when": {
+          "all": [
+            {
+              "eq": [
+                "retrieval_missed",
+                false
+              ]
+            },
+            {
+              "eq": [
+                "verification_complete",
+                true
+              ]
+            }
+          ]
+        }
+      },
+      "source": "src.retrieval-recovery",
+      "status": "candidate",
+      "superseded_by": null,
+      "supporting_sources": [
+        "src.core"
+      ],
+      "validation": [
+        "case.recovery"
+      ],
+      "when": {
+        "eq": [
+          "retrieval_missed",
+          true
+        ]
+      }
+    },
+    {
+      "consequence": {
+        "kind": "routing",
+        "meaning": "Resolve interaction mode before mutation or implementation workflow. Implementation carries authorized changes through validation/commit/push/PR in a dedicated worktree. Review/audit inspects and reports without implementation. Orchestration builds a complete handoff unless implementation is explicitly delegated. Human intent, standards and completion ownership remain external.",
+        "term": "mode-selection",
+        "value": "derive_from_human_deliverable"
+      },
+      "dependencies": [
+        {
+          "relation": "requires",
+          "target": "src.core"
+        },
+        {
+          "relation": "requires",
+          "target": "src.readiness"
+        },
+        {
+          "relation": "before",
+          "target": "pb.action-latch"
+        }
+      ],
+      "execution_qualified": false,
+      "failure": {
+        "fallback_sources": [
+          "src.readiness",
+          "src.core"
+        ],
+        "mode": "defined",
+        "operation": "Implementation-oriented action",
+        "response": "Do not infer implementation from ambiguous intent; resolve the bounded deliverable against current human direction before action.",
+        "when": {
+          "eq": [
+            "mode_resolved",
+            false
+          ]
+        }
+      },
+      "id": "pb.interaction-mode",
+      "interpretation": "Examples are classified supporting and do not define a phrase classifier. The existing workflow's explicit authorization requirements remain in the source.",
+      "kind": "requirement",
+      "owner": {
+        "question": "mode-selection",
+        "source": "src.interaction-mode"
+      },
+      "persistence": {
+        "retains": "Human-selected bounded role and deliverable until material steering",
+        "starts": "Before repository action",
+        "terminates_when": {
+          "any": [
+            {
+              "any": [
+                {
+                  "eq": [
+                    "leaves_repository_work",
+                    true
+                  ]
+                },
+                {
+                  "eq": [
+                    "repository_changed",
+                    true
+                  ]
+                }
+              ]
+            },
+            {
+              "eq": [
+                "human_direction_changed",
+                true
+              ]
+            }
+          ]
+        }
+      },
+      "source": "src.interaction-mode",
+      "status": "candidate",
+      "superseded_by": null,
+      "supporting_sources": [
+        "src.core"
+      ],
+      "validation": [
+        "case.mode"
+      ],
+      "when": {
+        "eq": [
+          "repository_work",
+          true
+        ]
+      }
+    },
+    {
+      "consequence": {
+        "kind": "obligation",
+        "meaning": "Before the next tool call, resolve the deliverable from current human direction and invalidate incompatible pending actions. Narrower current instruction replaces earlier envelopes; superseded plans, failed forbidden attempts and fallback plans carry no residual eligibility. Handoff requests select orchestration reads and exact authorized preservation/delivery only. Review invalidates implementation/local reproduction unless explicitly requested; connector-sufficient review uses its narrower owner. Convergence and capability alone never authorize mutation.",
+        "term": "eligible-actions",
+        "value": "invalidate_incompatible_pending"
+      },
+      "dependencies": [
+        {
+          "relation": "requires",
+          "target": "pb.interaction-mode"
+        },
+        {
+          "relation": "requires",
+          "target": "src.readiness"
+        },
+        {
+          "relation": "requires",
+          "target": "src.review"
+        },
+        {
+          "relation": "refers_to",
+          "target": "src.core"
+        }
+      ],
+      "execution_qualified": false,
+      "failure": {
+        "fallback_sources": [
+          "src.readiness",
+          "src.review"
+        ],
+        "mode": "defined",
+        "operation": "Next incompatible action",
+        "response": "Do not dispatch the queued action; discard residual eligibility and resolve the current human-authorized action set.",
+        "when": {
+          "eq": [
+            "pending_incompatible",
+            true
+          ]
+        }
+      },
+      "id": "pb.action-latch",
+      "interpretation": "Prompt completeness and shared-policy placement paragraphs are unprojected canonical requirements in the coverage ledger. The selector reports constraints; it never applies a latch to real runtime state.",
+      "kind": "invariant",
+      "owner": {
+        "question": "eligible-actions",
+        "source": "src.action-latch"
+      },
+      "persistence": {
+        "retains": "Eligible action classes; re-evaluate before further action",
+        "starts": "Mode selection and material current human steering",
+        "terminates_when": {
+          "any": [
+            {
+              "eq": [
+                "leaves_repository_work",
+                true
+              ]
+            },
+            {
+              "eq": [
+                "repository_changed",
+                true
+              ]
+            }
+          ]
+        }
+      },
+      "source": "src.action-latch",
+      "status": "candidate",
+      "superseded_by": null,
+      "supporting_sources": [
+        "src.core"
+      ],
+      "validation": [
+        "case.latch"
+      ],
+      "when": {
+        "eq": [
+          "repository_work",
+          true
+        ]
+      }
+    }
+  ],
+  "schema_version": 1,
+  "sources": [
+    {
+      "coverage": [
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            232,
+            232
+          ],
+          "rules": [],
+          "sha256": "22b7ee71066746e447ecf5172ebda0ce2cc6e17aee878ed263a3953ab8d583d8"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            234,
+            236
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "a011b7c2376341b80ad84266bb5ed982b90ef70a0dd0bfa628d14d00642e478e"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            238,
+            239
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "fc614e025a2f3ff9bee9b4367682dd5d5f90e1f549e313bfddae29c017ca7a94"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            240,
+            240
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "ca1c44f8bc82c54930148a5dd3c81784f1eef28237c18a272a9e817e7e690372"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            241,
+            244
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "3d8e732668d5e8c9e366edbbe8d8666977fb4b41e4fd638fad95674e055b30e4"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            245,
+            245
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "95abdb235ecc141c469bedc1e5d0547f6e308ec88e28bb8bbf10788834a47580"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            246,
+            247
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "66465f84ed537bcfd7b89b39967ec3e8a37073c2616e32be140078b632220ba8"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            248,
+            248
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "5663421fd78dd5b2bbd131105f7d2c35d21713753095383ebd75d71ccf4f50af"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            249,
+            252
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "10b780540425142b71cf40e5c9911c9bbe6cd237a27db08b19a2e602b9319282"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            253,
+            254
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "b8975a4cecbf4f367fd957ea39bcaceabc84a5405e28a17b5bb1cb722051ca34"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            255,
+            255
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "062bebc2689009666185267da80bac9920916185efa99c8052110d1a90f80207"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            256,
+            256
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "d6b4c9873c9354d0890a986c10378bb03dbefa19dc48a974a66aa59f74453222"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            257,
+            258
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "d7c4dbc105d33320157af44c5dc15e54ef5ad1b1268a424aa409b389715fa97e"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            260,
+            264
+          ],
+          "rules": [
+            "pb.startup-floor"
+          ],
+          "sha256": "9697a57a4d51ba8eb40da15b343bf92da81493a47823df897d516e57dfbfca54"
+        }
+      ],
+      "heading": "### Required Repository Startup Contract",
+      "id": "src.startup-floor",
+      "path": "docs/start-here.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "section_sha256": "0fe1c8511e798b57becf5ab4c42e2af7b919587ad1669e3ee94bcfa72cd1b368",
+      "sha256": "5e0e59ec0e340319cf5a67c680fe4de4b2b994e51ad0a2e550683485cb73c9f2"
+    },
+    {
+      "coverage": [
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            319,
+            319
+          ],
+          "rules": [],
+          "sha256": "b41b37dcf7b067d79159dec415c93743aa919a9fba79b6b9aecdc230f8d901ce"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            321,
+            325
+          ],
+          "rules": [
+            "pb.conditional-activation"
+          ],
+          "sha256": "5d13600fae3f74dfb80d9c4d7e820fba7524fcad0b62fc68b119d93ce31e99d3"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            327,
+            330
+          ],
+          "rules": [
+            "pb.conditional-activation"
+          ],
+          "sha256": "bc1d3e213064ae40e7b6199582d767e072f9348f1f5f7bc10f0be6df73958d6e"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            332,
+            335
+          ],
+          "rules": [
+            "pb.conditional-activation"
+          ],
+          "sha256": "5c3185915d5e666ee1890c86de76eec055960b0810bec8817201e71ed5700cf7"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            337,
+            339
+          ],
+          "rules": [
+            "pb.conditional-activation"
+          ],
+          "sha256": "45aba180bc5fe3375a3cfe5d46b19ed6f6d7fd245cc0e29d08fc93aad990d17f"
+        }
+      ],
+      "heading": "### Conditional Repository Guidance",
+      "id": "src.conditional-activation",
+      "path": "docs/start-here.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "section_sha256": "2bf103defcb379cd0027a11f221b57905bb86ccc8d6f715ff03a4bbf4011321b",
+      "sha256": "5e0e59ec0e340319cf5a67c680fe4de4b2b994e51ad0a2e550683485cb73c9f2"
+    },
+    {
+      "coverage": [
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            266,
+            266
+          ],
+          "rules": [],
+          "sha256": "dc06372d4295facefc59afb458c96f949919c5968b8b3d1feae0445301188004"
+        },
+        {
+          "canonical_reads": [
+            "src.mode-persistence"
+          ],
+          "class": "normative",
+          "lines": [
+            268,
+            268
+          ],
+          "rules": [],
+          "sha256": "9083795f7046139d8ff9218cf1868ab4bee69f153e29d64cfbc97bbab9cf38b9"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            269,
+            280
+          ],
+          "rules": [
+            "pb.mode-persistence"
+          ],
+          "sha256": "4d001f6bf595b911270d6b8e4359190f72bf41d85171673d545b2939c9f28dc2"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            281,
+            290
+          ],
+          "rules": [
+            "pb.mode-persistence"
+          ],
+          "sha256": "437d799aae396551fbadfd7631b8ca075fa0a21bf86faeacf88f660b6c33a6a8"
+        },
+        {
+          "canonical_reads": [
+            "src.mode-persistence"
+          ],
+          "class": "normative",
+          "lines": [
+            291,
+            295
+          ],
+          "rules": [],
+          "sha256": "236ec1e71f1d85ad9fef625f67ec70e8db47a3d2c14a8fa3500a5a67c7e084dd"
+        },
+        {
+          "canonical_reads": [
+            "src.mode-persistence"
+          ],
+          "class": "normative",
+          "lines": [
+            296,
+            298
+          ],
+          "rules": [],
+          "sha256": "0785f1c2e797f795dc72e4c9f1f437ba0a3ee2ef37744f758906d3fb7bda05a9"
+        },
+        {
+          "canonical_reads": [
+            "src.mode-persistence"
+          ],
+          "class": "normative",
+          "lines": [
+            299,
+            301
+          ],
+          "rules": [],
+          "sha256": "20daf9fbeca9024c8c6e9e21cfe77657b224630f010c7ca5e08f5a9fa68447b0"
+        },
+        {
+          "canonical_reads": [
+            "src.mode-persistence"
+          ],
+          "class": "normative",
+          "lines": [
+            302,
+            305
+          ],
+          "rules": [],
+          "sha256": "7f2377eb1f650e3e4fc1735d8ec8b3649ddcd609052667399462029f29a73f5d"
+        },
+        {
+          "canonical_reads": [
+            "src.mode-persistence"
+          ],
+          "class": "normative",
+          "lines": [
+            306,
+            309
+          ],
+          "rules": [],
+          "sha256": "d5a4268e8de8dc8d9216bdb0661c1717a102f98a3d470a1f2acec9b02a8e87f4"
+        },
+        {
+          "canonical_reads": [
+            "src.mode-persistence"
+          ],
+          "class": "normative",
+          "lines": [
+            310,
+            312
+          ],
+          "rules": [],
+          "sha256": "cbe4faa3beaa9c7d32fd08aa6d1c0395f94eb05751551bf7b1a8aed1cc717657"
+        },
+        {
+          "canonical_reads": [
+            "src.mode-persistence"
+          ],
+          "class": "normative",
+          "lines": [
+            313,
+            314
+          ],
+          "rules": [],
+          "sha256": "3b7421b457bc5c6f2c1951967046b707ab2ca96dbdb796f83e062187d637c771"
+        },
+        {
+          "canonical_reads": [
+            "src.mode-persistence"
+          ],
+          "class": "normative",
+          "lines": [
+            315,
+            317
+          ],
+          "rules": [],
+          "sha256": "716ae3b1877e2ab7ff4693fd50b3c70b72c650ea15fa7cc696cdb4613d5ff469"
+        }
+      ],
+      "heading": "### Required Repository Invariants",
+      "id": "src.mode-persistence",
+      "path": "docs/start-here.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "section_sha256": "0c919a8128691d9f235e263cb658ed15affc429702b60698b608ca02a5d67816",
+      "sha256": "5e0e59ec0e340319cf5a67c680fe4de4b2b994e51ad0a2e550683485cb73c9f2"
+    },
+    {
+      "coverage": [
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            118,
+            118
+          ],
+          "rules": [],
+          "sha256": "f2277c0dc10ce150141890ef35acb77fb37e302d250091b0ec574bc5b09af6fa"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            120,
+            121
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "81e8517692b07ff4af62a9b0aaea6bfcc2993b0a19c8dd4eb5cfe63aada54a04"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            123,
+            124
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "d4e3cc28fb7a8052d259158a25d72603b2c5b3e53685500f237a704d1916f9f0"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            126,
+            128
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "a634d415043cc249b1b174110d9719c6b0247e2350194024936bab615e6c3b93"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            129,
+            130
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "8e4d20c33d6738518fd8a41bed30d6a5ffe40fc3eb627204387e2db70891c21a"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            131,
+            131
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "5adb747c9145fa5e1c020215148b15259247d34e588fedd333b5083f7082dd19"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            132,
+            133
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "d930da911a7c6ec0f486c36988ba1b27ffdf14340afd374c602fff10e1c3babb"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            134,
+            134
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "7af1674f9d34bd19b2e637d41769cc4b2342162e4e671086334f5f22fde692c6"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            135,
+            136
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "467d3102720d2c6de617440d165e5e6ec1e133fbcbeef93b70532523b84f7531"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            137,
+            140
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "63299a79900971f937f9882b9f498ecaa7c9ed6f465a762cd6922d4bfc7c1a08"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            141,
+            142
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "3173730525811122867311ba29c6a579d8287d0113cf63c3f0e45a0e40e7dac1"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            144,
+            146
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "e33a86e45a1b89dc35cfe179f1c7a54403bee9a6e11446ac1e618b52421f2c2b"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            148,
+            149
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "94125dde5c1f6031737049463c6602276b825c7d450a33e96cd6f37756bb203a"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            150,
+            152
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "04683ff578629be6eb763bcf224604751aee936857b620a2450b377719cb9cb7"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            153,
+            153
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "31f4cdf9e5590c79b9ed91e3b6959c72885910423074fe099e1aadd95fc30bb4"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            155,
+            159
+          ],
+          "rules": [
+            "pb.retrieval-triggers"
+          ],
+          "sha256": "b4318ef9f9167e292f7b385651b1428a428d99a02c8103d660be289bb252feae"
+        }
+      ],
+      "heading": "## Triggers",
+      "id": "src.retrieval-triggers",
+      "path": "docs/source-first-retrieval.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "section_sha256": "d23154881ca4e9da490b6868baf3127965547dc384c7e34d9df752375f765718",
+      "sha256": "268bf852561925cfce08b4381a07b3cdc635d8b8d59ea49e4e83a64ca9d6d211"
+    },
+    {
+      "coverage": [
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            288,
+            288
+          ],
+          "rules": [],
+          "sha256": "891f544e6e82f5cbfac2d08384e0603f621cf11496b4d608cc0a2353e7424c90"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            290,
+            290
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "95b85641cfb6bdbca21528ba9dbfdb410d2296781cb1652c180324556af81c8e"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            292,
+            292
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "3107ed2a355a17cacf9af59673be713351b0e512ed06f5a8e0028029cf455719"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            293,
+            293
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "8fdd0158a0de288ef5322bf14ecaedb48ae35eb78d0ebb9ca90893862bdf8114"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            294,
+            294
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "a31f65a38705437581ec68584e9754d57880bb1fa21acc9ebbed1b32e6c89b53"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            295,
+            295
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "c73a5931da22ac8c6421ae06150e6c1e8a4d8d5b6f95971704c301ae99b27ee1"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            296,
+            296
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "fd8b8079649403e70f9291c3c67cfbf1aa40b27bb9efc4141bd6b475ac5b76e2"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            298,
+            299
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "08986acb33a522265d2a654d4263ad973b8c9f8ba14ede56b72b5bedbe6430a0"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            301,
+            301
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "ba9387dce78c4cbcb08b868ba27c6e034d4cc6cbb05f1b1ed9e06ffe7c37379f"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            303,
+            304
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "dcaf1853d39f32acbf08a80b5f9a1dba644f2dc8b66201d4303a425878202a94"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            305,
+            306
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "ca2023f8f002933fb72d70576734ceceb9aaa88460f3e704d5b097f719e4f904"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            307,
+            308
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "79ecd48f4120cbc96b64bebe7694250bd6ad0b8df1cfa674920c1ec2bccbdb7d"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            309,
+            310
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "0504f53021fda959c50c6bcc5b400129d5118937e35393cd03c1638e66581462"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            312,
+            316
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "22cae7fdac0155ac3ae8ccf3ff6ff3db21dc9985370ca9fb46920dbf7af56377"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            318,
+            321
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "17184e6f85a4e2e650b35db15d991fed291629b734f94bfcaeb832ec69a2340b"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            323,
+            325
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "06d87a34df072174800a1c41e5d6dac0879c07d94cca82818ca956f2cfd91116"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            327,
+            330
+          ],
+          "rules": [
+            "pb.claim-verification"
+          ],
+          "sha256": "fcafd493896f67716e9b75ef2538b7a5716fc3d4cbe5aa8078d34dd0b8b0970a"
+        }
+      ],
+      "heading": "## Verification Gate",
+      "id": "src.claim-verification",
+      "path": "docs/source-first-retrieval.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "section_sha256": "9c7ccc062aa19127db2c29660386fa6f5b26115494bf10c13d9451b163325928",
+      "sha256": "268bf852561925cfce08b4381a07b3cdc635d8b8d59ea49e4e83a64ca9d6d211"
+    },
+    {
+      "coverage": [
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            341,
+            341
+          ],
+          "rules": [],
+          "sha256": "1237cb3128050707a499c1e2850a080b6e767487e1247b945f6749273983a29e"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            343,
+            344
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "20e9c5d05fdf7af11c82d5c86443514a8c54237d8ce5a4da2ce588b1dad5fe30"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            346,
+            347
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "81cf2fd8d0275328193276237f73350b6207a518d24d4430a6ab144a9ec20558"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            348,
+            348
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "437bbcb0be7c065d471280058be3ea5e8b4ea9917c5517b3e32f99be9e3a97b0"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            349,
+            349
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "d859e344426fd907ec5431a14d8681c8053a8865e218f70da41966a77135e5b1"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            350,
+            350
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "faf8df4647e0c07a0c9f697cc744928d0167fd62e75850ea86a93cbb8612d665"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            351,
+            351
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "a9f2986b4678400a65914ad8e3a644f6a8c2873e2969bd4c0b5de7de847cd294"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            353,
+            354
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "87cb2089e8712aa4e986b8c6ba07765586be2f658ed5e14d0886dee2e6c4f035"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            356,
+            356
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "5c6b9048ac196f4e8942c47f3a18d29643e880d77f342e85cb9ab53405245fab"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            357,
+            357
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "6c959759ec203c4ebd57a7dd6106edaf1f8d14076f4e1ec283899f0f4e98d1ca"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            358,
+            358
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "863e8e9471fc8b2dea8217ed9d2c1c78b40dc371be0a007ceeb93831ea9d300f"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            359,
+            359
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "a00ad72bd6ea9f3786dc922adcdc3051d6e9818d78c45af9a4bf6681acb18e30"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            360,
+            360
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "01eaf0342c475f66557c39262f5daeeb9baa199af1ae07c14a6e4cb53eeda761"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            362,
+            365
+          ],
+          "rules": [
+            "pb.retrieval-recovery"
+          ],
+          "sha256": "7418d8a517cb01625767a4029cc438bab7bc71e18f5cbaca3a9f293147c7b632"
+        }
+      ],
+      "heading": "## Recovery",
+      "id": "src.retrieval-recovery",
+      "path": "docs/source-first-retrieval.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "section_sha256": "3a4a964657abf467584095aa3e6fe64bca2874355b5b14885bde4eec09c38da9",
+      "sha256": "268bf852561925cfce08b4381a07b3cdc635d8b8d59ea49e4e83a64ca9d6d211"
+    },
+    {
+      "coverage": [
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            127,
+            127
+          ],
+          "rules": [],
+          "sha256": "348943b7c48f330e10d9b1786121165957422fe22a0150d81352840012925d15"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            129,
+            131
+          ],
+          "rules": [
+            "pb.interaction-mode"
+          ],
+          "sha256": "8b83e307e2eec25fe4f03053c5684a14f673b450391f3513950738597c909ded"
+        },
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            133,
+            136
+          ],
+          "rules": [],
+          "sha256": "d7819ff3eea1183bea4890f80c1905021b91af06bd6caf3016fe80aed4998457"
+        },
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            138,
+            138
+          ],
+          "rules": [],
+          "sha256": "5dce7fa1c14a9f20a5cf8fd1072ef9daae5597a21831f87636d90765797c441d"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            140,
+            142
+          ],
+          "rules": [
+            "pb.interaction-mode"
+          ],
+          "sha256": "1e5bffa6e79220d51bf6b39bb949e94712debdd0fc91a7e142cbe057bf2fddc2"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            143,
+            145
+          ],
+          "rules": [
+            "pb.interaction-mode"
+          ],
+          "sha256": "9bc9b73622134fec54cffe7c8bdd5ef8db7699a13b861a53b52c3ea94d3670a6"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            146,
+            149
+          ],
+          "rules": [
+            "pb.interaction-mode"
+          ],
+          "sha256": "fcdf82a273dfed8de9d25175e3d421b40549ac95d06ae08a3c47bd0b6e22fbcc"
+        },
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            151,
+            151
+          ],
+          "rules": [],
+          "sha256": "da140744e49131832ce5c99b311fc0f32163a96120c55996613ed0112d401c55"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            153,
+            155
+          ],
+          "rules": [
+            "pb.interaction-mode"
+          ],
+          "sha256": "9093b9732c3fbc7920bc7d8dd07c3a428301f66c30c5ddd1d53030e8bb607a14"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            156,
+            157
+          ],
+          "rules": [
+            "pb.interaction-mode"
+          ],
+          "sha256": "1116e3cb215f40d061474d9987779f156878139139fe900104a1d750e074b53d"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            158,
+            159
+          ],
+          "rules": [
+            "pb.interaction-mode"
+          ],
+          "sha256": "52f799679774a6bd9e9f54c839957142ad691680b6ddea40d1959afe10592eda"
+        },
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            161,
+            161
+          ],
+          "rules": [],
+          "sha256": "1889f03338b79bbad8bdcdc925ef5e83069569c17e433174ef9a49f62e7d5ee7"
+        },
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            163,
+            164
+          ],
+          "rules": [],
+          "sha256": "86f2aa4a3981a018124bd0826e6c53ff6e90face62ce1228c2867ef4ceeaf21d"
+        },
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            165,
+            166
+          ],
+          "rules": [],
+          "sha256": "28180ec849c81bed85783486f367459a1119b52638400c2f40a4ab171b033138"
+        },
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            167,
+            169
+          ],
+          "rules": [],
+          "sha256": "0468dfd67b37863b487d4184961a2f749214235563511aaa0b3ea3d7f5bc40fc"
+        },
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            170,
+            172
+          ],
+          "rules": [],
+          "sha256": "1f76511074edfdfbf02a62464500a0d7683686a511cde6d171432de94cb1e434"
+        }
+      ],
+      "heading": "## Interaction Mode Preflight",
+      "id": "src.interaction-mode",
+      "path": "docs/repo-readiness.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "section_sha256": "1261f596e1747fd8d36f9ef714dabfb90ccee3100daaf35eb59b8ce6aa6baba6",
+      "sha256": "30029313b5514f06358ca68c342ac0be191262ff1f48e6086f5ce9d7aac96a4c"
+    },
+    {
+      "coverage": [
+        {
+          "canonical_reads": [],
+          "class": "supporting",
+          "lines": [
+            174,
+            174
+          ],
+          "rules": [],
+          "sha256": "38ba18d0476fbfde2aab04ebefbd067ac3d8531f7f711129191fda9ef536e0ab"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            176,
+            182
+          ],
+          "rules": [
+            "pb.action-latch"
+          ],
+          "sha256": "7f1afd4e7be6dce13d10818f5265116bdd8c76218c4ce64c38c4748353c386b7"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            184,
+            194
+          ],
+          "rules": [
+            "pb.action-latch"
+          ],
+          "sha256": "2da207f6ffd9f209ae02754ffcf6b83a7a60bb21ecd077cb4f82c594e350f27c"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            196,
+            202
+          ],
+          "rules": [
+            "pb.action-latch"
+          ],
+          "sha256": "8d29ed0f15885b1461189555ba0d33a588e136a32115d4766bc14686ef3c72b6"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            204,
+            206
+          ],
+          "rules": [
+            "pb.action-latch"
+          ],
+          "sha256": "8bc8a8afafe19f095d287830cad3174029f96d6c07676d9995a9490aef250bb2"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            208,
+            215
+          ],
+          "rules": [
+            "pb.action-latch"
+          ],
+          "sha256": "067249b2629e84367abfda889e492fe77d4c01b39393decab87a9b43ef7e36e1"
+        },
+        {
+          "canonical_reads": [],
+          "class": "normative",
+          "lines": [
+            217,
+            221
+          ],
+          "rules": [
+            "pb.action-latch"
+          ],
+          "sha256": "7e35e91dc60f21b9a1949e809fe68ec434419d53a5367e595f85a597505994da"
+        },
+        {
+          "canonical_reads": [
+            "src.action-latch"
+          ],
+          "class": "normative",
+          "lines": [
+            223,
+            230
+          ],
+          "rules": [],
+          "sha256": "e78f97aca9fefae674c16d8c7832390005d88c5a8e00e5ee0e5e6adc0f51825f"
+        },
+        {
+          "canonical_reads": [
+            "src.action-latch"
+          ],
+          "class": "normative",
+          "lines": [
+            232,
+            239
+          ],
+          "rules": [],
+          "sha256": "1fd8c902e596b2907332b1bef238c5a6d5c6c175e09df195e138800ee5de2dcd"
+        },
+        {
+          "canonical_reads": [
+            "src.action-latch"
+          ],
+          "class": "normative",
+          "lines": [
+            241,
+            243
+          ],
+          "rules": [],
+          "sha256": "adb46d7cc9931e9736dc12ef772df612cc6d97ff56d599a64f7a754e7e969078"
+        }
+      ],
+      "heading": "### Interaction-mode action eligibility latch",
+      "id": "src.action-latch",
+      "path": "docs/repo-readiness.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "section_sha256": "ba9d374d65b62f523a8096e9659263ad874ffc7c4fb9385e892a375c27f07bc6",
+      "sha256": "30029313b5514f06358ca68c342ac0be191262ff1f48e6086f5ce9d7aac96a4c"
+    },
+    {
+      "id": "src.core",
+      "path": "docs/core-model.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "6881e82ee10675996bb708ef15c783cb16bcb58a585204be44e847109332d52f",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.baseline",
+      "path": "docs/engineering-baseline.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "8d26d435e0de0327df04f854626ccbf084f6b6e8c27f6869ff631d3cd2948e14",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.start",
+      "path": "docs/start-here.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "5e0e59ec0e340319cf5a67c680fe4de4b2b994e51ad0a2e550683485cb73c9f2",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.retrieval",
+      "path": "docs/source-first-retrieval.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "268bf852561925cfce08b4381a07b3cdc635d8b8d59ea49e4e83a64ca9d6d211",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.readiness",
+      "path": "docs/repo-readiness.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "30029313b5514f06358ca68c342ac0be191262ff1f48e6086f5ce9d7aac96a4c",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.agents",
+      "path": "AGENTS.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "ba73bca75df119396315f3935fd4c50662d11f8cbd24624ea3b520d1a6b109ee",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.codex",
+      "path": "docs/tool-adapters/codex.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "a3a3e9d77313d37f975cbfea783e579ffff7ace99bf818d371cbfb93b7c16476",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.claude",
+      "path": "docs/tool-adapters/claude.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "98a6905ec90ea4985dfef72a9de5981d4cc2963fe9599fc335fcbb79f04e50f0",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.chatgpt",
+      "path": "docs/tool-adapters/chatgpt.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "d13f9462ec790c2f88be17857152b876ebf1371119d93ebf819af231190d192f",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.lifecycle",
+      "path": "docs/feature-lifecycle.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "adb65afc64db850d75766918beb4d1d731e5af18f3a934f0819c11f3f9642b32",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.maintenance",
+      "path": "docs/maintenance-automations.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "f0291e7c20490720e4f01413b0cc4cc49c3772eef2a3cb44ddbdf23a28b39bb4",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.ecosystem",
+      "path": "docs/ai-workflow-ecosystem.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "a04dee3cd91f550b7e1b9a948aced19a54df78a1225c081a091c82a093013861",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.interfaces",
+      "path": "docs/repo-to-repo-interface-contracts.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "6f359d0a1713d568ab70d4147681764aad17409e10cd36a31c61325216b4beda",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.glossary",
+      "path": "docs/cross-repo-glossary.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "89ef405a14ae7cafaae78df8764751205d441dbd9c575e2c17521469e5fcb8e0",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.review",
+      "path": "docs/review-packet.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "d23e87115aee405ebe57f90e92fe6c3b6691e6e79de6d41643d3cc24221644cb",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.prompts",
+      "path": "docs/prompt-contracts.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "36b6270f159dd227a218566027c319ae001a8579404e1fb23ed4e3f0d1866c7d",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    },
+    {
+      "id": "src.evidence",
+      "path": "docs/evidence-lifecycle.md",
+      "revision": "58772af650c72d7d3811d824e159b0cdb4dab60f",
+      "sha256": "c07963016304efcfb4dee00ee160fed47281492d81c75d51dbab23fb72b5456d",
+      "unprojected": "Canonical read; this pilot does not represent the owner's full contract."
+    }
+  ],
+  "status": "experimental",
+  "terms": [
+    {
+      "definition": "Current bounded action depends on repository state; classify from current human instruction, not keywords alone.",
+      "id": "repository_work",
+      "role": "fact",
+      "source": "src.start",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "Controller verified and applied the complete repository floor and activated owners, not merely retrieved them.",
+      "id": "startup_succeeded",
+      "role": "fact",
+      "source": "src.start",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "All startup checks and task-specific prerequisites are clear under their owners.",
+      "id": "startup_ready",
+      "role": "fact",
+      "source": "src.start",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "Changed repository, mode, artifact, workflow, source requirements, locality, executor or authority requires activation reevaluation; ordinary follow-up does not.",
+      "id": "material_change",
+      "role": "fact",
+      "source": "src.start",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "Current target differs from the repository whose startup completed.",
+      "id": "repository_changed",
+      "role": "fact",
+      "source": "src.start",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "Interaction clearly leaves repository work.",
+      "id": "leaves_repository_work",
+      "role": "fact",
+      "source": "src.start",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "Human explicitly requested another artifact style; does not waive required sources.",
+      "id": "human_style_override",
+      "role": "fact",
+      "source": "src.start",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "An actual maintenance-automation trigger in Conditional Repository Guidance applies.",
+      "id": "maintenance_scope",
+      "role": "fact",
+      "source": "src.start",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "Current authorized action enters feature-delivery planning or execution, after the prerequisite workflow's boundary.",
+      "id": "feature_delivery_current",
+      "role": "fact",
+      "source": "src.lifecycle",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "Work involves multiple repositories, cross-repository interfaces or architectural terminology.",
+      "id": "cross_repository_scope",
+      "role": "fact",
+      "source": "src.start",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "At least one mandatory trigger applies after classifying references and state-dependent questions against the complete Triggers section.",
+      "id": "mandatory_trigger",
+      "role": "fact",
+      "source": "src.retrieval",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "At least one currently permitted qualified authoritative route supplies the required source; one failed transport is insufficient to set false.",
+      "id": "source_available",
+      "role": "fact",
+      "source": "src.retrieval",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "Claim-specific checks have verified every materially necessary source fact; partial verification is not complete.",
+      "id": "verification_complete",
+      "role": "fact",
+      "source": "src.retrieval",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "Mandatory retrieval ordering was missed, assumptions preceded inspection, or a listed recovery trigger applies.",
+      "id": "retrieval_missed",
+      "role": "fact",
+      "source": "src.retrieval",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "Bounded deliverable and action classes have been resolved from current human direction.",
+      "id": "mode_resolved",
+      "role": "fact",
+      "source": "src.readiness",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "A queued action is outside the current bounded action set.",
+      "id": "pending_incompatible",
+      "role": "fact",
+      "source": "src.readiness",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "A material current human instruction changes eligible action classes; prior actions retain no residual eligibility.",
+      "id": "human_direction_changed",
+      "role": "fact",
+      "source": "src.readiness",
+      "type": "boolean",
+      "values": [
+        false,
+        true
+      ]
+    },
+    {
+      "definition": "Resolved semantic deliverable; labels never authorize action. Human direction owns changes.",
+      "id": "interaction_mode",
+      "role": "fact",
+      "source": "src.readiness",
+      "type": "enum",
+      "values": [
+        "implementation",
+        "review_audit",
+        "orchestration"
+      ]
+    },
+    {
+      "definition": "Candidate constraint on startup-path; reports a canonical obligation, never permission or completed work.",
+      "id": "startup-path",
+      "role": "effect",
+      "source": "src.startup-floor",
+      "type": "enum",
+      "values": [
+        "canonical_reads_first"
+      ]
+    },
+    {
+      "definition": "Candidate constraint on activation-path; reports a canonical obligation, never permission or completed work.",
+      "id": "activation-path",
+      "role": "effect",
+      "source": "src.conditional-activation",
+      "type": "enum",
+      "values": [
+        "evaluate_owned_triggers"
+      ]
+    },
+    {
+      "definition": "Candidate constraint on repository-conventions; reports a canonical obligation, never permission or completed work.",
+      "id": "repository-conventions",
+      "role": "effect",
+      "source": "src.mode-persistence",
+      "type": "enum",
+      "values": [
+        "retain_with_refresh"
+      ]
+    },
+    {
+      "definition": "Candidate constraint on retrieval-order; reports a canonical obligation, never permission or completed work.",
+      "id": "retrieval-order",
+      "role": "effect",
+      "source": "src.retrieval-triggers",
+      "type": "enum",
+      "values": [
+        "classify_before_continuity"
+      ]
+    },
+    {
+      "definition": "Candidate constraint on claim-evidence; reports a canonical obligation, never permission or completed work.",
+      "id": "claim-evidence",
+      "role": "effect",
+      "source": "src.claim-verification",
+      "type": "enum",
+      "values": [
+        "report_verified_partial_blocked"
+      ]
+    },
+    {
+      "definition": "Candidate constraint on recovery-path; reports a canonical obligation, never permission or completed work.",
+      "id": "recovery-path",
+      "role": "effect",
+      "source": "src.retrieval-recovery",
+      "type": "enum",
+      "values": [
+        "retrieve_then_correct"
+      ]
+    },
+    {
+      "definition": "Candidate constraint on mode-selection; reports a canonical obligation, never permission or completed work.",
+      "id": "mode-selection",
+      "role": "effect",
+      "source": "src.interaction-mode",
+      "type": "enum",
+      "values": [
+        "derive_from_human_deliverable"
+      ]
+    },
+    {
+      "definition": "Candidate constraint on eligible-actions; reports a canonical obligation, never permission or completed work.",
+      "id": "eligible-actions",
+      "role": "effect",
+      "source": "src.action-latch",
+      "type": "enum",
+      "values": [
+        "invalidate_incompatible_pending"
+      ]
+    }
+  ]
+}

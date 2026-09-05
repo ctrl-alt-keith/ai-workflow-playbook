@@ -1,4 +1,4 @@
-.PHONY: help check check-env check-local-bootstrap authoritative-source-check scanner-test
+.PHONY: help check check-env check-local-bootstrap authoritative-source-check scanner-test projection-check projection-render projection-coverage
 
 .DEFAULT_GOAL := check
 
@@ -38,3 +38,12 @@ authoritative-source-check: ## Run advisory authoritative-source scanning.
 
 scanner-test: ## Run scanner unit tests.
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests
+
+projection-check: ## Check experimental pilot source bindings (opt-in; not a startup or merge gate).
+	PYTHONDONTWRITEBYTECODE=1 python3 scripts/projection_pilot.py check
+
+projection-render: ## Print an experimental analysis bundle; missing facts remain unknown.
+	PYTHONDONTWRITEBYTECODE=1 python3 scripts/projection_pilot.py render
+
+projection-coverage: ## Print source/coverage drift, including newly added pilot blocks.
+	PYTHONDONTWRITEBYTECODE=1 python3 scripts/projection_pilot.py coverage-diff
