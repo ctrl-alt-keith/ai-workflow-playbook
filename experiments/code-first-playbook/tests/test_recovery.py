@@ -153,30 +153,15 @@ class RecoveryTests(unittest.TestCase):
         self.assertIn('includes:\n\n- ', section)
         self.assertIn('repair:\n\n1. ', section)
 
-    def test_failed_transport_does_not_trigger_all_routes_failure(self):
-        failure = self.records[candidate.RULE]['failure']['when']
-        cases = {
-            'raw API failed; connected hosted read remains': True,
-            'high-level provider CLI failed; fetched Git remains': True,
-            'local Git failed; connected hosted read remains': True,
-            'all materially applicable qualified routes unavailable': False,
-        }
-        for case, source_available in cases.items():
-            with self.subTest(case=case):
-                state = {'fact.source_available': source_available}
-                self.assertEqual(evaluate(failure, state), not source_available)
+    def test_failure_gate_requires_aggregate_source_unavailability(self):
+        availability = self.records['fact.source_available']
+        self.assertEqual(availability['resolution_class'], 'external_judgment')
+        self.assertEqual(availability['evaluators'], ['controller'])
+        self.assertEqual(availability['sources'], ['source.retrieval'])
 
-    def test_recovery_contract_preserves_route_and_auth_boundaries(self):
-        action = ' '.join(self.records[candidate.ACTION]['does'].split())
-        required_meaning = (
-            'A transport failure is evidence about that mechanism only.',
-            'stop after the exact claim is sufficiently verified rather than trying every tool.',
-            'Do not prompt, re-prompt, escalate, mutate authentication, or enter an auth loop',
-            'hosted evidence must not invent local checkout freshness',
-            'freshly fetched Git evidence must not invent hosted-only metadata',
-            'provider API behavior is itself the subject',
-            'Ordinary successful first-class retrieval needs no speculative raw provider API',
-        )
-        for meaning in required_meaning:
-            with self.subTest(meaning=meaning):
-                self.assertIn(meaning, action)
+        failure = self.records[candidate.RULE]['failure']
+        self.assertEqual(failure['when'], {'is': ['fact.source_available', False]})
+        self.assertEqual(failure['action'], 'action.retrieval-recovery-failure')
+        self.assertEqual(failure['alternatives'], [])
+        self.assertFalse(evaluate(failure['when'], {'fact.source_available': True}))
+        self.assertTrue(evaluate(failure['when'], {'fact.source_available': False}))
