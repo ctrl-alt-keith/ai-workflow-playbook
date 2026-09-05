@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-from compiler.model import Invalid
+from compiler.model import Invalid, evaluate
 from compiler.provenance import read_json
 import recovery as candidate
 import shutil
@@ -152,3 +152,31 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(section.split(), self.records[candidate.ACTION]['does'].split())
         self.assertIn('includes:\n\n- ', section)
         self.assertIn('repair:\n\n1. ', section)
+
+    def test_failed_transport_does_not_trigger_all_routes_failure(self):
+        failure = self.records[candidate.RULE]['failure']['when']
+        cases = {
+            'raw API failed; connected hosted read remains': True,
+            'high-level provider CLI failed; fetched Git remains': True,
+            'local Git failed; connected hosted read remains': True,
+            'all materially applicable qualified routes unavailable': False,
+        }
+        for case, source_available in cases.items():
+            with self.subTest(case=case):
+                state = {'fact.source_available': source_available}
+                self.assertEqual(evaluate(failure, state), not source_available)
+
+    def test_recovery_contract_preserves_route_and_auth_boundaries(self):
+        action = ' '.join(self.records[candidate.ACTION]['does'].split())
+        required_meaning = (
+            'A transport failure is evidence about that mechanism only.',
+            'stop after the exact claim is sufficiently verified rather than trying every tool.',
+            'Do not prompt, re-prompt, escalate, mutate authentication, or enter an auth loop',
+            'hosted evidence must not invent local checkout freshness',
+            'freshly fetched Git evidence must not invent hosted-only metadata',
+            'provider API behavior is itself the subject',
+            'Ordinary successful first-class retrieval needs no speculative raw provider API',
+        )
+        for meaning in required_meaning:
+            with self.subTest(meaning=meaning):
+                self.assertIn(meaning, action)

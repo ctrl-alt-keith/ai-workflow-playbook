@@ -362,7 +362,8 @@ records:
   - source.retrieval
   - source.start
   does: |
-    Recovery is required when source-first ordering has already been missed. This
+    Recovery is required when source-first ordering has already been missed or a
+    selected retrieval transport fails before a required fact is verified. This
     includes:
 
     - the assistant answered before opening the referenced PR, issue, repository,
@@ -376,18 +377,52 @@ records:
 
     - conversational context conflicts with authoritative state
 
+    - a repository, provider CLI, connector, or raw provider API transport fails
+      before the exact required fact is established
+
+    A transport failure is evidence about that mechanism only. It is not evidence
+    that every route to the authoritative source is unavailable. Keep three states
+    separate: the selected transport failed; the required fact remains unverified;
+    and the authoritative source is unavailable because no materially applicable
+    permitted route can establish that fact without weakening evidence, authority,
+    authentication, or safety guarantees.
+
     When retrieval remains available, recovery restores verified state before
     conversational repair:
 
     1. Halt continuity reasoning.
 
-    2. Identify every unresolved mandatory trigger.
+    2. Identify every unresolved mandatory trigger and the exact fact still needed.
 
-    3. Retrieve the authoritative source state for those triggers.
+    3. Identify the source that owns the fact and select its narrowest normal
+       supported retrieval surface.
 
-    4. Discard, correct, or mark unverified any assumptions made before retrieval.
+    4. If that transport fails, record the failure as transport or capability
+       evidence without classifying the authoritative source as unavailable.
 
-    5. Resume from the restored verified state and stated unknowns.
+    5. Use another permitted surface when it can establish the same fact with the
+       required evidence semantics; stop after the exact claim is sufficiently
+       verified rather than trying every tool.
+
+    6. Discard, correct, or mark unverified any assumptions made before retrieval,
+       then resume from the restored verified state and stated unknowns.
+
+    Fail closed only when the required fact remains materially unverified after the
+    applicable qualified routes are unavailable, insufficient, or blocked. Report
+    the missing fact and the routes actually unavailable. Preserve the scope of each
+    route: hosted evidence must not invent local checkout freshness, and freshly
+    fetched Git evidence must not invent hosted-only metadata.
+
+    Do not prompt, re-prompt, escalate, mutate authentication, or enter an auth loop
+    merely because a speculative lower-level transport failed. Authentication
+    failure on one surface is not evidence that every other qualified route is
+    unauthenticated. Preserve any narrower authentication preflight explicitly
+    required by the owning workflow.
+
+    Ordinary successful first-class retrieval needs no speculative raw provider API
+    call for confirmation. Direct low-level API inspection remains permitted when
+    provider API behavior is itself the subject or a specialized workflow explicitly
+    requires that evidence surface.
 
     Acknowledgment alone is not recovery. Explaining the violation is not
     remediation. Recovery must perform the missing retrieval or inspection when it
