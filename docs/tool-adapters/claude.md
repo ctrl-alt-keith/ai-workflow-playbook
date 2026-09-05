@@ -305,22 +305,14 @@ evidence. The first `system/init` record must report exactly `Bash`, `Glob`,
 `Grep`, and `Read`; no MCP servers, plugins, skills, slash commands, or
 capability-startup error; `dontAsk` permission mode; the requested model family;
 and the exact attempt-scratch runtime directory. Stop the process on a mismatch
-and reject any eventual output. Family qualification is anchored rather than a
-substring check: the `fable` request currently admits only `fable`,
-`claude-fable-5`, and `claude-fable-5-1`. It rejects other families, malformed
-near-matches, and unqualified future Fable IDs until the accepted set is updated
-from current source evidence.
+and reject any eventual output. A `fable` request admits only `fable`,
+`claude-fable-5`, and `claude-fable-5-1`; other, malformed, and unknown future
+identities fail qualification.
 
-The initialization record reports the effective model, but it does not report
-effective effort. For an explicit governed effort request, the generated
-`PreToolUse` hook records the hook input's `effort.level`, which Anthropic
-documents as the level currently in effect and as reflecting any downgrade from
-an unsupported request. The receipt keeps requested effort separate from this
-hook-observed effective value. A mismatch or absent/invalid observation fails
-closed; in particular, requesting `high` never by itself supports an effective
-High claim. The launcher also removes inherited `CLAUDE_CODE_EFFORT_LEVEL` when
-it supplies an explicit `--effort`, preventing inherited configuration from
-silently replacing the task-owned request.
+Initialization does not report effective effort. For an explicit effort, the
+`PreToolUse` hook's current `effort.level` is the effective evidence. Receipts
+keep requested and observed effort separate; missing, invalid, or mismatched
+evidence fails closed, and a request alone never proves effective effort.
 
 The launcher still performs whole-source,
 Git-index, and Git-administration integrity checks because provider flags,
@@ -533,7 +525,7 @@ Other providers and error paths need not expose the same evidence or perform a
 server-side fallback. If effective identity is unavailable, record that
 limitation rather than treating the request as proof. Requalify, escalate, or
 stop only when the effective result violates a required capability or exact-model
-or effort reviewer qualification; a runtime event is not automatically fatal.
+reviewer qualification; a runtime event is not automatically fatal.
 
 If a lower-capability SAME THREAD reaches unresolved ambiguity, an architecture
 or authority decision, conflicting authoritative evidence, repeated residual
