@@ -354,24 +354,19 @@ Keep prompt delivery small and deterministic. Resolve these decisions in order:
 
 1. Classify the produced artifact.
 2. Resolve the human operator or viewer and execution recipient independently.
-3. Resolve whether delivery crosses an execution or handoff boundary, applying
-   the existing
+3. Resolve the execution/handoff boundary under the existing
    [material-attempt and conversational-steering boundary](prompt-contracts.md#material-attempts-and-conversational-steering).
-4. Qualify and select the applicable route, then its presentation.
+4. Qualify and select the applicable transport, then its presentation.
 
-Ordinary in-run steering to an already-active execution attempt stays
-conversational/inline, even when it is a complete prompt for Codex, Claude, or
-ChatGPT. A concrete machine recipient alone does not create a new durable
-handoff or require transport qualification. Resolve the actual boundary from
-the receiving attempt and executable contract, not a thread-routing label:
-a fresh execution needs a handoff, while a revised contract that must cross
-execution, recovery, review, replay, restart, or handoff follows the existing
-new-attempt rule even if the visible thread is reused.
+A concrete machine recipient alone does not create a durable handoff or require
+transport qualification. Use the linked boundary to distinguish ordinary in-run
+steering from fresh execution or revised-contract handoffs, independently of
+visible thread reuse.
 
 Wording such as `show me`, `give me`, or `prompt me` does not override a clearly
 named machine recipient, including when the human manually launches its
-downstream thread. An unresolved machine execution surface remains unresolved;
-it does not become a human recipient merely because the human views the prompt.
+downstream thread. An unresolved machine execution surface does not become a
+human recipient.
 
 - no prompt: no delivery action;
 - conceptual fragment: lightweight conversational presentation;
@@ -417,14 +412,6 @@ relationships rather than the surrounding prose.
 `cak-228-prompt-me-codex` represents “Prompt me to have Codex do X,” including
 manual thread creation: the human is the viewer or launcher, while Codex
 receives and executes the complete prompt.
-
-The CAK-242 and CAK-241 corrections represent independent instances of complete
-steering for an already-active Codex attempt without a new handoff boundary.
-The steering rows show that known permitted or unavailable transport capability,
-or capability not yet inspected, does not change conversational delivery.
-`revised-contract-review` instead means another actor must reconstruct the
-changed executable contract for review; visible thread reuse does not remove
-that boundary.
 
 `identity-unresolved-after-inspection` means the required route or identity
 remains unverified after the applicable capability inspection; an unknown route
