@@ -3,11 +3,11 @@
 Experimental shadow preview. Existing Playbook prose controls.
 Incomplete executor contract; no live use or adoption.
 
-Input commit: `900ed9d33ed57674d4b855298638dbaf903bf4fd`.
+Input commit: `c6457854dc558ad8c679cc0932d88438dded52ca`.
 
 Source status: frozen mapped baseline.
 
-Exact producing identities: `d0fb21923d7ba89084945b9c825d531bed3a3d98fcf055b8e424dc454b5c9b70` (see provenance.json).
+Exact producing identities: `d9a08bd69b3da2972c0c86a37c9d128fa5b0b63084636fc21326b43f67f80aca` (see provenance.json).
 
 ## Navigation
 
@@ -25,7 +25,7 @@ Selection: conditional; pb.retrieval-triggers:activates.
 
 ### pb.claim-verification/when
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/when -->
@@ -38,7 +38,7 @@ is:
 
 ### pb.claim-verification/effect
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/effect -->
@@ -64,7 +64,7 @@ current-operation
 
 ### pb.claim-verification/before
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/before -->
@@ -74,7 +74,7 @@ current-operation
 
 ### pb.claim-verification/failure
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/failure -->
@@ -101,7 +101,7 @@ Readiness, mergeability, approval, closure or implementation-completeness claims
 
 ### pb.claim-verification/completion
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/completion -->
@@ -121,7 +121,7 @@ Were the unit and all required external owners applied sufficiently? This remain
 
 ### pb.claim-verification/authority_ref
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/authority_ref -->
@@ -141,7 +141,7 @@ immediately-before-action
 
 ### pb.claim-verification/lifetime
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/lifetime -->
@@ -170,7 +170,7 @@ any:
 
 ### pb.claim-verification/activates
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/activates -->
@@ -180,7 +180,7 @@ any:
 
 ### pb.claim-verification/overrides
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/overrides -->
@@ -190,7 +190,7 @@ any:
 
 ### pb.claim-verification/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/owner -->
@@ -200,7 +200,7 @@ source.retrieval
 
 ### pb.claim-verification/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/references -->
@@ -210,7 +210,7 @@ source.retrieval
 
 ### pb.claim-verification/requires
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/requires -->
@@ -222,7 +222,7 @@ source.retrieval
 
 ### pb.claim-verification/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/status -->
@@ -232,7 +232,7 @@ active
 
 ### pb.claim-verification/unit
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.claim-verification/unit -->
@@ -247,7 +247,7 @@ Selection: conditional; pb.mode-persistence:requires.
 
 ### pb.conditional-activation/when
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/when -->
@@ -260,7 +260,7 @@ is:
 
 ### pb.conditional-activation/effect
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/effect -->
@@ -286,7 +286,7 @@ current-operation
 
 ### pb.conditional-activation/before
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/before -->
@@ -296,7 +296,7 @@ current-operation
 
 ### pb.conditional-activation/failure
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/failure -->
@@ -323,7 +323,7 @@ Affected analysis or artifact
 
 ### pb.conditional-activation/completion
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/completion -->
@@ -343,7 +343,7 @@ Were the unit and all required external owners applied sufficiently? This remain
 
 ### pb.conditional-activation/authority_ref
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/authority_ref -->
@@ -363,7 +363,7 @@ immediately-before-action
 
 ### pb.conditional-activation/lifetime
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/lifetime -->
@@ -392,7 +392,7 @@ any:
 
 ### pb.conditional-activation/activates
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/activates -->
@@ -451,7 +451,7 @@ any:
 
 ### pb.conditional-activation/overrides
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/overrides -->
@@ -461,7 +461,7 @@ any:
 
 ### pb.conditional-activation/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/owner -->
@@ -471,7 +471,7 @@ source.start
 
 ### pb.conditional-activation/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/references -->
@@ -481,7 +481,7 @@ source.start
 
 ### pb.conditional-activation/requires
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/requires -->
@@ -491,7 +491,7 @@ source.start
 
 ### pb.conditional-activation/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/status -->
@@ -501,7 +501,7 @@ active
 
 ### pb.conditional-activation/unit
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.conditional-activation/unit -->
@@ -516,7 +516,7 @@ Selection: conditional.
 
 ### pb.mode-persistence/when
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/when -->
@@ -529,7 +529,7 @@ is:
 
 ### pb.mode-persistence/effect
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/effect -->
@@ -555,7 +555,7 @@ current-operation
 
 ### pb.mode-persistence/before
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/before -->
@@ -565,7 +565,7 @@ current-operation
 
 ### pb.mode-persistence/failure
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/failure -->
@@ -592,7 +592,7 @@ Affected conclusion or artifact after activation changes
 
 ### pb.mode-persistence/completion
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/completion -->
@@ -612,7 +612,7 @@ Were the unit and all required external owners applied sufficiently? This remain
 
 ### pb.mode-persistence/authority_ref
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/authority_ref -->
@@ -632,7 +632,7 @@ immediately-before-action
 
 ### pb.mode-persistence/lifetime
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/lifetime -->
@@ -667,7 +667,7 @@ any:
 
 ### pb.mode-persistence/activates
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/activates -->
@@ -677,7 +677,7 @@ any:
 
 ### pb.mode-persistence/overrides
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/overrides -->
@@ -687,7 +687,7 @@ any:
 
 ### pb.mode-persistence/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/owner -->
@@ -697,7 +697,7 @@ source.start
 
 ### pb.mode-persistence/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/references -->
@@ -707,7 +707,7 @@ source.start
 
 ### pb.mode-persistence/requires
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/requires -->
@@ -718,7 +718,7 @@ source.start
 
 ### pb.mode-persistence/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/status -->
@@ -728,7 +728,7 @@ active
 
 ### pb.mode-persistence/unit
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.mode-persistence/unit -->
@@ -743,7 +743,7 @@ Selection: conditional.
 
 ### pb.retrieval-recovery/when
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/when -->
@@ -756,7 +756,7 @@ is:
 
 ### pb.retrieval-recovery/effect
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/effect -->
@@ -782,7 +782,7 @@ current-operation
 
 ### pb.retrieval-recovery/before
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/before -->
@@ -792,7 +792,7 @@ current-operation
 
 ### pb.retrieval-recovery/failure
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/failure -->
@@ -819,7 +819,7 @@ Recovery-dependent conclusion
 
 ### pb.retrieval-recovery/completion
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/completion -->
@@ -839,7 +839,7 @@ Were the unit and all required external owners applied sufficiently? This remain
 
 ### pb.retrieval-recovery/authority_ref
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/authority_ref -->
@@ -859,7 +859,7 @@ immediately-before-action
 
 ### pb.retrieval-recovery/lifetime
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/lifetime -->
@@ -888,7 +888,7 @@ all:
 
 ### pb.retrieval-recovery/activates
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/activates -->
@@ -898,7 +898,7 @@ all:
 
 ### pb.retrieval-recovery/overrides
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/overrides -->
@@ -908,7 +908,7 @@ all:
 
 ### pb.retrieval-recovery/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/owner -->
@@ -918,7 +918,7 @@ source.retrieval
 
 ### pb.retrieval-recovery/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/references -->
@@ -928,7 +928,7 @@ source.retrieval
 
 ### pb.retrieval-recovery/requires
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/requires -->
@@ -940,7 +940,7 @@ source.retrieval
 
 ### pb.retrieval-recovery/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/status -->
@@ -950,7 +950,7 @@ active
 
 ### pb.retrieval-recovery/unit
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-recovery/unit -->
@@ -965,7 +965,7 @@ Selection: conditional.
 
 ### pb.retrieval-triggers/when
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/when -->
@@ -978,7 +978,7 @@ is:
 
 ### pb.retrieval-triggers/effect
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/effect -->
@@ -1004,7 +1004,7 @@ current-operation
 
 ### pb.retrieval-triggers/before
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/before -->
@@ -1014,7 +1014,7 @@ current-operation
 
 ### pb.retrieval-triggers/failure
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/failure -->
@@ -1041,7 +1041,7 @@ Stateful reasoning
 
 ### pb.retrieval-triggers/completion
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/completion -->
@@ -1061,7 +1061,7 @@ Were the unit and all required external owners applied sufficiently? This remain
 
 ### pb.retrieval-triggers/authority_ref
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/authority_ref -->
@@ -1081,7 +1081,7 @@ immediately-before-action
 
 ### pb.retrieval-triggers/lifetime
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/lifetime -->
@@ -1110,7 +1110,7 @@ any:
 
 ### pb.retrieval-triggers/activates
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/activates -->
@@ -1129,7 +1129,7 @@ any:
 
 ### pb.retrieval-triggers/overrides
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/overrides -->
@@ -1139,7 +1139,7 @@ any:
 
 ### pb.retrieval-triggers/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/owner -->
@@ -1149,7 +1149,7 @@ source.retrieval
 
 ### pb.retrieval-triggers/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/references -->
@@ -1159,7 +1159,7 @@ source.retrieval
 
 ### pb.retrieval-triggers/requires
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/requires -->
@@ -1169,7 +1169,7 @@ source.retrieval
 
 ### pb.retrieval-triggers/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/status -->
@@ -1179,7 +1179,7 @@ active
 
 ### pb.retrieval-triggers/unit
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.retrieval-triggers/unit -->
@@ -1194,7 +1194,7 @@ Selection: conditional; pb.mode-persistence:requires.
 
 ### pb.startup-floor/when
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/when -->
@@ -1207,7 +1207,7 @@ is:
 
 ### pb.startup-floor/effect
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/effect -->
@@ -1233,7 +1233,7 @@ current-operation
 
 ### pb.startup-floor/before
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/before -->
@@ -1243,7 +1243,7 @@ current-operation
 
 ### pb.startup-floor/failure
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/failure -->
@@ -1270,7 +1270,7 @@ Repository-scoped action
 
 ### pb.startup-floor/completion
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/completion -->
@@ -1297,7 +1297,7 @@ is:
 
 ### pb.startup-floor/authority_ref
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/authority_ref -->
@@ -1317,7 +1317,7 @@ immediately-before-action
 
 ### pb.startup-floor/lifetime
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/lifetime -->
@@ -1346,7 +1346,7 @@ any:
 
 ### pb.startup-floor/activates
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/activates -->
@@ -1356,7 +1356,7 @@ any:
 
 ### pb.startup-floor/overrides
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/overrides -->
@@ -1366,7 +1366,7 @@ any:
 
 ### pb.startup-floor/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/owner -->
@@ -1376,7 +1376,7 @@ source.start
 
 ### pb.startup-floor/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/references -->
@@ -1386,7 +1386,7 @@ source.start
 
 ### pb.startup-floor/requires
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/requires -->
@@ -1404,7 +1404,7 @@ source.start
 
 ### pb.startup-floor/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/status -->
@@ -1414,7 +1414,7 @@ active
 
 ### pb.startup-floor/unit
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:pb.startup-floor/unit -->
@@ -1426,7 +1426,7 @@ pb.startup-floor
 
 ### action.claim-verification/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification/action_kind -->
@@ -1436,7 +1436,7 @@ behavior
 
 ### action.claim-verification/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification/does -->
@@ -1494,7 +1494,7 @@ the current checkout.
 
 ### action.claim-verification/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification/does_not_establish -->
@@ -1506,7 +1506,7 @@ the current checkout.
 
 ### action.claim-verification/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification/owner -->
@@ -1516,7 +1516,7 @@ source.retrieval
 
 ### action.claim-verification/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification/parameters -->
@@ -1536,7 +1536,7 @@ source.retrieval
 
 ### action.claim-verification/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification/references -->
@@ -1548,7 +1548,7 @@ source.retrieval
 
 ### action.claim-verification/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification/status -->
@@ -1558,7 +1558,7 @@ active
 
 ### action.claim-verification-failure/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification-failure/action_kind -->
@@ -1568,7 +1568,7 @@ behavior
 
 ### action.claim-verification-failure/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification-failure/does -->
@@ -1578,7 +1578,7 @@ Report verified facts separately from unknowns. Stop the stateful workflow if a 
 
 ### action.claim-verification-failure/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification-failure/does_not_establish -->
@@ -1589,7 +1589,7 @@ Report verified facts separately from unknowns. Stop the stateful workflow if a 
 
 ### action.claim-verification-failure/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification-failure/owner -->
@@ -1599,7 +1599,7 @@ source.retrieval
 
 ### action.claim-verification-failure/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification-failure/parameters -->
@@ -1619,7 +1619,7 @@ source.retrieval
 
 ### action.claim-verification-failure/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification-failure/references -->
@@ -1629,7 +1629,7 @@ source.retrieval
 
 ### action.claim-verification-failure/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.claim-verification-failure/status -->
@@ -1639,7 +1639,7 @@ active
 
 ### action.conditional-activation/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation/action_kind -->
@@ -1649,7 +1649,7 @@ behavior
 
 ### action.conditional-activation/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation/does -->
@@ -1678,7 +1678,7 @@ apply.
 
 ### action.conditional-activation/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation/does_not_establish -->
@@ -1690,7 +1690,7 @@ apply.
 
 ### action.conditional-activation/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation/owner -->
@@ -1700,7 +1700,7 @@ source.start
 
 ### action.conditional-activation/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation/parameters -->
@@ -1720,7 +1720,7 @@ source.start
 
 ### action.conditional-activation/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation/references -->
@@ -1735,7 +1735,7 @@ source.start
 
 ### action.conditional-activation/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation/status -->
@@ -1745,7 +1745,7 @@ active
 
 ### action.conditional-activation-failure/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation-failure/action_kind -->
@@ -1755,7 +1755,7 @@ behavior
 
 ### action.conditional-activation-failure/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation-failure/does -->
@@ -1765,7 +1765,7 @@ Retain unknown activations and required context; inspect canonical routing befor
 
 ### action.conditional-activation-failure/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation-failure/does_not_establish -->
@@ -1776,7 +1776,7 @@ Retain unknown activations and required context; inspect canonical routing befor
 
 ### action.conditional-activation-failure/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation-failure/owner -->
@@ -1786,7 +1786,7 @@ source.start
 
 ### action.conditional-activation-failure/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation-failure/parameters -->
@@ -1806,7 +1806,7 @@ source.start
 
 ### action.conditional-activation-failure/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation-failure/references -->
@@ -1816,7 +1816,7 @@ source.start
 
 ### action.conditional-activation-failure/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.conditional-activation-failure/status -->
@@ -1826,7 +1826,7 @@ active
 
 ### action.mode-persistence/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence/action_kind -->
@@ -1836,7 +1836,7 @@ behavior
 
 ### action.mode-persistence/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence/does -->
@@ -1869,7 +1869,7 @@ behavior
 
 ### action.mode-persistence/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence/does_not_establish -->
@@ -1881,7 +1881,7 @@ behavior
 
 ### action.mode-persistence/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence/owner -->
@@ -1891,7 +1891,7 @@ source.start
 
 ### action.mode-persistence/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence/parameters -->
@@ -1911,7 +1911,7 @@ source.start
 
 ### action.mode-persistence/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence/references -->
@@ -1921,7 +1921,7 @@ source.start
 
 ### action.mode-persistence/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence/status -->
@@ -1931,7 +1931,7 @@ active
 
 ### action.mode-persistence-failure/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence-failure/action_kind -->
@@ -1941,7 +1941,7 @@ behavior
 
 ### action.mode-persistence-failure/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence-failure/does -->
@@ -1951,7 +1951,7 @@ Fail closed if a newly required owner cannot be retrieved; preserve its failure/
 
 ### action.mode-persistence-failure/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence-failure/does_not_establish -->
@@ -1962,7 +1962,7 @@ Fail closed if a newly required owner cannot be retrieved; preserve its failure/
 
 ### action.mode-persistence-failure/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence-failure/owner -->
@@ -1972,7 +1972,7 @@ source.start
 
 ### action.mode-persistence-failure/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence-failure/parameters -->
@@ -1992,7 +1992,7 @@ source.start
 
 ### action.mode-persistence-failure/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence-failure/references -->
@@ -2002,7 +2002,7 @@ source.start
 
 ### action.mode-persistence-failure/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.mode-persistence-failure/status -->
@@ -2012,7 +2012,7 @@ active
 
 ### action.retrieval-recovery/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery/action_kind -->
@@ -2022,7 +2022,7 @@ behavior
 
 ### action.retrieval-recovery/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery/does -->
@@ -2063,7 +2063,7 @@ that still matter after inspection.
 
 ### action.retrieval-recovery/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery/does_not_establish -->
@@ -2075,7 +2075,7 @@ that still matter after inspection.
 
 ### action.retrieval-recovery/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery/owner -->
@@ -2085,7 +2085,7 @@ source.retrieval
 
 ### action.retrieval-recovery/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery/parameters -->
@@ -2105,7 +2105,7 @@ source.retrieval
 
 ### action.retrieval-recovery/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery/references -->
@@ -2117,7 +2117,7 @@ source.retrieval
 
 ### action.retrieval-recovery/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery/status -->
@@ -2127,7 +2127,7 @@ active
 
 ### action.retrieval-recovery-failure/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery-failure/action_kind -->
@@ -2137,7 +2137,7 @@ behavior
 
 ### action.retrieval-recovery-failure/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery-failure/does -->
@@ -2147,7 +2147,7 @@ If no permitted qualified authoritative route remains, stop affected stateful co
 
 ### action.retrieval-recovery-failure/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery-failure/does_not_establish -->
@@ -2158,7 +2158,7 @@ If no permitted qualified authoritative route remains, stop affected stateful co
 
 ### action.retrieval-recovery-failure/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery-failure/owner -->
@@ -2168,7 +2168,7 @@ source.retrieval
 
 ### action.retrieval-recovery-failure/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery-failure/parameters -->
@@ -2188,7 +2188,7 @@ source.retrieval
 
 ### action.retrieval-recovery-failure/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery-failure/references -->
@@ -2200,7 +2200,7 @@ source.retrieval
 
 ### action.retrieval-recovery-failure/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-recovery-failure/status -->
@@ -2210,7 +2210,7 @@ active
 
 ### action.retrieval-triggers/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers/action_kind -->
@@ -2220,7 +2220,7 @@ behavior
 
 ### action.retrieval-triggers/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers/does -->
@@ -2279,7 +2279,7 @@ inference.
 
 ### action.retrieval-triggers/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers/does_not_establish -->
@@ -2291,7 +2291,7 @@ inference.
 
 ### action.retrieval-triggers/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers/owner -->
@@ -2301,7 +2301,7 @@ source.retrieval
 
 ### action.retrieval-triggers/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers/parameters -->
@@ -2321,7 +2321,7 @@ source.retrieval
 
 ### action.retrieval-triggers/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers/references -->
@@ -2331,7 +2331,7 @@ source.retrieval
 
 ### action.retrieval-triggers/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers/status -->
@@ -2341,7 +2341,7 @@ active
 
 ### action.retrieval-triggers-failure/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers-failure/action_kind -->
@@ -2351,7 +2351,7 @@ behavior
 
 ### action.retrieval-triggers-failure/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers-failure/does -->
@@ -2361,7 +2361,7 @@ Report missing identifiers or unavailable mandatory source and stop dependent co
 
 ### action.retrieval-triggers-failure/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers-failure/does_not_establish -->
@@ -2372,7 +2372,7 @@ Report missing identifiers or unavailable mandatory source and stop dependent co
 
 ### action.retrieval-triggers-failure/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers-failure/owner -->
@@ -2382,7 +2382,7 @@ source.retrieval
 
 ### action.retrieval-triggers-failure/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers-failure/parameters -->
@@ -2402,7 +2402,7 @@ source.retrieval
 
 ### action.retrieval-triggers-failure/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers-failure/references -->
@@ -2413,7 +2413,7 @@ source.retrieval
 
 ### action.retrieval-triggers-failure/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.retrieval-triggers-failure/status -->
@@ -2423,7 +2423,7 @@ active
 
 ### action.startup-floor/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor/action_kind -->
@@ -2433,7 +2433,7 @@ behavior
 
 ### action.startup-floor/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor/does -->
@@ -2484,7 +2484,7 @@ establish sufficiency.
 
 ### action.startup-floor/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor/does_not_establish -->
@@ -2496,7 +2496,7 @@ establish sufficiency.
 
 ### action.startup-floor/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor/owner -->
@@ -2506,7 +2506,7 @@ source.start
 
 ### action.startup-floor/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor/parameters -->
@@ -2526,7 +2526,7 @@ source.start
 
 ### action.startup-floor/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor/references -->
@@ -2544,7 +2544,7 @@ source.start
 
 ### action.startup-floor/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor/status -->
@@ -2554,7 +2554,7 @@ active
 
 ### action.startup-floor-failure/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor-failure/action_kind -->
@@ -2564,7 +2564,7 @@ behavior
 
 ### action.startup-floor-failure/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor-failure/does -->
@@ -2574,7 +2574,7 @@ Report the exact unresolved prerequisite, source or authority gap and stop affec
 
 ### action.startup-floor-failure/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor-failure/does_not_establish -->
@@ -2585,7 +2585,7 @@ Report the exact unresolved prerequisite, source or authority gap and stop affec
 
 ### action.startup-floor-failure/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor-failure/owner -->
@@ -2595,7 +2595,7 @@ source.start
 
 ### action.startup-floor-failure/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor-failure/parameters -->
@@ -2615,7 +2615,7 @@ source.start
 
 ### action.startup-floor-failure/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor-failure/references -->
@@ -2626,7 +2626,7 @@ source.start
 
 ### action.startup-floor-failure/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:action.startup-floor-failure/status -->
@@ -2636,7 +2636,7 @@ active
 
 ### boundary.claim-verification/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.claim-verification/action_kind -->
@@ -2646,7 +2646,7 @@ boundary
 
 ### boundary.claim-verification/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.claim-verification/does -->
@@ -2656,7 +2656,7 @@ The specific dependent Readiness, mergeability, approval, closure or implementat
 
 ### boundary.claim-verification/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.claim-verification/does_not_establish -->
@@ -2666,7 +2666,7 @@ The specific dependent Readiness, mergeability, approval, closure or implementat
 
 ### boundary.claim-verification/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.claim-verification/owner -->
@@ -2676,7 +2676,7 @@ source.retrieval
 
 ### boundary.claim-verification/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.claim-verification/parameters -->
@@ -2696,7 +2696,7 @@ source.retrieval
 
 ### boundary.claim-verification/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.claim-verification/references -->
@@ -2706,7 +2706,7 @@ source.retrieval
 
 ### boundary.claim-verification/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.claim-verification/status -->
@@ -2716,7 +2716,7 @@ active
 
 ### boundary.conditional-activation/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.conditional-activation/action_kind -->
@@ -2726,7 +2726,7 @@ boundary
 
 ### boundary.conditional-activation/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.conditional-activation/does -->
@@ -2736,7 +2736,7 @@ The specific dependent Affected analysis or artifact for operation=current-opera
 
 ### boundary.conditional-activation/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.conditional-activation/does_not_establish -->
@@ -2746,7 +2746,7 @@ The specific dependent Affected analysis or artifact for operation=current-opera
 
 ### boundary.conditional-activation/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.conditional-activation/owner -->
@@ -2756,7 +2756,7 @@ source.start
 
 ### boundary.conditional-activation/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.conditional-activation/parameters -->
@@ -2776,7 +2776,7 @@ source.start
 
 ### boundary.conditional-activation/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.conditional-activation/references -->
@@ -2786,7 +2786,7 @@ source.start
 
 ### boundary.conditional-activation/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.conditional-activation/status -->
@@ -2796,7 +2796,7 @@ active
 
 ### boundary.mode-persistence/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.mode-persistence/action_kind -->
@@ -2806,7 +2806,7 @@ boundary
 
 ### boundary.mode-persistence/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.mode-persistence/does -->
@@ -2816,7 +2816,7 @@ The specific dependent Affected conclusion or artifact after activation changes 
 
 ### boundary.mode-persistence/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.mode-persistence/does_not_establish -->
@@ -2826,7 +2826,7 @@ The specific dependent Affected conclusion or artifact after activation changes 
 
 ### boundary.mode-persistence/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.mode-persistence/owner -->
@@ -2836,7 +2836,7 @@ source.start
 
 ### boundary.mode-persistence/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.mode-persistence/parameters -->
@@ -2856,7 +2856,7 @@ source.start
 
 ### boundary.mode-persistence/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.mode-persistence/references -->
@@ -2866,7 +2866,7 @@ source.start
 
 ### boundary.mode-persistence/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.mode-persistence/status -->
@@ -2876,7 +2876,7 @@ active
 
 ### boundary.retrieval-recovery/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-recovery/action_kind -->
@@ -2886,7 +2886,7 @@ boundary
 
 ### boundary.retrieval-recovery/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-recovery/does -->
@@ -2896,7 +2896,7 @@ The specific dependent Recovery-dependent conclusion for operation=current-opera
 
 ### boundary.retrieval-recovery/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-recovery/does_not_establish -->
@@ -2906,7 +2906,7 @@ The specific dependent Recovery-dependent conclusion for operation=current-opera
 
 ### boundary.retrieval-recovery/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-recovery/owner -->
@@ -2916,7 +2916,7 @@ source.retrieval
 
 ### boundary.retrieval-recovery/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-recovery/parameters -->
@@ -2936,7 +2936,7 @@ source.retrieval
 
 ### boundary.retrieval-recovery/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-recovery/references -->
@@ -2946,7 +2946,7 @@ source.retrieval
 
 ### boundary.retrieval-recovery/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-recovery/status -->
@@ -2956,7 +2956,7 @@ active
 
 ### boundary.retrieval-triggers/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-triggers/action_kind -->
@@ -2966,7 +2966,7 @@ boundary
 
 ### boundary.retrieval-triggers/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-triggers/does -->
@@ -2976,7 +2976,7 @@ The specific dependent Stateful reasoning for operation=current-operation. Check
 
 ### boundary.retrieval-triggers/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-triggers/does_not_establish -->
@@ -2986,7 +2986,7 @@ The specific dependent Stateful reasoning for operation=current-operation. Check
 
 ### boundary.retrieval-triggers/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-triggers/owner -->
@@ -2996,7 +2996,7 @@ source.retrieval
 
 ### boundary.retrieval-triggers/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-triggers/parameters -->
@@ -3016,7 +3016,7 @@ source.retrieval
 
 ### boundary.retrieval-triggers/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-triggers/references -->
@@ -3026,7 +3026,7 @@ source.retrieval
 
 ### boundary.retrieval-triggers/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.retrieval-triggers/status -->
@@ -3036,7 +3036,7 @@ active
 
 ### boundary.startup-floor/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.startup-floor/action_kind -->
@@ -3046,7 +3046,7 @@ boundary
 
 ### boundary.startup-floor/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.startup-floor/does -->
@@ -3056,7 +3056,7 @@ The specific dependent Repository-scoped action for operation=current-operation.
 
 ### boundary.startup-floor/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.startup-floor/does_not_establish -->
@@ -3066,7 +3066,7 @@ The specific dependent Repository-scoped action for operation=current-operation.
 
 ### boundary.startup-floor/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.startup-floor/owner -->
@@ -3076,7 +3076,7 @@ source.start
 
 ### boundary.startup-floor/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.startup-floor/parameters -->
@@ -3096,7 +3096,7 @@ source.start
 
 ### boundary.startup-floor/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.startup-floor/references -->
@@ -3106,7 +3106,7 @@ source.start
 
 ### boundary.startup-floor/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:boundary.startup-floor/status -->
@@ -3116,7 +3116,7 @@ active
 
 ### evidence.claim-verification/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.claim-verification/action_kind -->
@@ -3126,7 +3126,7 @@ evidence
 
 ### evidence.claim-verification/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.claim-verification/does -->
@@ -3136,7 +3136,7 @@ Record source-specific checks, unresolved questions and evidence of applying thi
 
 ### evidence.claim-verification/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.claim-verification/does_not_establish -->
@@ -3147,7 +3147,7 @@ Record source-specific checks, unresolved questions and evidence of applying thi
 
 ### evidence.claim-verification/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.claim-verification/owner -->
@@ -3157,7 +3157,7 @@ source.retrieval
 
 ### evidence.claim-verification/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.claim-verification/parameters -->
@@ -3177,7 +3177,7 @@ source.retrieval
 
 ### evidence.claim-verification/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.claim-verification/references -->
@@ -3187,7 +3187,7 @@ source.retrieval
 
 ### evidence.claim-verification/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.claim-verification/status -->
@@ -3197,7 +3197,7 @@ active
 
 ### evidence.conditional-activation/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.conditional-activation/action_kind -->
@@ -3207,7 +3207,7 @@ evidence
 
 ### evidence.conditional-activation/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.conditional-activation/does -->
@@ -3217,7 +3217,7 @@ Record source-specific checks, unresolved questions and evidence of applying thi
 
 ### evidence.conditional-activation/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.conditional-activation/does_not_establish -->
@@ -3228,7 +3228,7 @@ Record source-specific checks, unresolved questions and evidence of applying thi
 
 ### evidence.conditional-activation/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.conditional-activation/owner -->
@@ -3238,7 +3238,7 @@ source.start
 
 ### evidence.conditional-activation/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.conditional-activation/parameters -->
@@ -3258,7 +3258,7 @@ source.start
 
 ### evidence.conditional-activation/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.conditional-activation/references -->
@@ -3268,7 +3268,7 @@ source.start
 
 ### evidence.conditional-activation/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.conditional-activation/status -->
@@ -3278,7 +3278,7 @@ active
 
 ### evidence.mode-persistence/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.mode-persistence/action_kind -->
@@ -3288,7 +3288,7 @@ evidence
 
 ### evidence.mode-persistence/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.mode-persistence/does -->
@@ -3298,7 +3298,7 @@ Record source-specific checks, unresolved questions and evidence of applying thi
 
 ### evidence.mode-persistence/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.mode-persistence/does_not_establish -->
@@ -3309,7 +3309,7 @@ Record source-specific checks, unresolved questions and evidence of applying thi
 
 ### evidence.mode-persistence/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.mode-persistence/owner -->
@@ -3319,7 +3319,7 @@ source.start
 
 ### evidence.mode-persistence/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.mode-persistence/parameters -->
@@ -3339,7 +3339,7 @@ source.start
 
 ### evidence.mode-persistence/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.mode-persistence/references -->
@@ -3349,7 +3349,7 @@ source.start
 
 ### evidence.mode-persistence/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.mode-persistence/status -->
@@ -3359,7 +3359,7 @@ active
 
 ### evidence.retrieval-recovery/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-recovery/action_kind -->
@@ -3369,7 +3369,7 @@ evidence
 
 ### evidence.retrieval-recovery/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-recovery/does -->
@@ -3379,7 +3379,7 @@ Record source-specific checks, unresolved questions and evidence of applying thi
 
 ### evidence.retrieval-recovery/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-recovery/does_not_establish -->
@@ -3390,7 +3390,7 @@ Record source-specific checks, unresolved questions and evidence of applying thi
 
 ### evidence.retrieval-recovery/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-recovery/owner -->
@@ -3400,7 +3400,7 @@ source.retrieval
 
 ### evidence.retrieval-recovery/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-recovery/parameters -->
@@ -3420,7 +3420,7 @@ source.retrieval
 
 ### evidence.retrieval-recovery/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-recovery/references -->
@@ -3430,7 +3430,7 @@ source.retrieval
 
 ### evidence.retrieval-recovery/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-recovery/status -->
@@ -3440,7 +3440,7 @@ active
 
 ### evidence.retrieval-triggers/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-triggers/action_kind -->
@@ -3450,7 +3450,7 @@ evidence
 
 ### evidence.retrieval-triggers/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-triggers/does -->
@@ -3460,7 +3460,7 @@ Record source-specific checks, unresolved questions and evidence of applying thi
 
 ### evidence.retrieval-triggers/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-triggers/does_not_establish -->
@@ -3471,7 +3471,7 @@ Record source-specific checks, unresolved questions and evidence of applying thi
 
 ### evidence.retrieval-triggers/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-triggers/owner -->
@@ -3481,7 +3481,7 @@ source.retrieval
 
 ### evidence.retrieval-triggers/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-triggers/parameters -->
@@ -3501,7 +3501,7 @@ source.retrieval
 
 ### evidence.retrieval-triggers/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-triggers/references -->
@@ -3511,7 +3511,7 @@ source.retrieval
 
 ### evidence.retrieval-triggers/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/source-retrieval.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/source-retrieval.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.retrieval-triggers/status -->
@@ -3521,7 +3521,7 @@ active
 
 ### evidence.startup-floor/action_kind
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.startup-floor/action_kind -->
@@ -3531,7 +3531,7 @@ evidence
 
 ### evidence.startup-floor/does
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.startup-floor/does -->
@@ -3541,7 +3541,7 @@ Record source-specific checks, unresolved questions and evidence of applying thi
 
 ### evidence.startup-floor/does_not_establish
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.startup-floor/does_not_establish -->
@@ -3552,7 +3552,7 @@ Record source-specific checks, unresolved questions and evidence of applying thi
 
 ### evidence.startup-floor/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.startup-floor/owner -->
@@ -3562,7 +3562,7 @@ source.start
 
 ### evidence.startup-floor/parameters
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.startup-floor/parameters -->
@@ -3582,7 +3582,7 @@ source.start
 
 ### evidence.startup-floor/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.startup-floor/references -->
@@ -3592,7 +3592,7 @@ source.start
 
 ### evidence.startup-floor/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:evidence.startup-floor/status -->
@@ -3602,7 +3602,7 @@ active
 
 ### fact.cross_repository_scope/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.cross_repository_scope/evaluators -->
@@ -3612,7 +3612,7 @@ active
 
 ### fact.cross_repository_scope/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.cross_repository_scope/freshness -->
@@ -3624,7 +3624,7 @@ context
 
 ### fact.cross_repository_scope/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.cross_repository_scope/owner -->
@@ -3634,7 +3634,7 @@ source.start
 
 ### fact.cross_repository_scope/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.cross_repository_scope/question -->
@@ -3644,7 +3644,7 @@ Work involves multiple repositories, cross-repository interfaces or architectura
 
 ### fact.cross_repository_scope/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.cross_repository_scope/references -->
@@ -3654,7 +3654,7 @@ Work involves multiple repositories, cross-repository interfaces or architectura
 
 ### fact.cross_repository_scope/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.cross_repository_scope/resolution_class -->
@@ -3664,7 +3664,7 @@ external_judgment
 
 ### fact.cross_repository_scope/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.cross_repository_scope/sources -->
@@ -3674,7 +3674,7 @@ external_judgment
 
 ### fact.cross_repository_scope/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.cross_repository_scope/status -->
@@ -3684,7 +3684,7 @@ active
 
 ### fact.cross_repository_scope/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.cross_repository_scope/type -->
@@ -3694,7 +3694,7 @@ boolean
 
 ### fact.cross_repository_scope/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.cross_repository_scope/values -->
@@ -3705,7 +3705,7 @@ boolean
 
 ### fact.feature_delivery_current/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.feature_delivery_current/evaluators -->
@@ -3715,7 +3715,7 @@ boolean
 
 ### fact.feature_delivery_current/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.feature_delivery_current/freshness -->
@@ -3727,7 +3727,7 @@ context
 
 ### fact.feature_delivery_current/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.feature_delivery_current/owner -->
@@ -3737,7 +3737,7 @@ source.start
 
 ### fact.feature_delivery_current/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.feature_delivery_current/question -->
@@ -3747,7 +3747,7 @@ Current authorized action enters feature-delivery planning or execution, after t
 
 ### fact.feature_delivery_current/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.feature_delivery_current/references -->
@@ -3757,7 +3757,7 @@ Current authorized action enters feature-delivery planning or execution, after t
 
 ### fact.feature_delivery_current/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.feature_delivery_current/resolution_class -->
@@ -3767,7 +3767,7 @@ external_judgment
 
 ### fact.feature_delivery_current/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.feature_delivery_current/sources -->
@@ -3777,7 +3777,7 @@ external_judgment
 
 ### fact.feature_delivery_current/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.feature_delivery_current/status -->
@@ -3787,7 +3787,7 @@ active
 
 ### fact.feature_delivery_current/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.feature_delivery_current/type -->
@@ -3797,7 +3797,7 @@ boolean
 
 ### fact.feature_delivery_current/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.feature_delivery_current/values -->
@@ -3808,7 +3808,7 @@ boolean
 
 ### fact.human_style_override/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.human_style_override/evaluators -->
@@ -3818,7 +3818,7 @@ boolean
 
 ### fact.human_style_override/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.human_style_override/freshness -->
@@ -3830,7 +3830,7 @@ context
 
 ### fact.human_style_override/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.human_style_override/owner -->
@@ -3840,7 +3840,7 @@ source.start
 
 ### fact.human_style_override/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.human_style_override/question -->
@@ -3850,7 +3850,7 @@ Human explicitly requested another artifact style; does not waive required sourc
 
 ### fact.human_style_override/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.human_style_override/references -->
@@ -3860,7 +3860,7 @@ Human explicitly requested another artifact style; does not waive required sourc
 
 ### fact.human_style_override/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.human_style_override/resolution_class -->
@@ -3870,7 +3870,7 @@ external_judgment
 
 ### fact.human_style_override/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.human_style_override/sources -->
@@ -3880,7 +3880,7 @@ external_judgment
 
 ### fact.human_style_override/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.human_style_override/status -->
@@ -3890,7 +3890,7 @@ active
 
 ### fact.human_style_override/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.human_style_override/type -->
@@ -3900,7 +3900,7 @@ boolean
 
 ### fact.human_style_override/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.human_style_override/values -->
@@ -3911,7 +3911,7 @@ boolean
 
 ### fact.leaves_repository_work/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.leaves_repository_work/evaluators -->
@@ -3921,7 +3921,7 @@ boolean
 
 ### fact.leaves_repository_work/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.leaves_repository_work/freshness -->
@@ -3933,7 +3933,7 @@ context
 
 ### fact.leaves_repository_work/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.leaves_repository_work/owner -->
@@ -3943,7 +3943,7 @@ source.start
 
 ### fact.leaves_repository_work/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.leaves_repository_work/question -->
@@ -3953,7 +3953,7 @@ Interaction clearly leaves repository work.
 
 ### fact.leaves_repository_work/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.leaves_repository_work/references -->
@@ -3963,7 +3963,7 @@ Interaction clearly leaves repository work.
 
 ### fact.leaves_repository_work/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.leaves_repository_work/resolution_class -->
@@ -3973,7 +3973,7 @@ external_judgment
 
 ### fact.leaves_repository_work/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.leaves_repository_work/sources -->
@@ -3983,7 +3983,7 @@ external_judgment
 
 ### fact.leaves_repository_work/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.leaves_repository_work/status -->
@@ -3993,7 +3993,7 @@ active
 
 ### fact.leaves_repository_work/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.leaves_repository_work/type -->
@@ -4003,7 +4003,7 @@ boolean
 
 ### fact.leaves_repository_work/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.leaves_repository_work/values -->
@@ -4014,7 +4014,7 @@ boolean
 
 ### fact.maintenance_scope/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.maintenance_scope/evaluators -->
@@ -4024,7 +4024,7 @@ boolean
 
 ### fact.maintenance_scope/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.maintenance_scope/freshness -->
@@ -4036,7 +4036,7 @@ context
 
 ### fact.maintenance_scope/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.maintenance_scope/owner -->
@@ -4046,7 +4046,7 @@ source.start
 
 ### fact.maintenance_scope/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.maintenance_scope/question -->
@@ -4056,7 +4056,7 @@ An actual maintenance-automation trigger in Conditional Repository Guidance appl
 
 ### fact.maintenance_scope/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.maintenance_scope/references -->
@@ -4066,7 +4066,7 @@ An actual maintenance-automation trigger in Conditional Repository Guidance appl
 
 ### fact.maintenance_scope/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.maintenance_scope/resolution_class -->
@@ -4076,7 +4076,7 @@ external_judgment
 
 ### fact.maintenance_scope/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.maintenance_scope/sources -->
@@ -4086,7 +4086,7 @@ external_judgment
 
 ### fact.maintenance_scope/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.maintenance_scope/status -->
@@ -4096,7 +4096,7 @@ active
 
 ### fact.maintenance_scope/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.maintenance_scope/type -->
@@ -4106,7 +4106,7 @@ boolean
 
 ### fact.maintenance_scope/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.maintenance_scope/values -->
@@ -4117,7 +4117,7 @@ boolean
 
 ### fact.mandatory_trigger/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.mandatory_trigger/evaluators -->
@@ -4127,7 +4127,7 @@ boolean
 
 ### fact.mandatory_trigger/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.mandatory_trigger/freshness -->
@@ -4139,7 +4139,7 @@ context
 
 ### fact.mandatory_trigger/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.mandatory_trigger/owner -->
@@ -4149,7 +4149,7 @@ source.start
 
 ### fact.mandatory_trigger/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.mandatory_trigger/question -->
@@ -4159,7 +4159,7 @@ At least one mandatory trigger applies after classifying references and state-de
 
 ### fact.mandatory_trigger/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.mandatory_trigger/references -->
@@ -4169,7 +4169,7 @@ At least one mandatory trigger applies after classifying references and state-de
 
 ### fact.mandatory_trigger/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.mandatory_trigger/resolution_class -->
@@ -4179,7 +4179,7 @@ external_judgment
 
 ### fact.mandatory_trigger/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.mandatory_trigger/sources -->
@@ -4189,7 +4189,7 @@ external_judgment
 
 ### fact.mandatory_trigger/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.mandatory_trigger/status -->
@@ -4199,7 +4199,7 @@ active
 
 ### fact.mandatory_trigger/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.mandatory_trigger/type -->
@@ -4209,7 +4209,7 @@ boolean
 
 ### fact.mandatory_trigger/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.mandatory_trigger/values -->
@@ -4220,7 +4220,7 @@ boolean
 
 ### fact.repository_changed/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_changed/evaluators -->
@@ -4230,7 +4230,7 @@ boolean
 
 ### fact.repository_changed/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_changed/freshness -->
@@ -4242,7 +4242,7 @@ context
 
 ### fact.repository_changed/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_changed/owner -->
@@ -4252,7 +4252,7 @@ source.start
 
 ### fact.repository_changed/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_changed/question -->
@@ -4262,7 +4262,7 @@ Current target differs from the repository whose startup completed.
 
 ### fact.repository_changed/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_changed/references -->
@@ -4272,7 +4272,7 @@ Current target differs from the repository whose startup completed.
 
 ### fact.repository_changed/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_changed/resolution_class -->
@@ -4282,7 +4282,7 @@ external_judgment
 
 ### fact.repository_changed/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_changed/sources -->
@@ -4292,7 +4292,7 @@ external_judgment
 
 ### fact.repository_changed/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_changed/status -->
@@ -4302,7 +4302,7 @@ active
 
 ### fact.repository_changed/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_changed/type -->
@@ -4312,7 +4312,7 @@ boolean
 
 ### fact.repository_changed/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_changed/values -->
@@ -4323,7 +4323,7 @@ boolean
 
 ### fact.repository_work/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_work/evaluators -->
@@ -4333,7 +4333,7 @@ boolean
 
 ### fact.repository_work/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_work/freshness -->
@@ -4345,7 +4345,7 @@ context
 
 ### fact.repository_work/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_work/owner -->
@@ -4355,7 +4355,7 @@ source.start
 
 ### fact.repository_work/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_work/question -->
@@ -4365,7 +4365,7 @@ Current bounded action depends on repository state; classify from current human 
 
 ### fact.repository_work/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_work/references -->
@@ -4375,7 +4375,7 @@ Current bounded action depends on repository state; classify from current human 
 
 ### fact.repository_work/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_work/resolution_class -->
@@ -4385,7 +4385,7 @@ external_judgment
 
 ### fact.repository_work/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_work/sources -->
@@ -4395,7 +4395,7 @@ external_judgment
 
 ### fact.repository_work/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_work/status -->
@@ -4405,7 +4405,7 @@ active
 
 ### fact.repository_work/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_work/type -->
@@ -4415,7 +4415,7 @@ boolean
 
 ### fact.repository_work/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.repository_work/values -->
@@ -4426,7 +4426,7 @@ boolean
 
 ### fact.retrieval_missed/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.retrieval_missed/evaluators -->
@@ -4436,7 +4436,7 @@ boolean
 
 ### fact.retrieval_missed/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.retrieval_missed/freshness -->
@@ -4448,7 +4448,7 @@ context
 
 ### fact.retrieval_missed/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.retrieval_missed/owner -->
@@ -4458,7 +4458,7 @@ source.start
 
 ### fact.retrieval_missed/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.retrieval_missed/question -->
@@ -4468,7 +4468,7 @@ Mandatory retrieval ordering was missed, assumptions preceded inspection, or a l
 
 ### fact.retrieval_missed/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.retrieval_missed/references -->
@@ -4478,7 +4478,7 @@ Mandatory retrieval ordering was missed, assumptions preceded inspection, or a l
 
 ### fact.retrieval_missed/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.retrieval_missed/resolution_class -->
@@ -4488,7 +4488,7 @@ external_judgment
 
 ### fact.retrieval_missed/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.retrieval_missed/sources -->
@@ -4498,7 +4498,7 @@ external_judgment
 
 ### fact.retrieval_missed/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.retrieval_missed/status -->
@@ -4508,7 +4508,7 @@ active
 
 ### fact.retrieval_missed/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.retrieval_missed/type -->
@@ -4518,7 +4518,7 @@ boolean
 
 ### fact.retrieval_missed/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.retrieval_missed/values -->
@@ -4529,7 +4529,7 @@ boolean
 
 ### fact.source_available/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.source_available/evaluators -->
@@ -4539,7 +4539,7 @@ boolean
 
 ### fact.source_available/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.source_available/freshness -->
@@ -4551,7 +4551,7 @@ context
 
 ### fact.source_available/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.source_available/owner -->
@@ -4561,7 +4561,7 @@ source.start
 
 ### fact.source_available/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.source_available/question -->
@@ -4571,7 +4571,7 @@ At least one currently permitted qualified authoritative route supplies the requ
 
 ### fact.source_available/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.source_available/references -->
@@ -4581,7 +4581,7 @@ At least one currently permitted qualified authoritative route supplies the requ
 
 ### fact.source_available/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.source_available/resolution_class -->
@@ -4591,7 +4591,7 @@ external_judgment
 
 ### fact.source_available/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.source_available/sources -->
@@ -4601,7 +4601,7 @@ external_judgment
 
 ### fact.source_available/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.source_available/status -->
@@ -4611,7 +4611,7 @@ active
 
 ### fact.source_available/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.source_available/type -->
@@ -4621,7 +4621,7 @@ boolean
 
 ### fact.source_available/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.source_available/values -->
@@ -4632,7 +4632,7 @@ boolean
 
 ### fact.startup_ready/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_ready/evaluators -->
@@ -4642,7 +4642,7 @@ boolean
 
 ### fact.startup_ready/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_ready/freshness -->
@@ -4654,7 +4654,7 @@ context
 
 ### fact.startup_ready/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_ready/owner -->
@@ -4664,7 +4664,7 @@ source.start
 
 ### fact.startup_ready/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_ready/question -->
@@ -4674,7 +4674,7 @@ All startup checks and task-specific prerequisites are clear under their owners.
 
 ### fact.startup_ready/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_ready/references -->
@@ -4684,7 +4684,7 @@ All startup checks and task-specific prerequisites are clear under their owners.
 
 ### fact.startup_ready/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_ready/resolution_class -->
@@ -4694,7 +4694,7 @@ external_judgment
 
 ### fact.startup_ready/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_ready/sources -->
@@ -4704,7 +4704,7 @@ external_judgment
 
 ### fact.startup_ready/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_ready/status -->
@@ -4714,7 +4714,7 @@ active
 
 ### fact.startup_ready/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_ready/type -->
@@ -4724,7 +4724,7 @@ boolean
 
 ### fact.startup_ready/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_ready/values -->
@@ -4735,7 +4735,7 @@ boolean
 
 ### fact.startup_succeeded/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_succeeded/evaluators -->
@@ -4745,7 +4745,7 @@ boolean
 
 ### fact.startup_succeeded/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_succeeded/freshness -->
@@ -4757,7 +4757,7 @@ context
 
 ### fact.startup_succeeded/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_succeeded/owner -->
@@ -4767,7 +4767,7 @@ source.start
 
 ### fact.startup_succeeded/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_succeeded/question -->
@@ -4777,7 +4777,7 @@ Controller verified and applied the complete repository floor and activated owne
 
 ### fact.startup_succeeded/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_succeeded/references -->
@@ -4787,7 +4787,7 @@ Controller verified and applied the complete repository floor and activated owne
 
 ### fact.startup_succeeded/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_succeeded/resolution_class -->
@@ -4797,7 +4797,7 @@ external_judgment
 
 ### fact.startup_succeeded/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_succeeded/sources -->
@@ -4807,7 +4807,7 @@ external_judgment
 
 ### fact.startup_succeeded/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_succeeded/status -->
@@ -4817,7 +4817,7 @@ active
 
 ### fact.startup_succeeded/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_succeeded/type -->
@@ -4827,7 +4827,7 @@ boolean
 
 ### fact.startup_succeeded/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.startup_succeeded/values -->
@@ -4838,7 +4838,7 @@ boolean
 
 ### fact.verification_complete/evaluators
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.verification_complete/evaluators -->
@@ -4848,7 +4848,7 @@ boolean
 
 ### fact.verification_complete/freshness
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.verification_complete/freshness -->
@@ -4860,7 +4860,7 @@ context
 
 ### fact.verification_complete/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.verification_complete/owner -->
@@ -4870,7 +4870,7 @@ source.start
 
 ### fact.verification_complete/question
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.verification_complete/question -->
@@ -4880,7 +4880,7 @@ Claim-specific checks have verified every materially necessary source fact; part
 
 ### fact.verification_complete/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.verification_complete/references -->
@@ -4890,7 +4890,7 @@ Claim-specific checks have verified every materially necessary source fact; part
 
 ### fact.verification_complete/resolution_class
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.verification_complete/resolution_class -->
@@ -4900,7 +4900,7 @@ external_judgment
 
 ### fact.verification_complete/sources
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.verification_complete/sources -->
@@ -4910,7 +4910,7 @@ external_judgment
 
 ### fact.verification_complete/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.verification_complete/status -->
@@ -4920,7 +4920,7 @@ active
 
 ### fact.verification_complete/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.verification_complete/type -->
@@ -4930,7 +4930,7 @@ boolean
 
 ### fact.verification_complete/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:fact.verification_complete/values -->
@@ -4941,7 +4941,7 @@ boolean
 
 ### source.agents/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.agents/definition -->
@@ -4951,7 +4951,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.agents/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.agents/owner -->
@@ -4961,7 +4961,7 @@ source.start
 
 ### source.agents/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.agents/path -->
@@ -4971,7 +4971,7 @@ AGENTS.md
 
 ### source.agents/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.agents/references -->
@@ -4981,7 +4981,7 @@ AGENTS.md
 
 ### source.agents/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.agents/status -->
@@ -4991,7 +4991,7 @@ active
 
 ### source.baseline/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.baseline/definition -->
@@ -5001,7 +5001,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.baseline/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.baseline/owner -->
@@ -5011,7 +5011,7 @@ source.start
 
 ### source.baseline/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.baseline/path -->
@@ -5021,7 +5021,7 @@ docs/engineering-baseline.md
 
 ### source.baseline/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.baseline/references -->
@@ -5031,7 +5031,7 @@ docs/engineering-baseline.md
 
 ### source.baseline/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.baseline/status -->
@@ -5041,7 +5041,7 @@ active
 
 ### source.chatgpt/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.chatgpt/definition -->
@@ -5051,7 +5051,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.chatgpt/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.chatgpt/owner -->
@@ -5061,7 +5061,7 @@ source.start
 
 ### source.chatgpt/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.chatgpt/path -->
@@ -5071,7 +5071,7 @@ docs/tool-adapters/chatgpt.md
 
 ### source.chatgpt/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.chatgpt/references -->
@@ -5081,7 +5081,7 @@ docs/tool-adapters/chatgpt.md
 
 ### source.chatgpt/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.chatgpt/status -->
@@ -5091,7 +5091,7 @@ active
 
 ### source.claude/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.claude/definition -->
@@ -5101,7 +5101,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.claude/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.claude/owner -->
@@ -5111,7 +5111,7 @@ source.start
 
 ### source.claude/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.claude/path -->
@@ -5121,7 +5121,7 @@ docs/tool-adapters/claude.md
 
 ### source.claude/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.claude/references -->
@@ -5131,7 +5131,7 @@ docs/tool-adapters/claude.md
 
 ### source.claude/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.claude/status -->
@@ -5141,7 +5141,7 @@ active
 
 ### source.codex/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.codex/definition -->
@@ -5151,7 +5151,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.codex/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.codex/owner -->
@@ -5161,7 +5161,7 @@ source.start
 
 ### source.codex/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.codex/path -->
@@ -5171,7 +5171,7 @@ docs/tool-adapters/codex.md
 
 ### source.codex/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.codex/references -->
@@ -5181,7 +5181,7 @@ docs/tool-adapters/codex.md
 
 ### source.codex/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.codex/status -->
@@ -5191,7 +5191,7 @@ active
 
 ### source.core/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.core/definition -->
@@ -5201,7 +5201,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.core/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.core/owner -->
@@ -5211,7 +5211,7 @@ source.start
 
 ### source.core/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.core/path -->
@@ -5221,7 +5221,7 @@ docs/core-model.md
 
 ### source.core/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.core/references -->
@@ -5231,7 +5231,7 @@ docs/core-model.md
 
 ### source.core/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.core/status -->
@@ -5241,7 +5241,7 @@ active
 
 ### source.ecosystem/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.ecosystem/definition -->
@@ -5251,7 +5251,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.ecosystem/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.ecosystem/owner -->
@@ -5261,7 +5261,7 @@ source.start
 
 ### source.ecosystem/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.ecosystem/path -->
@@ -5271,7 +5271,7 @@ docs/ai-workflow-ecosystem.md
 
 ### source.ecosystem/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.ecosystem/references -->
@@ -5281,7 +5281,7 @@ docs/ai-workflow-ecosystem.md
 
 ### source.ecosystem/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.ecosystem/status -->
@@ -5291,7 +5291,7 @@ active
 
 ### source.glossary/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.glossary/definition -->
@@ -5301,7 +5301,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.glossary/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.glossary/owner -->
@@ -5311,7 +5311,7 @@ source.start
 
 ### source.glossary/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.glossary/path -->
@@ -5321,7 +5321,7 @@ docs/cross-repo-glossary.md
 
 ### source.glossary/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.glossary/references -->
@@ -5331,7 +5331,7 @@ docs/cross-repo-glossary.md
 
 ### source.glossary/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.glossary/status -->
@@ -5341,7 +5341,7 @@ active
 
 ### source.interfaces/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.interfaces/definition -->
@@ -5351,7 +5351,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.interfaces/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.interfaces/owner -->
@@ -5361,7 +5361,7 @@ source.start
 
 ### source.interfaces/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.interfaces/path -->
@@ -5371,7 +5371,7 @@ docs/repo-to-repo-interface-contracts.md
 
 ### source.interfaces/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.interfaces/references -->
@@ -5381,7 +5381,7 @@ docs/repo-to-repo-interface-contracts.md
 
 ### source.interfaces/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.interfaces/status -->
@@ -5391,7 +5391,7 @@ active
 
 ### source.lifecycle/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.lifecycle/definition -->
@@ -5401,7 +5401,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.lifecycle/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.lifecycle/owner -->
@@ -5411,7 +5411,7 @@ source.start
 
 ### source.lifecycle/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.lifecycle/path -->
@@ -5421,7 +5421,7 @@ docs/feature-lifecycle.md
 
 ### source.lifecycle/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.lifecycle/references -->
@@ -5431,7 +5431,7 @@ docs/feature-lifecycle.md
 
 ### source.lifecycle/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.lifecycle/status -->
@@ -5441,7 +5441,7 @@ active
 
 ### source.maintenance/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.maintenance/definition -->
@@ -5451,7 +5451,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.maintenance/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.maintenance/owner -->
@@ -5461,7 +5461,7 @@ source.start
 
 ### source.maintenance/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.maintenance/path -->
@@ -5471,7 +5471,7 @@ docs/maintenance-automations.md
 
 ### source.maintenance/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.maintenance/references -->
@@ -5481,7 +5481,7 @@ docs/maintenance-automations.md
 
 ### source.maintenance/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.maintenance/status -->
@@ -5491,7 +5491,7 @@ active
 
 ### source.readiness/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.readiness/definition -->
@@ -5501,7 +5501,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.readiness/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.readiness/owner -->
@@ -5511,7 +5511,7 @@ source.start
 
 ### source.readiness/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.readiness/path -->
@@ -5521,7 +5521,7 @@ docs/repo-readiness.md
 
 ### source.readiness/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.readiness/references -->
@@ -5531,7 +5531,7 @@ docs/repo-readiness.md
 
 ### source.readiness/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.readiness/status -->
@@ -5541,7 +5541,7 @@ active
 
 ### source.retrieval/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.retrieval/definition -->
@@ -5551,7 +5551,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.retrieval/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.retrieval/owner -->
@@ -5561,7 +5561,7 @@ source.start
 
 ### source.retrieval/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.retrieval/path -->
@@ -5571,7 +5571,7 @@ docs/source-first-retrieval.md
 
 ### source.retrieval/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.retrieval/references -->
@@ -5581,7 +5581,7 @@ docs/source-first-retrieval.md
 
 ### source.retrieval/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.retrieval/status -->
@@ -5591,7 +5591,7 @@ active
 
 ### source.review/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.review/definition -->
@@ -5601,7 +5601,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.review/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.review/owner -->
@@ -5611,7 +5611,7 @@ source.start
 
 ### source.review/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.review/path -->
@@ -5621,7 +5621,7 @@ docs/review-packet.md
 
 ### source.review/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.review/references -->
@@ -5631,7 +5631,7 @@ docs/review-packet.md
 
 ### source.review/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.review/status -->
@@ -5641,7 +5641,7 @@ active
 
 ### source.start/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.start/definition -->
@@ -5651,7 +5651,7 @@ External canonical read. Resolve the claim from this source; missing content blo
 
 ### source.start/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.start/owner -->
@@ -5661,7 +5661,7 @@ source.start
 
 ### source.start/path
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.start/path -->
@@ -5671,7 +5671,7 @@ docs/start-here.md
 
 ### source.start/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.start/references -->
@@ -5681,7 +5681,7 @@ docs/start-here.md
 
 ### source.start/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:source.start/status -->
@@ -5691,7 +5691,7 @@ active
 
 ### term.operation/definition
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:term.operation/definition -->
@@ -5701,7 +5701,7 @@ Identity of the one concrete operation under review in the synthetic pilot conte
 
 ### term.operation/owner
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:term.operation/owner -->
@@ -5711,7 +5711,7 @@ source.start
 
 ### term.operation/references
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:term.operation/references -->
@@ -5721,7 +5721,7 @@ source.start
 
 ### term.operation/status
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:term.operation/status -->
@@ -5731,7 +5731,7 @@ active
 
 ### term.operation/type
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:term.operation/type -->
@@ -5741,7 +5741,7 @@ enum
 
 ### term.operation/values
 
-[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/900ed9d33ed57674d4b855298638dbaf903bf4fd/experiments/code-first-playbook/semantics/startup.yaml)
+[Edit semantic source](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/c6457854dc558ad8c679cc0932d88438dded52ca/experiments/code-first-playbook/semantics/startup.yaml)
 
 <!-- markdownlint-disable MD009 MD012 -->
 <!-- begin:term.operation/values -->
