@@ -9,20 +9,33 @@ concrete capability in use. Use this adapter with `docs/start-here.md`,
 `docs/core-model.md`, `docs/source-first-retrieval.md`, `docs/repo-readiness.md`,
 and repo-local `AGENTS.md`; do not treat it as a second copy of those rules.
 
-## GPT-5.6 Model And Reasoning Routing
+## OpenAI Model And Reasoning Routing
 
-Choose the lowest-cost GPT-5.6 model and reasoning effort that preserves the
+Choose the lowest-cost available model and reasoning effort that preserves the
 confidence required by the bounded task. Model selection and reasoning effort
 are separate configuration decisions: select both deliberately, and do not
-default substantial work to Sol merely because it is long-running.
+default substantial work to Sol or Astra merely because it is long-running.
 
-The current official positioning, checked 2026-08-10, is: Sol for frontier
-capability, Terra for an intelligence/cost balance, and Luna for efficient,
-high-volume, cost-sensitive workloads. GPT-5.6 supports `none`, `low`,
-`medium`, `high`, `xhigh`, and `max` reasoning effort; availability of a
-specific combination remains executor/runtime evidence. This adapter uses
-Light, Medium, and High as portable recommendation classes, mapped to the
-available runtime setting by the operator.
+The official model references, checked 2026-09-04, position
+[GPT-6 Astra](https://developers.openai.com/api/docs/models/gpt-6-astra)
+(`gpt-6-astra`) for the hardest end-to-end reasoning, coding, computer-use,
+research, and document tasks;
+[GPT-5.6 Sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol)
+for complex professional work;
+[Terra](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
+for an intelligence/cost balance; and
+[Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna)
+for cost-sensitive, high-volume workloads. Astra's documented API reasoning
+efforts are `low`, `medium`, `high`, `xhigh`, and `max`; GPT-5.6 also supports
+`none`. A Codex surface may expose a different set: verify the selected
+model/effort combination in that runtime rather than copying the API list.
+This adapter uses Light, Medium, and High as portable recommendation classes,
+mapped to the available runtime setting by the operator.
+
+OpenAI's [Codex release guidance](https://learn.chatgpt.com/docs/whats-new)
+documents Astra as an option once available to the account. Rollout and
+administrator enablement remain separate from model capability; verify access
+on the actual interactive or scheduled execution surface.
 
 Use task characteristics, not duration, to route: ambiguity, consequence of
 error, repository-context breadth, novelty, architectural judgment,
@@ -38,8 +51,9 @@ remain on Luna.
 | Substantial but bounded analysis; moderate synthesis; difficult localized debugging | Terra | High | architecture or authority decisions, conflicting evidence, or unresolved ambiguity remain after bounded investigation | move deterministic execution and verification to Luna |
 | Protocol/design work; architecture synthesis; ambiguous root-cause debugging; high-consequence authority or controller semantics; difficult adversarial review | Sol | High; consider `xhigh` or `max` only with a measured need | use a bounded supported Pro-mode execution, independent review, or explicit human decision when the unresolved risk remains material | delegate established-contract implementation to Terra and mechanical verification to Luna |
 
-Defaults are routing hypotheses, not a guarantee that the lower-cost choice is
-sufficient. Do not downgrade when consequences are high, ambiguity is
+The Luna/Terra/Sol defaults remain in place pending representative Astra
+qualification. Defaults are routing hypotheses, not a guarantee that the
+lower-cost choice is sufficient. Do not downgrade when consequences are high, ambiguity is
 material, validation is weak, work is hard to reverse, or a failure could
 silently corrupt authority or evidence. `xhigh` and `max` are exceptional:
 use them only for a bounded demanding task with an observed quality need; do
@@ -52,6 +66,30 @@ exposes it and a bounded quality/reliability need justifies the added cost and
 latency; it is not a routine Sol default. The `gpt-5.6` alias resolves to Sol,
 so use an explicit Terra or Luna identifier whenever that lower-cost routing is
 intended.
+
+### Provisional Astra Placement
+
+Consider Astra for a bounded quality-first escalation or a demanding workflow
+spanning code, browsers, research, and professional artifacts when its
+documented strengths match an observed need. This is a provisional routing
+recommendation, not a demonstrated improvement over Sol for Playbook work.
+Before changing defaults, compare representative outcomes, boundary adherence,
+latency, cost per accepted result, and intervention behavior under controlled
+conditions. Launch benchmarks and a single successful run do not qualify a
+task class. Use current provider pricing rather than assuming fewer output
+tokens makes Astra cheaper for the workload.
+
+The published Astra context/output limits do not exceed those of Luna, Terra,
+or Sol; a model switch alone does not justify a larger source set. OpenAI's
+[misalignment monitoring](https://developers.openai.com/api/docs/guides/safety-checks/misalignment-monitoring)
+can stop covered conversations and can flag legitimate activity or miss issues.
+It does not undo prior actions or replace the existing authority, evidence,
+review, and human-decision boundaries.
+
+Astra's existence does not require a change to the
+[autonomous maintenance layer](../maintenance-automations.md). Deterministic
+hosted stewardship gains no model dependency; residual model-backed jobs are
+candidates for later qualification on their actual execution surfaces.
 
 ### Escalation And Delegation
 
@@ -76,7 +114,8 @@ work for other purposes.
 
 Apply the shared `FRESH THREAD`, `SAME THREAD`, and `CHILD TASK` vocabulary in
 [`prompts.md`](../prompts.md#thread-routing-and-configuration-continuity). For
-a FRESH THREAD, select the matrix's task-appropriate GPT-5.6 model and effort.
+a FRESH THREAD, select the task-appropriate model and effort using the matrix
+and provisional Astra guidance above.
 For a SAME THREAD, preserve the requested parent model and effort by default:
 task-class sufficiency alone does not justify intentionally mutating an
 already-running configuration. Record the effective model and effort separately
@@ -145,14 +184,24 @@ variables can be evaluated separately, do not change the model, prompt,
 reasoning effort, tool behavior, and workflow at the same time.
 
 Preserve the prior effective reasoning effort as the first migration baseline.
+For an Astra comparison from `none` or `minimal`, OpenAI recommends `low`;
+record that required configuration change as a comparison limitation.
 Treat reasoning effort as execution configuration rather than prompt prose,
 then tune it against representative tasks. Do not recommend a global increase
 or compensate for a configuration mismatch by bloating the prompt.
 
 Keep Pro mode, persisted reasoning, programmatic tool calling, explicit prompt
-caching, and multi-agent execution outside the baseline migration. Evaluate
-each optional feature separately only when the workload shape and measured
+caching, multi-agent execution, async tool calling, and mid-turn steering
+outside the baseline migration. Evaluate each optional feature separately only
+when the workload shape and measured
 results justify it. Preserve behavior and settings before optimizing.
+
+The API's [async tool calling](https://developers.openai.com/api/docs/guides/async-tool-calling)
+allows useful work while application-managed tools are pending;
+[mid-turn steering](https://developers.openai.com/api/docs/guides/steering)
+accepts user updates through Responses WebSockets without undoing prior actions
+or canceling started tools. These API capabilities do not establish their
+availability or behavior in every Codex runtime.
 
 ### Operator Metadata And Reasoning Recommendations
 
@@ -161,7 +210,7 @@ executable prompt with this plain-text operator metadata:
 
 ```text
 Thread routing: <FRESH THREAD | SAME THREAD | CHILD TASK>
-Recommended model: <FRESH THREAD/CHILD TASK: GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol; SAME THREAD: Preserve requested thread model and observe effective runtime model>
+Recommended model: <FRESH THREAD/CHILD TASK: GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol | GPT-6 Astra (provisional); SAME THREAD: Preserve requested thread model and observe effective runtime model>
 Recommended reasoning level: <FRESH THREAD/CHILD TASK: Light | Medium | High; SAME THREAD: Preserve requested thread setting and observe effective runtime setting>
 
 Reason:
@@ -227,9 +276,10 @@ guarantee, the attempt fails closed rather than silently choosing a weaker
 setting.
 
 This posture is derived from OpenAI's current
-[GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/latest-model)
+[model guidance](https://developers.openai.com/api/docs/guides/latest-model)
 and [OpenAI models reference](https://developers.openai.com/api/docs/models),
-checked 2026-08-10.
+checked 2026-09-04. Provider positioning supports candidate selection; the
+Playbook's task-class defaults still require workload evidence.
 
 ## Prompt-Contract Mapping
 
@@ -796,7 +846,3 @@ Use the PR readiness, validation, and delivery rules in
 When reporting successful completion for Codex implementation work, apply the
 core model's
 [`Successful completion projection`](../core-model.md#successful-completion-projection).
-Normally include the opened or updated PR and its status, the canonical
-validation and review summary, the exact implementation head when useful, and
-the stop boundary. Add changed-file, blocker, risk, or forensic-evidence detail
-only when it materially affects operator review or action.
