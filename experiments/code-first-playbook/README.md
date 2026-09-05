@@ -47,7 +47,8 @@ views. A topic overview is never a complete execution contract.
 Preserve exact pilot/evaluation/review evidence under CAK-233 first.
 If unmerged, leave main untouched and return branch/PR disposition to the human.
 For a separately authorized removal PR, first preserve the operational Recovery
-source, compiler dependencies, checks and setup identified in `AGENTS.md`, or
+source, compiler dependencies, checks and setup identified in `AGENTS.md`,
+including `semantics/startup.yaml` and `provenance/sources.json`, or
 complete a separately authorized reverse ownership transition. The predecessor's
 blanket directory/Make/CI removal recipe is no longer applicable. Preserve unrelated
 edits and history. Verify no removed imports/consumers remain, run the then-current

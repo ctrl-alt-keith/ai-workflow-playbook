@@ -117,7 +117,8 @@ Recovery output and provenance without repairing them. Review meaningful
 changes through the shared semantic diff and generated prose diff; the focused
 outgoing-envelope guard does not replace incoming-edge corpus review.
 
-The existing semantic modules, restricted parser/model/validator, diff,
+The existing semantic modules (including `semantics/startup.yaml`),
+`provenance/sources.json`, restricted parser/model/validator, diff,
 provenance helpers, Recovery section renderer/contract, focused tests,
 requirements and Make/CI integration may support this one operational section
 at their existing locations. This permanent, section-specific placement

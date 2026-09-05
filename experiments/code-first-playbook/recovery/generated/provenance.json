@@ -60,8 +60,8 @@
       "sha256": "dbd46d14ef4a5f12fa73932cd318b51053adc3635055fa5f7d0c54beb2bc788f"
     },
     "recovery.py": {
-      "bytes": 7754,
-      "sha256": "6865fa3602de72493c7bd8c76d070c083d364838ddd1948ba65719182e52d588"
+      "bytes": 7993,
+      "sha256": "1c7760a2ef3af1304742806e2272b359d8c5c6fdcf3f738d675f8f4a19439bfb"
     },
     "recovery/contract.json": {
       "bytes": 1700,

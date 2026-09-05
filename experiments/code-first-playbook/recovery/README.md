@@ -87,6 +87,17 @@ Unrendered authority, failure, lifetime, precedence, vocabulary and mapping
 changes reject generation until their effect is explicitly reviewed. Do not
 refresh the guard automatically to silence a failure.
 
+The failure names the differing record IDs without supplying replacement
+hashes. For a legitimate envelope change, review those records in the full
+semantic diff and assess their effect on the Recovery mapping and surrounding
+owners. Record that disposition and obtain any required human authority before
+updating the corresponding `envelope_sha256` entries in `contract.json` from
+`recovery.envelope(records)` for the reviewed corpus. Keep the old/new hashes
+beside the semantic change in the PR, and leave unrelated entries untouched.
+Then explicitly regenerate and run `make check`, the source-binding check and
+the semantic/prose diff review. Computing or copying a hash does not approve
+the underlying change; this procedure does not grant transition authority.
+
 Source selection, permitted transport, verification, precedence, live action
 authority and judgment sufficiency remain owned by Source-First Retrieval,
 Start Here, Repo Readiness and the executor adapters. This section is not a

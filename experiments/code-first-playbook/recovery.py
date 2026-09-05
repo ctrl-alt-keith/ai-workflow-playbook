@@ -60,8 +60,12 @@ def section(records):
 
 def render(records, contract):
     require(contract['ownership'] == OWNERSHIP, 'wrong Recovery ownership mapping')
-    require(contract['envelope_sha256'] == envelope(records),
-            'unrendered recovery envelope changed; review its section mapping before regeneration')
+    expected, observed = contract['envelope_sha256'], envelope(records)
+    changed = sorted(rid for rid in expected.keys() | observed.keys()
+                     if expected.get(rid) != observed.get(rid))
+    require(expected == observed,
+            'unrendered recovery envelope changed: ' + ', '.join(changed)
+            + '; review its section mapping before regeneration (recovery/README.md)')
     body = section(records)
     require(not re.search(r'^#{1,2} ', body, re.MULTILINE)
             and '<!-- generated:' not in body and '<!-- /generated:' not in body,
