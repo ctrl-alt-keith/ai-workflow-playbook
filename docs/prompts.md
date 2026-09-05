@@ -350,22 +350,43 @@ material, isolated snippets, and incomplete fragments remain lightweight.
 
 ## Prompt Delivery Decision Model
 
-Keep prompt delivery small and deterministic. Classify the produced artifact,
-resolve the human operator or viewer and execution recipient independently,
-then select one presentation. Wording such as `show me`, `give me`, or `prompt
-me` does not override a clearly named machine recipient, including when the
-human manually launches its downstream thread.
+Keep prompt delivery small and deterministic. Resolve these decisions in order:
+
+1. Classify the produced artifact.
+2. Resolve the human operator or viewer and execution recipient independently.
+3. Resolve whether delivery crosses an execution or handoff boundary, applying
+   the existing
+   [material-attempt and conversational-steering boundary](prompt-contracts.md#material-attempts-and-conversational-steering).
+4. Qualify and select the applicable route, then its presentation.
+
+Ordinary in-run steering to an already-active execution attempt stays
+conversational/inline, even when it is a complete prompt for Codex, Claude, or
+ChatGPT. A concrete machine recipient alone does not create a new durable
+handoff or require transport qualification. Resolve the actual boundary from
+the receiving attempt and executable contract, not a thread-routing label:
+a fresh execution needs a handoff, while a revised contract that must cross
+execution, recovery, review, replay, restart, or handoff follows the existing
+new-attempt rule even if the visible thread is reused.
+
+Wording such as `show me`, `give me`, or `prompt me` does not override a clearly
+named machine recipient, including when the human manually launches its
+downstream thread. An unresolved machine execution surface remains unresolved;
+it does not become a human recipient merely because the human views the prompt.
 
 - no prompt: no delivery action;
 - conceptual fragment: lightweight conversational presentation;
+- ordinary in-run steering to an already-active machine attempt: conversational
+  inline delivery, using the canonical two-block presentation when complete;
+  no new durable handoff;
 - complete prompt for a human recipient: the canonical inline two-block
   presentation;
 - qualifying small canonical-text prompt for a ChatGPT, Claude, or Codex
-  machine recipient with a permitted Airtable route: the Airtable record
-  handoff below;
+  machine recipient crossing an execution or handoff boundary with a permitted
+  Airtable route: the Airtable record handoff below;
   or
-- missing, unresolved, or mismatched recipient, route, destination, or required
-  identity: a clear blocked result with no alternate renderer.
+- missing, unresolved, or mismatched required recipient, boundary, route,
+  destination, or identity for a genuine handoff: a clear blocked result with
+  no alternate renderer, after inspecting applicable unknown capability.
 
 Do not use request wording, operator visibility, or an available file provider
 to override the resolved recipient and route. A file provider is not a fallback
@@ -378,19 +399,32 @@ arbitrary bytes or provider file identity, revision, or checksum behavior.
 These cases exercise the decision model above. Tests validate their routing
 relationships rather than the surrounding prose.
 
-| Case | Produced artifact | Operator/viewer | Execution recipient | Downstream execution surface | Route capability | Selected delivery |
-| --- | --- | --- | --- | --- | --- | --- |
-| `human-personal-use` | `complete` | `human` | `human` | `human` | `not-required` | `inline-two-block` |
-| `cak-228-prompt-me-codex` | `complete` | `human` | `codex` | `codex` | `permitted` | `airtable-thin-handoff` |
-| `claude-executes` | `complete` | `human` | `claude` | `claude` | `permitted` | `airtable-thin-handoff` |
-| `chatgpt-executes` | `complete` | `human` | `chatgpt` | `chatgpt` | `permitted` | `airtable-thin-handoff` |
-| `machine-route-unavailable` | `complete` | `human` | `codex` | `codex` | `unavailable` | `blocked` |
-| `machine-identity-unresolved` | `complete` | `human` | `codex` | `codex` | `identity-unresolved-after-inspection` | `blocked` |
-| `conceptual-fragment` | `fragment` | `human` | `none` | `none` | `not-applicable` | `lightweight` |
+| Case | Produced artifact | Operator/viewer | Execution recipient | Downstream execution surface | Execution/handoff boundary | Route capability | Selected delivery |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `human-personal-use` | `complete` | `human` | `human` | `human` | `not-applicable` | `not-required` | `inline-two-block` |
+| `cak-228-prompt-me-codex` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `permitted` | `airtable-thin-handoff` |
+| `claude-executes` | `complete` | `human` | `claude` | `claude` | `fresh-execution` | `permitted` | `airtable-thin-handoff` |
+| `chatgpt-executes` | `complete` | `human` | `chatgpt` | `chatgpt` | `fresh-execution` | `permitted` | `airtable-thin-handoff` |
+| `cak-242-codex-correction` | `complete` | `human` | `codex` | `codex` | `in-run-steering` | `permitted` | `inline-two-block` |
+| `cak-241-codex-correction` | `complete` | `human` | `codex` | `codex` | `in-run-steering` | `permitted` | `inline-two-block` |
+| `claude-steering` | `complete` | `human` | `claude` | `claude` | `in-run-steering` | `unavailable` | `inline-two-block` |
+| `chatgpt-steering` | `complete` | `human` | `chatgpt` | `chatgpt` | `in-run-steering` | `not-inspected` | `inline-two-block` |
+| `reused-thread-revised-contract` | `complete` | `human` | `codex` | `codex` | `revised-contract-review` | `permitted` | `airtable-thin-handoff` |
+| `machine-route-unavailable` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `unavailable` | `blocked` |
+| `machine-identity-unresolved` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `identity-unresolved-after-inspection` | `blocked` |
+| `conceptual-fragment` | `fragment` | `human` | `none` | `none` | `not-applicable` | `not-applicable` | `lightweight` |
 
 `cak-228-prompt-me-codex` represents “Prompt me to have Codex do X,” including
 manual thread creation: the human is the viewer or launcher, while Codex
 receives and executes the complete prompt.
+
+The CAK-242 and CAK-241 corrections represent independent instances of complete
+steering for an already-active Codex attempt without a new handoff boundary.
+The steering rows show that known permitted or unavailable transport capability,
+or capability not yet inspected, does not change conversational delivery.
+`revised-contract-review` instead means another actor must reconstruct the
+changed executable contract for review; visible thread reuse does not remove
+that boundary.
 
 `identity-unresolved-after-inspection` means the required route or identity
 remains unverified after the applicable capability inspection; an unknown route
@@ -408,10 +442,8 @@ single-record request and response limits. The permitted Airtable route owns
 that runtime limit check. Payloads that do not qualify remain outside this
 normal text route; they do not trigger a fallback from it.
 
-Apply the
-[`material-attempt and conversational-steering boundary`](prompt-contracts.md#material-attempts-and-conversational-steering)
-before selecting a new durable handoff. Use one new Airtable record per
-producer attempt with these required fields:
+After the decision model selects a genuine handoff, use one new Airtable record
+per producer attempt with these required fields:
 
 - `Handoff Key`
 - `Payload`

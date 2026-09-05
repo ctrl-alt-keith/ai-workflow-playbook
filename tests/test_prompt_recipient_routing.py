@@ -13,6 +13,7 @@ EXPECTED_COLUMNS = (
     "Operator/viewer",
     "Execution recipient",
     "Downstream execution surface",
+    "Execution/handoff boundary",
     "Route capability",
     "Selected delivery",
 )
@@ -53,27 +54,63 @@ class PromptRecipientRoutingTests(unittest.TestCase):
         self.assertEqual(prompted["Operator/viewer"], "human")
         self.assertEqual(prompted["Execution recipient"], "codex")
         self.assertEqual(prompted["Downstream execution surface"], "codex")
+        self.assertEqual(prompted["Execution/handoff boundary"], "fresh-execution")
         self.assertEqual(prompted["Selected delivery"], "airtable-thin-handoff")
 
-    def test_permitted_complete_machine_routes_use_airtable(self) -> None:
+    def test_in_run_steering_does_not_create_a_machine_handoff(self) -> None:
+        for case in ("cak-242-codex-correction", "cak-241-codex-correction"):
+            with self.subTest(case=case):
+                correction = self.cases[case]
+                self.assertEqual(correction["Produced artifact"], "complete")
+                self.assertEqual(correction["Execution recipient"], "codex")
+                self.assertEqual(correction["Downstream execution surface"], "codex")
+                self.assertEqual(
+                    correction["Execution/handoff boundary"], "in-run-steering"
+                )
+
+        steering = [
+            row
+            for row in self.cases.values()
+            if row["Execution/handoff boundary"] == "in-run-steering"
+        ]
+        self.assertEqual(
+            {row["Execution recipient"] for row in steering},
+            {"codex", "claude", "chatgpt"},
+        )
+        self.assertEqual(
+            {row["Route capability"] for row in steering},
+            {"permitted", "unavailable", "not-inspected"},
+        )
+        self.assertEqual(
+            {row["Selected delivery"] for row in steering}, {"inline-two-block"}
+        )
+
+    def test_permitted_complete_machine_handoffs_use_airtable(self) -> None:
         qualifying = [
             row
             for row in self.cases.values()
             if row["Produced artifact"] == "complete"
             and row["Execution recipient"] not in {"human", "none"}
+            and row["Execution/handoff boundary"]
+            in {"fresh-execution", "revised-contract-review"}
             and row["Route capability"] == "permitted"
         ]
-        self.assertTrue(qualifying)
+        self.assertEqual(
+            {row["Execution/handoff boundary"] for row in qualifying},
+            {"fresh-execution", "revised-contract-review"},
+        )
         self.assertEqual(
             {row["Selected delivery"] for row in qualifying},
             {"airtable-thin-handoff"},
         )
 
-    def test_machine_route_failure_never_falls_back_inline(self) -> None:
+    def test_machine_handoff_route_failure_never_falls_back_inline(self) -> None:
         failures = [
             row
             for row in self.cases.values()
-            if row["Route capability"]
+            if row["Execution/handoff boundary"]
+            in {"fresh-execution", "revised-contract-review"}
+            and row["Route capability"]
             in {"unavailable", "identity-unresolved-after-inspection"}
         ]
         self.assertEqual(
