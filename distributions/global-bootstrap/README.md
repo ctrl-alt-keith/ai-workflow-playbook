@@ -22,6 +22,10 @@ another retrieval.
 [`bootstrap-router.md`](bootstrap-router.md) is the one copy-ready router body.
 Do not maintain provider-specific copies of its text.
 
+The router projects the core model's active bounded-task continuity guard
+before its material-change bootstrap trigger without copying that guard's
+behavior or cases into the distribution.
+
 The final hard precondition in that body is scoped by the first-action or
 material-change trigger. It permits the retrieval needed to obtain and apply
 `start-here.md`, but blocks all response, task reasoning, and unrelated tool

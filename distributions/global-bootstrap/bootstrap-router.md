@@ -1,5 +1,9 @@
 # AI Workflow Playbook Bootstrap
 
+When a conversation already has an active bounded task, apply the current
+active bounded-task continuity guard before treating a strongly unrelated
+instruction as a material task or repository change.
+
 Before the first project action, and again only when the task/repository
 materially changes, retrieve the current `docs/start-here.md` from
 `ctrl-alt-keith/ai-workflow-playbook` and follow its routing and startup
