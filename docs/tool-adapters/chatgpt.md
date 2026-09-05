@@ -124,8 +124,9 @@ Apply the shared
 [`prompt delivery decision model`](../prompts.md#prompt-delivery-decision-model),
 with the transport rules in
 [`cross-executor prompt presentation`](../prompts.md#cross-executor-prompt-presentation).
-For a qualifying small canonical-text prompt whose ChatGPT or Claude recipient
-has a permitted Airtable route, use the shared
+For a qualifying small canonical-text prompt whose resolved machine recipient
+is eligible under the shared model and has a permitted Airtable route, use the
+shared
 [`Airtable canonical-text handoff`](../prompts.md#airtable-canonical-text-handoff)
 and emit its compact external envelope. Do not add file preview,
 download-link, or attempt-local retrieval steps.
@@ -135,6 +136,11 @@ For a human execution recipient, use the existing
 machine recipient is unknown, inspect or attempt it before resolving the route.
 Material prompts also apply the durable profile below; routine prompts do not
 inherit it from transport.
+
+Treat `show me`, `give me`, and `prompt me` as operator-presentation wording,
+not as a recipient override. When the request clearly names a machine executor,
+keep the human who manually instantiates that run as its viewer or launcher and
+apply the shared machine-recipient selection unchanged.
 
 Route failure and terminal blocking remain owned by the canonical decision
 model. ChatGPT must preserve the owning failure reason rather than choose
@@ -228,6 +234,10 @@ Consume the current selection from the shared
 Its presentation is final input to this client projection: an Airtable route
 uses the thin handoff, a blocked route renders no complete prompt, and
 conceptual fragments remain lightweight.
+
+After a successful Airtable handoff, report only the useful operator
+configuration and the required external envelope. Do not duplicate the stored
+prompt or routine storage and verification mechanics in chat.
 
 For the canonical inline two-block presentation, emit the shared operator
 metadata and complete executable prompt as two consecutive fenced blocks with

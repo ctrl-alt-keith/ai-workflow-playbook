@@ -344,7 +344,7 @@ fails closed and records diagnostic evidence when possible.
 Use this profile when exact rendered-prompt bytes become a dependency for an
 executor attempt, review, recovery, or replay. It is an operational
 profile of the prompt contract and governed-artifact lifecycle. For qualifying
-small canonical-text ChatGPT/Claude handoffs, it uses the shared
+small canonical-text ChatGPT, Claude, or Codex handoffs, it uses the shared
 [`Airtable canonical-text handoff`](prompts.md#airtable-canonical-text-handoff).
 It is not a general Airtable artifact store, prompt-management platform, or
 requirement to preserve routine prompts.
