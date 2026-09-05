@@ -3079,13 +3079,13 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         module = load_script("claude_review_hook_evidence_race", LAUNCHER)
         evidence_path = self.root / "hook-race-evidence.json"
         encoded = b'{"observed":true}'
-        real_exclusive_write = module.exclusive_write
+        real_link = module.os.link
 
-        def concurrent_winner(path, content):
-            real_exclusive_write(path, content)
-            raise FileExistsError(path)
+        def concurrent_winner(source, destination, **kwargs):
+            real_link(source, destination, **kwargs)
+            raise FileExistsError(destination)
 
-        with mock.patch.object(module, "exclusive_write", side_effect=concurrent_winner):
+        with mock.patch.object(module.os, "link", side_effect=concurrent_winner):
             module.write_idempotent_hook_evidence(evidence_path, encoded, "hook")
         self.assertEqual(evidence_path.read_bytes(), encoded)
 

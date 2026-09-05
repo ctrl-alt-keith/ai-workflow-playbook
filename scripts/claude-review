@@ -2458,11 +2458,19 @@ def write_idempotent_hook_evidence(path: Path, encoded: bytes, label: str) -> No
         if path.is_symlink() or path.read_bytes() != encoded:
             raise ValueError(f"{label} evidence changed within one attempt")
         return
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    temporary_created = False
     try:
-        exclusive_write(path, encoded)
-    except FileExistsError:
-        if path.is_symlink() or path.read_bytes() != encoded:
-            raise ValueError(f"{label} evidence changed within one attempt")
+        exclusive_write(temporary, encoded)
+        temporary_created = True
+        try:
+            os.link(temporary, path, follow_symlinks=False)
+        except FileExistsError:
+            if path.is_symlink() or path.read_bytes() != encoded:
+                raise ValueError(f"{label} evidence changed within one attempt")
+    finally:
+        if temporary_created and temporary.exists() and not temporary.is_symlink():
+            temporary.unlink()
 
 
 def permission_hook(
