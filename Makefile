@@ -5,7 +5,7 @@
 help: ## List available repo-local Makefile targets with short descriptions.
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_.-]+:.*## / {printf "  %-28s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-check: code-first-check code-first-recovery-check ## Run canonical local validation for local work and CI.
+check: code-first-recovery-check ## Run canonical local validation for local work and CI.
 	@if command -v markdownlint-cli2 >/dev/null 2>&1; then \
 		echo "Running markdownlint-cli2"; \
 		markdownlint-cli2 "**/*.md" "!.worktrees/**" "!experiments/code-first-playbook/.build/**" "!experiments/code-first-playbook/.venv/**"; \
@@ -41,36 +41,20 @@ scanner-test: ## Run scanner unit tests.
 
 CFP := experiments/code-first-playbook
 CFP_PY := $(CFP)/.venv/bin/python
-.PHONY: code-first-setup code-first-tools code-first-check code-first-source-check code-first-render code-first-diff code-first-rehearse
+.PHONY: code-first-setup code-first-tools
 
-code-first-setup: ## Set up the isolated CAK-233 parser dependency.
+code-first-setup: ## Set up the isolated Recovery semantic tooling.
 	python3 -m venv $(CFP)/.venv
 	$(CFP_PY) -m pip install --disable-pip-version-check -r $(CFP)/requirements.txt
 
-code-first-tools: ## Report missing pilot tooling before any dependent check.
-	@test -x "$(CFP_PY)" || { echo "CAK-233 pilot tooling unavailable. Run make code-first-setup; dependent checks were not run."; exit 1; }
-
-code-first-check: code-first-tools ## Check the bounded shadow compiler and exact previews.
-	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) -m unittest discover -s $(CFP)/tests
-	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py check
-
-code-first-source-check: code-first-tools ## Check current prose binding for pilot claims.
-	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py source-check
-
-code-first-render: code-first-tools ## Generate non-operational review previews.
-	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py render
-
-code-first-diff: code-first-tools ## Exercise the two bounded semantic edit rounds.
-	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py diff --old-bundle cases/baseline.json --bundle cases/edit-round-1.json
-	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py diff --old-bundle cases/edit-round-1.json --bundle cases/edit-round-2.json
-
-code-first-rehearse: code-first-tools ## Report simulation-only authority-transition rehearsal.
-	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py rehearse
+code-first-tools: ## Report missing Recovery tooling before any dependent check.
+	@test -x "$(CFP_PY)" || { echo "Recovery semantic tooling unavailable. Run make code-first-setup; dependent checks were not run."; exit 1; }
 
 RECOVERY_BASE ?= origin/main
 .PHONY: code-first-recovery-rehearse code-first-recovery-check code-first-recovery-render code-first-recovery-source-check code-first-recovery-diff
 
 code-first-recovery-check: code-first-tools ## Check generated Recovery prose and its exact provenance.
+	cd $(CFP) && PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m unittest discover -s tests
 	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery.py check
 
 code-first-recovery-render: code-first-tools ## Explicitly regenerate only the owned Recovery section.

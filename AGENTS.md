@@ -84,19 +84,14 @@ Repo-local rules take precedence only for repo-specific behavior.
   `docs/feature-lifecycle.md`, `docs/alignment-checkpoints.md`, and
   `docs/review-packet.md` as reference material for deeper workflow details.
 
-### CAK-233 temporary code-first pilot exception
+### CAK-233 legacy preview retirement
 
-Notwithstanding Repo Scope and File Placement above, the human-approved CAK-233 implementation proposal v1 permits experimental semantic source, Python compiler/validator/diff/rendering and simulation code, focused fixtures/tests, and generated previews only under `experiments/code-first-playbook/`.
-
-Outside that directory, this exception permits only this section, the focused `code-first-*` Makefile targets and their `make check` integration, and the pilot dependency-setup step in the existing `.github/workflows/markdownlint.yml`. Existing validation remains in place.
-
-Scope is `pb.startup-floor`, `pb.conditional-activation`, `pb.mode-persistence`, `pb.retrieval-triggers`, `pb.claim-verification`, and `pb.retrieval-recovery`. At most twelve rule records may represent documented dependency decomposition within these six units. Interaction-mode and action-latch remain external canonical boundaries unless a new human scope decision explicitly includes them. Permit only AI, Operator/SRE and Support projections, two evaluation edit rounds, and simulation-only authority rehearsal.
-
-Existing Playbook prose remains operationally canonical. All experimental sources, generated previews, diagnostics and simulations are evidence only. No live executor, startup/router, automation or production documentation consumes or adopts them. No policy change, authority inversion, generated-doc adoption, global rollout or Playbook–Enforcement runtime/import dependency is authorized.
-
-`make check` includes the experiment's deterministic tests and committed-preview regeneration check. The separate `make code-first-source-check` verifies current external prose bindings for pilot evaluation/readiness claims; Recovery's generated body uses the permanent section contract below. It does not make unrelated prose edits depend on snapshot reapproval. Missing required tooling blocks the checks that need it and must be reported, not silently skipped.
-
-This exception activates only under the explicit human decision approving the exact CAK-233 proposal and this exception. It expires at the earlier of the human's pilot disposition or 30 calendar days after that approval. At expiry, stop further development and expansion pending human disposition. Expiry does not delete evidence, adopt outputs, extract implementation, or grant removal/merge authority. A fresh explicit human decision is required for extension or removal. All other repository rules remain in force.
+CAK-238 retires CAK-233's experimental AI, Operator/SRE and Support preview
+pipeline, its preview-only provenance rebinding, and its mock transition
+rehearsal. They have no operational reader or distinct continuing failure
+boundary. The shared semantic source, parser, validator, diff, source binding,
+provenance helper and focused Recovery checks remain only because the Recovery
+contract below actively depends on them.
 
 ### Recovery generated-section ownership
 
@@ -126,11 +121,8 @@ permission avoids duplicating the compiler; it permits no other generated
 section, new semantic-language construct, persona adoption, runtime controller
 or cross-repository dependency.
 
-CAK-233's remaining infrastructure and persona previews stay experimental and
-retain the predecessor's original expiry and disposition boundary. That expiry
-does not revoke Recovery ownership or stop its necessary generation and
-validation. Pilot removal must preserve Recovery's named dependencies, or
-follow a separately authorized reverse ownership transition; it cannot delete
-them under the old blanket removal recipe. This carve-out does not renew or
-widen the pilot. Implementation and validation do not grant doctrine promotion
-or merge authority; those decisions apply to the exact reviewed transition.
+The retired previews' expiry and historical evidence do not revoke Recovery
+ownership or stop its necessary generation and validation. This carve-out does
+not widen generated ownership beyond Recovery. Implementation and validation
+do not grant doctrine promotion or merge authority; those decisions apply to
+the exact reviewed transition.

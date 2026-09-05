@@ -24,8 +24,8 @@
       "sha256": "ba50b938c8f92519a5da1320576c88e77893b08df8e618235d37fced195b7629"
     },
     "compiler/diff.py": {
-      "bytes": 3569,
-      "sha256": "e8cf4cd4c885dad7b75cb2498e384a244edb58e0ab4771ee2a7f2b209d184044"
+      "bytes": 4486,
+      "sha256": "e811f8e40ecf85e171a4458086c5ce00b0237a3a94663135950295f219a02097"
     },
     "compiler/load.py": {
       "bytes": 3736,
@@ -36,20 +36,12 @@
       "sha256": "10f90e099017c70ddbfa7eb009ce14fee1b1782fc66d015d071ea12a3c2bf3f1"
     },
     "compiler/provenance.py": {
-      "bytes": 6100,
-      "sha256": "283a6ac1989729791e3c791a5760551c76caf0aa8b6a596103244430daff36c5"
+      "bytes": 3113,
+      "sha256": "94481343988fdf5bf157335bd934904c6e5813bbb5f2c93c505855dc020a50c9"
     },
     "compiler/recovery_section.py": {
-      "bytes": 1480,
-      "sha256": "569c4fb202e5854e8302fd8ea005d919f3dc3fdd86c12c1d53f1e67308d15c0c"
-    },
-    "compiler/rehearsal.py": {
-      "bytes": 6961,
-      "sha256": "7f82c56731875ba68bb151eac806dc862a8cef74913427710f5948517d04d281"
-    },
-    "compiler/select.py": {
-      "bytes": 8883,
-      "sha256": "7e411d449c2477466450a4a4254a955ec48922cea34e576e15b9943837c1932d"
+      "bytes": 2149,
+      "sha256": "d0cf6e72bc7d71cae32f747542667053d02470c8ac61666290ae906d5f14c2e6"
     },
     "compiler/validate.py": {
       "bytes": 10648,
@@ -60,12 +52,12 @@
       "sha256": "dbd46d14ef4a5f12fa73932cd318b51053adc3635055fa5f7d0c54beb2bc788f"
     },
     "recovery.py": {
-      "bytes": 7993,
-      "sha256": "1c7760a2ef3af1304742806e2272b359d8c5c6fdcf3f738d675f8f4a19439bfb"
+      "bytes": 8114,
+      "sha256": "533d3af82184fe574c10bdfa1bbaeabe7f9b5c355e9e9c731328bc534e6c34e0"
     },
     "recovery/contract.json": {
-      "bytes": 1700,
-      "sha256": "5720341ebe86a9045fd35a5a278731e939e7f2b3dd0ec2031595098a2bb4195e"
+      "bytes": 1848,
+      "sha256": "7a1ae8234ef7622486299a7251842935cc0cfe8cca8315dfda00d72b06ca75bf"
     },
     "requirements.txt": {
       "bytes": 14,

@@ -14,6 +14,20 @@ BEGIN = b'<!-- generated: pb.retrieval-recovery -->\n'
 END = b'<!-- /generated: pb.retrieval-recovery -->\n'
 
 
+def reader_mappings(contract, records):
+    """Validate the renderer's complete, explicit clause-to-reader contract."""
+    mappings = contract.get('reader_mappings')
+    require(type(mappings) is list and len(mappings) == 1,
+            'Recovery requires exactly one explicit reader mapping')
+    mapping, = mappings
+    require(mapping == {'clause': OWNERSHIP['clause'], 'reader': OWNERSHIP['reader']},
+            'stale or malformed Recovery reader mapping')
+    record, field = mapping['clause'].split('/')
+    require(record in records and field in records[record],
+            'stale Recovery reader mapping clause: ' + mapping['clause'])
+    return mappings
+
+
 def parts(document):
     """Keep the stable heading and every byte outside its body with the reader."""
     heading = b'\n## Recovery\n\n'

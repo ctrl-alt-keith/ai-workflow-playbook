@@ -1,11 +1,12 @@
 import copy
 import unittest
-from common import corpus
+import recovery as candidate
 from compiler.diff import semantic_diff
 
 
 class Diff(unittest.TestCase):
-    def setUp(self):self.b,self.r,self.l,self.s,self.p=corpus()
+    def setUp(self):
+        self.r, self.l = candidate.corpus()
 
     def change(self,rid,field,value):
         n=copy.deepcopy(self.r);n[rid][field]=value
@@ -18,6 +19,7 @@ class Diff(unittest.TestCase):
         self.assertEqual(e['affected_rules'],['pb.mode-persistence','pb.startup-floor'])
         self.assertIn({'id':'pb.startup-floor','site':'effect.action'},e['direct_reference_sites'])
         self.assertEqual(e['impact'],'unresolved_semantic_impact')
+        self.assertEqual(e['affected_reader_outputs'], [])
 
     def test_21_imported_term_and_boundary(self):
         e=self.change('term.operation','definition','Changed definition without renamed ID.')
