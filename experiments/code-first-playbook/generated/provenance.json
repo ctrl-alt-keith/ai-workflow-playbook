@@ -2,7 +2,7 @@
   "authority_transferred": false,
   "compiler_sha256": "ade7560291fe59f11da774df11af7cd837a2a2f400eb7701ea0233d0e085f1cf",
   "context_sha256": "3fc7b2f9e010bdbd9a50d414b9f9d1fab223d271192e70c05cafaeb297a54d91",
-  "input_commit": "35241049177c16619761195d393913707dedb5e0",
+  "input_commit": "900ed9d33ed57674d4b855298638dbaf903bf4fd",
   "locations": {
     "action.claim-verification": {
       "module": "source-retrieval",
@@ -276,7 +276,7 @@
   "outputs": {
     "ai/startup-retrieval.json": {
       "bytes": 231714,
-      "sha256": "9eb8ae968e9c460c0ce5d8550ab1bcf292edd6593b93e79e9eb5b30dc96c7c99"
+      "sha256": "026bd5a13f62391aed63ca7b33fbb55cc5d94ed9a73575221babe13a799e4acd"
     },
     "coverage.json": {
       "bytes": 141253,
@@ -284,15 +284,15 @@
     },
     "index.md": {
       "bytes": 575,
-      "sha256": "6d479944964c7370f052f8363f93642d5352fab8635d8c6aec397e7578c7b9b6"
+      "sha256": "c2d002190c65cd6080b20c4028528c77e11cc624d33a1d5172cf2b58efa904a8"
     },
     "operator-sre/startup-retrieval.md": {
-      "bytes": 185500,
-      "sha256": "033e2fed49dd03af7ad88d57f08b25d1d9980ef811f095621c15568e6792ee42"
+      "bytes": 223924,
+      "sha256": "c703715d70e02e63b0ba61b692c24ab4c67d231be615218e2cb1cc38f950b8c9"
     },
     "support/startup-retrieval.md": {
-      "bytes": 187945,
-      "sha256": "25654e8d39b3d32be6aa6ae352a022343001c1556b52e00c7a984f8f62fad2a2"
+      "bytes": 226368,
+      "sha256": "15a2d4d26966f94867f6ae9188b591be4cdc4634381a8bb7eb5ce39661c6f5d3"
     }
   },
   "profile_sha256": "1044487084283e312ac8f0f64c2128e6523e1ea9cb54384dab1bbea21ccd398e",
@@ -358,8 +358,8 @@
       "sha256": "659fe69233bb78ff9bdd9617cf6a5b79a62776ae7ff89f90996255bd6a603db9"
     },
     "renderers/clauses.py": {
-      "bytes": 6866,
-      "sha256": "ef5d0e3ef45dc5fc83b1682a5597f6f2eb09269cb20b680d83b14298bd5ca03b"
+      "bytes": 7252,
+      "sha256": "62442896e56ab8b2d60052b524dbbf70f923b276260ed568e70c4bfc765edb21"
     },
     "renderers/operator_sre.py": {
       "bytes": 178,
@@ -382,7 +382,7 @@
       "sha256": "b3e7723f9187f7f45cdb132e38297328a03b84f296c481611e657b8a57b0adc7"
     }
   },
-  "renderer_sha256": "7b4db37f001a2fc0538633575dd80d696b58e02d4cd6e8bef28411e3333fd010",
+  "renderer_sha256": "7e6532586fd69465b129f8d7b756df72fe3fceaba5fea4f87b78d07ed61bb7b5",
   "self_hash": "not_recursive; final PR receipt binds this file",
   "semantic_sha256": "68f1642a1a99425acf188837554d3fd9e4ebe4c371bc77870e9af18e1a585d1c",
   "source_fidelity": "frozen mapped baseline"

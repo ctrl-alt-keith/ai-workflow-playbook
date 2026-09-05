@@ -23,6 +23,27 @@ times and cannot establish the <=120% cost or >=20% gain thresholds. One
 controller performed both rounds, with substantial carryover knowledge.
 No third authoring round is authorized by this pilot.
 
+## Controller audience-task inspection
+
+The controller inspected the actual generated human files after generation.
+These are eight read-only mock task answers, not an independent consumer study
+or a timing comparison. All eight answers stayed correct or explicitly unresolved.
+
+| View/task | Answer from the actual projection | Evidence clause |
+| --- | --- | --- |
+| Operator: startup incomplete | Stop the affected operation and name the prerequisite; retrieval alone is insufficient. | `action.startup-floor-failure/does` |
+| Operator: ordinary continuation | Reuse still-current sources; do not blanket-rehydrate ordinary follow-ups. | `action.mode-persistence/does` |
+| Operator: raw route denied, approved connector available | Recover through the permitted qualified connector; no premature all-routes failure. | `action.retrieval-recovery-failure/does` |
+| Operator: partial verification | Separate verified facts and unknowns; do not recommend from missing evidence. | `action.claim-verification-failure/does` |
+| Support: work began without context | Symptom navigation reaches startup failure and the external authority question. Sufficiency is unresolved. | `pb.startup-floor/failure`, `pb.startup-floor/authority_ref` |
+| Support: a summary is treated as current state | Symptom navigation reaches retrieval triggers; a summary does not supply current verification. | `action.retrieval-triggers/does` |
+| Support: source lookup rejected | The source-lookup symptom reaches recovery and distinguishes available qualified recovery from no remaining permitted route. | `action.retrieval-recovery-failure/does` |
+| Support: unclear specialized guidance | Preserve conditional owners and inspect their actual applicability; no definite activation from topic nouns. | `action.conditional-activation-failure/does` |
+
+The two Support entry routes for summary-based answers and rejected lookups are
+distinct symptom navigation, not new policy. Whether that navigation reduces
+reader effort remains unmeasured. The long appendix is a concrete cost concern.
+
 The controller identified all six intended edit effects from typed diffs:
 activation, fallback, lifetime, action definition, imported term definition,
 and context only. This is author inspection, not an independent blind score.
@@ -41,6 +62,7 @@ declared dependents. Context remains a separate non-normative event.
 | FR-05 | Natural-language definition edits cannot be proven equivalent by the finite predicate evaluator. | Report unresolved semantic impact and all declared dependents. Review required; no synonym engine. |
 | FR-06 | A complete recovery-unit body is much larger than a Support symptom summary. | Rehearse with full normative body and external boundaries. The Support summary alone is ineligible for reversal. |
 | FR-07 | The bounded fixtures and one controller do not supply a qualified paired performance baseline or independent consumer population. | Total author/reviewer time, equivalent prose-plus-sidecar timing and AI reliability benefit remain unmeasured. Do not infer benefit from script execution time. |
+| FR-08 | Canonical lint initially inspected old ignored build previews and flagged whitespace in exact normative payloads. | Exclude only experiment build/dependency state; bound the two whitespace lint exemptions to audited payloads. Canonical validation then passed. |
 
 ## Acceptance and stop disposition
 

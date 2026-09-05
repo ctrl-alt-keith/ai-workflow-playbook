@@ -5900,7 +5900,7 @@
     "authority_transferred": false,
     "compiler_sha256": "ade7560291fe59f11da774df11af7cd837a2a2f400eb7701ea0233d0e085f1cf",
     "context_sha256": "3fc7b2f9e010bdbd9a50d414b9f9d1fab223d271192e70c05cafaeb297a54d91",
-    "input_commit": "35241049177c16619761195d393913707dedb5e0",
+    "input_commit": "900ed9d33ed57674d4b855298638dbaf903bf4fd",
     "locations": {
       "action.claim-verification": {
         "module": "source-retrieval",
@@ -6234,8 +6234,8 @@
         "sha256": "659fe69233bb78ff9bdd9617cf6a5b79a62776ae7ff89f90996255bd6a603db9"
       },
       "renderers/clauses.py": {
-        "bytes": 6866,
-        "sha256": "ef5d0e3ef45dc5fc83b1682a5597f6f2eb09269cb20b680d83b14298bd5ca03b"
+        "bytes": 7252,
+        "sha256": "62442896e56ab8b2d60052b524dbbf70f923b276260ed568e70c4bfc765edb21"
       },
       "renderers/operator_sre.py": {
         "bytes": 178,
@@ -6258,7 +6258,7 @@
         "sha256": "b3e7723f9187f7f45cdb132e38297328a03b84f296c481611e657b8a57b0adc7"
       }
     },
-    "renderer_sha256": "7b4db37f001a2fc0538633575dd80d696b58e02d4cd6e8bef28411e3333fd010",
+    "renderer_sha256": "7e6532586fd69465b129f8d7b756df72fe3fceaba5fea4f87b78d07ed61bb7b5",
     "semantic_sha256": "68f1642a1a99425acf188837554d3fd9e4ebe4c371bc77870e9af18e1a585d1c",
     "source_fidelity": "frozen mapped baseline"
   },

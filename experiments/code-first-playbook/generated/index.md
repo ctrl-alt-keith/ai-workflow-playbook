@@ -2,7 +2,7 @@
 
 Existing Playbook prose remains operationally canonical. No execution or adoption.
 
-Input commit: `35241049177c16619761195d393913707dedb5e0`.
+Input commit: `900ed9d33ed57674d4b855298638dbaf903bf4fd`.
 
 - [AI structured clauses](ai/startup-retrieval.json)
 - [Operator/SRE cards](operator-sre/startup-retrieval.md)
