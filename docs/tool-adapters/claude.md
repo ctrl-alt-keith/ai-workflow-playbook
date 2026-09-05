@@ -260,10 +260,13 @@ other task authority.
 
 The governed invocation uses Claude's provider-native `--restricted` mode,
 available in Claude Code 2.1.248 and later, to isolate settings and confine file
-tools. The generated `PreToolUse` hook permits `Read`, `Grep`, and `Glob`, and permits
-`Bash` only when its command text exactly equals the shell rendering of one
-configured argv vector and the tool input does not request sandbox bypass. The
-launcher does not force-enable Claude's provider sandbox because bounded review
+tools. The controller enforces that version floor before provider launch. The
+generated `PreToolUse` hook permits `Read`, `Grep`, and `Glob`, and permits `Bash`
+only when its command text exactly equals the shell rendering of one configured
+argv vector and the tool input does not request sandbox bypass. The controller
+requires an exact attempt-local hook-liveness record even when no effort was
+requested. The controller does not force-enable Claude's provider sandbox
+because bounded review
 under a nested host sandbox showed that it can make every granted Bash command
 unusable. Instead, the controller independently executes each configured
 command before review under a safe environment that disables system Git
@@ -339,8 +342,8 @@ candidate-specific, and unknown shared changes remain blocking.
 The configured candidate commit is reverified immediately before the attempt
 baseline and again immediately before provider process creation. Each
 observation includes the symbolic-ref identity. A mismatch stops
-before the provider starts and is preserved as structured evidence; the newly
-observed commit cannot silently become the next attempt's baseline.
+before the provider starts and is preserved as structured evidence; an observed
+commit cannot silently replace the configured identity.
 
 Git may write a commit object or an exact per-worktree administration file
 milliseconds before updating the unrelated HEAD/ref transition that attributes

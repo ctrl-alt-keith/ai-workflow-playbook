@@ -2012,7 +2012,8 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "    version_count = pathlib.Path(os.environ['FAKE_VERSION_COUNT'])\n"
             "    count = int(version_count.read_text()) + 1 if version_count.exists() else 1\n"
             "    version_count.write_text(str(count))\n"
-            "    print('fake-claude 2.1.241')\n"
+            "    version = '2.1.247' if os.environ.get('FAKE_SCENARIO') == 'restricted_unsupported' else '2.1.252'\n"
+            "    print(f'fake-claude {version}')\n"
             "    raise SystemExit(0)\n"
             "prompt = sys.stdin.read()\n"
             "count = pathlib.Path(os.environ['FAKE_COUNT'])\n"
@@ -2038,9 +2039,11 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "effective_effort = os.environ.get('FAKE_EFFECTIVE_EFFORT','high')\n"
             "if scenario == 'inherited_effort_override': effective_effort = os.environ.get('CLAUDE_CODE_EFFORT_LEVEL', effective_effort)\n"
             "if scenario != 'effort_unobservable': hook_input['effort'] = {'level':effective_effort}\n"
-            "hook_result = subprocess.run([hook['command'], *hook['args']], input=json.dumps(hook_input), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n"
-            "hook_output = json.loads(hook_result.stdout)\n"
-            "hook_denied = hook_output['hookSpecificOutput']['permissionDecision'] != 'allow'\n"
+            "hook_denied = False\n"
+            "if scenario != 'hook_unobservable':\n"
+            "    hook_result = subprocess.run([hook['command'], *hook['args']], input=json.dumps(hook_input), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n"
+            "    hook_output = json.loads(hook_result.stdout)\n"
+            "    hook_denied = hook_output['hookSpecificOutput']['permissionDecision'] != 'allow'\n"
             "print(json.dumps({'type':'user','message':{'content':[{'type':'tool_result','tool_use_id':canary_id,'content':'canary','is_error':scenario == 'dead_command_grant' or hook_denied}]}}), flush=True)\n"
             "if scenario == 'non_object_json': print('null', flush=True)\n"
             "if scenario == 'tool_mismatch': time.sleep(0.08)\n"
@@ -2122,6 +2125,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "    raise SystemExit(1)\n"
             "if scenario == 'auth_precise':\n"
             "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}','result':'API Error: 401 OAuth access token has expired'}), flush=True)\n"
+            "    raise SystemExit(1)\n"
+            "if scenario == 'hostile_retry_error':\n"
+            "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':'authorization: Bearer secret-token-value' + 'x' * 2000}), flush=True)\n"
+            "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}'}), flush=True)\n"
             "    raise SystemExit(1)\n"
             "print(json.dumps({'type':'result','subtype':'success','is_error':False,'session_id':f's{attempt}','result':'ACCEPT'}), flush=True)\n",
             encoding="utf-8",
@@ -2220,6 +2227,9 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             artifact = Path((body or self.config_body())[key])
             if artifact.exists() or artifact.is_symlink():
                 artifact.unlink()
+        claude_arguments = ["--model", model]
+        if effort is not None:
+            claude_arguments.extend(("--effort", effort))
         completed = subprocess.run(
             [
                 str(LAUNCHER),
@@ -2230,10 +2240,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 "--review-config-fixture",
                 str(config),
                 "--",
-                "--model",
-                model,
-                "--effort",
-                effort,
+                *claude_arguments,
             ],
             check=False,
             input="exact review prompt\n",
@@ -2457,6 +2464,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             },
         )
         self.assertTrue(qualification["effort_matches"])
+        self.assertTrue(qualification["permission_hook_liveness"]["observed"])
 
     def test_effective_effort_mismatch_fails_closed(self):
         completed, diagnostic = self.run_governed(effort="high", effective_effort="low")
@@ -2482,6 +2490,24 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(qualification["effective"]["effort"]["status"], "unobservable")
         self.assertIsNone(qualification["effective"]["effort"]["value"])
         self.assertFalse(qualification["effort_matches"])
+
+    def test_permission_hook_liveness_is_required_without_an_effort_request(self):
+        completed, diagnostic = self.run_governed("hook_unobservable", effort=None)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "permission_hook_unobservable")
+        qualification = self.receipts()[0]["runtime"]["configuration_qualification"]
+        self.assertEqual(qualification["requested"]["effort"], None)
+        self.assertEqual(qualification["permission_hook_liveness"], {"observed": False})
+
+    def test_restricted_mode_version_floor_stops_before_provider_spawn(self):
+        completed, diagnostic = self.run_governed("restricted_unsupported")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(
+            diagnostic["failure_classification"],
+            "claude_restricted_mode_version_unsupported",
+        )
+        self.assertFalse(diagnostic["substantive_review_started"])
+        self.assertFalse(self.count.exists())
 
     def test_candidate_head_drift_before_first_attempt_baseline_stops_without_provider_spawn(self):
         result, diagnostic = self.run_governed_with_head_mutation(verification_call=2)
@@ -2544,6 +2570,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         arguments, system_prompt = module.governed_claude_arguments(
             config,
             ["--model", "opus", "--effort", "high"],
+            scratch / module.HOOK_LIVENESS_EVIDENCE_NAME,
             scratch / module.EFFORT_EVIDENCE_NAME,
         )
         self.assertIn("--restricted", arguments)
@@ -2755,6 +2782,14 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertTrue(all(receipt["attempt_scratch"]["cleanup"]["passed"] for receipt in receipts))
         self.assertTrue(all(not Path(path).exists() for path in scratch_paths))
 
+    def test_unknown_provider_retry_error_uses_a_fixed_safe_classification(self):
+        completed, diagnostic = self.run_governed("hostile_retry_error")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "terminal_provider_failure")
+        serialized = json.dumps({"diagnostic": diagnostic, "receipts": self.receipts()})
+        self.assertNotIn("secret-token-value", serialized)
+        self.assertLess(len(diagnostic["failure_classification"]), 100)
+
     def test_provider_terminal_failure_does_not_recheck_for_a_second_spawn(self):
         completed, diagnostic = self.run_governed("transient_then_executable_drift")
         self.assertEqual(completed.returncode, 70)
@@ -2951,16 +2986,20 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         digest = module.sha256_bytes(config.read_bytes())
         hook_input = json.dumps(
             {
+                "cwd": str(self.root),
                 "tool_name": "Bash",
                 "tool_input": {"command": shlex.join(self.config_body()["allowed_commands"][0])},
             }
         )
+        liveness_evidence = self.root / module.HOOK_LIVENESS_EVIDENCE_NAME
         command = [
             str(LAUNCHER),
             "--permission-hook",
             str(config),
             "--permission-hook-digest",
             digest,
+            "--permission-hook-liveness-evidence",
+            str(liveness_evidence),
         ]
         allowed = subprocess.run(
             command,

@@ -798,13 +798,16 @@ substantive review output.
 
 The governed provider argv includes Claude's `--restricted` mode, available in
 Claude Code 2.1.248 and later, so provider-managed settings and filesystem
-confinement carry the controls they can express. The controller still owns the
-exact argv and entry identity, standard-input EOF, stream drainage, process-group
-lifecycle, exact-command hook and canary, source no-delta checks, redaction, and
-receipts. Claude owns its structured session, message, tool, provider-retry,
-result, and usage events plus credential storage and refresh. The controller is
-the owner for privacy-safe live stream interpretation and publication; the
-provider stream is evidence, not a second authority boundary. Do not add
+confinement carry the controls they can express. The controller enforces that
+version floor before provider launch and requires attempt-local evidence that
+its exact-command hook ran, even when no effort was requested. The controller
+still owns the exact argv and entry identity, standard-input EOF, stream
+drainage, process-group lifecycle, exact-command hook and canary, source
+no-delta checks, redaction, and receipts. Claude owns its structured session,
+message, tool, provider-retry, result, and usage events plus credential storage
+and refresh. The controller is the owner for privacy-safe live stream
+interpretation and publication; the provider stream is evidence, not a second
+authority boundary. Do not add
 `--permission-prompts none` until the selected Claude is at least 2.1.259 and
 that behavior has been separately qualified.
 
