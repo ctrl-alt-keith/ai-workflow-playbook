@@ -77,7 +77,7 @@ def identity(root, bundle_path, bundle, records, locations):
     semantic = {i:r for i,r in records.items() if r['kind'] != 'context'}
     context = {i:r for i,r in records.items() if r['kind'] == 'context'}
     return {'input_commit': bound['input_commit'], 'raw_inputs': actual,
-            'source_fidelity':'hypothetical evaluation edit; not baseline parity' if bundle['evaluation_only'] else 'frozen mapped baseline',
+            'source_fidelity':'hypothetical evaluation edit; not baseline parity' if bundle['evaluation_only'] else 'frozen external bindings; Recovery body semantic-authored',
             'semantic_sha256': digest(canonical(semantic)), 'context_sha256': digest(canonical(context)),
             'profile_sha256': actual[bundle['profile']]['sha256'],
             'compiler_sha256': digest(canonical({p:v for p,v in actual.items() if p.startswith('compiler/') or p=='pilot.py'})),
