@@ -351,15 +351,18 @@ material, isolated snippets, and incomplete fragments remain lightweight.
 ## Prompt Delivery Decision Model
 
 Keep prompt delivery small and deterministic. Classify the produced artifact,
-resolve the execution recipient independently from the human viewer, and then
-select one presentation:
+resolve the human operator or viewer and execution recipient independently,
+then select one presentation. Wording such as `show me`, `give me`, or `prompt
+me` does not override a clearly named machine recipient, including when the
+human manually launches its downstream thread.
 
 - no prompt: no delivery action;
 - conceptual fragment: lightweight conversational presentation;
 - complete prompt for a human recipient: the canonical inline two-block
   presentation;
-- qualifying small canonical-text prompt for a ChatGPT or Claude machine
-  recipient with a permitted Airtable route: the Airtable record handoff below;
+- qualifying small canonical-text prompt for a ChatGPT, Claude, or Codex
+  machine recipient with a permitted Airtable route: the Airtable record
+  handoff below;
   or
 - missing, unresolved, or mismatched recipient, route, destination, or required
   identity: a clear blocked result with no alternate renderer.
@@ -370,11 +373,34 @@ for a qualifying small canonical-text handoff. A separately authorized workflow
 may select file-backed delivery only when its payload actually requires
 arbitrary bytes or provider file identity, revision, or checksum behavior.
 
+### Recipient-routing qualification cases
+
+These cases exercise the decision model above. Tests validate their routing
+relationships rather than the surrounding prose.
+
+| Case | Produced artifact | Operator/viewer | Execution recipient | Downstream execution surface | Route capability | Selected delivery |
+| --- | --- | --- | --- | --- | --- | --- |
+| `human-personal-use` | `complete` | `human` | `human` | `human` | `not-required` | `inline-two-block` |
+| `cak-228-prompt-me-codex` | `complete` | `human` | `codex` | `codex` | `permitted` | `airtable-thin-handoff` |
+| `claude-executes` | `complete` | `human` | `claude` | `claude` | `permitted` | `airtable-thin-handoff` |
+| `chatgpt-executes` | `complete` | `human` | `chatgpt` | `chatgpt` | `permitted` | `airtable-thin-handoff` |
+| `machine-route-unavailable` | `complete` | `human` | `codex` | `codex` | `unavailable` | `blocked` |
+| `machine-identity-unresolved` | `complete` | `human` | `codex` | `codex` | `identity-unresolved-after-inspection` | `blocked` |
+| `conceptual-fragment` | `fragment` | `human` | `none` | `none` | `not-applicable` | `lightweight` |
+
+`cak-228-prompt-me-codex` represents “Prompt me to have Codex do X,” including
+manual thread creation: the human is the viewer or launcher, while Codex
+receives and executes the complete prompt.
+
+`identity-unresolved-after-inspection` means the required route or identity
+remains unverified after the applicable capability inspection; an unknown route
+that has not yet been inspected does not qualify for terminal blocking.
+
 ### Airtable canonical-text handoff
 
-This section owns the shared ChatGPT/Claude handoff contract. Adapters map its
-operations to the connector actions exposed by each executor; they do not copy
-or redefine these rules.
+This section owns the shared handoff contract for the eligible machine
+recipients named above. Adapters map its operations to concrete connector
+actions without redefining it.
 
 A handoff qualifies as small canonical text when the frozen payload fits
 unchanged in one `Payload` long-text field and within the current connector's
@@ -424,13 +450,16 @@ This section applies the decision model symmetrically when one executor
 produces a complete prompt for another: each direction is governed by the same
 shared presentation and handoff contract.
 
-For a qualifying small canonical-text ChatGPT/Claude machine handoff, apply the
-[Airtable contract](#airtable-canonical-text-handoff) and provide the target-
-shaped thin envelope without reproducing the complete prompt in chat. For a
-human execution recipient, use the matching adapter's canonical inline
-presentation. Inspect unknown connector capability before selection; if the
-required Airtable route or identity is unavailable, fail clearly rather than
-switching to file-backed delivery or reconstructing the prompt in chat.
+For a qualifying small canonical-text handoff to an eligible machine recipient,
+apply the [Airtable contract](#airtable-canonical-text-handoff) and provide the
+target-shaped thin envelope without reproducing the complete prompt in chat.
+On success, return only the matching adapter's launch or configuration guidance
+and required external envelope; do not replay the stored payload or routine
+transport mechanics. For a human execution recipient, use the matching
+adapter's canonical inline presentation. Inspect unknown connector capability
+before selection; if the required Airtable route or identity is unavailable,
+fail clearly rather than switching to file-backed delivery or reconstructing
+the prompt in chat.
 
 Prompt governance remains a separate selection. A material prompt that passes
 its admission test additionally applies the

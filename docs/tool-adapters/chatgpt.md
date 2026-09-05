@@ -124,8 +124,9 @@ Apply the shared
 [`prompt delivery decision model`](../prompts.md#prompt-delivery-decision-model),
 with the transport rules in
 [`cross-executor prompt presentation`](../prompts.md#cross-executor-prompt-presentation).
-For a qualifying small canonical-text prompt whose ChatGPT or Claude recipient
-has a permitted Airtable route, use the shared
+For a qualifying small canonical-text prompt whose resolved machine recipient
+is eligible under the shared model and has a permitted Airtable route, use the
+shared
 [`Airtable canonical-text handoff`](../prompts.md#airtable-canonical-text-handoff)
 and emit its compact external envelope. Do not add file preview,
 download-link, or attempt-local retrieval steps.
