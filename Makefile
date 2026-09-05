@@ -5,7 +5,7 @@
 help: ## List available repo-local Makefile targets with short descriptions.
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_.-]+:.*## / {printf "  %-28s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-check: code-first-check ## Run canonical local validation for local work and CI.
+check: code-first-check code-first-recovery-check ## Run canonical local validation for local work and CI.
 	@if command -v markdownlint-cli2 >/dev/null 2>&1; then \
 		echo "Running markdownlint-cli2"; \
 		markdownlint-cli2 "**/*.md" "!.worktrees/**" "!experiments/code-first-playbook/.build/**" "!experiments/code-first-playbook/.venv/**"; \
@@ -66,3 +66,17 @@ code-first-diff: code-first-tools ## Exercise the two bounded semantic edit roun
 
 code-first-rehearse: code-first-tools ## Report simulation-only authority-transition rehearsal.
 	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py rehearse
+
+.PHONY: code-first-recovery-check code-first-recovery-render code-first-recovery-source-check code-first-recovery-diff
+
+code-first-recovery-check: code-first-tools ## Check the one-section CAK-235 replacement candidate.
+	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery_candidate.py check
+
+code-first-recovery-render: code-first-tools ## Regenerate the committed Recovery replacement candidate.
+	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery_candidate.py render
+
+code-first-recovery-source-check: code-first-tools ## Check current source bindings and exact Recovery section parity.
+	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery_candidate.py source-check
+
+code-first-recovery-diff: code-first-tools ## Demonstrate a Recovery definition change in the shared semantic diff.
+	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery_candidate.py diff
