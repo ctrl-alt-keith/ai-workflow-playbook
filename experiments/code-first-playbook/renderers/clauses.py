@@ -106,12 +106,16 @@ def human(audience, selected, normative, provenance, locations, profile):
         for c in owned:
             link = source_link(c["record_id"], provenance, locations)
             lines += [f"### {c['id']}", "", f"[Edit semantic source]({link})", "",
-                      f"<!-- begin:{c['id']} -->",c['text'],f"<!-- end:{c['id']} -->", ""]
+                      '<!-- markdownlint-disable MD009 MD012 -->',
+                      f"<!-- begin:{c['id']} -->",c['text'],f"<!-- end:{c['id']} -->",
+                      '<!-- markdownlint-enable MD009 MD012 -->', ""]
     lines += ["## Owned vocabulary", ""]
     for c in normative:
         if not c["record_id"].startswith("pb."):
             lines += [f"### {c['id']}", "", f"[Edit semantic source]({source_link(c['record_id'], provenance, locations)})",
-                      "",f"<!-- begin:{c['id']} -->",c['text'],f"<!-- end:{c['id']} -->", ""]
+                      "",'<!-- markdownlint-disable MD009 MD012 -->',
+                      f"<!-- begin:{c['id']} -->",c['text'],f"<!-- end:{c['id']} -->",
+                      '<!-- markdownlint-enable MD009 MD012 -->', ""]
     lines += ["## Unresolved questions and external reads", "", "```json",
               canonical({"facts": selected["fact_reports"], "external_sources": selected["external_sources"],
                          "external_rule_boundaries": selected["external_rule_boundaries"],
@@ -119,7 +123,11 @@ def human(audience, selected, normative, provenance, locations, profile):
                          "permission": "not_evaluated"}).decode().rstrip(), "```", "",
               "## Supporting context (non-normative)", ""]
     lines += [r["body"] for r in selected["vocabulary"].values() if r["kind"] == "context"]
-    return ("\n".join(lines).rstrip() + "\n").encode()
+    clean=[]
+    for line in lines:
+        if line=='' and clean and clean[-1]=='':continue
+        clean.append(line)
+    return ("\n".join(clean).rstrip() + "\n").encode()
 
 
 def source_link(rid, provenance, locations):

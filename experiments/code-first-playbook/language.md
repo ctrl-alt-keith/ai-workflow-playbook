@@ -89,6 +89,11 @@ links inside inherited prose resolve against their semantic owner's source
 path at the frozen prose revision; normative values remain unchanged. Every
 clause also links to the exact semantic input commit.
 
+Exact normative payloads may retain meaningful whitespace. Only Markdown's
+trailing-space/multiple-blank rules are locally disabled inside each audited
+payload; all other lint and semantic checks still apply. The ignored pilot
+build/dependency directories are excluded from Markdown source discovery.
+
 `provenance/input-commit.json` is produced by an explicit bind against Git object
 bytes after input commit creation. It may include the two frozen evaluation
 bundles. Generation verifies every selected working input against that binding;

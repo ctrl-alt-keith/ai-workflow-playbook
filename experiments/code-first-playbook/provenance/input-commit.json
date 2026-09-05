@@ -2,16 +2,40 @@
   "binding_method": "exact git object bytes compared at explicit bind; no current HEAD substitution",
   "files": {
     "cases/baseline.json": {
-      "bytes": 367,
-      "sha256": "3d8d654ed7ad216db764680d96de97748006cdd2021cfa7ac73891ca9025b545"
+      "bytes": 434,
+      "sha256": "d09c108470d06390a888882e73c3c330b4b4fdd3e523935fd0f14dcb5eb5208b"
+    },
+    "cases/edit-round-1.json": {
+      "bytes": 451,
+      "sha256": "a6c14860c079fe798ea67304857b923d96782a8b05180ec213e3e7b2350337d5"
+    },
+    "cases/edit-round-1/source-retrieval.yaml": {
+      "bytes": 16917,
+      "sha256": "1573997e929a6ecfdfdd11cd52d44420dc2fbb179b5961c503591edf19535257"
+    },
+    "cases/edit-round-1/startup.yaml": {
+      "bytes": 26658,
+      "sha256": "775a973f693504b7096c133c43283dfedab827e3218660b9f162eb19b39b0e9a"
+    },
+    "cases/edit-round-2.json": {
+      "bytes": 451,
+      "sha256": "57673d49f2697e0a67b90f423f5b5afaeff4fc799f2e37b446ee4cd09cf1715c"
+    },
+    "cases/edit-round-2/source-retrieval.yaml": {
+      "bytes": 16917,
+      "sha256": "1573997e929a6ecfdfdd11cd52d44420dc2fbb179b5961c503591edf19535257"
+    },
+    "cases/edit-round-2/startup.yaml": {
+      "bytes": 24800,
+      "sha256": "e22dcdd7050ff9ca2a28c4c605fb691c549bd35f86fd8fca6326e89002230063"
     },
     "compiler/__init__.py": {
       "bytes": 74,
       "sha256": "ba50b938c8f92519a5da1320576c88e77893b08df8e618235d37fced195b7629"
     },
     "compiler/diff.py": {
-      "bytes": 3032,
-      "sha256": "b9b8fa579a4b9f4cb6a7d7f9ce49b82cc483e938a8b843b78472b9ac0cfa4270"
+      "bytes": 3429,
+      "sha256": "b6e2866d2a2ec8aa316fbcd8c2297cf553014a39e7510d611405c635267b5605"
     },
     "compiler/load.py": {
       "bytes": 3736,
@@ -22,32 +46,36 @@
       "sha256": "10f90e099017c70ddbfa7eb009ce14fee1b1782fc66d015d071ea12a3c2bf3f1"
     },
     "compiler/provenance.py": {
-      "bytes": 4935,
-      "sha256": "f185f2b5ba1a57343ad49b752948c7d79eb333248a6d0a983b4812f9bdf52e78"
+      "bytes": 5174,
+      "sha256": "821ec49acc129bd171ff9033f2d662f76f5205aa4a0798405b7cd226b225ed24"
+    },
+    "compiler/rehearsal.py": {
+      "bytes": 6961,
+      "sha256": "7f82c56731875ba68bb151eac806dc862a8cef74913427710f5948517d04d281"
     },
     "compiler/select.py": {
-      "bytes": 8196,
-      "sha256": "3397aa2ddb0f486f776c05a2ed04539a88b2d5c945ab4d7d6965a7b866d14476"
+      "bytes": 8616,
+      "sha256": "342b0d4da21f2fd63dd04d04b81077128628ec8280192e752a94f7c06441e148"
     },
     "compiler/validate.py": {
-      "bytes": 9473,
-      "sha256": "2c2e5996e717c7dae05b16d62486f90ced5f127b0808dd4c5aef21b5173494bb"
+      "bytes": 10648,
+      "sha256": "48a9a89c2677309830c75bffdc65bb0acfe75673ec45009ffd9ca31c8a0180cf"
     },
     "pilot.py": {
-      "bytes": 7172,
-      "sha256": "699cff2aac33fbf2798dea08c43f12044eb436ece14c59b23f7ad4ca0daca008"
+      "bytes": 8055,
+      "sha256": "45f69fbbab493b3f2f4c13ec6fffc29bbf129092e94a4a704ebaf2413fddcbc7"
     },
     "profiles/startup-retrieval.json": {
-      "bytes": 233,
-      "sha256": "51c52ec76df45e66c00b33641ca841f83a01c0b4f741d81aef1beb0fce60237b"
+      "bytes": 1266,
+      "sha256": "1044487084283e312ac8f0f64c2128e6523e1ea9cb54384dab1bbea21ccd398e"
     },
     "provenance/predecessor.json": {
-      "bytes": 7293,
-      "sha256": "1a10899b20e03d0ef040ef53c78ce3a58d66448cb79292c5e1428bbad97c5000"
+      "bytes": 9039,
+      "sha256": "00252fa3d9a19c4f4138a5c027908b515925f9a891d1d846c3e63b63f044115e"
     },
     "provenance/sources.json": {
-      "bytes": 8744,
-      "sha256": "45c208c963f5677d4bc3a3cc007f3dedcec7567732d5ecc2a293e3814678041d"
+      "bytes": 49823,
+      "sha256": "3599f26423664bed3e9103a878bee03c08a73a1373380006081b30a8d50cbfae"
     },
     "renderers/__init__.py": {
       "bytes": 74,
@@ -58,8 +86,8 @@
       "sha256": "659fe69233bb78ff9bdd9617cf6a5b79a62776ae7ff89f90996255bd6a603db9"
     },
     "renderers/clauses.py": {
-      "bytes": 5350,
-      "sha256": "537b388aa8102b5e32240594e030ea95f2353035019a0215d3c4a2e9286f2464"
+      "bytes": 6866,
+      "sha256": "ef5d0e3ef45dc5fc83b1682a5597f6f2eb09269cb20b680d83b14298bd5ca03b"
     },
     "renderers/operator_sre.py": {
       "bytes": 178,
@@ -73,10 +101,14 @@
       "bytes": 14,
       "sha256": "0969da99a0bc2a1b71ed50584560f4588a37567ac63af3ddbaf3c4617ca5621a"
     },
+    "semantics/source-retrieval.yaml": {
+      "bytes": 16880,
+      "sha256": "02f4d6ec287bd157090649ad01e3b2f1a816cbd40d4594a754f53a414399a1f8"
+    },
     "semantics/startup.yaml": {
-      "bytes": 11724,
-      "sha256": "b37d9919f4cef49a7cd888f028bd197417a6815188dff87de2cbc79840750510"
+      "bytes": 26761,
+      "sha256": "b3e7723f9187f7f45cdb132e38297328a03b84f296c481611e657b8a57b0adc7"
     }
   },
-  "input_commit": "1324f7f481d241e41778a2edc753b1bd1a495755"
+  "input_commit": "35241049177c16619761195d393913707dedb5e0"
 }
