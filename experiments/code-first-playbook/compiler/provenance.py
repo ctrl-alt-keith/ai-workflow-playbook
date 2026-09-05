@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from .load import safe_path
 from .model import canonical, digest, require, shape
+from .recovery_section import READER, RULE, ACTION, OWNERSHIP, surrounding
 
 OUTPUTS = ('index.md', 'ai/startup-retrieval.json', 'operator-sre/startup-retrieval.md',
            'support/startup-retrieval.md', 'coverage.json', 'provenance.json')
@@ -35,11 +36,25 @@ def inputs(root, bundle_path, bundle):
 def binding(root, manifest, records=None, current_repo=None):
     """Frozen accounting is separate from freshness of current operational prose."""
     changes = []
+    require(sum(u['unit'] == RULE for u in manifest['units']) == 1,
+            'exactly one Recovery ownership binding required')
     for unit in manifest['units']:
+        if unit['unit'] == RULE:
+            require(unit.get('canonical_body') == OWNERSHIP and unit['blocks'] == [],
+                    'Recovery must bind to its semantic action, not historical prose parity')
+            if records is not None:
+                require(records[RULE]['effect']['action'] == ACTION,
+                        'Recovery owning rule no longer selects its canonical action')
         if current_repo is not None:
             raw = safe_path(current_repo, unit['path']).read_bytes()
-            if digest(raw) != unit['sha256']:
-                changes.append({'unit': unit['unit'], 'code': 'whole_source_drift', 'path': unit['path']})
+            if unit['path'] == READER:
+                actual, expected = digest(surrounding(raw)), unit['outside_recovery_sha256']
+                code = 'surrounding_source_drift'
+            else:
+                actual, expected = digest(raw), unit['sha256']
+                code = 'whole_source_drift'
+            if actual != expected:
+                changes.append({'unit': unit['unit'], 'code': code, 'path': unit['path']})
         for block in unit['blocks']:
             require(digest(block['text'].encode()) == block['sha256'], 'frozen block hash mismatch')
             if records is not None and block['disposition'] == 'mapped':
@@ -62,7 +77,7 @@ def identity(root, bundle_path, bundle, records, locations):
     semantic = {i:r for i,r in records.items() if r['kind'] != 'context'}
     context = {i:r for i,r in records.items() if r['kind'] == 'context'}
     return {'input_commit': bound['input_commit'], 'raw_inputs': actual,
-            'source_fidelity':'hypothetical evaluation edit; not baseline parity' if bundle['evaluation_only'] else 'frozen mapped baseline',
+            'source_fidelity':'hypothetical evaluation edit; not baseline parity' if bundle['evaluation_only'] else 'frozen external bindings; Recovery body semantic-authored',
             'semantic_sha256': digest(canonical(semantic)), 'context_sha256': digest(canonical(context)),
             'profile_sha256': actual[bundle['profile']]['sha256'],
             'compiler_sha256': digest(canonical({p:v for p,v in actual.items() if p.startswith('compiler/') or p=='pilot.py'})),

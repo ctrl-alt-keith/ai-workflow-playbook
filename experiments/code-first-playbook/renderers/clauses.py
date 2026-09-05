@@ -56,7 +56,7 @@ def header(audience, provenance):
     return {"audience": audience, "topic": "startup-retrieval",
             "status": "experimental_shadow_not_for_execution",
             "coverage": "mapped_clauses_only_external_sources_required",
-            "operational_owner": "existing_playbook_prose", "provenance": provenance}
+            "operational_owner": "existing_playbook_prose_except_recovery_body", "provenance": provenance}
 
 
 def audit(raw, audience, normative):
@@ -72,7 +72,7 @@ def audit(raw, audience, normative):
 def human(audience, selected, normative, provenance, locations, profile):
     h = header(audience, provenance)
     title = "Operator/SRE workflow cards" if audience == "operator-sre" else "Support triage guide"
-    lines = [f"# {title}", "", "Experimental shadow preview. Existing Playbook prose controls.",
+    lines = [f"# {title}", "", "Experimental shadow preview. Current ownership follows the repo-local Recovery section contract; other prose owners are unchanged.",
              "Incomplete executor contract; no live use or adoption.", "",
              f"Input commit: `{provenance['input_commit']}`.", "",
              'Source status: '+provenance.get('source_fidelity','synthetic renderer test')+'.', '',

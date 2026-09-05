@@ -94,6 +94,43 @@ Scope is `pb.startup-floor`, `pb.conditional-activation`, `pb.mode-persistence`,
 
 Existing Playbook prose remains operationally canonical. All experimental sources, generated previews, diagnostics and simulations are evidence only. No live executor, startup/router, automation or production documentation consumes or adopts them. No policy change, authority inversion, generated-doc adoption, global rollout or Playbook–Enforcement runtime/import dependency is authorized.
 
-`make check` includes the experiment's deterministic tests and committed-preview regeneration check. The separate `make code-first-source-check` verifies current prose bindings for pilot evaluation/readiness claims; it does not make unrelated prose edits depend on snapshot reapproval. Missing required pilot tooling blocks the checks that need it and must be reported, not silently skipped.
+`make check` includes the experiment's deterministic tests and committed-preview regeneration check. The separate `make code-first-source-check` verifies current external prose bindings for pilot evaluation/readiness claims; Recovery's generated body uses the permanent section contract below. It does not make unrelated prose edits depend on snapshot reapproval. Missing required tooling blocks the checks that need it and must be reported, not silently skipped.
 
 This exception activates only under the explicit human decision approving the exact CAK-233 proposal and this exception. It expires at the earlier of the human's pilot disposition or 30 calendar days after that approval. At expiry, stop further development and expansion pending human disposition. Expiry does not delete evidence, adopt outputs, extract implementation, or grant removal/merge authority. A fresh explicit human decision is required for extension or removal. All other repository rules remain in force.
+
+### Recovery generated-section ownership
+
+The narrower CAK-235 ownership model supersedes the pilot's prose-canonical and
+no-generated-doc-adoption restrictions **only for the Recovery body** at
+`docs/source-first-retrieval.md#recovery`. Its sole authored normative body is
+`action.retrieval-recovery/does`, owned by `pb.retrieval-recovery`, in
+`experiments/code-first-playbook/semantics/source-retrieval.yaml`. The semantic
+`source.retrieval` identity still names the surrounding document owner; the
+section-specific author/reader mapping lives in `recovery/contract.json`.
+All surrounding retrieval, precedence, verification, failure, authority and
+executor rules retain their existing owners.
+
+Only the marked Recovery body is generated; the rest of its reader document
+remains hand-maintained. Authors edit the semantic action and explicitly run
+`make code-first-recovery-render`. `make check` detects stale or hand-edited
+Recovery output and provenance without repairing them. Review meaningful
+changes through the shared semantic diff and generated prose diff; the focused
+outgoing-envelope guard does not replace incoming-edge corpus review.
+
+The existing semantic modules (including `semantics/startup.yaml`),
+`provenance/sources.json`, restricted parser/model/validator, diff,
+provenance helpers, Recovery section renderer/contract, focused tests,
+requirements and Make/CI integration may support this one operational section
+at their existing locations. This permanent, section-specific placement
+permission avoids duplicating the compiler; it permits no other generated
+section, new semantic-language construct, persona adoption, runtime controller
+or cross-repository dependency.
+
+CAK-233's remaining infrastructure and persona previews stay experimental and
+retain the predecessor's original expiry and disposition boundary. That expiry
+does not revoke Recovery ownership or stop its necessary generation and
+validation. Pilot removal must preserve Recovery's named dependencies, or
+follow a separately authorized reverse ownership transition; it cannot delete
+them under the old blanket removal recipe. This carve-out does not renew or
+widen the pilot. Implementation and validation do not grant doctrine promotion
+or merge authority; those decisions apply to the exact reviewed transition.

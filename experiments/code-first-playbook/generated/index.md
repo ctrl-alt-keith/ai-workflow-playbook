@@ -1,8 +1,8 @@
 # CAK-233 generated shadow previews
 
-Existing Playbook prose remains operationally canonical. No execution or adoption.
+Evidence-only persona previews. Recovery alone uses its semantic-authored reader section; all surrounding prose owners remain canonical. No execution or adoption by these previews.
 
-Input commit: `c6457854dc558ad8c679cc0932d88438dded52ca`.
+Input commit: `56351d8d6eed3d3292b332832a921a898de800dd`.
 
 - [AI structured clauses](ai/startup-retrieval.json)
 - [Operator/SRE cards](operator-sre/startup-retrieval.md)

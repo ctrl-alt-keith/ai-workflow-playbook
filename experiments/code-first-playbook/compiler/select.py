@@ -141,7 +141,7 @@ def select(records, observations, context, as_of, acquisitions, diagnostics=()):
         clauses.append({"id": rid, "activation": activation[rid],
                         "selection_reasons": sorted(reasons[rid]),
                         "conditions": evaluated, "record": rules[rid]})
-    return {"status": "experimental_shadow", "operational_owner": "existing_playbook_prose",
+    return {"status": "experimental_shadow", "operational_owner": "existing_playbook_prose_except_recovery_body",
             "complete_execution_contract": False, "permission": "not_evaluated",
             "completion_grants_authority": False, "rules": clauses,
             "vocabulary": {i: records[i] for i in sorted(included) if i not in rules},

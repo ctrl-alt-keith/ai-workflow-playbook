@@ -1,7 +1,9 @@
 # CAK-233 code-first shadow pilot
 
-Experimental only. Existing Playbook prose remains operationally canonical.
-No executor, router, automation or production documentation consumes these
+The CAK-233 persona previews remain experimental evidence only. The one
+[Recovery section](recovery/README.md) now has a separate semantic-authored
+ownership contract in `AGENTS.md`; all surrounding Playbook prose retains its
+existing owners. No executor, router or automation consumes the persona
 outputs. Permission is never evaluated and completion grants no authority.
 
 ## Authorization and bounds
@@ -44,9 +46,11 @@ views. A topic overview is never a complete execution contract.
 
 Preserve exact pilot/evaluation/review evidence under CAK-233 first.
 If unmerged, leave main untouched and return branch/PR disposition to the human.
-If merged later, a separately authorized removal PR deletes this directory,
-the exact CAK-233 AGENTS section, its Makefile targets/check invocation, and the
-pilot setup step in the existing Markdown Lint workflow. Preserve unrelated
-edits and history. Verify no active imports/consumers remain, run the then-current
+For a separately authorized removal PR, first preserve the operational Recovery
+source, compiler dependencies, checks and setup identified in `AGENTS.md`,
+including `semantics/startup.yaml` and `provenance/sources.json`, or
+complete a separately authorized reverse ownership transition. The predecessor's
+blanket directory/Make/CI removal recipe is no longer applicable. Preserve unrelated
+edits and history. Verify no removed imports/consumers remain, run the then-current
 `make check`, and stop for human merge authority. Only remove this experiment's
 ignored dependency/build state after containment and evidence checks.

@@ -60,4 +60,6 @@ def semantic_diff(old, new, old_locations=None, new_locations=None):
             # evidence without mislabeling that noise as normative fan-out.
             events[-1].update(old=None,new=None,impact='source_provenance_only',affected_ids=[],
                               affected_rules=[],affected_outputs=[],direct_reference_sites=[])
+        elif 'pb.retrieval-recovery' in rules:
+            events[-1]['affected_outputs'].append('docs/source-first-retrieval.md#recovery')
     return {"status": "evidence_only", "events": events, "permission": "not_evaluated"}
