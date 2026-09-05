@@ -16,7 +16,7 @@ confidence required by the bounded task. Model selection and reasoning effort
 are separate configuration decisions: select both deliberately, and do not
 default substantial work to Sol or Astra merely because it is long-running.
 
-The official model references, checked 2026-09-04, position
+The official model references, checked 2026-09-05, position
 [GPT-6 Astra](https://developers.openai.com/api/docs/models/gpt-6-astra)
 (`gpt-6-astra`) for the hardest end-to-end reasoning, coding, computer-use,
 research, and document tasks;
@@ -91,6 +91,27 @@ Astra's existence does not require a change to the
 hosted stewardship gains no model dependency; residual model-backed jobs are
 candidates for later qualification on their actual execution surfaces.
 
+### Codex Selector Qualification
+
+For FRESH THREAD and CHILD TASK attempts, record the requested model, exact
+selector, runtime-reported effective model (or `unobservable`), and any
+substitution separately. API IDs are candidates, not Codex acceptance proof.
+Use only these exact mappings; reject aliases, near-matches, and guessed IDs.
+
+| Requested model | Exact Codex selector |
+| --- | --- |
+| `GPT-6 Astra` | `gpt-6-astra` |
+| `GPT-5.6 Luna` | `gpt-5.6-luna` |
+| `GPT-5.6 Terra` | `gpt-5.6-terra` |
+| `GPT-5.6 Sol` | `gpt-5.6-sol` |
+
+Use `scripts/codex-preflight` with the exact
+`CODEX_PREFLIGHT_REQUESTED_MODEL` value. Its read-only probe fails before
+substantive work on rejection; preserve and reuse its runtime evidence until
+the client, identity, policy, or surface changes. It never selects fallback:
+exact-model requirements fail closed, while advisory fallback remains
+orchestration-owned and explicit. Reasoning effort is independent.
+
 ### Escalation And Delegation
 
 Escalate a lower-cost task only on evidence: unresolved ambiguity after a
@@ -115,7 +136,8 @@ work for other purposes.
 Apply the shared `FRESH THREAD`, `SAME THREAD`, and `CHILD TASK` vocabulary in
 [`prompts.md`](../prompts.md#thread-routing-and-configuration-continuity). For
 a FRESH THREAD, select the task-appropriate model and effort using the matrix
-and provisional Astra guidance above.
+and provisional Astra guidance above, after the selected runtime qualifies its
+exact selector.
 For a SAME THREAD, preserve the requested parent model and effort by default:
 task-class sufficiency alone does not justify intentionally mutating an
 already-running configuration. Record the effective model and effort separately
@@ -210,7 +232,7 @@ executable prompt with this plain-text operator metadata:
 
 ```text
 Thread routing: <FRESH THREAD | SAME THREAD | CHILD TASK>
-Recommended model: <FRESH THREAD/CHILD TASK: GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol | GPT-6 Astra (provisional); SAME THREAD: Preserve requested thread model and observe effective runtime model>
+Recommended model: <FRESH THREAD/CHILD TASK: GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol | GPT-6 Astra (provisional; exact Codex selector must be qualified); SAME THREAD: Preserve requested thread model and observe effective runtime model>
 Recommended reasoning level: <FRESH THREAD/CHILD TASK: Light | Medium | High; SAME THREAD: Preserve requested thread setting and observe effective runtime setting>
 
 Reason:
@@ -278,7 +300,7 @@ setting.
 This posture is derived from OpenAI's current
 [model guidance](https://developers.openai.com/api/docs/guides/latest-model)
 and [OpenAI models reference](https://developers.openai.com/api/docs/models),
-checked 2026-09-04. Provider positioning supports candidate selection; the
+checked 2026-09-05. Provider positioning supports candidate selection; the
 Playbook's task-class defaults still require workload evidence.
 
 ## Prompt-Contract Mapping
