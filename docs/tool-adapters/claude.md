@@ -305,7 +305,24 @@ evidence. The first `system/init` record must report exactly `Bash`, `Glob`,
 `Grep`, and `Read`; no MCP servers, plugins, skills, slash commands, or
 capability-startup error; `dontAsk` permission mode; the requested model family;
 and the exact attempt-scratch runtime directory. Stop the process on a mismatch
-and reject any eventual output. The launcher still performs whole-source,
+and reject any eventual output. Family qualification is anchored rather than a
+substring check: the `fable` request currently admits only `fable`,
+`claude-fable-5`, and `claude-fable-5-1`. It rejects other families, malformed
+near-matches, and unqualified future Fable IDs until the accepted set is updated
+from current source evidence.
+
+The initialization record reports the effective model, but it does not report
+effective effort. For an explicit governed effort request, the generated
+`PreToolUse` hook records the hook input's `effort.level`, which Anthropic
+documents as the level currently in effect and as reflecting any downgrade from
+an unsupported request. The receipt keeps requested effort separate from this
+hook-observed effective value. A mismatch or absent/invalid observation fails
+closed; in particular, requesting `high` never by itself supports an effective
+High claim. The launcher also removes inherited `CLAUDE_CODE_EFFORT_LEVEL` when
+it supplies an explicit `--effort`, preventing inherited configuration from
+silently replacing the task-owned request.
+
+The launcher still performs whole-source,
 Git-index, and Git-administration integrity checks because provider flags,
 hooks, command-canary evidence, and initialization metadata are defense in
 depth, not proof that no effect occurred. It snapshots candidate-worktree and
@@ -437,7 +454,7 @@ retention, and visibility values remain outside this adapter.
 
 Choose the lowest-cost Claude Code model/configuration expected to preserve the
 confidence required by the bounded task. Do not infer a mapping from OpenAI
-model names or tiers. Current Claude Code documentation, checked 2026-08-10,
+model names or tiers. Current Claude Code documentation, checked 2026-09-04,
 establishes the executor-native `haiku`, `sonnet`, `opus`, and `fable` aliases:
 Haiku for simple fast tasks, Sonnet for daily coding, Opus for complex reasoning,
 and Fable for the hardest and longest-running tasks.
@@ -516,7 +533,7 @@ Other providers and error paths need not expose the same evidence or perform a
 server-side fallback. If effective identity is unavailable, record that
 limitation rather than treating the request as proof. Requalify, escalate, or
 stop only when the effective result violates a required capability or exact-model
-reviewer qualification; a runtime event is not automatically fatal.
+or effort reviewer qualification; a runtime event is not automatically fatal.
 
 If a lower-capability SAME THREAD reaches unresolved ambiguity, an architecture
 or authority decision, conflicting authoritative evidence, repeated residual
@@ -595,6 +612,7 @@ only when it materially affects operator review or action.
 Behavioral claims above are grounded in official Anthropic documentation,
 including [Claude Code memory](https://code.claude.com/docs/en/memory),
 [permissions](https://code.claude.com/docs/en/permissions),
+[hooks](https://code.claude.com/docs/en/hooks),
 [the tools reference](https://code.claude.com/docs/en/tools-reference),
 [subagents](https://code.claude.com/docs/en/sub-agents), and
 [worktrees](https://code.claude.com/docs/en/worktrees). Surface and hydration
@@ -611,4 +629,4 @@ guide](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model)
 [models overview](https://platform.claude.com/docs/en/about-claude/models/overview),
 [thinking guide](https://platform.claude.com/docs/en/build-with-claude/thinking),
 and [fallback guide](https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback),
-checked 2026-08-10.
+checked 2026-09-04.
