@@ -1,5 +1,12 @@
 # AI Workflow Playbook Bootstrap
 
+When a conversation already has an active bounded task, do not treat a
+strongly unrelated instruction without a clear transition signal as a material
+task or repository change. Preserve the active task, ask whether to switch or
+continue, and make no task-owned or durable mutation for the unrelated request
+until the operator's intent is resolved. Ordinary task-local steering and
+clear task switches proceed normally.
+
 Before the first project action, and again only when the task/repository
 materially changes, retrieve the current `docs/start-here.md` from
 `ctrl-alt-keith/ai-workflow-playbook` and follow its routing and startup

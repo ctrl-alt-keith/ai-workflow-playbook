@@ -355,6 +355,40 @@ When a workflow accepts, integrates, or synthesizes evidence, apply the
 [`evidence lifecycle`](evidence-lifecycle.md) before crossing into decision
 production.
 
+## Active Bounded-Task Continuity
+
+When a conversation already has an active bounded task, preserve that task
+across related follow-ups, corrections, steering, questions, and task-local
+tangents. Clear human direction to start a new task, switch topics, ask an
+unrelated question, or make an equivalent transition adopts the new task
+without another confirmation and then applies the normal task-change,
+activation-routing, interaction-mode, and execution-surface rules.
+
+When a new instruction is strongly unrelated and has no clear transition
+signal, treat the discontinuity as a plausible wrong-thread prompt. Preserve
+the active task, briefly ask whether to switch this conversation to the new
+task or continue the active task, and make no task-owned planning,
+repository, execution, or other durable mutation for the unrelated request
+while intent is unresolved. If the human confirms the switch, adopt the new
+task and apply the normal routing and source-refresh rules before acting.
+
+Use this guard only for a strong discontinuity from an active bounded task. It
+does not create a general intent taxonomy, confidence score, classifier, or
+confirmation framework.
+
+The qualification cases below protect the semantic boundary rather than
+classifying natural language.
+
+<!-- qualification: active-bounded-task-continuity -->
+
+| Case | Relationship to active task | Transition signal | Outcome | Unrelated durable mutation |
+| --- | --- | --- | --- | --- |
+| `related-implementation-follow-up` | related | none required | continue | not applicable |
+| `correction-steering-or-task-local-tangent` | related | none required | continue | not applicable |
+| `explicit-unrelated-topic-switch` | unrelated | explicit | switch and re-route | only after normal current-task gates |
+| `abrupt-unrelated-without-switch-signal` | unrelated | absent | confirm and hold | prohibited while unresolved |
+| `confirmed-switch-after-hold` | unrelated | confirmed | switch and re-route | only after normal current-task gates |
+
 ## Durable Continuity
 
 Durable project artifacts are the recoverable continuity substrate for a
