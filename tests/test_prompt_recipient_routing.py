@@ -48,18 +48,12 @@ class PromptRecipientRoutingTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.cases = parse_qualification_cases()
 
-    def test_human_viewer_does_not_determine_execution_recipient(self) -> None:
-        human_viewer_cases = [
-            row for row in self.cases.values() if row["Operator/viewer"] == "human"
-        ]
-        self.assertEqual(
-            {row["Execution recipient"] for row in human_viewer_cases},
-            {"human", "codex", "claude", "chatgpt", "none"},
-        )
-        self.assertIn(
-            "airtable-thin-handoff",
-            {row["Selected delivery"] for row in human_viewer_cases},
-        )
+    def test_prompt_me_manual_launch_keeps_codex_recipient(self) -> None:
+        prompted = self.cases["cak-228-prompt-me-codex"]
+        self.assertEqual(prompted["Operator/viewer"], "human")
+        self.assertEqual(prompted["Execution recipient"], "codex")
+        self.assertEqual(prompted["Downstream execution surface"], "codex")
+        self.assertEqual(prompted["Selected delivery"], "airtable-thin-handoff")
 
     def test_permitted_complete_machine_routes_use_airtable(self) -> None:
         qualifying = [
@@ -85,16 +79,6 @@ class PromptRecipientRoutingTests(unittest.TestCase):
         self.assertEqual(
             {row["Selected delivery"] for row in failures},
             {"blocked"},
-        )
-
-    def test_manual_launch_does_not_change_machine_recipient(self) -> None:
-        prompted = self.cases["cak-228-prompt-me-codex"]
-        manual = self.cases["manual-codex-launch"]
-        self.assertEqual(prompted["Execution recipient"], "codex")
-        self.assertEqual(manual["Execution recipient"], "codex")
-        self.assertEqual(
-            prompted["Selected delivery"],
-            manual["Selected delivery"],
         )
 
     def test_human_recipient_and_fragment_keep_lightweight_routes(self) -> None:

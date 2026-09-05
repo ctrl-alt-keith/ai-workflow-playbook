@@ -323,23 +323,19 @@ For a material prompt:
 
 Apply the shared
 [`Airtable canonical-text handoff`](../prompts.md#airtable-canonical-text-handoff)
-when Codex receives a qualifying small canonical-text prompt. Use the external
-envelope's exact Airtable base, table, and record IDs and retrieve that record
-through a currently permitted connector route. Require exactly one result and
-verify the expected key and field set before re-encoding the payload and
-independently checking its byte length and SHA-256.
+when Codex receives a qualifying small canonical-text prompt. Retrieve the
+envelope's exact record through a currently permitted connector route and apply
+the shared verification and fail-closed rules without choosing another route or
+renderer.
 
 When the prompt is an exact issue-owned material prompt, also apply the
 [`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile).
 Routine machine-recipient handoffs use the shared transport without acquiring
 that material-prompt governance.
 
-Fail closed on a missing, multiple, stale, transformed, truncated, or mismatched
-record. Do not substitute a local download, another delivery route, or
-reconstructed chat text. Record the delivery operation and Codex attempt
-separately from the record and envelope; neither supplies authority. Concrete
-provider, account, destination, retention, and visibility policy stay in their
-owning contract, not this adapter.
+Record the delivery operation and Codex attempt separately from the record and
+envelope; neither supplies authority. Concrete provider, account, destination,
+retention, and visibility policy stay in their owning contract.
 
 ## Startup Deltas
 
