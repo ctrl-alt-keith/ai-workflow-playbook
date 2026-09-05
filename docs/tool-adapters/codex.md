@@ -799,8 +799,9 @@ substantive review output.
 The governed provider argv includes Claude's `--restricted` mode, available in
 Claude Code 2.1.248 and later, so provider-managed settings and filesystem
 confinement carry the controls they can express. The controller enforces that
-version floor before provider launch and requires attempt-local evidence that
-its exact-command hook ran, even when no effort was requested. The controller
+version floor before provider launch, keeps setting sources explicitly empty,
+and requires attempt-local evidence that its exact-command hook ran, even when
+no effort was requested. The controller
 still owns the exact argv and entry identity, standard-input EOF, stream
 drainage, process-group lifecycle, exact-command hook and canary, source
 no-delta checks, redaction, and receipts. Claude owns its structured session,

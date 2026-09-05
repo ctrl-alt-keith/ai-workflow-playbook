@@ -2012,14 +2012,22 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "    version_count = pathlib.Path(os.environ['FAKE_VERSION_COUNT'])\n"
             "    count = int(version_count.read_text()) + 1 if version_count.exists() else 1\n"
             "    version_count.write_text(str(count))\n"
-            "    version = '2.1.247' if os.environ.get('FAKE_SCENARIO') == 'restricted_unsupported' else '2.1.252'\n"
-            "    print(f'fake-claude {version}')\n"
+            "    scenario = os.environ.get('FAKE_SCENARIO')\n"
+            "    if scenario == 'version_banner': print('Node 22.1.0; fake-claude 2.1.252')\n"
+            "    else:\n"
+            "        version = '2.1.247' if scenario == 'restricted_unsupported' else '2.1.252'\n"
+            "        print(f'{version} (fake-claude)')\n"
             "    raise SystemExit(0)\n"
             "prompt = sys.stdin.read()\n"
             "count = pathlib.Path(os.environ['FAKE_COUNT'])\n"
             "attempt = int(count.read_text()) + 1 if count.exists() else 1\n"
             "count.write_text(str(attempt))\n"
             "scenario = os.environ.get('FAKE_SCENARIO', 'success')\n"
+            "if scenario in {'early_server_error','early_auth_error'}:\n"
+            "    error = 'server_error' if scenario == 'early_server_error' else 'authentication_failed'\n"
+            "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':error}), flush=True)\n"
+            "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}'}), flush=True)\n"
+            "    raise SystemExit(1)\n"
             "if scenario == 'ignore_term': signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
             "candidate = pathlib.Path(os.environ['FAKE_CANDIDATE'])\n"
             "package = pathlib.Path(os.environ['FAKE_PACKAGE'])\n"
@@ -2509,6 +2517,15 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertFalse(diagnostic["substantive_review_started"])
         self.assertFalse(self.count.exists())
 
+    def test_restricted_mode_version_floor_rejects_a_prefixed_version_banner(self):
+        completed, diagnostic = self.run_governed("version_banner")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(
+            diagnostic["failure_classification"],
+            "claude_restricted_mode_version_unsupported",
+        )
+        self.assertFalse(self.count.exists())
+
     def test_candidate_head_drift_before_first_attempt_baseline_stops_without_provider_spawn(self):
         result, diagnostic = self.run_governed_with_head_mutation(verification_call=2)
         self.assertEqual(result, 70)
@@ -2574,7 +2591,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             scratch / module.EFFORT_EVIDENCE_NAME,
         )
         self.assertIn("--restricted", arguments)
-        self.assertNotIn("--setting-sources", arguments)
+        self.assertEqual(arguments[arguments.index("--setting-sources") + 1], "")
         settings = json.loads(arguments[arguments.index("--settings") + 1])
         self.assertNotIn("sandbox", settings)
         self.assertIn("Before substantive analysis", system_prompt)
@@ -2789,6 +2806,15 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         serialized = json.dumps({"diagnostic": diagnostic, "receipts": self.receipts()})
         self.assertNotIn("secret-token-value", serialized)
         self.assertLess(len(diagnostic["failure_classification"]), 100)
+
+    def test_provider_failure_before_init_preserves_terminal_class_and_exit_policy(self):
+        server, server_diagnostic = self.run_governed("early_server_error")
+        self.assertEqual(server.returncode, 70)
+        self.assertEqual(server_diagnostic["failure_classification"], "terminal_provider_server_error")
+
+        auth, auth_diagnostic = self.run_governed("early_auth_error")
+        self.assertEqual(auth.returncode, 78)
+        self.assertEqual(auth_diagnostic["failure_classification"], "AUTH_UNKNOWN_FAIL_CLOSED")
 
     def test_provider_terminal_failure_does_not_recheck_for_a_second_spawn(self):
         completed, diagnostic = self.run_governed("transient_then_executable_drift")
@@ -3048,6 +3074,20 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(json.loads(denied.stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
+
+    def test_idempotent_hook_evidence_accepts_an_identical_concurrent_winner(self):
+        module = load_script("claude_review_hook_evidence_race", LAUNCHER)
+        evidence_path = self.root / "hook-race-evidence.json"
+        encoded = b'{"observed":true}'
+        real_exclusive_write = module.exclusive_write
+
+        def concurrent_winner(path, content):
+            real_exclusive_write(path, content)
+            raise FileExistsError(path)
+
+        with mock.patch.object(module, "exclusive_write", side_effect=concurrent_winner):
+            module.write_idempotent_hook_evidence(evidence_path, encoded, "hook")
+        self.assertEqual(evidence_path.read_bytes(), encoded)
 
     def test_soft_liveness_threshold_never_terminates_or_replaces_attempt(self):
         completed, _ = self.run_governed("silent")

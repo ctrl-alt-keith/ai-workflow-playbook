@@ -109,7 +109,8 @@ A governed review begins with a controller-owned launch contract, not with a
 provider command assembled ad hoc. The contract must bind the exact prompt and
 configuration identities, candidate worktree and commit, complete source graph,
 logical launch root, additional readable directories, guarded roots, exact observational
-commands, evidence destination, retry bound, and cancellation policy. Choose a
+commands, evidence destination, attempt count and any explicit retry policy, and
+cancellation policy. Choose a
 logical launch root that commonly owns the source graph when practical; otherwise
 declare every additional directory explicitly. A narrow package-directory
 launch that cannot reach the candidate is a contract failure, not a partially
@@ -117,8 +118,8 @@ qualified review. A provider may run from fresh attempt-local scratch to contain
 its own startup mechanics only when the launcher exposes every logical source
 root explicitly and verifies the effective runtime directory during initialization.
 
-Bind an exact immutable stream and terminal-receipt path for every permitted
-attempt and a distinct exact path for successful final reviewer output. Keep
+Bind an exact immutable stream and terminal-receipt path for every explicitly
+authorized attempt and a distinct exact path for successful final reviewer output. Keep
 mutable live-process mechanics in private controller-owned
 attempt-local scratch and expose their exact locator while the controller is
 live; do not turn a replace-in-place state file into a durable artifact. Only
@@ -204,7 +205,7 @@ remaining fail-closed when attribution is ambiguous.
 
 Bind every attempt to the configured candidate commit again immediately before
 capturing its attempt baseline and immediately before creating the reviewer
-process. Apply both checks to the first attempt and every retry, and record the
+process. Apply both checks to each explicitly authorized attempt, and record the
 observed commit and symbolic-ref identity. Drift at either boundary stops before
 that attempt can start; it never becomes a new governed baseline.
 
@@ -225,8 +226,8 @@ controller-owned transient lock by exact path, actor, and lifetime and must not
 apply to terminal postflight.
 
 Keep raw observation separate from candidate-integrity disposition. Preflight,
-live monitoring, emergency-stop decisions, terminal postflight, retry
-eligibility, and receipts must use the same classification semantics. Record
+live monitoring, emergency-stop decisions, terminal postflight,
+successor-attempt eligibility, and receipts must use the same classification semantics. Record
 each changed Git-administration object by normalized path relative to its owning
 Git directory, owner scope, change type, before and after identities,
 classification evidence, and blocking or tolerated disposition. A review may
@@ -237,15 +238,14 @@ ambiguous changes qualify as unauthorized mutation for emergency stopping.
 An attempt is complete only after the exact reviewer process group is terminal,
 all output collectors reach end-of-stream, its output is captured, its terminal
 receipt is durable, and no-delta
-postflight passes. A fresh attempt may repeat the exact inputs only for an
-explicitly documented transient provider class, after the prior attempt is
-fully terminal, under the same controller and contract identity, and within a
-small declared cap. This is a fresh execution with an exact-input repeat, not a
-historical replay. Authentication, billing, access, capability, command,
+postflight passes. The Claude review controller authorizes exactly one provider
+attempt; any later review is a new explicit controller invocation with its own
+contract and evidence. Another adapter may own a bounded fresh exact-input
+repeat only when its current contract explicitly declares that responsibility,
+the prior attempt is fully terminal, and the terminal provider class is
+documented as eligible. Authentication, billing, access, capability, command,
 mutation, cancellation, and unknown failures are not automatically retryable.
-Provider-internal retry events are evidence inside one attempt unless the
-outer contract explicitly classifies the terminal result as eligible for a new
-attempt.
+Provider-internal retry events remain evidence inside one attempt.
 
 Apply the shared live-process rules in
 [`orchestration-and-parallelism.md#live-process-lifecycle`](orchestration-and-parallelism.md#live-process-lifecycle).

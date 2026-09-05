@@ -951,7 +951,7 @@ def version_of(executable: str, environment: dict[str, str], *, cwd: str) -> str
 def parsed_claude_version(reported: object) -> tuple[int, int, int] | None:
     if not isinstance(reported, str):
         return None
-    match = re.search(r"(\d+)\.(\d+)(?:\.(\d+))?", reported)
+    match = re.match(r"^(\d+)\.(\d+)(?:\.(\d+))?(?:\s|$)", reported)
     if match is None:
         return None
     return int(match.group(1)), int(match.group(2)), int(match.group(3) or 0)
@@ -2453,6 +2453,18 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
     )
 
 
+def write_idempotent_hook_evidence(path: Path, encoded: bytes, label: str) -> None:
+    if path.exists() or path.is_symlink():
+        if path.is_symlink() or path.read_bytes() != encoded:
+            raise ValueError(f"{label} evidence changed within one attempt")
+        return
+    try:
+        exclusive_write(path, encoded)
+    except FileExistsError:
+        if path.is_symlink() or path.read_bytes() != encoded:
+            raise ValueError(f"{label} evidence changed within one attempt")
+
+
 def permission_hook(
     config_path: Path,
     expected_digest: str | None,
@@ -2490,11 +2502,12 @@ def permission_hook(
             "zero_authority": True,
         }
         encoded_liveness = canonical_json_bytes(liveness_evidence)
-        if liveness_evidence_path.exists() or liveness_evidence_path.is_symlink():
-            if liveness_evidence_path.is_symlink() or liveness_evidence_path.read_bytes() != encoded_liveness:
-                raise ValueError("permission-hook liveness evidence changed within one attempt")
-        elif permitted:
-            exclusive_write(liveness_evidence_path, encoded_liveness)
+        if permitted:
+            write_idempotent_hook_evidence(
+                liveness_evidence_path,
+                encoded_liveness,
+                "permission-hook liveness",
+            )
         effort_matches = True
         if expected_effort is not None:
             if expected_effort not in EFFORT_LEVELS or effort_evidence_path is None:
@@ -2523,11 +2536,11 @@ def permission_hook(
                 "zero_authority": True,
             }
             encoded = canonical_json_bytes(evidence)
-            if effort_evidence_path.exists() or effort_evidence_path.is_symlink():
-                if effort_evidence_path.is_symlink() or effort_evidence_path.read_bytes() != encoded:
-                    raise ValueError("effort qualification evidence changed within one attempt")
-            else:
-                exclusive_write(effort_evidence_path, encoded)
+            write_idempotent_hook_evidence(
+                effort_evidence_path,
+                encoded,
+                "effort qualification",
+            )
             permitted = permitted and effort_matches
     except (OSError, ValueError, json.JSONDecodeError, KeyError, TypeError):
         permitted = False
@@ -2789,6 +2802,8 @@ def governed_claude_arguments(
         "--strict-mcp-config",
         "--mcp-config",
         '{"mcpServers":{}}',
+        "--setting-sources",
+        "",
         "--settings",
         json.dumps(hook_settings, separators=(",", ":")),
         "--append-system-prompt",
@@ -3706,17 +3721,21 @@ def run_governed_review(
             )
             if auth_failure and auth_failure.startswith("AUTH_"):
                 classification = auth_failure
-            if capability_failure or capability_signal_sent:
+            if capability_signal_sent:
                 classification = capability_failure or live_capability_failure or "startup_capability_error"
                 live_state["capability_failure"] = classification
-            elif canary_failure == "provider_command_canary_requested_sandbox_bypass":
-                classification = canary_failure
-            elif hook_liveness_failure:
-                classification = hook_liveness_failure
-            elif effort_failure:
-                classification = effort_failure
-            elif canary_failure:
-                classification = canary_failure
+            elif classification == "success":
+                if capability_failure:
+                    classification = capability_failure
+                    live_state["capability_failure"] = classification
+                elif canary_failure == "provider_command_canary_requested_sandbox_bypass":
+                    classification = canary_failure
+                elif hook_liveness_failure:
+                    classification = hook_liveness_failure
+                elif effort_failure:
+                    classification = effort_failure
+                elif canary_failure:
+                    classification = canary_failure
             if live_state.get("termination_authority"):
                 classification = "operator_authorized_termination"
             post_snapshot, postflight_observation_failure = observed_source_snapshot(

@@ -260,7 +260,9 @@ other task authority.
 
 The governed invocation uses Claude's provider-native `--restricted` mode,
 available in Claude Code 2.1.248 and later, to isolate settings and confine file
-tools. The controller enforces that version floor before provider launch. The
+tools. The controller enforces that version floor before provider launch and
+retains an explicit empty `--setting-sources` selection as independently
+observable argv evidence. The
 generated `PreToolUse` hook permits `Read`, `Grep`, and `Glob`, and permits `Bash`
 only when its command text exactly equals the shell rendering of one configured
 argv vector and the tool input does not request sandbox bypass. The controller
