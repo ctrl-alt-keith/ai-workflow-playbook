@@ -36,6 +36,40 @@ require_command "ssh" "Install OpenSSH client tools, then rerun this preflight."
 require_command "gh" "Install GitHub CLI from https://cli.github.com/, then rerun this preflight."
 require_command "git" "Install Git, then rerun this preflight."
 
+qualify_requested_model() {
+    requested_model="$1"
+
+    case "$requested_model" in
+        "GPT-6 Astra") execution_selector="gpt-6-astra" ;;
+        "GPT-5.6 Luna") execution_selector="gpt-5.6-luna" ;;
+        "GPT-5.6 Terra") execution_selector="gpt-5.6-terra" ;;
+        "GPT-5.6 Sol") execution_selector="gpt-5.6-sol" ;;
+        *)
+            fail_check \
+                "requested model is an exact supported Playbook identity" \
+                "Use GPT-6 Astra, GPT-5.6 Luna, GPT-5.6 Terra, or GPT-5.6 Sol; do not use aliases or guessed identifiers."
+            ;;
+    esac
+
+    require_command "codex" "Install or update Codex CLI, then rerun this model qualification."
+    info_check "requested model: $requested_model"
+    info_check "execution selector: $execution_selector"
+
+    if codex exec \
+        --ephemeral \
+        --skip-git-repo-check \
+        --sandbox read-only \
+        --model "$execution_selector" \
+        "Return exactly MODEL_QUALIFICATION_OK. Do not call tools or inspect files."; then
+        pass_check "Codex runtime accepted execution selector $execution_selector"
+        info_check "record the effective model only from Codex runtime output; otherwise record it as unobservable"
+    else
+        fail_check \
+            "Codex runtime accepted execution selector $execution_selector" \
+            "Keep the requested model separate from any permitted fallback, preserve this runtime output as capability evidence, and requalify after the Codex client or model access changes."
+    fi
+}
+
 ssh_host="${SSH_TARGET#git@}"
 repo_authority="${REPO_URL#git@}"
 repo_host="${repo_authority%%:*}"
@@ -110,6 +144,10 @@ else
     fail_check \
         "playbook repository is reachable with git ls-remote" \
         "Confirm GitHub SSH access and repository permission, then rerun git ls-remote $REPO_URL HEAD."
+fi
+
+if [ -n "${CODEX_PREFLIGHT_REQUESTED_MODEL:-}" ]; then
+    qualify_requested_model "$CODEX_PREFLIGHT_REQUESTED_MODEL"
 fi
 
 printf 'PASS Codex local automation preflight complete\n'
