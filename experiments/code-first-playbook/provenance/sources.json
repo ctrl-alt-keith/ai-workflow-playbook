@@ -1,7 +1,7 @@
 {
   "complete_execution_contract": false,
-  "operational_owner": "existing_playbook_prose",
-  "status": "frozen_fixture_not_freshness",
+  "operational_owner": "existing_playbook_prose_except_recovery_body",
+  "status": "frozen_external_bindings_and_canonical_recovery_body",
   "units": [
     {
       "blocks": [
@@ -648,6 +648,7 @@
         }
       ],
       "heading": "## Triggers",
+      "outside_recovery_sha256": "ba29b1a7627849c9e3ccf01b0f4e5feb1367e70dc8faed6ee056042a6c45aed6",
       "path": "docs/source-first-retrieval.md",
       "predecessor_section_sha256": "d23154881ca4e9da490b6868baf3127965547dc384c7e34d9df752375f765718",
       "revision": "da7a7dcb056239ac4193d1d44500c606488621f2",
@@ -879,6 +880,7 @@
         }
       ],
       "heading": "## Verification Gate",
+      "outside_recovery_sha256": "ba29b1a7627849c9e3ccf01b0f4e5feb1367e70dc8faed6ee056042a6c45aed6",
       "path": "docs/source-first-retrieval.md",
       "predecessor_section_sha256": "9c7ccc062aa19127db2c29660386fa6f5b26115494bf10c13d9451b163325928",
       "revision": "da7a7dcb056239ac4193d1d44500c606488621f2",
@@ -886,191 +888,15 @@
       "unit": "pb.claim-verification"
     },
     {
-      "blocks": [
-        {
-          "clause": null,
-          "disposition": "supporting",
-          "external_source": null,
-          "index": 1,
-          "lines": [
-            341,
-            341
-          ],
-          "predecessor_normalized_sha256": "1237cb3128050707a499c1e2850a080b6e767487e1247b945f6749273983a29e",
-          "sha256": "f79ce0ec1bcb212d4ad3163809c2ed34dcdf44cf60ba26da6cd02a54b20f556b",
-          "text": "## Recovery\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 2,
-          "lines": [
-            343,
-            344
-          ],
-          "predecessor_normalized_sha256": "20e9c5d05fdf7af11c82d5c86443514a8c54237d8ce5a4da2ce588b1dad5fe30",
-          "sha256": "436a6022ba6b2327373dda89fe4fd35174fc74d6baddca4a9eb63d0f2d11b87e",
-          "text": "Recovery is required when source-first ordering has already been missed. This\nincludes:\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 3,
-          "lines": [
-            346,
-            347
-          ],
-          "predecessor_normalized_sha256": "81cf2fd8d0275328193276237f73350b6207a518d24d4430a6ab144a9ec20558",
-          "sha256": "b9124bb4579929f7eb27e1e49fdd5dcb4a4a21da0c34671e6e9b6ade65003452",
-          "text": "- the assistant answered before opening the referenced PR, issue, repository,\n  branch, commit, path, or provider source\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 4,
-          "lines": [
-            348,
-            348
-          ],
-          "predecessor_normalized_sha256": "437bbcb0be7c065d471280058be3ea5e8b4ea9917c5517b3e32f99be9e3a97b0",
-          "sha256": "e7d74e9805c95dd05b014549f780ae3752ed5a9951e5ddda0ba0792d43505fae",
-          "text": "- conversational continuity outran verification\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 5,
-          "lines": [
-            349,
-            349
-          ],
-          "predecessor_normalized_sha256": "d859e344426fd907ec5431a14d8681c8053a8865e218f70da41966a77135e5b1",
-          "sha256": "65a8cb5badeadcde40c66d41134cd502126785a38c115d9cb2eb6b3a4808bf25",
-          "text": "- inferred state was used before retrieval\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 6,
-          "lines": [
-            350,
-            350
-          ],
-          "predecessor_normalized_sha256": "faf8df4647e0c07a0c9f697cc744928d0167fd62e75850ea86a93cbb8612d665",
-          "sha256": "2012601f9d8debec97948ca36701b618ad86ecbec25bcecf116d4bd11c82272a",
-          "text": "- a human explicitly calls out missing source inspection\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 7,
-          "lines": [
-            351,
-            351
-          ],
-          "predecessor_normalized_sha256": "a9f2986b4678400a65914ad8e3a644f6a8c2873e2969bd4c0b5de7de847cd294",
-          "sha256": "9ff5c17bfb808a1b7d8b90b11b6760d95edc853e487237a8fa52ca2996a1cea5",
-          "text": "- conversational context conflicts with authoritative state\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 8,
-          "lines": [
-            353,
-            354
-          ],
-          "predecessor_normalized_sha256": "87cb2089e8712aa4e986b8c6ba07765586be2f658ed5e14d0886dee2e6c4f035",
-          "sha256": "86efbf5079394143790fe41d1dfa67f997fb89336969c2295695669894ea81e8",
-          "text": "When retrieval remains available, recovery restores verified state before\nconversational repair:\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 9,
-          "lines": [
-            356,
-            356
-          ],
-          "predecessor_normalized_sha256": "5c6b9048ac196f4e8942c47f3a18d29643e880d77f342e85cb9ab53405245fab",
-          "sha256": "14390a17a59f1cb8dd7714c65e246cfdd0d83fe3c63750d1df80635e0fc99d8c",
-          "text": "1. Halt continuity reasoning.\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 10,
-          "lines": [
-            357,
-            357
-          ],
-          "predecessor_normalized_sha256": "6c959759ec203c4ebd57a7dd6106edaf1f8d14076f4e1ec283899f0f4e98d1ca",
-          "sha256": "9a9ec83e19c1239fbd648af73dde0d0bca65661fa1cfce899e07b8e28afb1531",
-          "text": "2. Identify every unresolved mandatory trigger.\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 11,
-          "lines": [
-            358,
-            358
-          ],
-          "predecessor_normalized_sha256": "863e8e9471fc8b2dea8217ed9d2c1c78b40dc371be0a007ceeb93831ea9d300f",
-          "sha256": "e2a6733e3e2cdeeb43e96fec848995ea553d3f779c847dda3ce0b558e0ee7b86",
-          "text": "3. Retrieve the authoritative source state for those triggers.\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 12,
-          "lines": [
-            359,
-            359
-          ],
-          "predecessor_normalized_sha256": "a00ad72bd6ea9f3786dc922adcdc3051d6e9818d78c45af9a4bf6681acb18e30",
-          "sha256": "d6f754ead1021d2bcbcbed8343580e64c403196eed02ebb47f52f646ca084254",
-          "text": "4. Discard, correct, or mark unverified any assumptions made before retrieval.\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 13,
-          "lines": [
-            360,
-            360
-          ],
-          "predecessor_normalized_sha256": "01eaf0342c475f66557c39262f5daeeb9baa199af1ae07c14a6e4cb53eeda761",
-          "sha256": "c93db2a2292b58dd8771fdcf9806ec08e4973cb81ea574bcc5516d74622cd403",
-          "text": "5. Resume from the restored verified state and stated unknowns.\n"
-        },
-        {
-          "clause": "action.retrieval-recovery/does",
-          "disposition": "mapped",
-          "external_source": null,
-          "index": 14,
-          "lines": [
-            362,
-            365
-          ],
-          "predecessor_normalized_sha256": "7418d8a517cb01625767a4029cc438bab7bc71e18f5cbaca3a9f293147c7b632",
-          "sha256": "c1eefe25eddeeb3daa819f4fdb7b5a8b28d417cbee4cff82bd28f27684f29271",
-          "text": "Acknowledgment alone is not recovery. Explaining the violation is not\nremediation. Recovery must perform the missing retrieval or inspection when it\nis available, then explain only remaining blockers, uncertainty, or corrections\nthat still matter after inspection.\n"
-        }
-      ],
+      "blocks": [],
+      "canonical_body": {
+        "clause": "action.retrieval-recovery/does",
+        "reader": "docs/source-first-retrieval.md#recovery",
+        "rule": "pb.retrieval-recovery",
+        "source": "semantics/source-retrieval.yaml"
+      },
       "heading": "## Recovery",
+      "outside_recovery_sha256": "ba29b1a7627849c9e3ccf01b0f4e5feb1367e70dc8faed6ee056042a6c45aed6",
       "path": "docs/source-first-retrieval.md",
       "predecessor_section_sha256": "3a4a964657abf467584095aa3e6fe64bca2874355b5b14885bde4eec09c38da9",
       "revision": "da7a7dcb056239ac4193d1d44500c606488621f2",

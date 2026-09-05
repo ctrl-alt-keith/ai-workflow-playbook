@@ -1,0 +1,125 @@
+import copy
+import unittest
+from pathlib import Path
+
+from common import ROOT
+from compiler.model import Invalid
+from compiler.provenance import read_json
+import recovery as candidate
+import shutil
+import tempfile
+from compiler.diff import semantic_diff
+from compiler.provenance import binding
+from compiler.recovery_section import BEGIN, END, READER, SOURCE, surrounding, replace
+
+
+class RecoveryTests(unittest.TestCase):
+    def setUp(self):
+        (ROOT / '.build').mkdir(exist_ok=True)
+        self.records, self.locations = candidate.corpus()
+        self.contract = read_json(ROOT, 'recovery/contract.json')
+
+    def test_definition_edit_changes_document_and_shared_diff(self):
+        edited = copy.deepcopy(self.records)
+        edited[candidate.ACTION]['does'] += '\nA hypothetical new recovery obligation.\n'
+        before = candidate.render(self.records, self.contract)
+        after = candidate.render(edited, self.contract)
+        self.assertNotEqual(before, after)
+        self.assertIn(b'A hypothetical new recovery obligation.', after)
+        report = candidate.definition_probe(self.records, self.locations)
+        event, = report['shared_semantic_diff']['events']
+        self.assertEqual(event['category'], 'action_definition_changed')
+        self.assertIn(candidate.RULE, event['affected_rules'])
+        self.assertEqual(report['reader_effects'][0]['effect'], 'body_changed')
+
+    def test_unrendered_normative_changes_fail_closed(self):
+        changes = [
+            (candidate.RULE, 'overrides', ['hypothetical']),
+            (candidate.RULE, 'authority_ref', {}),
+            ('action.retrieval-recovery-failure', 'does', 'Continue without a source.'),
+            ('fact.source_available', 'resolution_class', 'observed_evidence'),
+            ('source.retrieval', 'path', 'another-owner.md'),
+        ]
+        for rid, field, value in changes:
+            with self.subTest(rid=rid, field=field):
+                edited = copy.deepcopy(self.records)
+                edited[rid][field] = value
+                with self.assertRaises((Invalid, TypeError, KeyError)):
+                    candidate.render(edited, self.contract)
+
+    def local_repo(self, destination):
+        root = Path(destination) / 'experiments/code-first-playbook'
+        root.mkdir(parents=True)
+        for name in ('semantics', 'compiler', 'provenance', 'recovery'):
+            shutil.copytree(ROOT / name, root / name, ignore=shutil.ignore_patterns('__pycache__'))
+        for name in ('recovery.py', 'requirements.txt'):
+            shutil.copyfile(ROOT / name, root / name)
+        reader = root.parents[1] / READER
+        reader.parent.mkdir()
+        shutil.copyfile(ROOT.parents[1] / READER, reader)
+        return root, reader
+
+    def test_hand_edit_detection_is_read_only_and_explicit_generation_repairs(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / '.build') as directory:
+            root, reader = self.local_repo(directory)
+            original = reader.read_bytes()
+            edited = original.replace(b'Halt continuity reasoning.', b'Skip retrieval.')
+            reader.write_bytes(edited)
+            with self.assertRaisesRegex(Invalid, 'stale_or_hand_edited:.*semantic.*source-retrieval.yaml'):
+                candidate.check(root)
+            self.assertEqual(reader.read_bytes(), edited)
+            candidate.write(root)
+            self.assertEqual(reader.read_bytes(), original)
+            self.assertEqual(candidate.check(root)['status'], 'byte_identical')
+            (root / candidate.PROVENANCE).write_bytes(b'{}\n')
+            with self.assertRaisesRegex(Invalid, 'stale_or_hand_edited:.*provenance'):
+                candidate.check(root)
+
+    def test_semantic_edit_requires_no_old_prose_parity_and_preserves_surroundings(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / '.build') as directory:
+            root, reader = self.local_repo(directory)
+            original = reader.read_bytes()
+            source = root / SOURCE
+            source.write_text(source.read_text().replace('Halt continuity reasoning.',
+                              'Halt continuity reasoning and record the correction location.'))
+            changed, locations = candidate.corpus(root)
+            self.assertEqual(binding(root, read_json(root, 'provenance/sources.json'), changed)['status'], 'bound')
+            event, = semantic_diff(self.records, changed, self.locations, locations)['events']
+            self.assertIn(READER + '#recovery', event['affected_outputs'])
+            with self.assertRaisesRegex(Invalid, 'stale_or_hand_edited'):
+                candidate.check(root)
+            candidate.write(root)
+            self.assertIn(b'record the correction location.', reader.read_bytes())
+            self.assertEqual(surrounding(original), surrounding(reader.read_bytes()))
+            first = reader.read_bytes(), (root / candidate.PROVENANCE).read_bytes()
+            candidate.write(root)
+            self.assertEqual(first, (reader.read_bytes(), (root / candidate.PROVENANCE).read_bytes()))
+            self.assertEqual(candidate.check(root)['status'], 'byte_identical')
+
+    def test_document_boundaries_cannot_expand_generation(self):
+        raw = (ROOT.parents[1] / READER).read_bytes()
+        generated = candidate.render(self.records, self.contract)
+        for edited in (raw.replace(BEGIN, b''), raw.replace(END, b''),
+                       raw + BEGIN, raw + b'\n## Recovery\n\nDuplicate.\n'):
+            with self.subTest(edited=edited[-60:]):
+                with self.assertRaises(Invalid):
+                    replace(edited, generated)
+        changed = copy.deepcopy(self.records)
+        changed[candidate.ACTION]['does'] += '\n## New owned section\n'
+        with self.assertRaisesRegex(Invalid, 'section boundary'):
+            candidate.render(changed, self.contract)
+
+    def test_incoming_edge_remains_visible_in_shared_review_outside_focused_guard(self):
+        changed = copy.deepcopy(self.records)
+        changed['pb.mode-persistence']['references'].append(candidate.RULE)
+        self.assertEqual(candidate.envelope(changed), candidate.envelope(self.records))
+        event, = semantic_diff(self.records, changed)['events']
+        self.assertEqual(event['id'], 'pb.mode-persistence')
+        self.assertIn(candidate.RULE, event['new']['references'])
+        self.assertEqual(event['impact'], 'unresolved_semantic_impact')
+
+    def test_section_spacing_preserves_list_boundaries_and_all_tokens(self):
+        section = candidate.section(self.records)
+        self.assertEqual(section.split(), self.records[candidate.ACTION]['does'].split())
+        self.assertIn('includes:\n\n- ', section)
+        self.assertIn('repair:\n\n1. ', section)

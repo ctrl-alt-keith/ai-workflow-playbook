@@ -78,6 +78,16 @@ class Rendering(unittest.TestCase):
                 path=root/unit['path'];path.parent.mkdir(parents=True,exist_ok=True)
                 path.write_bytes((ROOT.parents[1]/unit['path']).read_bytes())
             self.assertEqual(binding(ROOT,manifest,self.r,root)['status'],'bound')
+            reader=root/'docs/source-first-retrieval.md'; original=reader.read_bytes()
+            reader.write_bytes(original.replace(b'Halt continuity reasoning.', b'Hypothetical body edit.'))
+            # Recovery's separate generated-output check owns this failure;
+            # external source freshness must no longer impose old body parity.
+            self.assertEqual(binding(ROOT,manifest,self.r,root)['status'],'bound')
+            reader.write_bytes(original.replace(b'## Failure Modes', b'## Changed Failure Modes'))
+            changes=binding(ROOT,manifest,self.r,root)['changes']
+            self.assertTrue(changes)
+            self.assertTrue(all(c['code']=='surrounding_source_drift' for c in changes))
+            reader.write_bytes(original)
             p=root/'docs/start-here.md';raw=p.read_bytes()
             for changed in (raw+b'\nNew unprojected block.\n',raw.replace(b'Purpose',b'Changed purpose'),raw[:-20]):
                 p.write_bytes(changed)

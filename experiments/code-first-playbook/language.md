@@ -109,8 +109,12 @@ tracked output. Semantic/context/compiler/renderer/profile/raw-input identities
 remain distinct; the output manifest does not recursively hash itself.
 
 Frozen block accounting and current source binding are separate. Ordinary
-checks use attributed frozen blocks; source-check compares entire current prose
-files. Drift blocks current pilot fidelity claims. Hypothetical evaluation
+checks use attributed frozen blocks except for the separately owned
+[Recovery body](recovery/README.md). Recovery binds directly to its semantic
+action; its old prose parity blocks are retired. Source-check compares current
+prose files, excluding only Recovery's generated body in the shared retrieval
+document; the Recovery check separately verifies that exact generated surface.
+Drift blocks current pilot fidelity claims. Hypothetical evaluation
 bundles are explicitly labeled as divergent and never claim baseline parity.
 
 ## Review and limitations

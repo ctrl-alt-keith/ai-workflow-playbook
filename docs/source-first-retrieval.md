@@ -340,6 +340,9 @@ requirements, or governance process.
 
 ## Recovery
 
+<!-- generated: pb.retrieval-recovery -->
+> Generated section. Edit the [semantic source](../experiments/code-first-playbook/semantics/source-retrieval.yaml) (`action.retrieval-recovery/does`).
+
 Recovery is required when source-first ordering has already been missed. This
 includes:
 
@@ -363,6 +366,8 @@ Acknowledgment alone is not recovery. Explaining the violation is not
 remediation. Recovery must perform the missing retrieval or inspection when it
 is available, then explain only remaining blockers, uncertainty, or corrections
 that still matter after inspection.
+
+<!-- /generated: pb.retrieval-recovery -->
 
 ## Failure Modes
 

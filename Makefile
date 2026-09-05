@@ -67,16 +67,20 @@ code-first-diff: code-first-tools ## Exercise the two bounded semantic edit roun
 code-first-rehearse: code-first-tools ## Report simulation-only authority-transition rehearsal.
 	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py rehearse
 
-.PHONY: code-first-recovery-check code-first-recovery-render code-first-recovery-source-check code-first-recovery-diff
+RECOVERY_BASE ?= origin/main
+.PHONY: code-first-recovery-rehearse code-first-recovery-check code-first-recovery-render code-first-recovery-source-check code-first-recovery-diff
 
-code-first-recovery-check: code-first-tools ## Check the one-section CAK-235 replacement candidate.
-	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery_candidate.py check
+code-first-recovery-check: code-first-tools ## Check generated Recovery prose and its exact provenance.
+	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery.py check
 
-code-first-recovery-render: code-first-tools ## Regenerate the committed Recovery replacement candidate.
-	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery_candidate.py render
+code-first-recovery-render: code-first-tools ## Explicitly regenerate only the owned Recovery section.
+	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery.py render
 
-code-first-recovery-source-check: code-first-tools ## Check current source bindings and exact Recovery section parity.
-	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery_candidate.py source-check
+code-first-recovery-source-check: code-first-tools ## Check surrounding prose bindings and generated Recovery identity.
+	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery.py source-check
 
 code-first-recovery-diff: code-first-tools ## Demonstrate a Recovery definition change in the shared semantic diff.
-	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery_candidate.py diff
+	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery.py diff
+
+code-first-recovery-rehearse: code-first-tools ## Rehearse the exact committed Recovery cutover and reverse patch.
+	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/recovery_transition.py --base-ref $(RECOVERY_BASE) --head-ref HEAD

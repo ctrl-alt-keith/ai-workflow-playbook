@@ -16,5 +16,10 @@
     "source.start": "bcd6c463e2a932d1cc87bc22fb753cbf417ea68e4db8a17f20f17490980adc07",
     "term.operation": "f58e15d6e02f20203faec836b8d6bdb95cac06c5b02e024ed31e6afdce154516"
   },
-  "section": "docs/source-first-retrieval.md#recovery"
+  "ownership": {
+    "clause": "action.retrieval-recovery/does",
+    "reader": "docs/source-first-retrieval.md#recovery",
+    "rule": "pb.retrieval-recovery",
+    "source": "semantics/source-retrieval.yaml"
+  }
 }

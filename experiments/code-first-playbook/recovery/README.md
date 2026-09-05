@@ -1,197 +1,180 @@
-# CAK-235: one generated Recovery section
+# Recovery: one semantic-authored section
 
-Decision surface: [read the replacement candidate](generated/recovery.md).
-It is a candidate for **only** [Source-First Retrieval: Recovery](../../../docs/source-first-retrieval.md#recovery),
-not the whole document or an executor contract. Existing prose remains
-operationally canonical. This PR requests review of the candidate; adoption
-requires the separate human transition below.
+Readers open [Source-First Retrieval: Recovery](../../../docs/source-first-retrieval.md#recovery).
+Authors edit `action.retrieval-recovery/does` in
+[the semantic source](../semantics/source-retrieval.yaml), owned by
+`pb.retrieval-recovery`. Only this body is generated; its heading, stable
+`#recovery` target and surrounding document retain their normal placement.
 
-## Target and authority
+## Ownership and implementation boundary
 
-The target was selected before implementation in CAK-235 comment
-`89895ec3-ade7-41bd-bc63-ae8fca6a719d`, against main
-`24453559a381301e9c222d1fd2303e4582f45b23` (merged PR #406).
-Recovery already has an exact action definition in the six-unit CAK-233 corpus
-and a unit-level rollback rehearsal. Its trigger list, five-step procedure and
-uncertainty obligations need no new language. The startup floor reaches many
-conditional owners; replacing the whole retrieval document would need broader
-modeling. A clearly owned section is the smallest credible replacement scope.
+[PR #407](https://github.com/ctrl-alt-keith/ai-workflow-playbook/pull/407)
+proved the replacement candidate, integrated at
+`4219234c924d5bc519303a259e7017d9dbedc7db`. The human then explicitly authorized
+this bounded implementation and a new PR under CAK-235. The implementation
+changes the canonical section owner, so it is a **material doctrine transition:
+cross-boundary contract**. The exact implementation head is the later review
+and promotion surface. Implementation is authorized; independent-review launch,
+doctrine promotion and merge remain pending separate human authorization.
+The predecessor's [review disposition](review-disposition.md) concerns its
+shadow candidate only and does not qualify this transition.
 
-The current human CAK-235 implementation request authorizes this one-view
-successor and supersedes the predecessor's three-view-only restriction for
-this task. It does not renew the predecessor's other work or adopt generated
-doctrine. No AGENTS edit is included. The CAK-233 outputs remain unchanged
-historical pilot evidence; their three audiences are not this MVP's interface.
+The [repo-local carve-out](../../../AGENTS.md#recovery-generated-section-ownership)
+separates permanent Recovery ownership from the still-experimental CAK-233
+infrastructure and its unchanged expiry. The shared semantic modules and
+compiler stay in their existing location to avoid a duplicate compiler or a
+broader infrastructure extraction. No other section or persona output is
+adopted. Pilot removal must preserve these operational dependencies or undergo
+a separately authorized reverse transition.
 
-## One source and one reader view
+The source identifier `source.retrieval` continues to identify the surrounding
+Source-First Retrieval owner. The precise author/reader direction is declared
+in [contract.json](contract.json), validated by
+[the section boundary](../compiler/recovery_section.py), and recorded in the
+[source bindings](../provenance/sources.json). The body has one authoring source;
+these mappings contain identities and hashes, not another normative body.
 
-Edit `action.retrieval-recovery/does` in
-[`semantics/source-retrieval.yaml`](../semantics/source-retrieval.yaml).
-That definition is the sole authored body input for this candidate. The existing
-module imports the shared startup vocabulary; there is one logical semantic
-corpus, not a second independently maintained prose template.
+## Generation and authoring
 
-The existing restricted parser, model validator, source bindings, definition
-diff and rehearsal remain in use. The focused
-[`recovery_candidate.py`](../recovery_candidate.py) emits the action body and
-normalizes only list spacing. It does not consult live prose to generate the
-body, interpret facts, select an audience, or use an LLM. The heading and
-generated/source marker are presentation. Exact input hashes and the original
-section binding live in [provenance.json](generated/provenance.json).
-
-Counts: **one section, one existing action body, one owning rule, zero new
-records, zero semantic-language extensions**. The shared corpus still contains
-67 records and six rules. Fifteen existing records are guarded for this
-section, including an external claim-verification rule boundary.
-
-This is deliberately a projection of a normative prose-valued action, not a
-claim that every sentence is a mechanically executable predicate. It proves
-one-source publication for this section; it does not prove automatic semantic
-equivalence or a generalized documentation platform.
-
-## Envelope and failure boundaries
-
-The section retains its existing surrounding owners. Source selection,
-permitted transport, verification gates, precedence, live action authority,
-and judgment sufficiency stay with Source-First Retrieval, Start Here,
-Repo Readiness and the relevant executor adapter. The body preserves unknowns
-and requires retrieval before correction/resumption. A section link does not
-promise that those external rules have been read or applied.
-
-[`contract.json`](contract.json) guards the existing rule and its referenced
-definitions, excluding only the emitted action body. Unknown facts are never
-resolved or used to prune this documentation. Changes to the rule's unrendered
-fields and its referenced failure, authority, lifetime, precedence, context or
-vocabulary definitions reject regeneration until the section mapping is
-explicitly reviewed. New incoming edges from unguarded rules are outside this
-guard; the shared semantic diff and corpus review remain necessary for them. The external
-claim-verification rule is guarded at its boundary; its entire dependency
-graph is not claimed as part of this section.
-
-The guard is a reviewed compatibility lock, not another semantic source or
-proof of completeness. It stores hashes, no substitute normative prose. Do not
-refresh it automatically to make a check pass. Use the existing semantic diff
-and inspect the affected owners first. A changed scope or meaning needs the
-applicable review; a hash cannot supply that judgment.
-
-## Authoring and checks
-
-From the repository worktree:
+From the owning worktree:
 
 ```sh
 make code-first-setup
 make code-first-recovery-render
 make check
 make code-first-recovery-source-check
-make code-first-recovery-diff
-make code-first-rehearse
 ```
 
-`make check` includes focused tests, the predecessor's committed-output check,
-this candidate's exact two-file output check, Markdown lint and repository
-tests. Checks detect missing, extra, stale and hand-edited candidate files;
-they never repair the candidate. Explicit render updates only the two
-committed candidate outputs. The source check additionally verifies all six
-current prose bindings and exact Recovery body parity after list spacing.
-Source freshness remains a separate readiness check, not a new gate on
-unrelated prose maintenance.
+The fixed [renderer](../recovery.py) uses the existing restricted parser and
+validator. It emits the action body with only list-spacing normalization.
+There is no LLM, new semantic-language construct, audience selector or
+compiler-field appendix. One concise source link and two invisible boundary
+comments distinguish generated content. The rest of the Markdown file is
+preserved byte-for-byte during explicit generation.
 
-`code-first-recovery-diff` is an explicitly hypothetical definition edit. It
-exercises the existing semantic diff and adds this candidate's affected path
-without relabeling the shared diff. The unchanged owning rule is reported as
-affected even though the edit is in the action definition. For an actual
-old/new semantic bundle comparison, use the existing `pilot.py diff`
-interface described in [language.md](../language.md); retain its unresolved
-semantic-impact classification and inspect the generated Markdown diff too.
+`make check` checks the actual reader section and
+[engineering provenance](generated/provenance.json) against freshly computed
+bytes. A direct prose edit fails with `stale_or_hand_edited` and the semantic
+source and generation command. Validation does not repair or silently overwrite
+that edit. Missing or duplicate section boundaries also fail. Explicit rendering
+updates only the marked body and provenance; damaged boundaries must first be
+restored. A second shadow Recovery reader is no longer generated or admitted.
 
-During shadow operation, changing policy requires changing its current prose
-owner and reviewing refreshed source bindings as well. That dual maintenance
-is a temporary cost of evidence collection, not the intended adopted workflow.
-Generation itself does not pull prose into the semantic source or accept drift.
+The provenance records declared semantic/compiler/contract input hashes and the
+generated section's byte identity. It deliberately excludes the hand-maintained
+document shell from the generated-output identity. Git and the delivery PR bind
+the exact implementation; successful generation grants no authority.
 
-## Evaluation and prose friction
+Recovery's old mapped prose blocks have been removed from active binding
+accounting. Its original prose revision/hash remain historical provenance only.
+For all units sharing Source-First Retrieval, current binding checks hash the
+surrounding document with only the Recovery body excluded. Other source files
+retain their whole-file checks. Recovery itself must match its semantic source,
+so an author never refreshes historical prose parity to change this body.
 
-The generated body is byte-identical to the 144-word original section after
-removing the pilot's extra blank lines between list items. The visible heading
-and marker add a small amount of navigation/status text. There is no appendix,
-fact table, compiler field dump or persona selector. Reader procedure and order
-are unchanged. Controller disposition: **reading cost acceptable for a section
-candidate**, pending independent review and human judgment.
+The existing persona checks still require their exact input-commit binding and
+explicit preview refresh when shared inputs change. Those previews are evidence
+only, not extra Recovery owners. This retained pilot maintenance is a known cost;
+its removal or redesign is outside this transition.
 
-| Dimension | Observed evidence and limit |
+## Semantic changes and surrounding owners
+
+The 15-record compatibility guard covers `pb.retrieval-recovery` and its outgoing
+referenced envelope, excluding only the rendered `action.retrieval-recovery/does`
+field. Another rule is guarded at its boundary but its complete execution graph
+is not traversed. Unknown judgments are not resolved or used to prune the body.
+Unrendered authority, failure, lifetime, precedence, vocabulary and mapping
+changes reject generation until their effect is explicitly reviewed. Do not
+refresh the guard automatically to silence a failure.
+
+Source selection, permitted transport, verification, precedence, live action
+authority and judgment sufficiency remain owned by Source-First Retrieval,
+Start Here, Repo Readiness and the executor adapters. This section is not a
+complete executor contract.
+
+New incoming references or changes elsewhere in the corpus are outside the
+focused guard. Review the shared semantic diff of the complete old/new corpus,
+as well as the generated prose diff; incoming semantics can matter even when
+Recovery's rendered bytes do not change. The shared diff preserves changed
+records, reference sites, affected rules and unresolved semantic impact. It
+also names `docs/source-first-retrieval.md#recovery` for affected Recovery rules.
+No claim of incoming-edge completeness is made by the focused guard.
+
+`make code-first-recovery-diff` demonstrates a hypothetical meaningful action
+edit through that shared diff. It changes no source. Actual bundle comparisons
+use `pilot.py diff --old-bundle ... --bundle ...`, as documented in
+[language.md](../language.md#f2-diff). Tests also edit the real semantic file in an
+isolated fixture, regenerate the reader and show that no old prose parity is
+needed. Review both semantic and reader changes before accepting new meaning.
+
+## Exact cutover and rollback
+
+At a clean committed implementation head, with the current pre-transition main:
+
+```sh
+make code-first-recovery-rehearse RECOVERY_BASE=origin/main
+```
+
+[The rehearsal](../recovery_transition.py) resolves exact base/head identities,
+checks the current generated section, proves the action and 144-word meaning
+are unchanged, checks surrounding bytes and the old/new ownership bindings,
+and verifies that the old shadow reader is absent. It applies the exact binary
+Git diff to an isolated repository-owned index initialized from the base. Its
+resulting tree must equal the implementation tree. Applying that same diff in
+reverse must restore the entire base tree exactly, including prose ownership,
+source bindings, AGENTS, compiler, previews and Make targets. This exercises the
+actual transition patch, not the predecessor's mock authority ledger. It changes
+no live checkout, branch, provider or human authority.
+
+To reverse this exact candidate under later explicit human authority, start a
+dedicated rollback branch/worktree at the reviewed head and apply its exact
+base-to-head patch with `git apply --reverse --index`, then validate and deliver
+that atomic reversal as a PR. After a squash merge, the equivalent operation is
+`git revert <verified-integrated-transition-commit>`. The delivery evidence binds
+the precise pre-merge range; the eventual merge workflow must retrieve the
+integrated commit rather than assuming it equals this head.
+
+That reverse restores one hand-maintained prose owner and returns the semantic
+body to shadow evidence, not dual authority. The historical body is eligible
+only because this transition proves it preserves the same meaning. Later body
+or overlapping contract changes invalidate this exact rollback qualification;
+review the full then-current body and ownership, refresh the reverse rehearsal
+and obtain the applicable human decision. Do not use an old generated copy to
+restore old policy silently. Compiler-only or semantic-content rollback retains
+semantic ownership and must still regenerate and validate its current reader.
+
+## Reading cost and representational friction
+
+The normative body remains the same **144 words**, in the same sequence, at the
+same reader location. No appendix or extra navigation hop is required. The source
+marker adds a small maintainer cue. Reading cost is unchanged apart from that cue;
+no comprehension-time, authoring-effort or maintenance improvement is claimed.
+
+| Observed edge | Handling and limit |
 | --- | --- |
-| Semantic preservation | Exact section parity; external envelope unchanged and guarded. This does not prove the whole unit is self-contained. |
-| Normal reading | Same 144-word body, same sequence; one marker. No claim of faster comprehension. |
-| Authoring effort | Existing YAML block remains readable but requires regeneration; shadow parity and envelope review add work. No measured improvement. |
-| Reviewer effort | Body and diff are small; reviewer must also inspect the explicit envelope boundary and compiler. No paired timing study. |
-| Diff clarity | Definition edits are first-class events with affected-rule fan-out; prose diff remains directly inspectable. |
-| Regeneration | Fixed output set and exact byte comparison; freshness check is separate. |
-| Normal-file credibility | Credible as the normal Recovery section after an approved ownership/path transition; not ready for silent substitution today. |
+| Normative rationale, examples and unknowns | Existing action body already represents them; preserved verbatim after list spacing. |
+| Reader navigation | Inline generation preserves the stable heading and surrounding reading flow. |
+| Source link and provenance | One relative editor link; detailed hashes stay on engineering surfaces. |
+| Mixed document ownership | Exact section boundary; generation preserves all surrounding bytes. |
+| Historical parity | Retired for Recovery; external-owner freshness remains separately checked. |
+| Unrendered normative envelope | Existing compatibility guard blocks drift; incoming changes still need corpus review. |
+| Shared pilot dependencies | Retained in place with a narrow permanent permission; old preview rebinding still costs work. |
+| Language pressure | No new construct required by this transition. New top-level headings or marker injection are rejected as outside the section contract. |
 
-| Prose edge | Concrete handling | Disposition |
-| --- | --- | --- |
-| URLs and external references | Recovery has no inline URLs. Marker links use paths correct for this candidate location. | Represented cleanly; moving output requires link review. |
-| Rationale/background | The closing paragraph distinguishes acknowledgment from actual recovery. It remains normative action text. | Represented cleanly; not mislabeled as removable context. |
-| Examples | The five triggering situations remain in the body in their original order. | Represented cleanly. |
-| Troubleshooting | Failure when no permitted route remains belongs to surrounding retrieval/adapter owners. | Kept external with guarded definitions; no second troubleshooting schema. |
-| Caveats/unknown state | Unverified assumptions and stated unknowns stay in the five-step procedure. | Represented cleanly. |
-| Historical context | Predecessor and trial history live in this evaluation, not in the reader file. | Bounded contextual prose. |
-| Navigation/onboarding | Candidate marker links to existing prose and the one edit source. | Bounded contextual prose. |
-| Related reading | Surrounding owners remain linked from the source document and this contract. | Bounded contextual prose; no generated reading catalog. |
-| Provider-specific notes | Raw API/connector recovery remains an external adapter boundary. | Deferred from the section; guarded, not deleted. |
-| Representational pressure | Publishing one existing action body is sufficient. Envelope changes cannot be silently projected. | No concrete need for a new semantic construct. |
+## Next governed review
 
-## Reversible transition plan
+No independent review is launched by this implementation run. The next human
+decision is whether to authorize a bounded governed review of the exact PR head.
+Recommended scope: changed ownership/reader/Make surfaces; this renderer,
+section boundary and rehearsal; the shared parser/model/validator, provenance
+and diff; the two semantic modules and source bindings; focused tests; current
+surrounding owners; and required reviewer startup/authority guidance. Use
+supplemental sources only for a concrete recorded gap.
 
-This PR does not perform these steps. The next human decision is whether this
-exact reviewed section candidate merits a separately scoped authority-transition
-PR. Merging this experiment alone would not change ownership.
-
-1. Select the exact semantic/body identities and the normative scope: only
-   Recovery, with its surrounding owners still explicit. Resolve any review
-   findings and refresh mutable source bindings.
-2. Authorize a bounded repo-local exception for the operational compiler and
-   normal generated destination; the old pilot exception does not authorize
-   live consumption or an indefinite runtime.
-3. In one reviewed transition, make the semantic action the owner of this
-   section, generate the normal reader file, replace the hand-maintained
-   section with a link preserving `#recovery`, and update the section-specific
-   source binding/ownership references and compatibility guard. Retire the
-   experimental parity dependency on that hand-maintained section; retain
-   checks for unchanged external owners. No dual active owner is permitted.
-4. Review the generated marker, relative links, provenance, stale checks and
-   actual routing diff at the exact transition head. Require a candidate-body
-   forward/reverse rehearsal against that final routing and authority mapping.
-   The existing nine-step CAK-233 rehearsal remains unit-level, simulation-only
-   evidence; it does not qualify an unimplemented production cutover.
-5. A compatible compiler rollback changes only compiler bytes. A content
-   rollback changes the semantic source under the then-current authority and
-   regenerates output; neither silently promotes a derivative.
-6. To return to prose, independently review the full current section body and
-   exact human decision, change routing atomically, and retire/tombstone the
-   semantic section owner. A stale generated body is ineligible. Restoring old
-   policy must be explicitly reviewed as an old-policy restoration.
-7. For removal of this unadopted candidate, preserve issue evidence, then remove
-   `recovery/`, `recovery_candidate.py`, its focused test and four Make targets,
-   and remove only `code-first-recovery-check` from `check` dependencies. Run
-   `make check`. The prior pilot, source prose and other targets remain intact.
-
-## Bounded independent review
-
-One qualified Claude Fable/High review is planned against the exact candidate
-commit. Its source set is this candidate subtree/script/test and Makefile,
-the two semantic modules, `compiler/`, `pilot.py`, `language.md`, the frozen
-source bindings, the recovery rehearsal fixture, the canonical Recovery
-section with its relevant surrounding owners, and the required reviewer
-startup/authority guidance. Supplemental sources need a recorded concrete
-reason; no broad adjacent-document exploration or persona re-review.
-
-The reviewer must assess body fidelity, externally retained semantics, guard
-coverage, determinism, links, reading cost and reversible ownership, and report
-actual sources/capability gaps. A material architecture/safety defect stops
-the task. Bounded corrections preserve the original review where applicable;
-otherwise return incomplete/follow-up instead of an open-ended review loop.
-Review and validation provide evidence only; the human owns adoption and merge.
-
-The completed review and bounded clarification are recorded in
-[review-disposition.md](review-disposition.md).
+Review one-source ownership, exact reader fidelity, boundary protection,
+hand-edit behavior, unrendered and incoming semantics, pilot-expiry separation,
+and the precise reverse operation. Require actual source attribution, capability
+gaps, anchored findings and an explicit verdict. Preserve the complete review
+and disposition substantive findings under the current governed-review contract.
+Only after that boundary may the human promote and authorize merging the exact
+reviewed transition.
