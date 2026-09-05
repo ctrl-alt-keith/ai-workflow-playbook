@@ -33,9 +33,8 @@ AUTH_PREFLIGHT_RESPONSE = "CLAUDE_AUTH_OK"
 AUTH_PREFLIGHT_BENIGN_NOTICES = {
     "Client.listTools() called but server does not advertise tools capability - returning empty list",
 }
-GOVERNED_CONFIG_VERSION = 1
-MAX_GOVERNED_ATTEMPTS = 3
-TRANSIENT_OUTER_RETRY_ERRORS = {"overloaded", "server_error"}
+GOVERNED_CONFIG_VERSION = 2
+CLAUDE_MINIMUM_VERSION_FOR_RESTRICTED = (2, 1, 248)
 SAFE_EXECUTABLES = {"git", "shasum"}
 INSTALLATION_SCHEMA_VERSION = 3
 QUALIFICATION_SCHEMA_VERSION = 3
@@ -45,6 +44,7 @@ MODEL_FAMILY_ALIASES = {"fable", "opus", "sonnet", "haiku"}
 CURRENT_FABLE_IDENTITIES = {"fable", "claude-fable-5", "claude-fable-5-1"}
 EFFORT_LEVELS = {"low", "medium", "high", "xhigh", "max"}
 EFFORT_EVIDENCE_NAME = "effective-effort.json"
+HOOK_LIVENESS_EVIDENCE_NAME = "permission-hook-liveness.json"
 WORKTREE_ADMIN_PATHS = ("HEAD", "index", "logs/HEAD", "COMMIT_EDITMSG", "ORIG_HEAD")
 OAUTH_REAUTHENTICATION_DISPOSITION = (
     "REVIEWER INFRASTRUCTURE FAILURE — OPERATOR REAUTHENTICATION REQUIRED"
@@ -946,6 +946,15 @@ def version_of(executable: str, environment: dict[str, str], *, cwd: str) -> str
     if result.returncode != 0:
         return None
     return bounded_redacted((result.stdout or result.stderr).strip()) or None
+
+
+def parsed_claude_version(reported: object) -> tuple[int, int, int] | None:
+    if not isinstance(reported, str):
+        return None
+    match = re.match(r"^(\d+)\.(\d+)(?:\.(\d+))?(?:\s|$)", reported)
+    if match is None:
+        return None
+    return int(match.group(1)), int(match.group(2)), int(match.group(3) or 0)
 
 
 def emit_diagnostics(record: dict[str, Any], destination: Path | None) -> None:
@@ -2315,9 +2324,9 @@ class GovernedReviewConfig:
     evidence_directory: Path
     preflight_receipt: Path
     final_output: Path
-    attempt_artifacts: tuple[tuple[Path, Path], ...]
+    attempt_stream: Path
+    attempt_terminal_receipt: Path
     allowed_commands: tuple[tuple[str, ...], ...]
-    max_attempts: int
     observation_interval: float
     soft_liveness_threshold: float
     graceful_termination_seconds: float
@@ -2328,6 +2337,12 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
     body = json.loads(raw)
     if not isinstance(body, dict) or body.get("schema_version") != GOVERNED_CONFIG_VERSION:
         raise ValueError(f"review config must use schema_version {GOVERNED_CONFIG_VERSION}")
+    obsolete_attempt_fields = {"attempt_artifacts", "max_attempts"}.intersection(body)
+    if obsolete_attempt_fields:
+        raise ValueError(
+            "review config schema_version 2 uses one explicit provider attempt and rejects: "
+            + ", ".join(sorted(obsolete_attempt_fields))
+        )
     required_strings = (
         "review_id",
         "contract_id",
@@ -2386,26 +2401,18 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
         raise ValueError("every declared source root must be covered by a guarded no-delta root")
     if any(contained(evidence, root) or contained(root, evidence) for root in guard_roots):
         raise ValueError("evidence directory must be disjoint from every guarded source root")
-    max_attempts = body.get("max_attempts", MAX_GOVERNED_ATTEMPTS)
-    if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or not 1 <= max_attempts <= MAX_GOVERNED_ATTEMPTS:
-        raise ValueError(f"max_attempts must be between 1 and {MAX_GOVERNED_ATTEMPTS}")
-    attempt_artifacts: list[tuple[Path, Path]] = []
-    for item in body.get("attempt_artifacts", []):
-        if not isinstance(item, dict) or not isinstance(item.get("stream"), str) or not isinstance(
-            item.get("terminal_receipt"), str
-        ):
-            raise ValueError("each attempt_artifacts item requires stream and terminal_receipt paths")
-        paths: list[Path] = []
-        for value in (item["stream"], item["terminal_receipt"]):
-            parent = Path(value).parent.resolve(strict=True)
-            artifact = parent / Path(value).name
-            if not contained(artifact, evidence):
-                raise ValueError("every attempt artifact must be inside the declared evidence directory")
-            paths.append(artifact)
-        attempt_artifacts.append((paths[0], paths[1]))
-    if len(attempt_artifacts) != max_attempts:
-        raise ValueError("attempt_artifacts must provide one exact stream/receipt pair for each allowed attempt")
-    artifact_paths = [preflight_receipt, final_output, *(path for pair in attempt_artifacts for path in pair)]
+    attempt_paths: list[Path] = []
+    for key in ("attempt_stream", "attempt_terminal_receipt"):
+        value = body.get(key)
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"review config requires non-empty {key}")
+        parent = Path(value).parent.resolve(strict=True)
+        artifact = parent / Path(value).name
+        if not contained(artifact, evidence):
+            raise ValueError("every attempt artifact must be inside the declared evidence directory")
+        attempt_paths.append(artifact)
+    attempt_stream, attempt_terminal_receipt = attempt_paths
+    artifact_paths = [preflight_receipt, final_output, attempt_stream, attempt_terminal_receipt]
     if len(set(artifact_paths)) != len(artifact_paths):
         raise ValueError("governed artifact paths must be distinct")
     validated_commands = [validate_command(value) for value in body.get("allowed_commands", [])]
@@ -2437,18 +2444,39 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
         evidence_directory=evidence,
         preflight_receipt=preflight_receipt,
         final_output=final_output,
-        attempt_artifacts=tuple(attempt_artifacts),
+        attempt_stream=attempt_stream,
+        attempt_terminal_receipt=attempt_terminal_receipt,
         allowed_commands=commands,
-        max_attempts=max_attempts,
         observation_interval=observation,
         soft_liveness_threshold=soft,
         graceful_termination_seconds=grace,
     )
 
 
+def write_idempotent_hook_evidence(path: Path, encoded: bytes, label: str) -> None:
+    if path.exists() or path.is_symlink():
+        if path.is_symlink() or path.read_bytes() != encoded:
+            raise ValueError(f"{label} evidence changed within one attempt")
+        return
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    temporary_created = False
+    try:
+        exclusive_write(temporary, encoded)
+        temporary_created = True
+        try:
+            os.link(temporary, path, follow_symlinks=False)
+        except FileExistsError:
+            if path.is_symlink() or path.read_bytes() != encoded:
+                raise ValueError(f"{label} evidence changed within one attempt")
+    finally:
+        if temporary_created and temporary.exists() and not temporary.is_symlink():
+            temporary.unlink()
+
+
 def permission_hook(
     config_path: Path,
     expected_digest: str | None,
+    liveness_evidence_path: Path | None,
     expected_effort: str | None,
     effort_evidence_path: Path | None,
 ) -> int:
@@ -2465,11 +2493,33 @@ def permission_hook(
             and command in allowed
             and tool_input.get("dangerouslyDisableSandbox") is not True
         )
+        if liveness_evidence_path is None:
+            raise ValueError("permission-hook liveness evidence path is required")
+        hook_cwd = Path(hook_input["cwd"]).resolve(strict=True)
+        liveness_parent = liveness_evidence_path.parent.resolve(strict=True)
+        if (
+            not liveness_evidence_path.is_absolute()
+            or liveness_evidence_path.name != HOOK_LIVENESS_EVIDENCE_NAME
+            or liveness_parent != hook_cwd
+        ):
+            raise ValueError("permission-hook liveness evidence is outside the exact provider runtime directory")
+        liveness_evidence = {
+            "kind": "claude_governed_review_permission_hook_liveness",
+            "config_sha256": expected_digest,
+            "observed": True,
+            "zero_authority": True,
+        }
+        encoded_liveness = canonical_json_bytes(liveness_evidence)
+        if permitted:
+            write_idempotent_hook_evidence(
+                liveness_evidence_path,
+                encoded_liveness,
+                "permission-hook liveness",
+            )
         effort_matches = True
         if expected_effort is not None:
             if expected_effort not in EFFORT_LEVELS or effort_evidence_path is None:
                 raise ValueError("effort qualification arguments are invalid")
-            hook_cwd = Path(hook_input["cwd"]).resolve(strict=True)
             evidence_parent = effort_evidence_path.parent.resolve(strict=True)
             if (
                 not effort_evidence_path.is_absolute()
@@ -2494,11 +2544,11 @@ def permission_hook(
                 "zero_authority": True,
             }
             encoded = canonical_json_bytes(evidence)
-            if effort_evidence_path.exists() or effort_evidence_path.is_symlink():
-                if effort_evidence_path.is_symlink() or effort_evidence_path.read_bytes() != encoded:
-                    raise ValueError("effort qualification evidence changed within one attempt")
-            else:
-                exclusive_write(effort_evidence_path, encoded)
+            write_idempotent_hook_evidence(
+                effort_evidence_path,
+                encoded,
+                "effort qualification",
+            )
             permitted = permitted and effort_matches
     except (OSError, ValueError, json.JSONDecodeError, KeyError, TypeError):
         permitted = False
@@ -2615,10 +2665,9 @@ def git_worktree_capability_error(
 def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) -> dict[str, object]:
     if config.final_output.exists() or config.final_output.is_symlink():
         raise RuntimeError(f"configured governed artifact already exists: {config.final_output}")
-    for stream_path, terminal_receipt_path in config.attempt_artifacts:
-        for artifact in (stream_path, terminal_receipt_path):
-            if artifact.exists() or artifact.is_symlink():
-                raise RuntimeError(f"configured governed artifact already exists: {artifact}")
+    for artifact in (config.attempt_stream, config.attempt_terminal_receipt):
+        if artifact.exists() or artifact.is_symlink():
+            raise RuntimeError(f"configured governed artifact already exists: {artifact}")
     path_results: list[dict[str, object]] = []
     for root, representative in config.source_locations:
         if representative.is_dir():
@@ -2696,6 +2745,7 @@ def governed_system_prompt(config: GovernedReviewConfig) -> str:
 def governed_claude_arguments(
     config: GovernedReviewConfig,
     model_arguments: list[str],
+    hook_liveness_evidence_path: Path,
     effort_evidence_path: Path | None = None,
 ) -> tuple[list[str], str]:
     allowed_model_arguments = preflight_arguments(model_arguments)
@@ -2711,6 +2761,8 @@ def governed_claude_arguments(
         str(config.path),
         "--permission-hook-digest",
         config.digest,
+        "--permission-hook-liveness-evidence",
+        str(hook_liveness_evidence_path),
     ]
     if requested_effort is not None:
         if effort_evidence_path is None:
@@ -2746,6 +2798,7 @@ def governed_claude_arguments(
         "stream-json",
         "--verbose",
         "--no-session-persistence",
+        "--restricted",
         "--disable-slash-commands",
         "--no-chrome",
         "--permission-mode",
@@ -2965,6 +3018,26 @@ def init_capability_failure(
     return None
 
 
+def hook_liveness_evidence(path: Path, config_digest: str) -> tuple[dict[str, object], str | None]:
+    if not path.exists() or path.is_symlink():
+        return {"observed": False}, "permission_hook_unobservable"
+    try:
+        evidence = json.loads(path.read_bytes())
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return {"observed": False}, "permission_hook_evidence_invalid"
+    valid = (
+        isinstance(evidence, dict)
+        and set(evidence) == {"kind", "config_sha256", "observed", "zero_authority"}
+        and evidence.get("kind") == "claude_governed_review_permission_hook_liveness"
+        and evidence.get("config_sha256") == config_digest
+        and evidence.get("observed") is True
+        and evidence.get("zero_authority") is True
+    )
+    if not valid:
+        return evidence if isinstance(evidence, dict) else {}, "permission_hook_evidence_invalid"
+    return evidence, None
+
+
 def effort_qualification_evidence(path: Path | None, requested_effort: str | None) -> tuple[dict[str, object], str | None]:
     """Read exact hook-observed effort evidence for the completed attempt."""
     if requested_effort is None:
@@ -3024,20 +3097,22 @@ def effort_qualification_evidence(path: Path | None, requested_effort: str | Non
     return evidence, None
 
 
-def retry_classification(parsed: dict[str, object], exit_code: int) -> tuple[str, bool]:
+def terminal_classification(parsed: dict[str, object], exit_code: int) -> str:
     result = parsed.get("result")
     retries = parsed.get("retry_events")
     if isinstance(result, dict) and result.get("subtype") == "success" and not result.get("is_error") and exit_code == 0:
-        return "success", False
+        return "success"
     if isinstance(retries, list) and retries:
         last_error = retries[-1].get("error")
-        if last_error in TRANSIENT_OUTER_RETRY_ERRORS and isinstance(result, dict) and result.get("is_error"):
-            return f"terminal_transient_{last_error}", True
         if last_error == "rate_limit":
-            return "terminal_rate_limit_policy_owned_by_cak_154", False
+            return "terminal_rate_limit_policy_owned_by_cak_154"
         if last_error in {"authentication_failed", "oauth_org_not_allowed", "billing_error"}:
-            return "terminal_auth_or_billing_failure", False
-    return "terminal_unclassified_failure", False
+            return "terminal_auth_or_billing_failure"
+        if last_error in {"overloaded", "server_error"}:
+            return f"terminal_provider_{last_error}"
+        if isinstance(last_error, str):
+            return "terminal_provider_failure"
+    return "terminal_unclassified_failure"
 
 
 def terminate_recorded_group(live_state_path: Path, authority: str, *, force_authorized: bool, grace_seconds: float | None) -> int:
@@ -3144,6 +3219,23 @@ def run_governed_review(
         "reviewer_execution_identity": execution_identity,
     }
     controller_id = uuid.uuid4().hex
+    claude_semantic_version = parsed_claude_version(execution_identity.get("version"))
+    if claude_semantic_version is None or claude_semantic_version < CLAUDE_MINIMUM_VERSION_FOR_RESTRICTED:
+        emit_diagnostics(
+            {
+                "kind": "claude_governed_review",
+                "review_id": config.body["review_id"],
+                "contract_id": config.body["contract_id"],
+                "controller_id": controller_id,
+                "contract_identity": contract_identity,
+                "failure_classification": "claude_restricted_mode_version_unsupported",
+                "candidate_verdict": "not_produced",
+                "substantive_review_started": False,
+                "error": "governed review requires Claude Code 2.1.248 or later for restricted mode",
+            },
+            diagnostics_destination,
+        )
+        return REVIEWER_FAILURE_EXIT
     with AttemptScratch.allocate(child_environment, "claude-review-controller-") as scratch:
         controller_environment = safe_command_environment(child_environment, scratch)
         environment = controller_environment
@@ -3212,9 +3304,8 @@ def run_governed_review(
         candidate_identity_checks: list[dict[str, object]] = []
         final_output: str | None = None
         final_exit = REVIEWER_FAILURE_EXIT
-        last_verified_snapshot = post_preflight_snapshot
         expected_symbolic_ref = preflight["candidate_identity"]["symbolic_ref"]
-        for attempt_number in range(1, config.max_attempts + 1):
+        for attempt_number in (1,):
             try:
                 candidate_identity = verified_candidate_head(
                     config.candidate,
@@ -3251,11 +3342,11 @@ def run_governed_review(
                         "failure_classification": "candidate_identity_changed_before_attempt",
                         "candidate_verdict": "not_produced",
                         "substantive_review_started": bool(attempt_summaries),
-                        "automated_retry_attempted": attempt_number > 1,
+                        "automated_retry_attempted": False,
                         "candidate_identity_stage": "before_attempt_baseline",
                         "candidate_identity_checks": candidate_identity_checks,
                         "candidate_identity_observation": getattr(error, "observation", None),
-                        "no_delta_postflight": no_delta_evidence(last_verified_snapshot, drift_snapshot),
+                        "no_delta_postflight": no_delta_evidence(post_preflight_snapshot, drift_snapshot),
                         "error": bounded_redacted(str(error)),
                     },
                     diagnostics_destination,
@@ -3266,9 +3357,11 @@ def run_governed_review(
             effort_evidence_path = (
                 attempt_scratch.path / EFFORT_EVIDENCE_NAME if requested_effort is not None else None
             )
+            hook_liveness_path = attempt_scratch.path / HOOK_LIVENESS_EVIDENCE_NAME
             arguments, _ = governed_claude_arguments(
                 config,
                 model_arguments,
+                hook_liveness_path,
                 effort_evidence_path,
             )
             command = [executable, "-p", *arguments]
@@ -3276,7 +3369,8 @@ def run_governed_review(
             attempt_snapshot = source_snapshot(
                 list(config.guard_roots), config.candidate, environment, config.allowed_commands, config.candidate_head
             )
-            output_path, receipt_path = config.attempt_artifacts[attempt_number - 1]
+            output_path = config.attempt_stream
+            receipt_path = config.attempt_terminal_receipt
             live_state_path = scratch / f"{attempt_id}-live-state.json"
             if not contained(live_state_path, scratch):
                 raise RuntimeError("live-state path escaped controller scratch")
@@ -3306,7 +3400,7 @@ def run_governed_review(
                         "attempts": attempt_summaries,
                         "attempt_number": attempt_number,
                         "substantive_review_started": bool(attempt_summaries),
-                        "automated_retry_attempted": attempt_number > 1,
+                        "automated_retry_attempted": False,
                         "no_delta_postflight": comparison,
                         "attempt_scratch": {**scratch_record, "cleanup": {"passed": True}},
                         "error": bounded_redacted(str(error)),
@@ -3353,7 +3447,7 @@ def run_governed_review(
                         "failure_classification": "candidate_identity_changed_before_execution",
                         "candidate_verdict": "not_produced",
                         "substantive_review_started": bool(attempt_summaries),
-                        "automated_retry_attempted": attempt_number > 1,
+                        "automated_retry_attempted": False,
                         "candidate_identity_stage": "immediately_before_provider_spawn",
                         "candidate_identity_checks": candidate_identity_checks,
                         "candidate_identity_observation": getattr(error, "observation", None),
@@ -3618,12 +3712,16 @@ def run_governed_review(
                 expected_cwd=attempt_scratch.path,
                 model_arguments=model_arguments,
             )
+            hook_liveness, hook_liveness_failure = hook_liveness_evidence(
+                hook_liveness_path,
+                config.digest,
+            )
             effort_evidence, effort_failure = effort_qualification_evidence(
                 effort_evidence_path,
                 requested_effort,
             )
             canary_failure = provider_command_canary_failure(parsed, config.allowed_commands[0])
-            classification, retryable = retry_classification(parsed, process.returncode)
+            classification = terminal_classification(parsed, process.returncode)
             auth_failure = classify_failure(
                 stderr.decode("utf-8", errors="replace"),
                 stdout.decode("utf-8", errors="replace"),
@@ -3631,20 +3729,23 @@ def run_governed_review(
             )
             if auth_failure and auth_failure.startswith("AUTH_"):
                 classification = auth_failure
-                retryable = False
-            if capability_failure or capability_signal_sent:
+            if capability_signal_sent:
                 classification = capability_failure or live_capability_failure or "startup_capability_error"
-                retryable = False
                 live_state["capability_failure"] = classification
-            elif effort_failure:
-                classification = effort_failure
-                retryable = False
-            elif canary_failure:
-                classification = canary_failure
-                retryable = False
+            elif classification == "success":
+                if capability_failure:
+                    classification = capability_failure
+                    live_state["capability_failure"] = classification
+                elif canary_failure == "provider_command_canary_requested_sandbox_bypass":
+                    classification = canary_failure
+                elif hook_liveness_failure:
+                    classification = hook_liveness_failure
+                elif effort_failure:
+                    classification = effort_failure
+                elif canary_failure:
+                    classification = canary_failure
             if live_state.get("termination_authority"):
                 classification = "operator_authorized_termination"
-                retryable = False
             post_snapshot, postflight_observation_failure = observed_source_snapshot(
                 list(config.guard_roots),
                 config.candidate,
@@ -3660,10 +3761,8 @@ def run_governed_review(
                 changes = list(postflight_comparison["blocking_paths"])
             if live_observation_failure is not None or postflight_observation_failure is not None:
                 classification = "source_observation_failure"
-                retryable = False
             elif changes:
                 classification = "reviewer_side_effect_failure"
-                retryable = False
             claude_version = execution_identity.get("version")
             scratch_record = attempt_scratch.record()
             try:
@@ -3676,7 +3775,6 @@ def run_governed_review(
                     "error": bounded_redacted(str(error)),
                 }
                 classification = "attempt_scratch_cleanup_failure"
-                retryable = False
             result = parsed.get("result")
             if classification == "success" and isinstance(result, dict) and isinstance(result.get("result"), str):
                 final_output = result["result"]
@@ -3693,7 +3791,7 @@ def run_governed_review(
                 "controller_id": controller_id,
                 "attempt_id": attempt_id,
                 "attempt_number": attempt_number,
-                "execution_kind": "fresh_execution_exact_input_repeat" if attempt_number > 1 else "fresh_execution",
+                "execution_kind": "fresh_execution",
                 "contract_identity": contract_identity,
                 "candidate_identity_checks": list(candidate_identity_checks),
                 "preflight": preflight,
@@ -3732,11 +3830,11 @@ def run_governed_review(
                             else None
                         ),
                         "effort_matches": effort_evidence["matches"],
+                        "permission_hook_liveness": hook_liveness,
                     },
                 },
                 "attempt_scratch": {**scratch_record, "cleanup": scratch_cleanup},
                 "failure_classification": None if classification == "success" else classification,
-                "retry_eligible": retryable,
                 "candidate_verdict": "uninterpreted" if classification == "success" else "not_produced",
                 "substantive_review_output": classification == "success",
                 "raw_output": {"path": str(output_path), "size": len(stdout), "sha256": sha256_bytes(stdout)},
@@ -3829,14 +3927,9 @@ def run_governed_review(
                     "attempt_id": attempt_id,
                     "receipt": str(receipt_path),
                     "classification": classification,
-                    "retry_eligible": retryable,
                     "live_state": str(live_state_path),
                 }
             )
-            if retryable and post_snapshot is not None and not changes:
-                last_verified_snapshot = post_snapshot
-            if classification == "success" or not retryable or attempt_number == config.max_attempts:
-                break
 
         overall = {
             "kind": "claude_governed_review",
@@ -3849,7 +3942,7 @@ def run_governed_review(
             "candidate_verdict": "uninterpreted" if final_exit == 0 else "not_produced",
             "substantive_review_output": final_exit == 0,
             "failure_classification": None if final_exit == 0 else attempt_summaries[-1]["classification"],
-            "automated_retry_attempted": len(attempt_summaries) > 1,
+            "automated_retry_attempted": False,
         }
         if final_output is not None:
             final_output_bytes = final_output.encode("utf-8")
@@ -3887,6 +3980,7 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
     operation.add_argument("--review-config-fixture", type=Path, help=argparse.SUPPRESS)
     operation.add_argument("--permission-hook", type=Path)
     parser.add_argument("--permission-hook-digest")
+    parser.add_argument("--permission-hook-liveness-evidence", type=Path)
     parser.add_argument("--permission-hook-expected-effort")
     parser.add_argument("--permission-hook-effort-evidence", type=Path)
     operation.add_argument("--request-termination", type=Path)
@@ -3906,6 +4000,10 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
         parser.error("do not pass Claude prompt flags; provide the prompt on standard input")
     if args.permission_hook is None and args.permission_hook_digest is not None:
         parser.error("--permission-hook-digest requires --permission-hook")
+    if args.permission_hook is None and args.permission_hook_liveness_evidence is not None:
+        parser.error("permission-hook liveness evidence requires --permission-hook")
+    if args.permission_hook is not None and args.permission_hook_liveness_evidence is None:
+        parser.error("--permission-hook requires a liveness evidence path")
     effort_hook_arguments = (
         args.permission_hook_expected_effort,
         args.permission_hook_effort_evidence,
@@ -3948,6 +4046,7 @@ def main(argv: list[str] | None = None) -> int:
         return permission_hook(
             args.permission_hook,
             args.permission_hook_digest,
+            args.permission_hook_liveness_evidence,
             args.permission_hook_expected_effort,
             args.permission_hook_effort_evidence,
         )
@@ -4163,7 +4262,8 @@ def main(argv: list[str] | None = None) -> int:
                 config.path,
                 config.preflight_receipt,
                 config.final_output,
-                *(path for pair in config.attempt_artifacts for path in pair),
+                config.attempt_stream,
+                config.attempt_terminal_receipt,
             }
             diagnostics_destination = qualified_diagnostics_destination(
                 args.diagnostics_file,

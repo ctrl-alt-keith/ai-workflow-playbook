@@ -2012,13 +2012,22 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "    version_count = pathlib.Path(os.environ['FAKE_VERSION_COUNT'])\n"
             "    count = int(version_count.read_text()) + 1 if version_count.exists() else 1\n"
             "    version_count.write_text(str(count))\n"
-            "    print('fake-claude 2.1.241')\n"
+            "    scenario = os.environ.get('FAKE_SCENARIO')\n"
+            "    if scenario == 'version_banner': print('Node 22.1.0; fake-claude 2.1.252')\n"
+            "    else:\n"
+            "        version = '2.1.247' if scenario == 'restricted_unsupported' else '2.1.252'\n"
+            "        print(f'{version} (fake-claude)')\n"
             "    raise SystemExit(0)\n"
             "prompt = sys.stdin.read()\n"
             "count = pathlib.Path(os.environ['FAKE_COUNT'])\n"
             "attempt = int(count.read_text()) + 1 if count.exists() else 1\n"
             "count.write_text(str(attempt))\n"
             "scenario = os.environ.get('FAKE_SCENARIO', 'success')\n"
+            "if scenario in {'early_server_error','early_auth_error'}:\n"
+            "    error = 'server_error' if scenario == 'early_server_error' else 'authentication_failed'\n"
+            "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':error}), flush=True)\n"
+            "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}'}), flush=True)\n"
+            "    raise SystemExit(1)\n"
             "if scenario == 'ignore_term': signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
             "candidate = pathlib.Path(os.environ['FAKE_CANDIDATE'])\n"
             "package = pathlib.Path(os.environ['FAKE_PACKAGE'])\n"
@@ -2038,9 +2047,11 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "effective_effort = os.environ.get('FAKE_EFFECTIVE_EFFORT','high')\n"
             "if scenario == 'inherited_effort_override': effective_effort = os.environ.get('CLAUDE_CODE_EFFORT_LEVEL', effective_effort)\n"
             "if scenario != 'effort_unobservable': hook_input['effort'] = {'level':effective_effort}\n"
-            "hook_result = subprocess.run([hook['command'], *hook['args']], input=json.dumps(hook_input), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n"
-            "hook_output = json.loads(hook_result.stdout)\n"
-            "hook_denied = hook_output['hookSpecificOutput']['permissionDecision'] != 'allow'\n"
+            "hook_denied = False\n"
+            "if scenario != 'hook_unobservable':\n"
+            "    hook_result = subprocess.run([hook['command'], *hook['args']], input=json.dumps(hook_input), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n"
+            "    hook_output = json.loads(hook_result.stdout)\n"
+            "    hook_denied = hook_output['hookSpecificOutput']['permissionDecision'] != 'allow'\n"
             "print(json.dumps({'type':'user','message':{'content':[{'type':'tool_result','tool_use_id':canary_id,'content':'canary','is_error':scenario == 'dead_command_grant' or hook_denied}]}}), flush=True)\n"
             "if scenario == 'non_object_json': print('null', flush=True)\n"
             "if scenario == 'tool_mismatch': time.sleep(0.08)\n"
@@ -2123,12 +2134,16 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "if scenario == 'auth_precise':\n"
             "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}','result':'API Error: 401 OAuth access token has expired'}), flush=True)\n"
             "    raise SystemExit(1)\n"
+            "if scenario == 'hostile_retry_error':\n"
+            "    print(json.dumps({'type':'system','subtype':'api_retry','session_id':f's{attempt}','error':'authorization: Bearer secret-token-value' + 'x' * 2000}), flush=True)\n"
+            "    print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'session_id':f's{attempt}'}), flush=True)\n"
+            "    raise SystemExit(1)\n"
             "print(json.dumps({'type':'result','subtype':'success','is_error':False,'session_id':f's{attempt}','result':'ACCEPT'}), flush=True)\n",
             encoding="utf-8",
         )
         self.fake.chmod(0o755)
 
-    def config_body(self, *, launch_root=None, additional=None, max_attempts=3):
+    def config_body(self, *, launch_root=None, additional=None):
         candidate_head = subprocess.run(
             ["git", "-C", str(self.candidate), "rev-parse", "HEAD"],
             check=True,
@@ -2136,7 +2151,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             stdout=subprocess.PIPE,
         ).stdout.strip()
         return {
-            "schema_version": 1,
+            "schema_version": 2,
             "review_id": "CAK-155-fixture",
             "contract_id": "sha256:fixture-contract",
             "launch_root": str(launch_root or self.root),
@@ -2151,17 +2166,11 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "evidence_directory": str(self.evidence),
             "preflight_receipt": str(self.evidence / "preflight-receipt.json"),
             "final_output": str(self.evidence / "review-output.md"),
-            "attempt_artifacts": [
-                {
-                    "stream": str(self.evidence / f"attempt-{number}-stream.jsonl"),
-                    "terminal_receipt": str(self.evidence / f"attempt-{number}-terminal-receipt.json"),
-                }
-                for number in range(1, max_attempts + 1)
-            ],
+            "attempt_stream": str(self.evidence / "attempt-stream.jsonl"),
+            "attempt_terminal_receipt": str(self.evidence / "attempt-terminal-receipt.json"),
             "allowed_commands": [
                 ["git", "-C", str(self.candidate), "status", "--porcelain=v2", "--untracked-files=all"]
             ],
-            "max_attempts": max_attempts,
             "observation_interval_seconds": 0.005,
             "soft_liveness_threshold_seconds": 0.02,
             "graceful_termination_seconds": 0.05,
@@ -2222,11 +2231,13 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         final_output = Path((body or self.config_body())["final_output"])
         if final_output.exists() or final_output.is_symlink():
             final_output.unlink()
-        for item in (body or self.config_body())["attempt_artifacts"]:
-            for value in item.values():
-                artifact = Path(value)
-                if artifact.exists() or artifact.is_symlink():
-                    artifact.unlink()
+        for key in ("attempt_stream", "attempt_terminal_receipt"):
+            artifact = Path((body or self.config_body())[key])
+            if artifact.exists() or artifact.is_symlink():
+                artifact.unlink()
+        claude_arguments = ["--model", model]
+        if effort is not None:
+            claude_arguments.extend(("--effort", effort))
         completed = subprocess.run(
             [
                 str(LAUNCHER),
@@ -2237,10 +2248,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 "--review-config-fixture",
                 str(config),
                 "--",
-                "--model",
-                model,
-                "--effort",
-                effort,
+                *claude_arguments,
             ],
             check=False,
             input="exact review prompt\n",
@@ -2298,11 +2306,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         *,
         verification_call,
         scenario="success",
-        max_attempts=1,
         symbolic_ref_only=False,
     ):
         module = load_script(f"claude_review_head_drift_{verification_call}_{scenario}", LAUNCHER)
-        body = self.config_body(max_attempts=max_attempts)
+        body = self.config_body()
         config = module.load_governed_config(self.write_config(body))
         diagnostics = self.evidence / "overall.json"
         environment = self.environment(scenario)
@@ -2465,6 +2472,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             },
         )
         self.assertTrue(qualification["effort_matches"])
+        self.assertTrue(qualification["permission_hook_liveness"]["observed"])
 
     def test_effective_effort_mismatch_fails_closed(self):
         completed, diagnostic = self.run_governed(effort="high", effective_effort="low")
@@ -2490,6 +2498,33 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(qualification["effective"]["effort"]["status"], "unobservable")
         self.assertIsNone(qualification["effective"]["effort"]["value"])
         self.assertFalse(qualification["effort_matches"])
+
+    def test_permission_hook_liveness_is_required_without_an_effort_request(self):
+        completed, diagnostic = self.run_governed("hook_unobservable", effort=None)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "permission_hook_unobservable")
+        qualification = self.receipts()[0]["runtime"]["configuration_qualification"]
+        self.assertEqual(qualification["requested"]["effort"], None)
+        self.assertEqual(qualification["permission_hook_liveness"], {"observed": False})
+
+    def test_restricted_mode_version_floor_stops_before_provider_spawn(self):
+        completed, diagnostic = self.run_governed("restricted_unsupported")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(
+            diagnostic["failure_classification"],
+            "claude_restricted_mode_version_unsupported",
+        )
+        self.assertFalse(diagnostic["substantive_review_started"])
+        self.assertFalse(self.count.exists())
+
+    def test_restricted_mode_version_floor_rejects_a_prefixed_version_banner(self):
+        completed, diagnostic = self.run_governed("version_banner")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(
+            diagnostic["failure_classification"],
+            "claude_restricted_mode_version_unsupported",
+        )
+        self.assertFalse(self.count.exists())
 
     def test_candidate_head_drift_before_first_attempt_baseline_stops_without_provider_spawn(self):
         result, diagnostic = self.run_governed_with_head_mutation(verification_call=2)
@@ -2523,22 +2558,9 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             )
         )
 
-    def test_candidate_head_drift_before_retry_preserves_first_attempt_and_stops_second_spawn(self):
-        result, diagnostic = self.run_governed_with_head_mutation(
-            verification_call=4,
-            scenario="transient_once",
-            max_attempts=2,
-        )
-        self.assertEqual(result, 70)
-        self.assertEqual(diagnostic["failure_classification"], "candidate_identity_changed_before_attempt")
-        self.assertEqual(self.count.read_text(encoding="utf-8"), "1")
-        self.assertEqual(len(diagnostic["attempts"]), 1)
-        self.assertTrue((self.evidence / "attempt-1-terminal-receipt.json").exists())
-        self.assertFalse((self.evidence / "attempt-2-terminal-receipt.json").exists())
-
     def test_detached_candidate_remains_bound_to_configured_commit(self):
         subprocess.run(["git", "-C", str(self.candidate), "checkout", "--detach", "-q", "HEAD"], check=True)
-        completed, diagnostic = self.run_governed("success", body=self.config_body(max_attempts=1))
+        completed, diagnostic = self.run_governed("success", body=self.config_body())
         self.assertEqual(completed.returncode, 0, diagnostic)
         self.assertEqual(diagnostic["preflight"]["candidate_identity"]["symbolic_ref"], None)
         self.assertEqual(
@@ -2565,8 +2587,11 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         arguments, system_prompt = module.governed_claude_arguments(
             config,
             ["--model", "opus", "--effort", "high"],
+            scratch / module.HOOK_LIVENESS_EVIDENCE_NAME,
             scratch / module.EFFORT_EVIDENCE_NAME,
         )
+        self.assertIn("--restricted", arguments)
+        self.assertEqual(arguments[arguments.index("--setting-sources") + 1], "")
         settings = json.loads(arguments[arguments.index("--settings") + 1])
         self.assertNotIn("sandbox", settings)
         self.assertIn("Before substantive analysis", system_prompt)
@@ -2760,29 +2785,46 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 70)
         self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
 
-    def test_transient_retry_recovers_without_contract_or_controller_drift(self):
+    def test_terminal_transient_failure_stops_without_controller_retry(self):
         completed, diagnostic = self.run_governed("transient_once")
-        self.assertEqual(completed.returncode, 0)
-        self.assertEqual(len(diagnostic["attempts"]), 2)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "terminal_provider_server_error")
+        self.assertFalse(diagnostic["automated_retry_attempted"])
+        self.assertEqual(len(diagnostic["attempts"]), 1)
         receipts = self.receipts()
-        self.assertEqual(len(receipts), 2)
+        self.assertEqual(len(receipts), 1)
         self.assertEqual({receipt["controller_id"] for receipt in receipts}, {diagnostic["controller_id"]})
-        self.assertEqual(len({json.dumps(receipt["contract_identity"], sort_keys=True) for receipt in receipts}), 1)
-        self.assertEqual(receipts[1]["execution_kind"], "fresh_execution_exact_input_repeat")
+        self.assertEqual(receipts[0]["execution_kind"], "fresh_execution")
         scratch_paths = [receipt["attempt_scratch"]["path"] for receipt in receipts]
-        self.assertEqual(len(set(scratch_paths)), 2)
         self.assertTrue(all(receipt["attempt_scratch"]["cleanup"]["passed"] for receipt in receipts))
         self.assertTrue(all(not Path(path).exists() for path in scratch_paths))
 
-    def test_retry_identity_drift_preserves_prior_attempt_evidence_and_stops_before_second_spawn(self):
+    def test_unknown_provider_retry_error_uses_a_fixed_safe_classification(self):
+        completed, diagnostic = self.run_governed("hostile_retry_error")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "terminal_provider_failure")
+        serialized = json.dumps({"diagnostic": diagnostic, "receipts": self.receipts()})
+        self.assertNotIn("secret-token-value", serialized)
+        self.assertLess(len(diagnostic["failure_classification"]), 100)
+
+    def test_provider_failure_before_init_preserves_terminal_class_and_exit_policy(self):
+        server, server_diagnostic = self.run_governed("early_server_error")
+        self.assertEqual(server.returncode, 70)
+        self.assertEqual(server_diagnostic["failure_classification"], "terminal_provider_server_error")
+
+        auth, auth_diagnostic = self.run_governed("early_auth_error")
+        self.assertEqual(auth.returncode, 78)
+        self.assertEqual(auth_diagnostic["failure_classification"], "AUTH_UNKNOWN_FAIL_CLOSED")
+
+    def test_provider_terminal_failure_does_not_recheck_for_a_second_spawn(self):
         completed, diagnostic = self.run_governed("transient_then_executable_drift")
         self.assertEqual(completed.returncode, 70)
         self.assertEqual(self.count.read_text(encoding="utf-8"), "1")
-        self.assertEqual(diagnostic["failure_classification"], "reviewer_identity_changed_before_execution")
+        self.assertEqual(diagnostic["failure_classification"], "terminal_provider_server_error")
         self.assertEqual(diagnostic["candidate_verdict"], "not_produced")
-        self.assertEqual(diagnostic["attempt_number"], 2)
-        self.assertTrue(diagnostic["substantive_review_started"])
-        self.assertTrue(diagnostic["automated_retry_attempted"])
+        self.assertEqual(self.receipts()[0]["attempt_number"], 1)
+        self.assertFalse(diagnostic["substantive_review_output"])
+        self.assertFalse(diagnostic["automated_retry_attempted"])
         self.assertEqual((self.root / "version-count").read_text(encoding="utf-8"), "2")
         self.assertEqual(len(diagnostic["attempts"]), 1)
         prior_attempt = diagnostic["attempts"][0]
@@ -2792,10 +2834,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertTrue(Path(receipt["raw_output"]["path"]).exists())
         self.assertEqual(len(self.receipts()), 1)
 
-    def test_lingering_process_group_blocks_retry_until_terminal(self):
+    def test_lingering_process_group_reaches_terminal_before_attempt_receipt(self):
         completed, diagnostic = self.run_governed("transient_with_lingering_child")
-        self.assertEqual(completed.returncode, 0)
-        self.assertEqual(len(diagnostic["attempts"]), 2)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(len(diagnostic["attempts"]), 1)
         receipts = self.receipts()
         self.assertTrue(all(receipt["lifecycle"]["process_group_terminal"] for receipt in receipts))
         self.assertTrue(
@@ -2835,10 +2877,12 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertFalse(stream_evidence["collectors_reached_eof_before_stream_freeze"])
         self.assertEqual(stream_evidence["collector_read_errors"]["stdout"], "fixture reader failure")
 
-    def test_retry_exhaustion_stops_at_three_and_auth_stops_at_one(self):
+    def test_provider_failure_and_auth_each_stop_after_one_explicit_attempt(self):
         exhausted, exhausted_diagnostic = self.run_governed("transient_always")
         self.assertEqual(exhausted.returncode, 70)
-        self.assertEqual(len(exhausted_diagnostic["attempts"]), 3)
+        self.assertEqual(exhausted_diagnostic["failure_classification"], "terminal_provider_server_error")
+        self.assertEqual(len(exhausted_diagnostic["attempts"]), 1)
+        self.assertFalse(exhausted_diagnostic["automated_retry_attempted"])
 
         auth_root = self.root / "auth-evidence"
         auth_root.mkdir()
@@ -2847,13 +2891,8 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         body["evidence_directory"] = str(auth_root)
         body["preflight_receipt"] = str(auth_root / "preflight-receipt.json")
         body["final_output"] = str(auth_root / "review-output.md")
-        body["attempt_artifacts"] = [
-            {
-                "stream": str(auth_root / f"attempt-{number}-stream.jsonl"),
-                "terminal_receipt": str(auth_root / f"attempt-{number}-terminal-receipt.json"),
-            }
-            for number in range(1, body["max_attempts"] + 1)
-        ]
+        body["attempt_stream"] = str(auth_root / "attempt-stream.jsonl")
+        body["attempt_terminal_receipt"] = str(auth_root / "attempt-terminal-receipt.json")
         config = auth_root / "review-config.json"
         config.write_text(json.dumps(body), encoding="utf-8")
         diagnostics = auth_root / "overall.json"
@@ -2868,6 +2907,16 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 78)
         self.assertEqual(len(json.loads(diagnostics.read_text())["attempts"]), 1)
+
+    def test_schema_two_rejects_obsolete_automatic_retry_fields(self):
+        module = load_script("claude_review_obsolete_retry_fields", LAUNCHER)
+        for obsolete_field, value in (("max_attempts", 2), ("attempt_artifacts", [])):
+            body = self.config_body()
+            body[obsolete_field] = value
+            with self.subTest(obsolete_field=obsolete_field), self.assertRaisesRegex(
+                ValueError, "one explicit provider attempt"
+            ):
+                module.load_governed_config(self.write_config(body))
 
     def test_precise_terminal_auth_record_stops_without_retry(self):
         completed, diagnostic = self.run_governed("auth_precise")
@@ -2963,16 +3012,20 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         digest = module.sha256_bytes(config.read_bytes())
         hook_input = json.dumps(
             {
+                "cwd": str(self.root),
                 "tool_name": "Bash",
                 "tool_input": {"command": shlex.join(self.config_body()["allowed_commands"][0])},
             }
         )
+        liveness_evidence = self.root / module.HOOK_LIVENESS_EVIDENCE_NAME
         command = [
             str(LAUNCHER),
             "--permission-hook",
             str(config),
             "--permission-hook-digest",
             digest,
+            "--permission-hook-liveness-evidence",
+            str(liveness_evidence),
         ]
         allowed = subprocess.run(
             command,
@@ -3008,7 +3061,8 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "deny",
         )
 
-        changed = self.config_body(max_attempts=2)
+        changed = self.config_body()
+        changed["contract_id"] = "sha256:changed-fixture-contract"
         config.write_text(json.dumps(changed), encoding="utf-8")
         denied = subprocess.run(
             command,
@@ -3020,6 +3074,20 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(json.loads(denied.stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
+
+    def test_idempotent_hook_evidence_accepts_an_identical_concurrent_winner(self):
+        module = load_script("claude_review_hook_evidence_race", LAUNCHER)
+        evidence_path = self.root / "hook-race-evidence.json"
+        encoded = b'{"observed":true}'
+        real_link = module.os.link
+
+        def concurrent_winner(source, destination, **kwargs):
+            real_link(source, destination, **kwargs)
+            raise FileExistsError(destination)
+
+        with mock.patch.object(module.os, "link", side_effect=concurrent_winner):
+            module.write_idempotent_hook_evidence(evidence_path, encoded, "hook")
+        self.assertEqual(evidence_path.read_bytes(), encoded)
 
     def test_soft_liveness_threshold_never_terminates_or_replaces_attempt(self):
         completed, _ = self.run_governed("silent")
@@ -3217,7 +3285,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
 
     def test_live_primary_worktree_commit_passes_for_a_linked_candidate(self):
         self.use_linked_candidate("fixture-live-primary")
-        body = self.config_body(max_attempts=1)
+        body = self.config_body()
         # Observe the completed Git operation, not its deliberately blocking transient lock.
         body["observation_interval_seconds"] = 0.5
         completed, diagnostic = self.run_governed("primary_worktree_commit_then_wait", body=body)
@@ -3235,7 +3303,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.use_linked_candidate("fixture-primary-mixed")
         completed, diagnostic = self.run_governed(
             "primary_worktree_and_candidate_mutation",
-            body=self.config_body(max_attempts=1),
+            body=self.config_body(),
         )
         self.assertEqual(completed.returncode, 70)
         self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
@@ -3830,7 +3898,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             ],
             check=True,
         )
-        completed, diagnostic = self.run_governed("unrelated_worktree_commit_then_wait", body=self.config_body(max_attempts=1))
+        completed, diagnostic = self.run_governed("unrelated_worktree_commit_then_wait", body=self.config_body())
         receipts = self.receipts()
         self.assertEqual(completed.returncode, 0, {"diagnostic": diagnostic, "receipts": receipts})
         self.assertIsNone(diagnostic["failure_classification"])
@@ -3860,7 +3928,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertNotIn("emergency_condition", receipt["lifecycle"])
 
     def test_live_unattributed_object_write_remains_fail_closed_after_stabilization(self):
-        completed, diagnostic = self.run_governed("unattributed_object_then_wait", body=self.config_body(max_attempts=1))
+        completed, diagnostic = self.run_governed("unattributed_object_then_wait", body=self.config_body())
         self.assertNotEqual(completed.returncode, 0)
         self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
         receipt = self.receipts()[0]
@@ -3876,7 +3944,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
     def test_governed_review_creates_no_local_or_cross_attempt_state(self):
         self.isolated_home = self.root / "isolated-home"
         self.isolated_home.mkdir()
-        completed, diagnostic = self.run_governed("success", body=self.config_body(max_attempts=1))
+        completed, diagnostic = self.run_governed("success", body=self.config_body())
         self.assertEqual(completed.returncode, 0)
         self.assertIsNone(diagnostic["failure_classification"])
         receipt = self.receipts()[0]
@@ -3914,7 +3982,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             check=True,
         )
         completed, diagnostic = self.run_governed(
-            "unrelated_worktree_and_candidate_mutation", body=self.config_body(max_attempts=1)
+            "unrelated_worktree_and_candidate_mutation", body=self.config_body()
         )
         self.assertEqual(completed.returncode, 70)
         self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
