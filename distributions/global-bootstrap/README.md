@@ -23,11 +23,8 @@ another retrieval.
 Do not maintain provider-specific copies of its text.
 
 The router projects the core model's active bounded-task continuity guard
-before its material-change bootstrap trigger. A strongly unrelated instruction
-without a clear transition signal therefore holds the active task and unrelated
-durable mutations until the operator chooses whether to switch or continue;
-ordinary steering and explicit switches pass through to the existing routing
-rules.
+before its material-change bootstrap trigger without copying that guard's
+behavior or cases into the distribution.
 
 The final hard precondition in that body is scoped by the first-action or
 material-change trigger. It permits the retrieval needed to obtain and apply

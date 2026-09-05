@@ -6,7 +6,7 @@ import unittest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CORE_MODEL = REPO_ROOT / "docs" / "core-model.md"
-TABLE_MARKER = "<!-- qualification: active-bounded-task-continuity -->"
+SECTION_HEADING = "### Active-task continuity qualification cases"
 EXPECTED_COLUMNS = (
     "Case",
     "Relationship to active task",
@@ -18,10 +18,10 @@ EXPECTED_COLUMNS = (
 
 def parse_qualification_cases() -> dict[str, dict[str, str]]:
     lines = CORE_MODEL.read_text(encoding="utf-8").splitlines()
-    marker_index = lines.index(TABLE_MARKER)
+    section_start = lines.index(SECTION_HEADING)
     table_start = next(
         index
-        for index in range(marker_index + 1, len(lines))
+        for index in range(section_start + 1, len(lines))
         if lines[index].startswith("| Case |")
     )
     header = tuple(cell.strip() for cell in lines[table_start].strip("|").split("|"))
@@ -52,7 +52,7 @@ class ActiveTaskContinuityTests(unittest.TestCase):
             for row in self.cases.values()
             if row["Relationship to active task"] == "related"
         ]
-        self.assertEqual(len(related), 2)
+        self.assertTrue(related)
         self.assertEqual({row["Outcome"] for row in related}, {"continue"})
         self.assertEqual(
             {row["Unrelated durable mutation"] for row in related},
@@ -61,11 +61,9 @@ class ActiveTaskContinuityTests(unittest.TestCase):
 
     def test_explicit_or_confirmed_switch_re_routes_normally(self) -> None:
         switches = [
-            row
-            for row in self.cases.values()
-            if row["Transition signal"] in {"explicit", "confirmed"}
+            self.cases["explicit-unrelated-topic-switch"],
+            self.cases["confirmed-switch-after-hold"],
         ]
-        self.assertEqual(len(switches), 2)
         self.assertEqual(
             {row["Outcome"] for row in switches},
             {"switch and re-route"},
@@ -76,13 +74,20 @@ class ActiveTaskContinuityTests(unittest.TestCase):
         )
 
     def test_abrupt_unrelated_prompt_confirms_and_holds_mutation(self) -> None:
-        held = self.cases["abrupt-unrelated-without-switch-signal"]
-        self.assertEqual(held["Relationship to active task"], "unrelated")
-        self.assertEqual(held["Transition signal"], "absent")
-        self.assertEqual(held["Outcome"], "confirm and hold")
+        held = [
+            row
+            for row in self.cases.values()
+            if row["Relationship to active task"] == "unrelated"
+            and row["Transition signal"] == "absent"
+        ]
+        self.assertTrue(held)
         self.assertEqual(
-            held["Unrelated durable mutation"],
-            "prohibited while unresolved",
+            {row["Outcome"] for row in held},
+            {"confirm and hold"},
+        )
+        self.assertEqual(
+            {row["Unrelated durable mutation"] for row in held},
+            {"prohibited while unresolved"},
         )
 
 

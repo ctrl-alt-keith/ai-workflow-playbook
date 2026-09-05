@@ -48,12 +48,13 @@ repository follow-up whose task shape remains sufficient, reuse still-current
 verified sources. Before adopting a strongly unrelated instruction as a task
 change, apply the core model's
 [`active bounded-task continuity`](../core-model.md#active-bounded-task-continuity)
-guard across both Chat and Work. After a switch is clear or confirmed, re-run
-the current activation route when the task materially changes interaction
+guard across both Chat and Work. If the task materially changes interaction
 mode, artifact, workflow, source need, execution locality, or authority
-boundary. Retrieve newly activated owners without replaying unchanged doctrine
-or hydrating unrelated documents. This is the persistent-context projection
-of the [activation-sufficiency invariant](../start-here.md#required-repository-invariants);
+boundary, re-run the current activation route before responding, planning,
+drafting, or acting. Retrieve newly activated owners without replaying
+unchanged doctrine or hydrating unrelated documents. This is the
+persistent-context projection of the
+[activation-sufficiency invariant](../start-here.md#required-repository-invariants);
 [`repo-readiness.md`](../repo-readiness.md) owns interaction-mode selection.
 
 ## Chat, Work, and execution locality

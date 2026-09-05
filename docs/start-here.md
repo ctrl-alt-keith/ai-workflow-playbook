@@ -52,10 +52,9 @@ tool call, or the passage of another conversational turn is not by itself a
 material change. Before treating a strongly unrelated instruction as a
 material task change, apply the core model's
 [`active bounded-task continuity`](core-model.md#active-bounded-task-continuity)
-guard. After that guard resolves a switch, re-run routing when the target
-repository changes or when the task materially changes the interaction mode,
-workflow, authoritative-source requirements, execution locality, or authority
-boundary.
+guard. Re-run routing when the target repository changes or when the task
+materially changes the interaction mode, workflow, authoritative-source
+requirements, execution locality, or authority boundary.
 
 When that first-action or material-change trigger applies, bootstrap remains a
 hard precondition: do not respond, reason about the task, or invoke another
