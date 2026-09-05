@@ -359,6 +359,29 @@ replace the write and verification mechanics in
 not weaken its candidate, privacy, visibility, retention, ownership, or
 fail-closed boundaries.
 
+### Material attempts and conversational steering
+
+The unit of durable prompt transport is one material executor attempt. Keep
+one frozen effective prompt artifact for that attempt. Ordinary in-run
+steering and follow-up remain conversational; another human message alone
+does not create another Airtable record. The executor's own run or conversation
+record is sufficient forensic evidence for that steering unless another actor
+must independently reconstruct the changed executable contract.
+
+When later direction materially changes the executable contract and the revised
+contract must cross an execution, recovery, review, replay, restart, or handoff
+boundary, freeze a clean revised effective prompt as a new attempt artifact
+before that boundary. Carry forward the still-applicable scope, constraints,
+authority references, and completion boundary so the next actor need not
+reconstruct the contract from a chronological chain of steering records.
+Apply the admission and exact-identity checks below to the new artifact;
+preserve its predecessor identity without modifying the prior frozen prompt.
+
+In-run steering does not revise an immutable attempt's selected identities or
+turn changed inputs into replay. Apply current human direction and the owning
+authority checks before acting on it; freezing, retaining, or successfully
+retrieving a revised prompt supplies no authority.
+
 ### Admission
 
 A rendered prompt is eligible for durable handoff only when all six conditions
