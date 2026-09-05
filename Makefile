@@ -41,25 +41,28 @@ scanner-test: ## Run scanner unit tests.
 
 CFP := experiments/code-first-playbook
 CFP_PY := $(CFP)/.venv/bin/python
-.PHONY: code-first-setup code-first-check code-first-source-check code-first-render code-first-diff code-first-rehearse
+.PHONY: code-first-setup code-first-tools code-first-check code-first-source-check code-first-render code-first-diff code-first-rehearse
 
 code-first-setup: ## Set up the isolated CAK-233 parser dependency.
 	python3 -m venv $(CFP)/.venv
 	$(CFP_PY) -m pip install --disable-pip-version-check -r $(CFP)/requirements.txt
 
-code-first-check: ## Check the bounded shadow compiler and exact previews.
+code-first-tools: ## Report missing pilot tooling before any dependent check.
+	@test -x "$(CFP_PY)" || { echo "CAK-233 pilot tooling unavailable. Run make code-first-setup; dependent checks were not run."; exit 1; }
+
+code-first-check: code-first-tools ## Check the bounded shadow compiler and exact previews.
 	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) -m unittest discover -s $(CFP)/tests
 	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py check
 
-code-first-source-check: ## Check current prose binding for pilot claims.
+code-first-source-check: code-first-tools ## Check current prose binding for pilot claims.
 	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py source-check
 
-code-first-render: ## Generate non-operational review previews.
+code-first-render: code-first-tools ## Generate non-operational review previews.
 	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py render
 
-code-first-diff: ## Exercise the two bounded semantic edit rounds.
+code-first-diff: code-first-tools ## Exercise the two bounded semantic edit rounds.
 	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py diff --old-bundle cases/baseline.json --bundle cases/edit-round-1.json
 	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py diff --old-bundle cases/edit-round-1.json --bundle cases/edit-round-2.json
 
-code-first-rehearse: ## Report simulation-only authority-transition rehearsal.
+code-first-rehearse: code-first-tools ## Report simulation-only authority-transition rehearsal.
 	PYTHONDONTWRITEBYTECODE=1 $(CFP_PY) $(CFP)/pilot.py rehearse

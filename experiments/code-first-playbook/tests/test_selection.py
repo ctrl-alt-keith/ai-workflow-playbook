@@ -40,7 +40,10 @@ class Selection(unittest.TestCase):
 
     def test_10_12_stale_missing_unavailable_conflict(self):
         o=observation(self.b); o['scope']['context']='old'
-        self.assertEqual(choose(self.r,[o])['fact_reports'][o['fact_id']]['state'],'stale')
+        report=choose(self.r,[o])['fact_reports'][o['fact_id']]
+        self.assertEqual(report['state'],'stale')
+        self.assertIn('scope_mismatch',report['observations'][0]['diagnostics'])
+        self.assertEqual(o['diagnostics'],[])
         self.assertEqual(self.s['fact_reports'][o['fact_id']]['state'],'unknown')
         o=observation(self.b,state='unavailable',value=None)
         self.assertEqual(choose(self.r,[o])['fact_reports'][o['fact_id']]['state'],'unavailable')
@@ -66,6 +69,7 @@ class Selection(unittest.TestCase):
         o['freshness']['observed_at']='2026-09-05T04:00:00Z';a[o['basis']]['observed_at']=o['freshness']['observed_at']
         s=choose(r,[o],a)
         self.assertEqual(s['fact_reports'][o['fact_id']]['state'],'stale')
+        self.assertIn('exceeded_max_age',s['fact_reports'][o['fact_id']]['observations'][0]['diagnostics'])
         self.assertIn('pb.startup-floor',by_id(s))
         o,a=proof(self.b);o['basis']=None
         self.assertIn('pb.startup-floor',by_id(choose(r,[o])))

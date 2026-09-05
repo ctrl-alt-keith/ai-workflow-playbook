@@ -35,11 +35,14 @@ def qualify(records, observations, context, as_of, acquisitions):
         observed = timestamp(obs["freshness"]["observed_at"])
         require(observed <= now, "future observation")
         state = obs["state"]
+        report_diagnostics = list(obs['diagnostics'])
         if obs["scope"] != context:
             state = "stale"
+            report_diagnostics.append('scope_mismatch')
         freshness = fact["freshness"]
         if freshness["mode"] == "time" and (now - observed).total_seconds() > freshness["max_age_seconds"]:
             state = "stale"
+            report_diagnostics.append('exceeded_max_age')
         qualified = False
         if fact["resolution_class"] == "external_judgment":
             require(bool(obs["rationale"]), "judgment rationale required")
@@ -60,7 +63,8 @@ def qualify(records, observations, context, as_of, acquisitions):
                     and len(evidence["sha256"]) == 64 and all(c in '0123456789abcdef' for c in evidence['sha256']),
                     "evidence qualification mismatch")
             qualified = state == "known"
-        grouped.setdefault(fid, []).append({"observation": obs, "state": state, "qualified": qualified})
+        grouped.setdefault(fid, []).append({"observation": obs, "state": state, "qualified": qualified,
+                                            'diagnostics':report_diagnostics})
     for fid, fact in records.items():
         if fact["kind"] != "fact":
             continue
