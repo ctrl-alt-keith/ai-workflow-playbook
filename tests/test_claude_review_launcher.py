@@ -2023,7 +2023,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "candidate = pathlib.Path(os.environ['FAKE_CANDIDATE'])\n"
             "package = pathlib.Path(os.environ['FAKE_PACKAGE'])\n"
             "tools = ['Bash','Glob','Grep'] if scenario == 'tool_mismatch' else ['Bash','Glob','Grep','Read']\n"
-            "model = 'wrong-exact-model' if scenario == 'model_mismatch' else os.environ.get('FAKE_EFFECTIVE_MODEL', 'fake-opus')\n"
+            "model = 'wrong-exact-model' if scenario == 'model_mismatch' else os.environ.get('FAKE_EFFECTIVE_MODEL', 'claude-opus-5')\n"
             "cwd = str(candidate) if scenario == 'cwd_mismatch' else os.getcwd()\n"
             "print(json.dumps({'type':'system','subtype':'init','session_id':f's{attempt}','model':model,'tools':tools,'mcp_servers':[],'permissionMode':'dontAsk','plugins':[],'skills':[],'slash_commands':[],'cwd':cwd} ), flush=True)\n"
             "canary_id = f'canary-{attempt}'\n"
@@ -2031,7 +2031,17 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "canary_input = {'command': canary_command}\n"
             "if scenario == 'canary_bypass': canary_input['dangerouslyDisableSandbox'] = True\n"
             "print(json.dumps({'type':'assistant','message':{'content':[{'type':'tool_use','id':canary_id,'name':'Bash','input':canary_input}]}}), flush=True)\n"
-            "print(json.dumps({'type':'user','message':{'content':[{'type':'tool_result','tool_use_id':canary_id,'content':'canary','is_error':scenario == 'dead_command_grant'}]}}), flush=True)\n"
+            "settings_index = sys.argv.index('--settings')\n"
+            "settings = json.loads(sys.argv[settings_index + 1])\n"
+            "hook = settings['hooks']['PreToolUse'][0]['hooks'][0]\n"
+            "hook_input = {'cwd':os.getcwd(),'permission_mode':'dontAsk','hook_event_name':'PreToolUse','tool_name':'Bash','tool_input':canary_input}\n"
+            "effective_effort = os.environ.get('FAKE_EFFECTIVE_EFFORT','high')\n"
+            "if scenario == 'inherited_effort_override': effective_effort = os.environ.get('CLAUDE_CODE_EFFORT_LEVEL', effective_effort)\n"
+            "if scenario != 'effort_unobservable': hook_input['effort'] = {'level':effective_effort}\n"
+            "hook_result = subprocess.run([hook['command'], *hook['args']], input=json.dumps(hook_input), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n"
+            "hook_output = json.loads(hook_result.stdout)\n"
+            "hook_denied = hook_output['hookSpecificOutput']['permissionDecision'] != 'allow'\n"
+            "print(json.dumps({'type':'user','message':{'content':[{'type':'tool_result','tool_use_id':canary_id,'content':'canary','is_error':scenario == 'dead_command_grant' or hook_denied}]}}), flush=True)\n"
             "if scenario == 'non_object_json': print('null', flush=True)\n"
             "if scenario == 'tool_mismatch': time.sleep(0.08)\n"
             "if scenario == 'cwd_mismatch': time.sleep(0.08)\n"
@@ -2166,7 +2176,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         path.write_text(json.dumps(body or self.config_body()), encoding="utf-8")
         return path
 
-    def environment(self, scenario):
+    def environment(self, scenario, *, effective_model=None, effective_effort=None):
         environment = os.environ.copy()
         environment.update(
             {
@@ -2186,9 +2196,22 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             environment["FAKE_PRIMARY_WORKTREE"] = str(self.primary_worktree)
         if hasattr(self, "isolated_home"):
             environment["CLAUDE_REVIEW_TEST_EFFECTIVE_HOME"] = str(self.isolated_home)
+        if effective_model is not None:
+            environment["FAKE_EFFECTIVE_MODEL"] = effective_model
+        if effective_effort is not None:
+            environment["FAKE_EFFECTIVE_EFFORT"] = effective_effort
         return environment
 
-    def run_governed(self, scenario="success", *, body=None, model="opus"):
+    def run_governed(
+        self,
+        scenario="success",
+        *,
+        body=None,
+        model="opus",
+        effort="high",
+        effective_model=None,
+        effective_effort=None,
+    ):
         config = self.write_config(body)
         diagnostics = self.evidence / "overall.json"
         if diagnostics.exists() or diagnostics.is_symlink():
@@ -2217,14 +2240,18 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 "--model",
                 model,
                 "--effort",
-                "high",
+                effort,
             ],
             check=False,
             input="exact review prompt\n",
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            env=self.environment(scenario),
+            env=self.environment(
+                scenario,
+                effective_model=effective_model,
+                effective_effort=effective_effort,
+            ),
         )
         if diagnostics.exists():
             diagnostic = json.loads(diagnostics.read_text(encoding="utf-8"))
@@ -2376,11 +2403,93 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertTrue(receipt["lifecycle"]["process_group_terminal"])
 
     def test_exact_model_selector_is_enforced(self):
-        exact, _ = self.run_governed(model="fake-opus")
+        exact, _ = self.run_governed(model="fake-opus", effective_model="fake-opus")
         self.assertEqual(exact.returncode, 0)
-        mismatch, diagnostic = self.run_governed("model_mismatch", model="fake-opus")
+        mismatch, diagnostic = self.run_governed(
+            "model_mismatch",
+            model="fake-opus",
+            effective_model="fake-opus",
+        )
         self.assertEqual(mismatch.returncode, 70)
         self.assertEqual(diagnostic["failure_classification"], "effective_model_mismatch")
+
+    def test_fable_family_accepts_current_exact_runtime_identity(self):
+        completed, _ = self.run_governed(model="fable", effective_model="claude-fable-5")
+        self.assertEqual(completed.returncode, 0)
+
+    def test_fable_family_rejects_other_or_unknown_runtime_identities(self):
+        for effective_model in (
+            "claude-opus-5",
+            "claude-sonnet-5",
+            "unknown",
+            "claude-fable-6",
+            "claude-fable-5-preview",
+            "Claude-Fable-5",
+        ):
+            with self.subTest(effective_model=effective_model):
+                completed, diagnostic = self.run_governed(
+                    model="fable",
+                    effective_model=effective_model,
+                )
+                self.assertEqual(completed.returncode, 70)
+                self.assertEqual(diagnostic["failure_classification"], "effective_model_mismatch")
+
+    def test_non_fable_family_rejects_fable_runtime_identity(self):
+        completed, diagnostic = self.run_governed(
+            model="opus",
+            effective_model="claude-fable-5",
+        )
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "effective_model_mismatch")
+
+    def test_existing_family_aliases_accept_canonical_runtime_identities(self):
+        for family in ("haiku", "sonnet", "opus"):
+            with self.subTest(family=family):
+                completed, _ = self.run_governed(
+                    model=family,
+                    effective_model=f"claude-{family}-5",
+                )
+                self.assertEqual(completed.returncode, 0)
+
+    def test_effective_high_effort_is_observed_separately_from_request(self):
+        completed, _ = self.run_governed(effort="high", effective_effort="high")
+        self.assertEqual(completed.returncode, 0)
+        qualification = self.receipts()[0]["runtime"]["configuration_qualification"]
+        self.assertEqual(qualification["requested"]["effort"], "high")
+        self.assertEqual(
+            qualification["effective"]["effort"],
+            {
+                "status": "observed",
+                "value": "high",
+                "source": "pre_tool_use_hook_input",
+            },
+        )
+        self.assertTrue(qualification["effort_matches"])
+
+    def test_effective_effort_mismatch_fails_closed(self):
+        completed, diagnostic = self.run_governed(effort="high", effective_effort="low")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "effective_effort_mismatch")
+        qualification = self.receipts()[0]["runtime"]["configuration_qualification"]
+        self.assertEqual(qualification["effective"]["effort"]["value"], "low")
+        self.assertFalse(qualification["effort_matches"])
+
+    def test_explicit_effort_removes_inherited_effort_override(self):
+        with mock.patch.dict(os.environ, {"CLAUDE_CODE_EFFORT_LEVEL": "low"}):
+            completed, _ = self.run_governed("inherited_effort_override", effort="high")
+        self.assertEqual(completed.returncode, 0)
+        qualification = self.receipts()[0]["runtime"]["configuration_qualification"]
+        self.assertEqual(qualification["effective"]["effort"]["value"], "high")
+
+    def test_unobservable_effective_effort_fails_closed_without_claiming_high(self):
+        completed, diagnostic = self.run_governed("effort_unobservable", effort="high")
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "effective_effort_unobservable")
+        qualification = self.receipts()[0]["runtime"]["configuration_qualification"]
+        self.assertEqual(qualification["requested"]["effort"], "high")
+        self.assertEqual(qualification["effective"]["effort"]["status"], "unobservable")
+        self.assertIsNone(qualification["effective"]["effort"]["value"])
+        self.assertFalse(qualification["effort_matches"])
 
     def test_candidate_head_drift_before_first_attempt_baseline_stops_without_provider_spawn(self):
         result, diagnostic = self.run_governed_with_head_mutation(verification_call=2)
@@ -2456,6 +2565,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         arguments, system_prompt = module.governed_claude_arguments(
             config,
             ["--model", "opus", "--effort", "high"],
+            scratch / module.EFFORT_EVIDENCE_NAME,
         )
         settings = json.loads(arguments[arguments.index("--settings") + 1])
         self.assertNotIn("sandbox", settings)

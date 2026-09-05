@@ -41,6 +41,10 @@ INSTALLATION_SCHEMA_VERSION = 3
 QUALIFICATION_SCHEMA_VERSION = 3
 REVISION_ATOM = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64}|HEAD|origin/main)")
 REQUIRED_TOOLS = {"Bash", "Glob", "Grep", "Read"}
+MODEL_FAMILY_ALIASES = {"fable", "opus", "sonnet", "haiku"}
+CURRENT_FABLE_IDENTITIES = {"fable", "claude-fable-5", "claude-fable-5-1"}
+EFFORT_LEVELS = {"low", "medium", "high", "xhigh", "max"}
+EFFORT_EVIDENCE_NAME = "effective-effort.json"
 WORKTREE_ADMIN_PATHS = ("HEAD", "index", "logs/HEAD", "COMMIT_EDITMSG", "ORIG_HEAD")
 OAUTH_REAUTHENTICATION_DISPOSITION = (
     "REVIEWER INFRASTRUCTURE FAILURE — OPERATOR REAUTHENTICATION REQUIRED"
@@ -1009,6 +1013,8 @@ def failure_fields(classification: str | None) -> dict[str, Any]:
 
 def preflight_arguments(arguments: list[str]) -> list[str]:
     """Keep the preflight harmless while retaining selected model/effort context."""
+    for option in ("--model", "--effort"):
+        selected_claude_option(arguments, option)
     selected: list[str] = []
     permitted = {"--model", "--effort"}
     index = 0
@@ -1031,6 +1037,53 @@ def preflight_arguments(arguments: list[str]) -> list[str]:
         else:
             index += 1
     return [*selected, "--tools", "", "--no-session-persistence"]
+
+
+def selected_claude_option(arguments: list[str], option: str) -> str | None:
+    """Return one exact Claude option value and reject ambiguous repetition."""
+    values: list[str] = []
+    index = 0
+    while index < len(arguments):
+        argument = arguments[index]
+        if argument == option:
+            if index + 1 >= len(arguments):
+                raise ValueError(f"{option} requires a value")
+            value = arguments[index + 1]
+            if not value or value.startswith("-"):
+                raise ValueError(f"{option} requires a non-empty value, not another option")
+            values.append(value)
+            index += 2
+        elif argument.startswith(f"{option}="):
+            value = argument.partition("=")[2]
+            if not value or value.startswith("-"):
+                raise ValueError(f"{option} requires a valid value")
+            values.append(value)
+            index += 1
+        else:
+            index += 1
+    if len(values) > 1:
+        raise ValueError(f"{option} must be provided at most once")
+    return values[0] if values else None
+
+
+def model_family_matches(requested_model: str, effective_model: object) -> bool:
+    """Match documented Claude aliases to strict, currently qualified family IDs."""
+    if not isinstance(effective_model, str):
+        return False
+    requested = requested_model.lower()
+    if requested not in MODEL_FAMILY_ALIASES:
+        return requested_model == effective_model
+    if effective_model != effective_model.lower():
+        return False
+    if requested == "fable":
+        return effective_model in CURRENT_FABLE_IDENTITIES
+    if effective_model == requested:
+        return True
+    family = re.escape(requested)
+    return re.fullmatch(
+        rf"(?:claude-{family}-(?:3|4|5)(?:-[0-9]+)*|claude-(?:3|4|5)(?:-[0-9]+)*-{family}(?:-[0-9]+)*)",
+        effective_model,
+    ) is not None
 
 
 def redacted_argv(argv: list[str]) -> list[str]:
@@ -2393,7 +2446,12 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
     )
 
 
-def permission_hook(config_path: Path, expected_digest: str | None) -> int:
+def permission_hook(
+    config_path: Path,
+    expected_digest: str | None,
+    expected_effort: str | None,
+    effort_evidence_path: Path | None,
+) -> int:
     try:
         config = load_governed_config(config_path)
         if expected_digest is None or config.digest != expected_digest:
@@ -2407,10 +2465,50 @@ def permission_hook(config_path: Path, expected_digest: str | None) -> int:
             and command in allowed
             and tool_input.get("dangerouslyDisableSandbox") is not True
         )
-    except (OSError, ValueError, json.JSONDecodeError, TypeError):
+        effort_matches = True
+        if expected_effort is not None:
+            if expected_effort not in EFFORT_LEVELS or effort_evidence_path is None:
+                raise ValueError("effort qualification arguments are invalid")
+            hook_cwd = Path(hook_input["cwd"]).resolve(strict=True)
+            evidence_parent = effort_evidence_path.parent.resolve(strict=True)
+            if (
+                not effort_evidence_path.is_absolute()
+                or effort_evidence_path.name != EFFORT_EVIDENCE_NAME
+                or evidence_parent != hook_cwd
+            ):
+                raise ValueError("effort evidence path is outside the exact provider runtime directory")
+            raw_effort = hook_input.get("effort")
+            observed_effort = raw_effort.get("level") if isinstance(raw_effort, dict) else None
+            observation_status = "observed" if observed_effort in EFFORT_LEVELS else "unobservable"
+            observed_effort = observed_effort if observation_status == "observed" else None
+            effort_matches = observation_status == "observed" and observed_effort == expected_effort
+            evidence = {
+                "kind": "claude_governed_review_effort_qualification",
+                "requested_effort": expected_effort,
+                "effective_effort_observation": {
+                    "status": observation_status,
+                    "value": observed_effort,
+                    "source": "pre_tool_use_hook_input",
+                },
+                "matches": effort_matches,
+                "zero_authority": True,
+            }
+            encoded = canonical_json_bytes(evidence)
+            if effort_evidence_path.exists() or effort_evidence_path.is_symlink():
+                if effort_evidence_path.is_symlink() or effort_evidence_path.read_bytes() != encoded:
+                    raise ValueError("effort qualification evidence changed within one attempt")
+            else:
+                exclusive_write(effort_evidence_path, encoded)
+            permitted = permitted and effort_matches
+    except (OSError, ValueError, json.JSONDecodeError, KeyError, TypeError):
         permitted = False
     decision = "allow" if permitted else "deny"
-    reason = "exact observational command grant" if permitted else "command is outside the exact governed review grant"
+    if permitted:
+        reason = "exact observational command and effort grant"
+    elif expected_effort is not None and not locals().get("effort_matches", False):
+        reason = "effective effort did not exactly satisfy the governed review request"
+    else:
+        reason = "command is outside the exact governed review grant"
     print(
         json.dumps(
             {
@@ -2595,12 +2693,36 @@ def governed_system_prompt(config: GovernedReviewConfig) -> str:
     )
 
 
-def governed_claude_arguments(config: GovernedReviewConfig, model_arguments: list[str]) -> tuple[list[str], str]:
+def governed_claude_arguments(
+    config: GovernedReviewConfig,
+    model_arguments: list[str],
+    effort_evidence_path: Path | None = None,
+) -> tuple[list[str], str]:
     allowed_model_arguments = preflight_arguments(model_arguments)
     if len(allowed_model_arguments) != len(model_arguments) + 3:  # adds --tools, empty value, and no-persistence
         raise ValueError("governed review accepts only --model and --effort Claude arguments")
     allowed_model_arguments = allowed_model_arguments[:-3]
     allowed_tools = ["Read", "Grep", "Glob", *[f"Bash({shlex.join(list(argv))})" for argv in config.allowed_commands]]
+    requested_effort = selected_claude_option(model_arguments, "--effort")
+    if requested_effort is not None and requested_effort not in EFFORT_LEVELS:
+        raise ValueError("governed review effort is not a currently supported exact value")
+    hook_args = [
+        "--permission-hook",
+        str(config.path),
+        "--permission-hook-digest",
+        config.digest,
+    ]
+    if requested_effort is not None:
+        if effort_evidence_path is None:
+            raise ValueError("governed effort qualification requires an exact evidence path")
+        hook_args.extend(
+            (
+                "--permission-hook-expected-effort",
+                requested_effort,
+                "--permission-hook-effort-evidence",
+                str(effort_evidence_path),
+            )
+        )
     hook_settings = {
         "hooks": {
             "PreToolUse": [
@@ -2610,12 +2732,7 @@ def governed_claude_arguments(config: GovernedReviewConfig, model_arguments: lis
                         {
                             "type": "command",
                             "command": str(Path(__file__).resolve()),
-                            "args": [
-                                "--permission-hook",
-                                str(config.path),
-                                "--permission-hook-digest",
-                                config.digest,
-                            ],
+                            "args": hook_args,
                         }
                     ],
                 }
@@ -2840,26 +2957,71 @@ def init_capability_failure(
         return "invalid_effective_runtime_cwd"
     if effective_cwd != expected_cwd.resolve(strict=True):
         return "effective_runtime_cwd_mismatch"
-    requested_model = None
-    for index, argument in enumerate(model_arguments):
-        if argument == "--model" and index + 1 < len(model_arguments):
-            requested_model = model_arguments[index + 1]
-        elif argument.startswith("--model="):
-            requested_model = argument.split("=", 1)[1]
+    requested_model = selected_claude_option(model_arguments, "--model")
     if requested_model:
         effective_model = init.get("model")
-        aliases = {"opus", "sonnet", "haiku"}
-        matches = (
-            isinstance(effective_model, str)
-            and (
-                requested_model.lower() in effective_model.lower()
-                if requested_model.lower() in aliases
-                else requested_model == effective_model
-            )
-        )
-        if not matches:
+        if not model_family_matches(requested_model, effective_model):
             return "effective_model_mismatch"
     return None
+
+
+def effort_qualification_evidence(path: Path | None, requested_effort: str | None) -> tuple[dict[str, object], str | None]:
+    """Read exact hook-observed effort evidence for the completed attempt."""
+    if requested_effort is None:
+        return {
+            "requested_effort": None,
+            "effective_effort_observation": {"status": "not_requested", "value": None, "source": None},
+            "matches": None,
+        }, None
+    if path is None or not path.exists() or path.is_symlink():
+        return {
+            "requested_effort": requested_effort,
+            "effective_effort_observation": {
+                "status": "unobservable",
+                "value": None,
+                "source": "pre_tool_use_hook_input",
+            },
+            "matches": False,
+        }, "effective_effort_unobservable"
+    try:
+        evidence = json.loads(path.read_bytes())
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return {
+            "requested_effort": requested_effort,
+            "effective_effort_observation": {
+                "status": "invalid_evidence",
+                "value": None,
+                "source": "pre_tool_use_hook_input",
+            },
+            "matches": False,
+        }, "effective_effort_evidence_invalid"
+    expected_keys = {
+        "kind",
+        "requested_effort",
+        "effective_effort_observation",
+        "matches",
+        "zero_authority",
+    }
+    observation = evidence.get("effective_effort_observation") if isinstance(evidence, dict) else None
+    valid = (
+        isinstance(evidence, dict)
+        and set(evidence) == expected_keys
+        and evidence.get("kind") == "claude_governed_review_effort_qualification"
+        and evidence.get("requested_effort") == requested_effort
+        and isinstance(observation, dict)
+        and set(observation) == {"status", "value", "source"}
+        and observation.get("status") in {"observed", "unobservable"}
+        and observation.get("source") == "pre_tool_use_hook_input"
+        and evidence.get("zero_authority") is True
+        and isinstance(evidence.get("matches"), bool)
+    )
+    if not valid:
+        return evidence if isinstance(evidence, dict) else {}, "effective_effort_evidence_invalid"
+    if observation["status"] == "unobservable":
+        return evidence, "effective_effort_unobservable"
+    if observation["value"] not in EFFORT_LEVELS or evidence["matches"] is not True:
+        return evidence, "effective_effort_mismatch"
+    return evidence, None
 
 
 def retry_classification(parsed: dict[str, object], exit_code: int) -> tuple[str, bool]:
@@ -2962,7 +3124,12 @@ def run_governed_review(
     diagnostics_destination: Path | None,
 ) -> int:
     prompt_digest = sha256_bytes(prompt)
-    arguments, system_prompt = governed_claude_arguments(config, model_arguments)
+    preflight_arguments(model_arguments)
+    requested_model = selected_claude_option(model_arguments, "--model")
+    requested_effort = selected_claude_option(model_arguments, "--effort")
+    if requested_effort is not None and requested_effort not in EFFORT_LEVELS:
+        raise ValueError("governed review effort is not a currently supported exact value")
+    system_prompt = governed_system_prompt(config)
     contract_identity = {
         "config_sha256": config.digest,
         "prompt_sha256": prompt_digest,
@@ -3041,7 +3208,6 @@ def run_governed_review(
             emit_diagnostics(record, diagnostics_destination)
             return REVIEWER_FAILURE_EXIT
 
-        command = [executable, "-p", *arguments]
         attempt_summaries: list[dict[str, object]] = []
         candidate_identity_checks: list[dict[str, object]] = []
         final_output: str | None = None
@@ -3097,6 +3263,15 @@ def run_governed_review(
                 return REVIEWER_FAILURE_EXIT
             attempt_scratch = AttemptScratch.allocate(child_environment, "claude-review-attempt-")
             environment = safe_command_environment(child_environment, attempt_scratch.path)
+            effort_evidence_path = (
+                attempt_scratch.path / EFFORT_EVIDENCE_NAME if requested_effort is not None else None
+            )
+            arguments, _ = governed_claude_arguments(
+                config,
+                model_arguments,
+                effort_evidence_path,
+            )
+            command = [executable, "-p", *arguments]
             attempt_id = f"{config.body['review_id']}-{attempt_number}-{uuid.uuid4().hex}"
             attempt_snapshot = source_snapshot(
                 list(config.guard_roots), config.candidate, environment, config.allowed_commands, config.candidate_head
@@ -3443,6 +3618,10 @@ def run_governed_review(
                 expected_cwd=attempt_scratch.path,
                 model_arguments=model_arguments,
             )
+            effort_evidence, effort_failure = effort_qualification_evidence(
+                effort_evidence_path,
+                requested_effort,
+            )
             canary_failure = provider_command_canary_failure(parsed, config.allowed_commands[0])
             classification, retryable = retry_classification(parsed, process.returncode)
             auth_failure = classify_failure(
@@ -3457,7 +3636,10 @@ def run_governed_review(
                 classification = capability_failure or live_capability_failure or "startup_capability_error"
                 retryable = False
                 live_state["capability_failure"] = classification
-            if canary_failure:
+            elif effort_failure:
+                classification = effort_failure
+                retryable = False
+            elif canary_failure:
                 classification = canary_failure
                 retryable = False
             if live_state.get("termination_authority"):
@@ -3531,6 +3713,26 @@ def run_governed_review(
                     "provider_runtime_cwd": str(attempt_scratch.path),
                     "HOME": environment["HOME"],
                     "effective_init": parsed.get("init"),
+                    "configuration_qualification": {
+                        "requested": {
+                            "model": requested_model,
+                            "effort": requested_effort,
+                        },
+                        "effective": {
+                            "model": (
+                                parsed["init"].get("model")
+                                if isinstance(parsed.get("init"), dict)
+                                else None
+                            ),
+                            "effort": effort_evidence["effective_effort_observation"],
+                        },
+                        "model_matches": (
+                            model_family_matches(requested_model, parsed["init"].get("model"))
+                            if requested_model is not None and isinstance(parsed.get("init"), dict)
+                            else None
+                        ),
+                        "effort_matches": effort_evidence["matches"],
+                    },
                 },
                 "attempt_scratch": {**scratch_record, "cleanup": scratch_cleanup},
                 "failure_classification": None if classification == "success" else classification,
@@ -3685,6 +3887,8 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
     operation.add_argument("--review-config-fixture", type=Path, help=argparse.SUPPRESS)
     operation.add_argument("--permission-hook", type=Path)
     parser.add_argument("--permission-hook-digest")
+    parser.add_argument("--permission-hook-expected-effort")
+    parser.add_argument("--permission-hook-effort-evidence", type=Path)
     operation.add_argument("--request-termination", type=Path)
     operation.add_argument("--decline-termination", type=Path)
     operation.add_argument("--terminate", type=Path)
@@ -3702,6 +3906,15 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
         parser.error("do not pass Claude prompt flags; provide the prompt on standard input")
     if args.permission_hook is None and args.permission_hook_digest is not None:
         parser.error("--permission-hook-digest requires --permission-hook")
+    effort_hook_arguments = (
+        args.permission_hook_expected_effort,
+        args.permission_hook_effort_evidence,
+    )
+    if args.permission_hook is None and any(value is not None for value in effort_hook_arguments):
+        parser.error("effort qualification arguments require --permission-hook")
+    if args.permission_hook is not None and any(value is not None for value in effort_hook_arguments):
+        if not all(value is not None for value in effort_hook_arguments):
+            parser.error("effort qualification requires both expected effort and evidence path")
     if args.terminate is None and any(
         value is not None for value in (args.termination_authority, args.grace_seconds)
     ):
@@ -3732,7 +3945,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.review_config_fixture is not None:
         args.review_config = args.review_config_fixture
     if args.permission_hook:
-        return permission_hook(args.permission_hook, args.permission_hook_digest)
+        return permission_hook(
+            args.permission_hook,
+            args.permission_hook_digest,
+            args.permission_hook_expected_effort,
+            args.permission_hook_effort_evidence,
+        )
     if args.request_termination:
         return request_or_decline_termination(args.request_termination, decline=False)
     if args.decline_termination:
@@ -3889,6 +4107,8 @@ def main(argv: list[str] | None = None) -> int:
     inherited_home = os.environ.get("HOME")
     child_environment = os.environ.copy()
     child_environment.pop("CLAUDE_REVIEW_TEST_EFFECTIVE_HOME", None)
+    if selected_claude_option(args.claude_args, "--effort") is not None:
+        child_environment.pop("CLAUDE_CODE_EFFORT_LEVEL", None)
     if not execution_fixture:
         child_environment.pop("CLAUDE_REVIEW_TEST_FIXTURE", None)
         child_environment.pop("CLAUDE_REVIEW_TEST_SCRATCH_PARENT", None)
