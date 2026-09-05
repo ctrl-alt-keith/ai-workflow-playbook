@@ -46,7 +46,7 @@ EFFORT_LEVELS = {"low", "medium", "high", "xhigh", "max"}
 EFFORT_EVIDENCE_NAME = "effective-effort.json"
 HOOK_LIVENESS_EVIDENCE_NAME = "permission-hook-liveness.json"
 WORKTREE_ADMIN_PATHS = ("HEAD", "index", "logs/HEAD", "COMMIT_EDITMSG", "ORIG_HEAD")
-LIVE_TELEMETRY_SCHEMA_VERSION = 1
+LIVE_TELEMETRY_SCHEMA_VERSION = 2
 LIVE_TELEMETRY_PRIVACY_CLASSIFICATION = "metadata_only"
 LIVE_TOOL_CLASSES = {
     "Bash": "shell",
@@ -2868,13 +2868,18 @@ class PipeCollector:
         return b"".join(self.lines)
 
 
+def correlation_identity(domain: str, value: str) -> str:
+    """Return a fixed-size, domain-separated public correlation identity."""
+    return sha256_bytes(f"claude-review/live-telemetry/{domain}/v1\0".encode("utf-8") + value.encode("utf-8"))
+
+
 class LiveTelemetry:
     """Classify complete provider records without retaining their sensitive bodies."""
 
     def __init__(self, controller_attempt_id: str):
         self.controller_attempt_id = controller_attempt_id
         self._receipts: list[dict[str, object]] = []
-        self._provider_session_id: str | None = None
+        self._provider_session_value: str | None = None
         self._seen_event_ids: set[str] = set()
         self._seen_raw_record_digests: set[str] = set()
         self._tool_classes: dict[str, str] = {}
@@ -2911,10 +2916,10 @@ class LiveTelemetry:
                 return
             session_id = record.get("session_id")
             if isinstance(session_id, str) and session_id:
-                self._provider_session_id = session_id
+                self._provider_session_value = session_id
             record_type = record.get("type")
             if record_type == "system" and record.get("subtype") == "init":
-                if self._provider_session_id is None:
+                if self._provider_session_value is None:
                     self._emit_degraded(ordinal, arrival_monotonic, "missing_provider_session_identity")
                     return
                 self._emit("provider_session_initialized", ordinal, arrival_monotonic, record, {})
@@ -2936,7 +2941,7 @@ class LiveTelemetry:
                     record,
                     {"terminal_status": normalized_terminal_status(record)},
                 )
-                self._emit_usage_if_present(record, ordinal, arrival_monotonic)
+                self._emit_usage_if_present(record, ordinal, arrival_monotonic, scope="review_attempt_terminal")
                 return
             if record_type not in {"assistant", "user"}:
                 self._emit_degraded(ordinal, arrival_monotonic, "unknown_provider_event")
@@ -2959,7 +2964,8 @@ class LiveTelemetry:
                     self._emit_tool_request(item, ordinal, arrival_monotonic, record)
                 elif item.get("type") == "tool_result":
                     self._emit_tool_completion(item, ordinal, arrival_monotonic, record)
-            self._emit_usage_if_present(record, ordinal, arrival_monotonic)
+            if record_type == "assistant":
+                self._emit_usage_if_present(record, ordinal, arrival_monotonic, scope="assistant_event")
 
     def collector_failed(self, arrival_monotonic: float) -> None:
         with self._lock:
@@ -3013,9 +3019,10 @@ class LiveTelemetry:
         )
 
     def _emit_usage_if_present(
-        self, record: dict[str, object], ordinal: int, arrival_monotonic: float
+        self, record: dict[str, object], ordinal: int, arrival_monotonic: float, *, scope: str
     ) -> None:
-        usage = record.get("usage")
+        message = record.get("message")
+        usage = message.get("usage") if scope == "assistant_event" and isinstance(message, dict) else record.get("usage")
         if not isinstance(usage, dict):
             return
         counters = {
@@ -3030,8 +3037,8 @@ class LiveTelemetry:
             ordinal,
             arrival_monotonic,
             record,
-            {"scope": "review_attempt", "counters": counters},
-            evidence="inferred",
+            {"scope": scope, "counters": counters},
+            evidence="direct" if scope == "assistant_event" else "inferred",
         )
 
     def _emit(
@@ -3045,18 +3052,18 @@ class LiveTelemetry:
         provider_tool_id: str | None = None,
         evidence: str = "direct",
     ) -> None:
-        provider_session_id = self._provider_session_id
-        if provider_session_id is None and event_type != "provider_session_initialized":
+        provider_session_value = self._provider_session_value
+        if provider_session_value is None and event_type != "provider_session_initialized":
             self._emit_degraded(ordinal, arrival_monotonic, "missing_provider_session_identity")
             return
-        provider_event_id = record.get("uuid")
-        if not isinstance(provider_event_id, str) or not provider_event_id:
-            provider_event_id = None
+        provider_event_value = record.get("uuid")
+        if not isinstance(provider_event_value, str) or not provider_event_value:
+            provider_event_value = None
         message = record.get("message")
-        provider_message_id = message.get("id") if isinstance(message, dict) else None
-        if not isinstance(provider_message_id, str) or not provider_message_id:
-            provider_message_id = None
-        dedupe_identity = provider_tool_id or provider_event_id or provider_message_id
+        provider_message_value = message.get("id") if isinstance(message, dict) else None
+        if not isinstance(provider_message_value, str) or not provider_message_value:
+            provider_message_value = None
+        dedupe_identity = provider_tool_id or provider_event_value or provider_message_value
         if dedupe_identity is not None:
             dedupe_key = f"{event_type}:{dedupe_identity}"
             if dedupe_key in self._seen_event_ids:
@@ -3072,14 +3079,14 @@ class LiveTelemetry:
             "metadata": metadata,
             "privacy_classification": LIVE_TELEMETRY_PRIVACY_CLASSIFICATION,
         }
-        if provider_session_id is not None:
-            receipt["provider_session_id"] = provider_session_id
-        if provider_event_id is not None:
-            receipt["provider_event_id"] = provider_event_id
-        if provider_message_id is not None:
-            receipt["provider_message_id"] = provider_message_id
+        if provider_session_value is not None:
+            receipt["provider_session_correlation_id"] = correlation_identity("session", provider_session_value)
+        if provider_event_value is not None:
+            receipt["provider_event_correlation_id"] = correlation_identity("event", provider_event_value)
+        if provider_message_value is not None:
+            receipt["provider_message_correlation_id"] = correlation_identity("message", provider_message_value)
         if provider_tool_id is not None:
-            receipt["provider_tool_id"] = provider_tool_id
+            receipt["provider_tool_correlation_id"] = correlation_identity("tool", provider_tool_id)
         self._receipts.append(receipt)
 
     def _emit_degraded(self, ordinal: int, arrival_monotonic: float, reason: str) -> None:

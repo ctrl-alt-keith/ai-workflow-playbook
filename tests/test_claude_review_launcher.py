@@ -2885,17 +2885,18 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             {
                 "type": "system",
                 "subtype": "init",
-                "session_id": "session-1",
+                "session_id": "session-secret-token-value-" + "s" * 300,
                 "model": "sensitive-model-config",
             },
             {
                 "type": "assistant",
                 "message": {
-                    "id": "message-1",
+                    "id": "message-secret-token-value-" + "m" * 300,
+                    "usage": {"input_tokens": 2, "output_tokens": 4, "ignored": "secret-token-value"},
                     "content": [
                         {
                             "type": "tool_use",
-                            "id": "tool-1",
+                            "id": "tool-secret-token-value-" + "t" * 300,
                             "name": "Bash",
                             "input": {"command": "secret-command --token secret-token-value"},
                         }
@@ -2908,7 +2909,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                     "content": [
                         {
                             "type": "tool_result",
-                            "tool_use_id": "tool-1",
+                            "tool_use_id": "tool-secret-token-value-" + "t" * 300,
                             "content": "sensitive tool output",
                         }
                     ]
@@ -2917,7 +2918,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             {
                 "type": "result",
                 "subtype": "success",
-                "session_id": "session-1",
+                "session_id": "session-secret-token-value-" + "s" * 300,
                 "usage": {"input_tokens": 3, "output_tokens": 5, "ignored": "secret-token-value"},
                 "result": "sensitive reviewer prose",
             },
@@ -2934,6 +2935,9 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertNotIn("sensitive reviewer prose", encoded)
         self.assertNotIn("sensitive tool output", encoded)
         self.assertNotIn("sensitive-model-config", encoded)
+        self.assertNotIn("session-secret-token-value", encoded)
+        self.assertNotIn("message-secret-token-value", encoded)
+        self.assertNotIn("tool-secret-token-value", encoded)
         event_types = [receipt["event_type"] for receipt in snapshot["receipts"]]
         self.assertEqual(
             event_types,
@@ -2941,6 +2945,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 "provider_session_initialized",
                 "substantive_model_activity",
                 "source_tool_request",
+                "usage_sample",
                 "source_tool_completion",
                 "provider_terminal",
                 "usage_sample",
@@ -2951,9 +2956,28 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         )
         self.assertEqual(snapshot["receipts"][2]["metadata"], {"tool_class": "shell"})
         self.assertEqual(
-            snapshot["receipts"][5]["metadata"],
-            {"scope": "review_attempt", "counters": {"input_tokens": 3, "output_tokens": 5}},
+            snapshot["receipts"][3]["metadata"],
+            {"scope": "assistant_event", "counters": {"input_tokens": 2, "output_tokens": 4}},
         )
+        self.assertEqual(
+            snapshot["receipts"][6]["metadata"],
+            {"scope": "review_attempt_terminal", "counters": {"input_tokens": 3, "output_tokens": 5}},
+        )
+        self.assertEqual(snapshot["receipts"][3]["evidence"], "direct")
+        self.assertEqual(snapshot["receipts"][6]["evidence"], "inferred")
+        self.assertEqual(
+            snapshot["receipts"][2]["provider_tool_correlation_id"],
+            snapshot["receipts"][4]["provider_tool_correlation_id"],
+        )
+        for key in (
+            "provider_session_correlation_id",
+            "provider_event_correlation_id",
+            "provider_message_correlation_id",
+            "provider_tool_correlation_id",
+        ):
+            for receipt in snapshot["receipts"]:
+                if key in receipt:
+                    self.assertRegex(receipt[key], r"^[0-9a-f]{64}$")
         self.assertEqual(snapshot["receipts"][-3]["metadata"], {"reason": "duplicate_or_replayed_record"})
         self.assertEqual(snapshot["receipts"][-2]["metadata"], {"reason": "truncated_record"})
         self.assertEqual(snapshot["receipts"][-1]["metadata"], {"reason": "unknown_provider_event"})
