@@ -1,0 +1,199 @@
+{
+  "complete_execution_contract": false,
+  "operational_owner": "existing_playbook_prose",
+  "status": "frozen_fixture_not_freshness",
+  "units": [
+    {
+      "blocks": [
+        {
+          "clause": null,
+          "disposition": "supporting",
+          "external_source": null,
+          "index": 1,
+          "lines": [
+            232,
+            232
+          ],
+          "predecessor_normalized_sha256": "22b7ee71066746e447ecf5172ebda0ce2cc6e17aee878ed263a3953ab8d583d8",
+          "sha256": "a900edcedce907bc474136535a52998fc3a712a65d688190d75adddad38f71b6",
+          "text": "### Required Repository Startup Contract\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 2,
+          "lines": [
+            234,
+            236
+          ],
+          "predecessor_normalized_sha256": "a011b7c2376341b80ad84266bb5ed982b90ef70a0dd0bfa628d14d00642e478e",
+          "sha256": "63b5b470781fe29226c4789417f88595a5dd4d31cfcc99251f7d60d13a1885ea",
+          "text": "Before repository-scoped code, documentation, research, planning, leadership,\nread-only review, audit, advice, architecture/workflow analysis, PR or issue\nrecommendations, and \"what changed?\" or \"what next?\" requests:\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 3,
+          "lines": [
+            238,
+            239
+          ],
+          "predecessor_normalized_sha256": "fc614e025a2f3ff9bee9b4367682dd5d5f90e1f549e313bfddae29c017ca7a94",
+          "sha256": "b542bb78cfa4408a07b72b4374e78b2ae602dea80866a70c5aed8c9469e94374",
+          "text": "1. Read this page, `docs/core-model.md`, and\n   `docs/engineering-baseline.md`.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 4,
+          "lines": [
+            240,
+            240
+          ],
+          "predecessor_normalized_sha256": "ca1c44f8bc82c54930148a5dd3c81784f1eef28237c18a272a9e817e7e690372",
+          "sha256": "b5ea0fd6038aa07092952c70f3f799811fe6ce84df43e38f5bd605be495fbb39",
+          "text": "2. Read the target repository's repo-local `AGENTS.md`.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 5,
+          "lines": [
+            241,
+            244
+          ],
+          "predecessor_normalized_sha256": "3d8e732668d5e8c9e366edbbe8d8666977fb4b41e4fd638fad95674e055b30e4",
+          "sha256": "9942e7eb25b327e61f0aed98cb1c76a3f99bd27caa0f4abe5124414bf7ea25b5",
+          "text": "3. Apply the matching executor adapter. Codex runs must apply\n   `docs/tool-adapters/codex.md`; Claude runs must apply\n   `docs/tool-adapters/claude.md`; repository-scoped ChatGPT runs must apply\n   `docs/tool-adapters/chatgpt.md`.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 6,
+          "lines": [
+            245,
+            245
+          ],
+          "predecessor_normalized_sha256": "95abdb235ecc141c469bedc1e5d0547f6e308ec88e28bb8bbf10788834a47580",
+          "sha256": "7b1aa2f233bb5a90f15837afec93853ffd8a1185559b494df102752611cc9542",
+          "text": "4. Identify the repository or workspace's primary purpose.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 7,
+          "lines": [
+            246,
+            247
+          ],
+          "predecessor_normalized_sha256": "66465f84ed537bcfd7b89b39967ec3e8a37073c2616e32be140078b632220ba8",
+          "sha256": "7778b15b587e9a32594b05bc5b00bcf1a64b318188df0243c61660a2edcb88e2",
+          "text": "5. Select the interaction mode from `docs/repo-readiness.md`: implementation,\n   review/audit, or orchestration/prompt-authoring.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 8,
+          "lines": [
+            248,
+            248
+          ],
+          "predecessor_normalized_sha256": "5663421fd78dd5b2bbd131105f7d2c35d21713753095383ebd75d71ccf4f50af",
+          "sha256": "7e77d6419aafe69db585d074c7e6450c967ac68c76f8c8b8f92c0ef955145e24",
+          "text": "6. Identify the canonical source for the rule, behavior, or state being used.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 9,
+          "lines": [
+            249,
+            252
+          ],
+          "predecessor_normalized_sha256": "10b780540425142b71cf40e5c9911c9bbe6cd237a27db08b19a2e602b9319282",
+          "sha256": "4fcfbf00da206d5019b9cb192cabf7099f14aff66db3c7f7e3cfadb248bf305e",
+          "text": "7. Apply `docs/source-first-retrieval.md` before stateful repository reasoning.\n   When connector capability matters, apply\n   [Connector availability is runtime evidence](#connector-availability-is-runtime-evidence)\n   without changing repository hydration or instruction discovery.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 10,
+          "lines": [
+            253,
+            254
+          ],
+          "predecessor_normalized_sha256": "b8975a4cecbf4f367fd957ea39bcaceabc84a5405e28a17b5bb1cb722051ca34",
+          "sha256": "b0b946ce9e5b89333ff02a73dc2e373faf1e7274f1b49292ca05b0a10b28be5b",
+          "text": "8. For policy-sensitive changes, apply the repo-family alignment check in\n   `docs/repo-readiness.md`.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 11,
+          "lines": [
+            255,
+            255
+          ],
+          "predecessor_normalized_sha256": "062bebc2689009666185267da80bac9920916185efa99c8052110d1a90f80207",
+          "sha256": "f6f15279d03d1787b6ca26bb2b2cf6c583a722fc07073dcfdb513b28cc775131",
+          "text": "9. Confirm command form and execution settings for planned commands.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 12,
+          "lines": [
+            256,
+            256
+          ],
+          "predecessor_normalized_sha256": "d6b4c9873c9354d0890a986c10378bb03dbefa19dc48a974a66aa59f74453222",
+          "sha256": "1432d817e7e4833fae19b56bf02fc9432bf384e0a256740b5be070b63369e8bf",
+          "text": "10. Identify the canonical validation, review, or inspection path.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 13,
+          "lines": [
+            257,
+            258
+          ],
+          "predecessor_normalized_sha256": "d7c4dbc105d33320157af44c5dc15e54ef5ad1b1268a424aa409b389715fa97e",
+          "sha256": "777c04b3b5e1a1e93acb17190826fe26026114a5a1af89361605f9401d42c5c7",
+          "text": "11. Act only after these checks are clear, or report the blocker, uncertainty,\n    capability gap, or missing context.\n"
+        },
+        {
+          "clause": "action.startup-floor/does",
+          "disposition": "mapped",
+          "external_source": null,
+          "index": 14,
+          "lines": [
+            260,
+            264
+          ],
+          "predecessor_normalized_sha256": "9697a57a4d51ba8eb40da15b343bf92da81493a47823df897d516e57dfbfca54",
+          "sha256": "ebd3a9a9ce60ccad0cec2d4fba9e6cf83841aff021b97e1f6af7731e46e6b470",
+          "text": "Controller-owned context sufficiency is determined from canonical routing for\nthe current task. The controller or other workflow owner must establish that\nthe repository floor and every activated document are present; a child or\ndelegated worker's own selection or belief that it has enough context cannot\nestablish sufficiency.\n"
+        }
+      ],
+      "heading": "### Required Repository Startup Contract",
+      "path": "docs/start-here.md",
+      "predecessor_section_sha256": "0fe1c8511e798b57becf5ab4c42e2af7b919587ad1669e3ee94bcfa72cd1b368",
+      "revision": "da7a7dcb056239ac4193d1d44500c606488621f2",
+      "sha256": "5e0e59ec0e340319cf5a67c680fe4de4b2b994e51ad0a2e550683485cb73c9f2",
+      "unit": "pb.startup-floor"
+    }
+  ]
+}

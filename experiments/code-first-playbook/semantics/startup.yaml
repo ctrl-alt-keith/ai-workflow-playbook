@@ -1,0 +1,403 @@
+language: playbook-semantics/0
+module: startup
+owner: source.start
+imports: []
+records:
+- id: source.agents
+  kind: source
+  owner: source.start
+  status: active
+  references: []
+  definition: 'External canonical read. Resolve the claim from this source; missing content blocks the
+    dependent conclusion. '
+  path: AGENTS.md
+- id: source.baseline
+  kind: source
+  owner: source.start
+  status: active
+  references: []
+  definition: 'External canonical read. Resolve the claim from this source; missing content blocks the
+    dependent conclusion. '
+  path: docs/engineering-baseline.md
+- id: source.chatgpt
+  kind: source
+  owner: source.start
+  status: active
+  references: []
+  definition: 'External canonical read. Resolve the claim from this source; missing content blocks the
+    dependent conclusion. Applicability is unresolved; all adapters remain visible until qualified selection. '
+  path: docs/tool-adapters/chatgpt.md
+- id: source.claude
+  kind: source
+  owner: source.start
+  status: active
+  references: []
+  definition: 'External canonical read. Resolve the claim from this source; missing content blocks the
+    dependent conclusion. Applicability is unresolved; all adapters remain visible until qualified selection. '
+  path: docs/tool-adapters/claude.md
+- id: source.codex
+  kind: source
+  owner: source.start
+  status: active
+  references: []
+  definition: 'External canonical read. Resolve the claim from this source; missing content blocks the
+    dependent conclusion. Applicability is unresolved; all adapters remain visible until qualified selection. '
+  path: docs/tool-adapters/codex.md
+- id: source.core
+  kind: source
+  owner: source.start
+  status: active
+  references: []
+  definition: 'External canonical read. Resolve the claim from this source; missing content blocks the
+    dependent conclusion. '
+  path: docs/core-model.md
+- id: source.readiness
+  kind: source
+  owner: source.start
+  status: active
+  references: []
+  definition: 'External canonical read. Resolve the claim from this source; missing content blocks the
+    dependent conclusion. Interaction-mode and action-latch remain external; no rules from either unit
+    are included. '
+  path: docs/repo-readiness.md
+- id: source.retrieval
+  kind: source
+  owner: source.start
+  status: active
+  references: []
+  definition: 'External canonical read. Resolve the claim from this source; missing content blocks the
+    dependent conclusion. '
+  path: docs/source-first-retrieval.md
+- id: source.review
+  kind: source
+  owner: source.start
+  status: active
+  references: []
+  definition: 'External canonical read. Resolve the claim from this source; missing content blocks the
+    dependent conclusion. '
+  path: docs/review-packet.md
+- id: source.start
+  kind: source
+  owner: source.start
+  status: active
+  references: []
+  definition: 'External canonical read. Resolve the claim from this source; missing content blocks the
+    dependent conclusion. '
+  path: docs/start-here.md
+- id: term.operation
+  kind: term
+  owner: source.start
+  status: active
+  references: []
+  definition: Identity of the one concrete operation under review in the synthetic pilot context. It does
+    not denote all repository work or authorize dispatch.
+  type: enum
+  values:
+  - current-operation
+- id: fact.leaves_repository_work
+  kind: fact
+  owner: source.start
+  status: active
+  references: []
+  question: Interaction clearly leaves repository work.
+  type: boolean
+  values:
+  - false
+  - true
+  resolution_class: external_judgment
+  evaluators:
+  - controller
+  sources:
+  - source.start
+  freshness:
+    mode: context
+- id: fact.material_change
+  kind: fact
+  owner: source.start
+  status: active
+  references: []
+  question: Changed repository, mode, artifact, workflow, source requirements, locality, executor or authority
+    requires activation reevaluation; ordinary follow-up does not.
+  type: boolean
+  values:
+  - false
+  - true
+  resolution_class: external_judgment
+  evaluators:
+  - controller
+  sources:
+  - source.start
+  freshness:
+    mode: context
+- id: fact.repository_changed
+  kind: fact
+  owner: source.start
+  status: active
+  references: []
+  question: Current target differs from the repository whose startup completed.
+  type: boolean
+  values:
+  - false
+  - true
+  resolution_class: external_judgment
+  evaluators:
+  - controller
+  sources:
+  - source.start
+  freshness:
+    mode: context
+- id: fact.repository_work
+  kind: fact
+  owner: source.start
+  status: active
+  references: []
+  question: Current bounded action depends on repository state; classify from current human instruction,
+    not keywords alone.
+  type: boolean
+  values:
+  - false
+  - true
+  resolution_class: external_judgment
+  evaluators:
+  - controller
+  sources:
+  - source.start
+  freshness:
+    mode: context
+- id: fact.startup_ready
+  kind: fact
+  owner: source.start
+  status: active
+  references: []
+  question: All startup checks and task-specific prerequisites are clear under their owners.
+  type: boolean
+  values:
+  - false
+  - true
+  resolution_class: external_judgment
+  evaluators:
+  - controller
+  sources:
+  - source.start
+  freshness:
+    mode: context
+- id: fact.startup_succeeded
+  kind: fact
+  owner: source.start
+  status: active
+  references: []
+  question: Controller verified and applied the complete repository floor and activated owners, not merely
+    retrieved them.
+  type: boolean
+  values:
+  - false
+  - true
+  resolution_class: external_judgment
+  evaluators:
+  - controller
+  sources:
+  - source.start
+  freshness:
+    mode: context
+- id: fact.exact-source-read
+  kind: fact
+  owner: source.start
+  status: active
+  references: []
+  question: Did the declared synthetic acquisition record read this exact source set? This does not establish
+    adequacy, application or startup success.
+  type: boolean
+  values:
+  - false
+  - true
+  resolution_class: observed_evidence
+  evaluators:
+  - fixture-acquirer
+  sources:
+  - source.start
+  freshness:
+    mode: time
+    max_age_seconds: 300
+- id: action.startup-floor
+  kind: action
+  owner: source.start
+  status: active
+  references:
+  - source.agents
+  - source.baseline
+  - source.chatgpt
+  - source.claude
+  - source.codex
+  - source.core
+  - source.readiness
+  - source.retrieval
+  - source.start
+  does: |
+    Before repository-scoped code, documentation, research, planning, leadership,
+    read-only review, audit, advice, architecture/workflow analysis, PR or issue
+    recommendations, and "what changed?" or "what next?" requests:
+
+    1. Read this page, `docs/core-model.md`, and
+       `docs/engineering-baseline.md`.
+
+    2. Read the target repository's repo-local `AGENTS.md`.
+
+    3. Apply the matching executor adapter. Codex runs must apply
+       `docs/tool-adapters/codex.md`; Claude runs must apply
+       `docs/tool-adapters/claude.md`; repository-scoped ChatGPT runs must apply
+       `docs/tool-adapters/chatgpt.md`.
+
+    4. Identify the repository or workspace's primary purpose.
+
+    5. Select the interaction mode from `docs/repo-readiness.md`: implementation,
+       review/audit, or orchestration/prompt-authoring.
+
+    6. Identify the canonical source for the rule, behavior, or state being used.
+
+    7. Apply `docs/source-first-retrieval.md` before stateful repository reasoning.
+       When connector capability matters, apply
+       [Connector availability is runtime evidence](#connector-availability-is-runtime-evidence)
+       without changing repository hydration or instruction discovery.
+
+    8. For policy-sensitive changes, apply the repo-family alignment check in
+       `docs/repo-readiness.md`.
+
+    9. Confirm command form and execution settings for planned commands.
+
+    10. Identify the canonical validation, review, or inspection path.
+
+    11. Act only after these checks are clear, or report the blocker, uncertainty,
+        capability gap, or missing context.
+
+    Controller-owned context sufficiency is determined from canonical routing for
+    the current task. The controller or other workflow owner must establish that
+    the repository floor and every activated document are present; a child or
+    delegated worker's own selection or belief that it has enough context cannot
+    establish sufficiency.
+  parameters:
+  - name: operation
+    type: term.operation
+    required: true
+  does_not_establish:
+  - Operational adoption
+  - Permission for the dependent operation
+  - Complete executor contract
+  action_kind: behavior
+- id: action.startup-floor-failure
+  kind: action
+  owner: source.start
+  status: active
+  references:
+  - source.retrieval
+  - source.start
+  does: Report the exact unresolved prerequisite, source or authority gap and stop affected action; successful
+    retrieval alone does not establish application.
+  parameters:
+  - name: operation
+    type: term.operation
+    required: true
+  does_not_establish:
+  - New source-access permission
+  - Authority from failure or fallback
+  action_kind: behavior
+- id: boundary.startup-floor
+  kind: action
+  owner: source.start
+  status: active
+  references: []
+  does: The specific dependent Repository-scoped action for operation=current-operation. Check current
+    outside authority immediately before it.
+  parameters:
+  - name: operation
+    type: term.operation
+    required: true
+  does_not_establish:
+  - Eligibility to perform the operation
+  action_kind: boundary
+- id: evidence.startup-floor
+  kind: action
+  owner: source.start
+  status: active
+  references: []
+  does: Record source-specific checks, unresolved questions and evidence of applying this unit to operation=current-operation.
+    Retrieval alone does not prove adequacy or compliance.
+  parameters:
+  - name: operation
+    type: term.operation
+    required: true
+  does_not_establish:
+  - Permission
+  - Discharge of external judgment
+  action_kind: evidence
+- id: context.startup-floor
+  kind: context
+  owner: source.start
+  status: active
+  references: []
+  body: All numbered startup requirements are represented as one obligation with explicit full canonical
+    reads; adapter selection and repo-family conditions remain unprojected judgments.
+- id: pb.startup-floor
+  kind: rule
+  owner: source.start
+  status: active
+  references: []
+  unit: pb.startup-floor
+  when:
+    is:
+    - fact.repository_work
+    - true
+  effect:
+    actor: controller
+    modality: must
+    action: action.startup-floor
+    parameters:
+      operation: current-operation
+  requires:
+  - source.start
+  - source.core
+  - source.baseline
+  - source.agents
+  - source.readiness
+  - source.retrieval
+  - source.codex
+  - source.claude
+  - source.chatgpt
+  activates: []
+  before:
+  - boundary.startup-floor
+  overrides: []
+  lifetime:
+    starts: Entry before repository-scoped action
+    persists_within: Complete target-specific startup floor and task-activated owners
+    ends_when:
+      any:
+      - is:
+        - fact.leaves_repository_work
+        - true
+      - is:
+        - fact.repository_changed
+        - true
+  failure:
+    when:
+      is:
+      - fact.startup_ready
+      - false
+    action: action.startup-floor-failure
+    alternatives: []
+    scope: Repository-scoped action
+  authority_ref:
+    source: source.readiness
+    question: What does current human direction authorize for operation=current-operation? Resolve external
+      interaction-mode and action-latch, plus source-specific restrictions.
+    check_at: immediately-before-action
+  completion:
+    evidence: evidence.startup-floor
+    boundary: boundary.startup-floor
+    question: Were the unit and all required external owners applied sufficiently? This remains controller
+      judgment.
+    when:
+      is:
+      - fact.startup_succeeded
+      - true
+  context:
+  - context.startup-floor

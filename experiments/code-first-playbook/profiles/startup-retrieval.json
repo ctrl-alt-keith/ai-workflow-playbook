@@ -1,0 +1,14 @@
+{
+  "operator-sre": [
+    {
+      "label": "Start a repository task",
+      "rule": "pb.startup-floor"
+    }
+  ],
+  "support": [
+    {
+      "label": "Work began without startup context",
+      "rule": "pb.startup-floor"
+    }
+  ]
+}
