@@ -167,6 +167,12 @@ class ProjectionContracts(unittest.TestCase):
         self.assertIs(result["rules"][1]["activation"], False)
         self.assertIn("requires", result["rules"][1]["selection"][0])
 
+    def test_failure_inheritance_cannot_leak_retired_rule_into_canonical_reads(self):
+        self.second(status="retired")
+        self.model["rules"][0]["failure"] = {"mode": "inherited", "from": "r2", "operation": "conclusion"}
+        with self.assertRaisesRegex(pilot.ContractError, "failure inheritance from retired ID"):
+            pilot.select(self.model, {"needed": True})
+
     def test_retirement_never_reassigns_ids_or_silently_redirects_dependencies(self):
         second = self.second()
         self.model["rules"][0].update(status="retired", superseded_by="r2")

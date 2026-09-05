@@ -5,7 +5,6 @@
       "src.start",
       "src.core",
       "src.agents",
-      "src.codex",
       "src.baseline",
       "src.retrieval",
       "src.readiness"
@@ -1599,7 +1598,9 @@
           "sha256": "fd8b8079649403e70f9291c3c67cfbf1aa40b27bb9efc4141bd6b475ac5b76e2"
         },
         {
-          "canonical_reads": [],
+          "canonical_reads": [
+            "src.claim-verification"
+          ],
           "class": "normative",
           "lines": [
             298,
@@ -2135,7 +2136,9 @@
           "sha256": "8d29ed0f15885b1461189555ba0d33a588e136a32115d4766bc14686ef3c72b6"
         },
         {
-          "canonical_reads": [],
+          "canonical_reads": [
+            "src.action-latch"
+          ],
           "class": "normative",
           "lines": [
             204,
@@ -2159,7 +2162,9 @@
           "sha256": "067249b2629e84367abfda889e492fe77d4c01b39393decab87a9b43ef7e36e1"
         },
         {
-          "canonical_reads": [],
+          "canonical_reads": [
+            "src.action-latch"
+          ],
           "class": "normative",
           "lines": [
             217,

@@ -199,6 +199,14 @@ qualification, source binding and complete block coverage, deterministic
 rendering, consumer capability and false-completeness claims. Structural
 success still cannot establish semantic equivalence or runtime safety.
 
+The eight-unit corpus uses distinct, single-value effect terms. It therefore
+exercises no cross-rule contradiction or duplicate detection, scoped precedence,
+retirement, inherited failure, or authority record. Prohibition and completion
+boundary kinds and the `in`, `present`, and `not` operators are also absent from
+the eight units. These mechanisms have synthetic fixture evidence only; the
+pilot does not yet establish their usefulness or proportionality for real
+Playbook rules.
+
 ## Evaluation boundary
 
 The sidecar's cases define expected observable behavior from canonical owners.

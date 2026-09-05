@@ -241,6 +241,7 @@ def validate(model, root=None):
             require(all(s in sources for s in failure.get("fallback_sources", [])), "missing fallback source")
         elif mode == "inherited":
             require(failure.get("from") in rules and failure.get("operation"), "invalid failure inheritance target")
+            require(rules[failure["from"]]["status"] != "retired", "failure inheritance from retired ID")
             failures[rid] = [failure["from"]]
         else:
             require(failure.get("reason"), "failure state needs reason")
