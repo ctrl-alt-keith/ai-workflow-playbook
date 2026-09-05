@@ -46,6 +46,14 @@ EFFORT_LEVELS = {"low", "medium", "high", "xhigh", "max"}
 EFFORT_EVIDENCE_NAME = "effective-effort.json"
 HOOK_LIVENESS_EVIDENCE_NAME = "permission-hook-liveness.json"
 WORKTREE_ADMIN_PATHS = ("HEAD", "index", "logs/HEAD", "COMMIT_EDITMSG", "ORIG_HEAD")
+LIVE_TELEMETRY_SCHEMA_VERSION = 1
+LIVE_TELEMETRY_PRIVACY_CLASSIFICATION = "metadata_only"
+LIVE_TOOL_CLASSES = {
+    "Bash": "shell",
+    "Glob": "search",
+    "Grep": "search",
+    "Read": "read",
+}
 OAUTH_REAUTHENTICATION_DISPOSITION = (
     "REVIEWER INFRASTRUCTURE FAILURE — OPERATOR REAUTHENTICATION REQUIRED"
 )
@@ -2823,12 +2831,15 @@ def governed_claude_arguments(
 
 
 class PipeCollector:
-    def __init__(self, stream: Any):
+    def __init__(self, stream: Any, on_line: Any | None = None, on_callback_error: Any | None = None):
         self.stream = stream
+        self.on_line = on_line
+        self.on_callback_error = on_callback_error
         self.lines: list[bytes] = []
         self.done = threading.Event()
         self.eof = threading.Event()
         self.error: str | None = None
+        self.callback_error: str | None = None
         self.thread = threading.Thread(target=self._read, daemon=True)
         self.thread.start()
 
@@ -2836,6 +2847,17 @@ class PipeCollector:
         try:
             for line in iter(self.stream.readline, b""):
                 self.lines.append(line)
+                if self.on_line is not None:
+                    try:
+                        self.on_line(line, time.monotonic())
+                    except Exception:
+                        # Telemetry must not interfere with preserving the raw stream.
+                        self.callback_error = "telemetry_interpretation_error"
+                        if self.on_callback_error is not None:
+                            try:
+                                self.on_callback_error(time.monotonic())
+                            except Exception:
+                                pass
             self.eof.set()
         except Exception as error:
             self.error = bounded_redacted(str(error))
@@ -2844,6 +2866,253 @@ class PipeCollector:
 
     def bytes(self) -> bytes:
         return b"".join(self.lines)
+
+
+class LiveTelemetry:
+    """Classify complete provider records without retaining their sensitive bodies."""
+
+    def __init__(self, controller_attempt_id: str):
+        self.controller_attempt_id = controller_attempt_id
+        self._receipts: list[dict[str, object]] = []
+        self._provider_session_id: str | None = None
+        self._seen_event_ids: set[str] = set()
+        self._seen_raw_record_digests: set[str] = set()
+        self._tool_classes: dict[str, str] = {}
+        self._stream_ordinal = 0
+        self._lock = threading.Lock()
+
+    def snapshot(self) -> dict[str, object]:
+        with self._lock:
+            return {
+                "schema_version": LIVE_TELEMETRY_SCHEMA_VERSION,
+                "privacy_classification": LIVE_TELEMETRY_PRIVACY_CLASSIFICATION,
+                "receipts": [dict(receipt) for receipt in self._receipts],
+            }
+
+    def observe(self, raw_line: bytes, arrival_monotonic: float) -> None:
+        with self._lock:
+            self._stream_ordinal += 1
+            ordinal = self._stream_ordinal
+            record_digest = sha256_bytes(raw_line)
+            if record_digest in self._seen_raw_record_digests:
+                self._emit_degraded(ordinal, arrival_monotonic, "duplicate_or_replayed_record")
+                return
+            self._seen_raw_record_digests.add(record_digest)
+            if not raw_line.endswith(b"\n"):
+                self._emit_degraded(ordinal, arrival_monotonic, "truncated_record")
+                return
+            try:
+                record = json.loads(raw_line)
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                self._emit_degraded(ordinal, arrival_monotonic, "malformed_record")
+                return
+            if not isinstance(record, dict):
+                self._emit_degraded(ordinal, arrival_monotonic, "malformed_record")
+                return
+            session_id = record.get("session_id")
+            if isinstance(session_id, str) and session_id:
+                self._provider_session_id = session_id
+            record_type = record.get("type")
+            if record_type == "system" and record.get("subtype") == "init":
+                if self._provider_session_id is None:
+                    self._emit_degraded(ordinal, arrival_monotonic, "missing_provider_session_identity")
+                    return
+                self._emit("provider_session_initialized", ordinal, arrival_monotonic, record, {})
+                return
+            if record_type == "system" and record.get("subtype") == "api_retry":
+                self._emit(
+                    "provider_failure",
+                    ordinal,
+                    arrival_monotonic,
+                    record,
+                    {"error_class": normalized_provider_error(record.get("error"))},
+                )
+                return
+            if record_type == "result":
+                self._emit(
+                    "provider_terminal",
+                    ordinal,
+                    arrival_monotonic,
+                    record,
+                    {"terminal_status": normalized_terminal_status(record)},
+                )
+                self._emit_usage_if_present(record, ordinal, arrival_monotonic)
+                return
+            if record_type not in {"assistant", "user"}:
+                self._emit_degraded(ordinal, arrival_monotonic, "unknown_provider_event")
+                return
+            message = record.get("message")
+            if not isinstance(message, dict):
+                self._emit_degraded(ordinal, arrival_monotonic, "malformed_record")
+                return
+            if record_type == "assistant":
+                self._emit("substantive_model_activity", ordinal, arrival_monotonic, record, {})
+            content = message.get("content")
+            if not isinstance(content, list):
+                self._emit_degraded(ordinal, arrival_monotonic, "malformed_record")
+                return
+            for item in content:
+                if not isinstance(item, dict):
+                    self._emit_degraded(ordinal, arrival_monotonic, "malformed_record")
+                    continue
+                if item.get("type") == "tool_use":
+                    self._emit_tool_request(item, ordinal, arrival_monotonic, record)
+                elif item.get("type") == "tool_result":
+                    self._emit_tool_completion(item, ordinal, arrival_monotonic, record)
+            self._emit_usage_if_present(record, ordinal, arrival_monotonic)
+
+    def collector_failed(self, arrival_monotonic: float) -> None:
+        with self._lock:
+            self._stream_ordinal += 1
+            self._emit_degraded(self._stream_ordinal, arrival_monotonic, "collector_error")
+
+    def interpretation_failed(self, arrival_monotonic: float) -> None:
+        with self._lock:
+            self._stream_ordinal += 1
+            self._emit_degraded(self._stream_ordinal, arrival_monotonic, "telemetry_interpretation_error")
+
+    def _emit_tool_request(
+        self, item: dict[str, object], ordinal: int, arrival_monotonic: float, record: dict[str, object]
+    ) -> None:
+        tool_id = item.get("id")
+        if not isinstance(tool_id, str) or not tool_id:
+            self._emit_degraded(ordinal, arrival_monotonic, "missing_tool_correlation_identity")
+            return
+        tool_class = LIVE_TOOL_CLASSES.get(item.get("name"), "other")
+        self._tool_classes[tool_id] = tool_class
+        self._emit(
+            "source_tool_request",
+            ordinal,
+            arrival_monotonic,
+            record,
+            {"tool_class": tool_class},
+            provider_tool_id=tool_id,
+        )
+
+    def _emit_tool_completion(
+        self, item: dict[str, object], ordinal: int, arrival_monotonic: float, record: dict[str, object]
+    ) -> None:
+        tool_id = item.get("tool_use_id")
+        if not isinstance(tool_id, str) or not tool_id:
+            self._emit_degraded(ordinal, arrival_monotonic, "missing_tool_correlation_identity")
+            return
+        tool_class = self._tool_classes.get(tool_id)
+        if tool_class is None:
+            self._emit_degraded(ordinal, arrival_monotonic, "unmatched_tool_completion")
+            return
+        self._emit(
+            "source_tool_completion",
+            ordinal,
+            arrival_monotonic,
+            record,
+            {
+                "tool_class": tool_class,
+                "completion_status": "error" if item.get("is_error") is True else "success",
+            },
+            provider_tool_id=tool_id,
+        )
+
+    def _emit_usage_if_present(
+        self, record: dict[str, object], ordinal: int, arrival_monotonic: float
+    ) -> None:
+        usage = record.get("usage")
+        if not isinstance(usage, dict):
+            return
+        counters = {
+            key: usage[key]
+            for key in ("input_tokens", "output_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")
+            if isinstance(usage.get(key), int) and usage[key] >= 0
+        }
+        if not counters:
+            return
+        self._emit(
+            "usage_sample",
+            ordinal,
+            arrival_monotonic,
+            record,
+            {"scope": "review_attempt", "counters": counters},
+            evidence="inferred",
+        )
+
+    def _emit(
+        self,
+        event_type: str,
+        ordinal: int,
+        arrival_monotonic: float,
+        record: dict[str, object],
+        metadata: dict[str, object],
+        *,
+        provider_tool_id: str | None = None,
+        evidence: str = "direct",
+    ) -> None:
+        provider_session_id = self._provider_session_id
+        if provider_session_id is None and event_type != "provider_session_initialized":
+            self._emit_degraded(ordinal, arrival_monotonic, "missing_provider_session_identity")
+            return
+        provider_event_id = record.get("uuid")
+        if not isinstance(provider_event_id, str) or not provider_event_id:
+            provider_event_id = None
+        message = record.get("message")
+        provider_message_id = message.get("id") if isinstance(message, dict) else None
+        if not isinstance(provider_message_id, str) or not provider_message_id:
+            provider_message_id = None
+        dedupe_identity = provider_tool_id or provider_event_id or provider_message_id
+        if dedupe_identity is not None:
+            dedupe_key = f"{event_type}:{dedupe_identity}"
+            if dedupe_key in self._seen_event_ids:
+                return
+            self._seen_event_ids.add(dedupe_key)
+        receipt: dict[str, object] = {
+            "schema_version": LIVE_TELEMETRY_SCHEMA_VERSION,
+            "controller_attempt_id": self.controller_attempt_id,
+            "monotonic_arrival_seconds": arrival_monotonic,
+            "stream_ordinal": ordinal,
+            "event_type": event_type,
+            "evidence": evidence,
+            "metadata": metadata,
+            "privacy_classification": LIVE_TELEMETRY_PRIVACY_CLASSIFICATION,
+        }
+        if provider_session_id is not None:
+            receipt["provider_session_id"] = provider_session_id
+        if provider_event_id is not None:
+            receipt["provider_event_id"] = provider_event_id
+        if provider_message_id is not None:
+            receipt["provider_message_id"] = provider_message_id
+        if provider_tool_id is not None:
+            receipt["provider_tool_id"] = provider_tool_id
+        self._receipts.append(receipt)
+
+    def _emit_degraded(self, ordinal: int, arrival_monotonic: float, reason: str) -> None:
+        self._receipts.append(
+            {
+                "schema_version": LIVE_TELEMETRY_SCHEMA_VERSION,
+                "controller_attempt_id": self.controller_attempt_id,
+                "monotonic_arrival_seconds": arrival_monotonic,
+                "stream_ordinal": ordinal,
+                "event_type": "telemetry_degraded",
+                "evidence": "direct",
+                "metadata": {"reason": reason},
+                "privacy_classification": LIVE_TELEMETRY_PRIVACY_CLASSIFICATION,
+            }
+        )
+
+
+def normalized_provider_error(value: object) -> str:
+    if value == "rate_limit":
+        return "rate_limit"
+    if value in {"authentication_failed", "oauth_org_not_allowed", "billing_error"}:
+        return "authentication_or_billing"
+    if value in {"permission_denied", "permission_error"}:
+        return "permission"
+    return "provider_failure"
+
+
+def normalized_terminal_status(record: dict[str, object]) -> str:
+    if record.get("subtype") == "success" and record.get("is_error") is not True:
+        return "success"
+    if record.get("subtype") == "error_during_execution" or record.get("is_error") is True:
+        return "failure"
+    return "other"
 
 
 def process_start_identity(pid: int) -> str | None:
@@ -3485,9 +3754,15 @@ def run_governed_review(
                 "partial_output_exists": False,
                 "graceful_termination_seconds": config.graceful_termination_seconds,
             }
+            live_telemetry = LiveTelemetry(attempt_id)
+            live_state["live_telemetry"] = live_telemetry.snapshot()
             exclusive_write(live_state_path, canonical_json_bytes(live_state))
             print(f"claude-review live-state: {live_state_path}", file=sys.stderr, flush=True)
-            stdout_collector = PipeCollector(process.stdout)
+            stdout_collector = PipeCollector(
+                process.stdout,
+                live_telemetry.observe,
+                live_telemetry.interpretation_failed,
+            )
             stderr_collector = PipeCollector(process.stderr)
             process.stdin.write(prompt)
             process.stdin.close()
@@ -3604,6 +3879,7 @@ def run_governed_review(
                         live_state["graceful_signal_delivery"] = "not_delivered"
                         live_state["graceful_signal_error"] = bounded_redacted(str(error))
                     emergency_signal_sent = True
+                live_state["live_telemetry"] = live_telemetry.snapshot()
                 replace_live_state(live_state_path, live_state)
             live_state["direct_process_exit_code"] = process.returncode
             while process_group_exists(pgid):
@@ -3686,6 +3962,7 @@ def run_governed_review(
                         live_state["graceful_signal_delivery"] = "not_delivered"
                         live_state["graceful_signal_error"] = bounded_redacted(str(error))
                     emergency_signal_sent = True
+                live_state["live_telemetry"] = live_telemetry.snapshot()
                 replace_live_state(live_state_path, live_state)
                 time.sleep(config.observation_interval)
             external_state = merged_external_state(live_state_path, live_state)
@@ -3703,6 +3980,8 @@ def run_governed_review(
             replace_live_state(live_state_path, live_state)
             stdout_collector.thread.join()
             stderr_collector.thread.join()
+            if stdout_collector.error is not None:
+                live_telemetry.collector_failed(time.monotonic())
             stdout = stdout_collector.bytes()
             stderr = stderr_collector.bytes()
             exclusive_write(output_path, stdout)
@@ -3849,12 +4128,14 @@ def run_governed_review(
                         "stdout": stdout_collector.error,
                         "stderr": stderr_collector.error,
                     },
+                    "live_telemetry_callback_error": stdout_collector.callback_error,
                     "provider_command_canary": {
                         "command": list(config.allowed_commands[0]),
                         "passed": canary_failure is None,
                         "failure_classification": canary_failure,
                     },
                 },
+                "live_telemetry": live_telemetry.snapshot(),
                 "lifecycle": {
                     key: live_state[key]
                     for key in (
@@ -3921,6 +4202,7 @@ def run_governed_review(
                     "failure_classification": receipt["failure_classification"],
                 }
             )
+            live_state["live_telemetry"] = live_telemetry.snapshot()
             replace_live_state(live_state_path, live_state)
             attempt_summaries.append(
                 {

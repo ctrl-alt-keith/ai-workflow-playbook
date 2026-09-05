@@ -2109,6 +2109,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "if scenario == 'escaped_output': (package / 'escaped-review.txt').write_text('escaped')\n"
             "if scenario == 'unsafe_scratch': (pathlib.Path(os.environ['TMPDIR']) / 'escape').symlink_to(candidate)\n"
             "if scenario == 'silent': time.sleep(0.08)\n"
+            "if scenario == 'live_receipts': time.sleep(0.15)\n"
             "if scenario == 'transient_with_lingering_child' and attempt == 1:\n"
             "    marker = os.environ['FAKE_LINGER_MARKER']\n"
             "    subprocess.Popen([sys.executable, '-c', f\"import pathlib,time; time.sleep(0.15); pathlib.Path({marker!r}).write_text('terminal')\"])\n"
@@ -2876,6 +2877,149 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(failed.bytes(), b"partial review evidence\n")
         self.assertFalse(stream_evidence["collectors_reached_eof_before_stream_freeze"])
         self.assertEqual(stream_evidence["collector_read_errors"]["stdout"], "fixture reader failure")
+
+    def test_live_telemetry_normalizes_only_allowlisted_metadata(self):
+        module = load_script("claude_review_live_telemetry_privacy", LAUNCHER)
+        telemetry = module.LiveTelemetry("attempt-1")
+        records = (
+            {
+                "type": "system",
+                "subtype": "init",
+                "session_id": "session-1",
+                "model": "sensitive-model-config",
+            },
+            {
+                "type": "assistant",
+                "message": {
+                    "id": "message-1",
+                    "content": [
+                        {
+                            "type": "tool_use",
+                            "id": "tool-1",
+                            "name": "Bash",
+                            "input": {"command": "secret-command --token secret-token-value"},
+                        }
+                    ],
+                },
+            },
+            {
+                "type": "user",
+                "message": {
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": "tool-1",
+                            "content": "sensitive tool output",
+                        }
+                    ]
+                },
+            },
+            {
+                "type": "result",
+                "subtype": "success",
+                "session_id": "session-1",
+                "usage": {"input_tokens": 3, "output_tokens": 5, "ignored": "secret-token-value"},
+                "result": "sensitive reviewer prose",
+            },
+        )
+        for ordinal, record in enumerate(records, start=1):
+            telemetry.observe((json.dumps(record) + "\n").encode("utf-8"), float(ordinal))
+        telemetry.observe((json.dumps(records[1]) + "\n").encode("utf-8"), 5.0)
+        telemetry.observe(b'{"type":"assistant"}', 6.0)
+        telemetry.observe(b'{"type":"future","prompt":"secret-token-value"}\n', 7.0)
+
+        snapshot = telemetry.snapshot()
+        encoded = json.dumps(snapshot, sort_keys=True)
+        self.assertNotIn("secret-token-value", encoded)
+        self.assertNotIn("sensitive reviewer prose", encoded)
+        self.assertNotIn("sensitive tool output", encoded)
+        self.assertNotIn("sensitive-model-config", encoded)
+        event_types = [receipt["event_type"] for receipt in snapshot["receipts"]]
+        self.assertEqual(
+            event_types,
+            [
+                "provider_session_initialized",
+                "substantive_model_activity",
+                "source_tool_request",
+                "source_tool_completion",
+                "provider_terminal",
+                "usage_sample",
+                "telemetry_degraded",
+                "telemetry_degraded",
+                "telemetry_degraded",
+            ],
+        )
+        self.assertEqual(snapshot["receipts"][2]["metadata"], {"tool_class": "shell"})
+        self.assertEqual(
+            snapshot["receipts"][5]["metadata"],
+            {"scope": "review_attempt", "counters": {"input_tokens": 3, "output_tokens": 5}},
+        )
+        self.assertEqual(snapshot["receipts"][-3]["metadata"], {"reason": "duplicate_or_replayed_record"})
+        self.assertEqual(snapshot["receipts"][-2]["metadata"], {"reason": "truncated_record"})
+        self.assertEqual(snapshot["receipts"][-1]["metadata"], {"reason": "unknown_provider_event"})
+
+    def test_live_telemetry_is_visible_before_provider_terminal_and_reconciled(self):
+        config = self.write_config()
+        diagnostics = self.evidence / "overall.json"
+        process = subprocess.Popen(
+            [
+                str(LAUNCHER),
+                "--claude-bin",
+                str(self.fake),
+                "--diagnostics-file",
+                str(diagnostics),
+                "--review-config-fixture",
+                str(config),
+                "--",
+                "--model",
+                "opus",
+                "--effort",
+                "high",
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=self.environment("live_receipts"),
+        )
+        self.addCleanup(lambda: process.poll() is None and process.kill())
+        assert process.stdin is not None
+        process.stdin.write("exact review prompt\n")
+        process.stdin.close()
+        observed = None
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            matches = list(self.root.glob("claude-review-controller-*/*-live-state.json"))
+            if matches:
+                state = json.loads(matches[0].read_text(encoding="utf-8"))
+                receipts = state["live_telemetry"]["receipts"]
+                event_types = {receipt["event_type"] for receipt in receipts}
+                if {
+                    "provider_session_initialized",
+                    "substantive_model_activity",
+                    "source_tool_request",
+                    "source_tool_completion",
+                }.issubset(event_types) and process.poll() is None:
+                    observed = (state, receipts)
+                    break
+            time.sleep(0.01)
+        self.assertIsNotNone(observed)
+        state, live_receipts = observed
+        self.assertEqual(state["state"], "running")
+        self.assertTrue(
+            all(receipt["controller_attempt_id"] == state["attempt_id"] for receipt in live_receipts)
+        )
+        self.assertEqual(
+            [receipt["monotonic_arrival_seconds"] for receipt in live_receipts],
+            sorted(receipt["monotonic_arrival_seconds"] for receipt in live_receipts),
+        )
+        process.wait(timeout=5)
+        terminal_receipt = self.receipts()[0]
+        terminal_types = {
+            receipt["event_type"] for receipt in terminal_receipt["live_telemetry"]["receipts"]
+        }
+        self.assertIn("provider_terminal", terminal_types)
+        self.assertTrue({receipt["event_type"] for receipt in live_receipts}.issubset(terminal_types))
 
     def test_provider_failure_and_auth_each_stop_after_one_explicit_attempt(self):
         exhausted, exhausted_diagnostic = self.run_governed("transient_always")
