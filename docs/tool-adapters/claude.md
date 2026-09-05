@@ -225,8 +225,9 @@ A versioned JSON review config binds the
 source graph, launch root and exact additional directories, guard roots,
 candidate and exact `HEAD`, disjoint evidence directory, immutable
 preflight-receipt and final-output paths, exact stream and terminal-receipt
-paths for every permitted attempt, observational
-command argv, retry cap, observation intervals, and cancellation policy. Mutable
+paths for the single explicit provider attempt, observational
+command argv, observation intervals, and cancellation policy. Schema version 2
+rejects the former `max_attempts` and `attempt_artifacts` fields. Mutable
 live-state mechanics remain in private controller attempt-local scratch. The
 launcher accepts
 only model and supported effort selection after `--`; it owns the tool,
@@ -257,7 +258,9 @@ rollback; returning to older bytes is a new transition. Qualification is
 evidence and capability gating only and grants no review, candidate, merge, or
 other task authority.
 
-The generated `PreToolUse` hook permits `Read`, `Grep`, and `Glob`, and permits
+The governed invocation uses Claude's provider-native `--restricted` mode,
+available in Claude Code 2.1.248 and later, to isolate settings and confine file
+tools. The generated `PreToolUse` hook permits `Read`, `Grep`, and `Glob`, and permits
 `Bash` only when its command text exactly equals the shell rendering of one
 configured argv vector and the tool input does not request sandbox bypass. The
 launcher does not force-enable Claude's provider sandbox because bounded review
@@ -333,9 +336,9 @@ lock, symlink, mode, vanished, special-object, or other ambiguity. Git
 configuration, packed refs, replacement, alternate, shallow, graft, attribute,
 candidate-specific, and unknown shared changes remain blocking.
 
-The configured candidate commit is reverified immediately before every attempt
-baseline and again immediately before provider process creation, including on
-retries. Each observation includes the symbolic-ref identity. A mismatch stops
+The configured candidate commit is reverified immediately before the attempt
+baseline and again immediately before provider process creation. Each
+observation includes the symbolic-ref identity. A mismatch stops
 before the provider starts and is preserved as structured evidence; the newly
 observed commit cannot silently become the next attempt's baseline.
 
@@ -348,7 +351,7 @@ unattached changes do not gain that exception, and terminal postflight remains
 fully fail-closed.
 
 Use that classification unchanged in preflight, live monitoring, emergency
-stopping, terminal postflight, retry eligibility, and receipts. Receipts retain
+stopping, terminal postflight, and receipts. Receipts retain
 exact Git-directory-relative paths, owner scope, change type, before/after
 identities, proof, and blocking or tolerated disposition. Proven-unrelated raw
 change can coexist with a passing candidate-integrity result; it must not be
@@ -368,13 +371,12 @@ whole-source no-delta checks remain required controls rather than assumptions
 about undocumented provider internals.
 
 Claude's structured `system/api_retry` event is an in-process provider retry
-inside the same attempt. Only a terminal `overloaded` or `server_error` result
-may qualify for the launcher's bounded fresh exact-input repeat. Rate limiting,
-authentication, billing, capability, access, command, mutation, cancellation,
-and unknown errors stop without an outer retry. After the direct provider
-process exits, the launcher keeps awaiting the same process group until it is
-terminal, then waits for both output collectors to reach end-of-stream before
-freezing the stream artifact or considering a retry. The launcher records the
+inside the same controller attempt. A terminal result ends that attempt; the
+controller never starts a fresh automatic exact-input repeat. A later review is
+a new explicit invocation with its own contract and evidence. After the direct
+provider process exits, the controller keeps awaiting the same process group
+until it is terminal, then waits for both output collectors to reach
+end-of-stream before freezing the stream artifact. The controller records the
 exact process group as required by the shared
 [`live-process lifecycle`](../orchestration-and-parallelism.md#live-process-lifecycle).
 Mutable control state in controller scratch preserves request, decline,

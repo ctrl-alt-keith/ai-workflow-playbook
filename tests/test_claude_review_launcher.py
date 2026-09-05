@@ -2128,7 +2128,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         )
         self.fake.chmod(0o755)
 
-    def config_body(self, *, launch_root=None, additional=None, max_attempts=3):
+    def config_body(self, *, launch_root=None, additional=None):
         candidate_head = subprocess.run(
             ["git", "-C", str(self.candidate), "rev-parse", "HEAD"],
             check=True,
@@ -2136,7 +2136,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             stdout=subprocess.PIPE,
         ).stdout.strip()
         return {
-            "schema_version": 1,
+            "schema_version": 2,
             "review_id": "CAK-155-fixture",
             "contract_id": "sha256:fixture-contract",
             "launch_root": str(launch_root or self.root),
@@ -2151,17 +2151,11 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "evidence_directory": str(self.evidence),
             "preflight_receipt": str(self.evidence / "preflight-receipt.json"),
             "final_output": str(self.evidence / "review-output.md"),
-            "attempt_artifacts": [
-                {
-                    "stream": str(self.evidence / f"attempt-{number}-stream.jsonl"),
-                    "terminal_receipt": str(self.evidence / f"attempt-{number}-terminal-receipt.json"),
-                }
-                for number in range(1, max_attempts + 1)
-            ],
+            "attempt_stream": str(self.evidence / "attempt-stream.jsonl"),
+            "attempt_terminal_receipt": str(self.evidence / "attempt-terminal-receipt.json"),
             "allowed_commands": [
                 ["git", "-C", str(self.candidate), "status", "--porcelain=v2", "--untracked-files=all"]
             ],
-            "max_attempts": max_attempts,
             "observation_interval_seconds": 0.005,
             "soft_liveness_threshold_seconds": 0.02,
             "graceful_termination_seconds": 0.05,
@@ -2222,11 +2216,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         final_output = Path((body or self.config_body())["final_output"])
         if final_output.exists() or final_output.is_symlink():
             final_output.unlink()
-        for item in (body or self.config_body())["attempt_artifacts"]:
-            for value in item.values():
-                artifact = Path(value)
-                if artifact.exists() or artifact.is_symlink():
-                    artifact.unlink()
+        for key in ("attempt_stream", "attempt_terminal_receipt"):
+            artifact = Path((body or self.config_body())[key])
+            if artifact.exists() or artifact.is_symlink():
+                artifact.unlink()
         completed = subprocess.run(
             [
                 str(LAUNCHER),
@@ -2298,11 +2291,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         *,
         verification_call,
         scenario="success",
-        max_attempts=1,
         symbolic_ref_only=False,
     ):
         module = load_script(f"claude_review_head_drift_{verification_call}_{scenario}", LAUNCHER)
-        body = self.config_body(max_attempts=max_attempts)
+        body = self.config_body()
         config = module.load_governed_config(self.write_config(body))
         diagnostics = self.evidence / "overall.json"
         environment = self.environment(scenario)
@@ -2523,22 +2515,9 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             )
         )
 
-    def test_candidate_head_drift_before_retry_preserves_first_attempt_and_stops_second_spawn(self):
-        result, diagnostic = self.run_governed_with_head_mutation(
-            verification_call=4,
-            scenario="transient_once",
-            max_attempts=2,
-        )
-        self.assertEqual(result, 70)
-        self.assertEqual(diagnostic["failure_classification"], "candidate_identity_changed_before_attempt")
-        self.assertEqual(self.count.read_text(encoding="utf-8"), "1")
-        self.assertEqual(len(diagnostic["attempts"]), 1)
-        self.assertTrue((self.evidence / "attempt-1-terminal-receipt.json").exists())
-        self.assertFalse((self.evidence / "attempt-2-terminal-receipt.json").exists())
-
     def test_detached_candidate_remains_bound_to_configured_commit(self):
         subprocess.run(["git", "-C", str(self.candidate), "checkout", "--detach", "-q", "HEAD"], check=True)
-        completed, diagnostic = self.run_governed("success", body=self.config_body(max_attempts=1))
+        completed, diagnostic = self.run_governed("success", body=self.config_body())
         self.assertEqual(completed.returncode, 0, diagnostic)
         self.assertEqual(diagnostic["preflight"]["candidate_identity"]["symbolic_ref"], None)
         self.assertEqual(
@@ -2567,6 +2546,8 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             ["--model", "opus", "--effort", "high"],
             scratch / module.EFFORT_EVIDENCE_NAME,
         )
+        self.assertIn("--restricted", arguments)
+        self.assertNotIn("--setting-sources", arguments)
         settings = json.loads(arguments[arguments.index("--settings") + 1])
         self.assertNotIn("sandbox", settings)
         self.assertIn("Before substantive analysis", system_prompt)
@@ -2760,29 +2741,29 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 70)
         self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
 
-    def test_transient_retry_recovers_without_contract_or_controller_drift(self):
+    def test_terminal_transient_failure_stops_without_controller_retry(self):
         completed, diagnostic = self.run_governed("transient_once")
-        self.assertEqual(completed.returncode, 0)
-        self.assertEqual(len(diagnostic["attempts"]), 2)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "terminal_provider_server_error")
+        self.assertFalse(diagnostic["automated_retry_attempted"])
+        self.assertEqual(len(diagnostic["attempts"]), 1)
         receipts = self.receipts()
-        self.assertEqual(len(receipts), 2)
+        self.assertEqual(len(receipts), 1)
         self.assertEqual({receipt["controller_id"] for receipt in receipts}, {diagnostic["controller_id"]})
-        self.assertEqual(len({json.dumps(receipt["contract_identity"], sort_keys=True) for receipt in receipts}), 1)
-        self.assertEqual(receipts[1]["execution_kind"], "fresh_execution_exact_input_repeat")
+        self.assertEqual(receipts[0]["execution_kind"], "fresh_execution")
         scratch_paths = [receipt["attempt_scratch"]["path"] for receipt in receipts]
-        self.assertEqual(len(set(scratch_paths)), 2)
         self.assertTrue(all(receipt["attempt_scratch"]["cleanup"]["passed"] for receipt in receipts))
         self.assertTrue(all(not Path(path).exists() for path in scratch_paths))
 
-    def test_retry_identity_drift_preserves_prior_attempt_evidence_and_stops_before_second_spawn(self):
+    def test_provider_terminal_failure_does_not_recheck_for_a_second_spawn(self):
         completed, diagnostic = self.run_governed("transient_then_executable_drift")
         self.assertEqual(completed.returncode, 70)
         self.assertEqual(self.count.read_text(encoding="utf-8"), "1")
-        self.assertEqual(diagnostic["failure_classification"], "reviewer_identity_changed_before_execution")
+        self.assertEqual(diagnostic["failure_classification"], "terminal_provider_server_error")
         self.assertEqual(diagnostic["candidate_verdict"], "not_produced")
-        self.assertEqual(diagnostic["attempt_number"], 2)
-        self.assertTrue(diagnostic["substantive_review_started"])
-        self.assertTrue(diagnostic["automated_retry_attempted"])
+        self.assertEqual(self.receipts()[0]["attempt_number"], 1)
+        self.assertFalse(diagnostic["substantive_review_output"])
+        self.assertFalse(diagnostic["automated_retry_attempted"])
         self.assertEqual((self.root / "version-count").read_text(encoding="utf-8"), "2")
         self.assertEqual(len(diagnostic["attempts"]), 1)
         prior_attempt = diagnostic["attempts"][0]
@@ -2792,10 +2773,10 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertTrue(Path(receipt["raw_output"]["path"]).exists())
         self.assertEqual(len(self.receipts()), 1)
 
-    def test_lingering_process_group_blocks_retry_until_terminal(self):
+    def test_lingering_process_group_reaches_terminal_before_attempt_receipt(self):
         completed, diagnostic = self.run_governed("transient_with_lingering_child")
-        self.assertEqual(completed.returncode, 0)
-        self.assertEqual(len(diagnostic["attempts"]), 2)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(len(diagnostic["attempts"]), 1)
         receipts = self.receipts()
         self.assertTrue(all(receipt["lifecycle"]["process_group_terminal"] for receipt in receipts))
         self.assertTrue(
@@ -2835,10 +2816,12 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertFalse(stream_evidence["collectors_reached_eof_before_stream_freeze"])
         self.assertEqual(stream_evidence["collector_read_errors"]["stdout"], "fixture reader failure")
 
-    def test_retry_exhaustion_stops_at_three_and_auth_stops_at_one(self):
+    def test_provider_failure_and_auth_each_stop_after_one_explicit_attempt(self):
         exhausted, exhausted_diagnostic = self.run_governed("transient_always")
         self.assertEqual(exhausted.returncode, 70)
-        self.assertEqual(len(exhausted_diagnostic["attempts"]), 3)
+        self.assertEqual(exhausted_diagnostic["failure_classification"], "terminal_provider_server_error")
+        self.assertEqual(len(exhausted_diagnostic["attempts"]), 1)
+        self.assertFalse(exhausted_diagnostic["automated_retry_attempted"])
 
         auth_root = self.root / "auth-evidence"
         auth_root.mkdir()
@@ -2847,13 +2830,8 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         body["evidence_directory"] = str(auth_root)
         body["preflight_receipt"] = str(auth_root / "preflight-receipt.json")
         body["final_output"] = str(auth_root / "review-output.md")
-        body["attempt_artifacts"] = [
-            {
-                "stream": str(auth_root / f"attempt-{number}-stream.jsonl"),
-                "terminal_receipt": str(auth_root / f"attempt-{number}-terminal-receipt.json"),
-            }
-            for number in range(1, body["max_attempts"] + 1)
-        ]
+        body["attempt_stream"] = str(auth_root / "attempt-stream.jsonl")
+        body["attempt_terminal_receipt"] = str(auth_root / "attempt-terminal-receipt.json")
         config = auth_root / "review-config.json"
         config.write_text(json.dumps(body), encoding="utf-8")
         diagnostics = auth_root / "overall.json"
@@ -2868,6 +2846,16 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 78)
         self.assertEqual(len(json.loads(diagnostics.read_text())["attempts"]), 1)
+
+    def test_schema_two_rejects_obsolete_automatic_retry_fields(self):
+        module = load_script("claude_review_obsolete_retry_fields", LAUNCHER)
+        for obsolete_field, value in (("max_attempts", 2), ("attempt_artifacts", [])):
+            body = self.config_body()
+            body[obsolete_field] = value
+            with self.subTest(obsolete_field=obsolete_field), self.assertRaisesRegex(
+                ValueError, "one explicit provider attempt"
+            ):
+                module.load_governed_config(self.write_config(body))
 
     def test_precise_terminal_auth_record_stops_without_retry(self):
         completed, diagnostic = self.run_governed("auth_precise")
@@ -3008,7 +2996,8 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "deny",
         )
 
-        changed = self.config_body(max_attempts=2)
+        changed = self.config_body()
+        changed["contract_id"] = "sha256:changed-fixture-contract"
         config.write_text(json.dumps(changed), encoding="utf-8")
         denied = subprocess.run(
             command,
@@ -3217,7 +3206,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
 
     def test_live_primary_worktree_commit_passes_for_a_linked_candidate(self):
         self.use_linked_candidate("fixture-live-primary")
-        body = self.config_body(max_attempts=1)
+        body = self.config_body()
         # Observe the completed Git operation, not its deliberately blocking transient lock.
         body["observation_interval_seconds"] = 0.5
         completed, diagnostic = self.run_governed("primary_worktree_commit_then_wait", body=body)
@@ -3235,7 +3224,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.use_linked_candidate("fixture-primary-mixed")
         completed, diagnostic = self.run_governed(
             "primary_worktree_and_candidate_mutation",
-            body=self.config_body(max_attempts=1),
+            body=self.config_body(),
         )
         self.assertEqual(completed.returncode, 70)
         self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
@@ -3830,7 +3819,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             ],
             check=True,
         )
-        completed, diagnostic = self.run_governed("unrelated_worktree_commit_then_wait", body=self.config_body(max_attempts=1))
+        completed, diagnostic = self.run_governed("unrelated_worktree_commit_then_wait", body=self.config_body())
         receipts = self.receipts()
         self.assertEqual(completed.returncode, 0, {"diagnostic": diagnostic, "receipts": receipts})
         self.assertIsNone(diagnostic["failure_classification"])
@@ -3860,7 +3849,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertNotIn("emergency_condition", receipt["lifecycle"])
 
     def test_live_unattributed_object_write_remains_fail_closed_after_stabilization(self):
-        completed, diagnostic = self.run_governed("unattributed_object_then_wait", body=self.config_body(max_attempts=1))
+        completed, diagnostic = self.run_governed("unattributed_object_then_wait", body=self.config_body())
         self.assertNotEqual(completed.returncode, 0)
         self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
         receipt = self.receipts()[0]
@@ -3876,7 +3865,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
     def test_governed_review_creates_no_local_or_cross_attempt_state(self):
         self.isolated_home = self.root / "isolated-home"
         self.isolated_home.mkdir()
-        completed, diagnostic = self.run_governed("success", body=self.config_body(max_attempts=1))
+        completed, diagnostic = self.run_governed("success", body=self.config_body())
         self.assertEqual(completed.returncode, 0)
         self.assertIsNone(diagnostic["failure_classification"])
         receipt = self.receipts()[0]
@@ -3914,7 +3903,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             check=True,
         )
         completed, diagnostic = self.run_governed(
-            "unrelated_worktree_and_candidate_mutation", body=self.config_body(max_attempts=1)
+            "unrelated_worktree_and_candidate_mutation", body=self.config_body()
         )
         self.assertEqual(completed.returncode, 70)
         self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")

@@ -1,5 +1,5 @@
 # Generated from the reviewed Playbook template. Do not substitute a relative
-# launcher: the exact absolute installed path is the execution identity bound.
+# controller: the exact absolute installed path is the execution identity bound.
 prefix_rule(
     pattern=[
         "__CLAUDE_REVIEW_LAUNCHER__",
@@ -18,11 +18,11 @@ prefix_rule(
 prefix_rule(
     pattern=["__CLAUDE_REVIEW_LAUNCHER__", "--auth-preflight"],
     decision="allow",
-    justification="The exact installed reviewed launcher constrains authentication preflight execution.",
+    justification="The exact installed review controller constrains authentication preflight execution.",
 )
 
 prefix_rule(
     pattern=["__CLAUDE_REVIEW_LAUNCHER__", "--review-config"],
     decision="allow",
-    justification="The exact installed reviewed launcher constrains governed review execution.",
+    justification="The exact installed review controller constrains governed review execution.",
 )

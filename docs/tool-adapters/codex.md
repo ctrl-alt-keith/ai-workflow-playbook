@@ -607,16 +607,21 @@ For local development and lifecycle controls, use the repository's
 environment assignment. It derives the effective operating-system account,
 normalizes `USER`, `LOGNAME`, and `HOME` for the Claude child, reads the review
 prompt from standard input rather than argv, and emits bounded diagnostics plus
-append-only attempt receipts. For substantive review, pass `--review-config`
+append-only attempt receipts. The command is the review controller even though
+its compatibility name remains `claude-review`: Codex
+[prefix rules](https://learn.chatgpt.com/docs/agent-configuration/rules) match
+arbitrary trailing arguments, so allowing the Claude executable directly would
+also allow unreviewed flags beyond an approved prefix. For substantive review,
+pass `--review-config`
 with the versioned governed-launch JSON and pass only model and supported effort
-selection after `--`. The launcher owns the Claude tools, permission mode, MCP,
+selection after `--`. The controller owns the Claude tools, permission mode, MCP,
 settings, hook, output, and session-persistence flags; do not append competing
 review flags. Production auth and review use the byte-exact machine-local
 installation made by
 [`install-claude-review`](../../scripts/install-claude-review), not the writable
 repository path. Put `--review-config` immediately after that exact installed
 absolute path. Authentication preflight follows the same convention.
-The launcher rejects either mode when combined with permission-hook or lifecycle
+The controller rejects either mode when combined with permission-hook or lifecycle
 control modes, so an allowed review prefix cannot authorize those controls.
 
 Before an expensive independent review, run the same launcher with
@@ -759,8 +764,8 @@ controller and keep awaiting that exact launcher until its live-state record is
 terminal. The review config must cover every source root, bind the candidate and
 exact `HEAD`, and bind the
 disjoint admitted evidence destination, enumerate exact observational command
-argv and immutable per-attempt artifact paths, and declare retry and cancellation
-policy. Do not use a Codex tool timeout
+argv and immutable single-attempt artifact paths, and declare cancellation
+policy. Schema version 2 rejects the former automatic-retry fields. Do not use a Codex tool timeout
 or missing output as evidence that Claude exited, and do not launch a replacement
 while the recorded process group may still be live. If the interactive contract
 requires a disposition, use the launcher's request, decline, or authority-bound
@@ -778,17 +783,30 @@ Controller-side command preflight is followed by an in-provider exact-command
 canary. The launcher rejects a missing or failed canary and any
 `dangerouslyDisableSandbox` request; do not bypass a nested-sandbox failure.
 After Claude's direct process exits, keep awaiting the recorded process group
-and complete both stream collectors before freezing output or considering an
-eligible exact-input repeat.
+and complete both stream collectors before freezing output. A terminal provider
+failure ends this explicit controller attempt; a later review is a new,
+separately authorized invocation.
 
 The launcher performs representative access and command-effect preflight,
 validates Claude's effective initialization metadata, snapshots all guarded
 source bytes and the Git index, and requires a positive no-delta postflight.
-Its retry cap applies only to fresh executions that repeat exact input after a
-fully terminal, explicitly transient provider outcome. Provider-internal retry
-events remain part of one attempt. Preserve each attempt receipt even when no
+Provider-internal retry events remain part of the one controller attempt; the
+controller does not automatically launch a fresh exact-input repeat. Preserve
+the attempt receipt even when no
 candidate verdict is produced, and apply finding disposition only to successful
 substantive review output.
+
+The governed provider argv includes Claude's `--restricted` mode, available in
+Claude Code 2.1.248 and later, so provider-managed settings and filesystem
+confinement carry the controls they can express. The controller still owns the
+exact argv and entry identity, standard-input EOF, stream drainage, process-group
+lifecycle, exact-command hook and canary, source no-delta checks, redaction, and
+receipts. Claude owns its structured session, message, tool, provider-retry,
+result, and usage events plus credential storage and refresh. The controller is
+the owner for privacy-safe live stream interpretation and publication; the
+provider stream is evidence, not a second authority boundary. Do not add
+`--permission-prompts none` until the selected Claude is at least 2.1.259 and
+that behavior has been separately qualified.
 
 The launcher preserves distinct documented failure classes when provider output
 supports them: `AUTH_OAUTH_TOKEN_EXPIRED_401`,

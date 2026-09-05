@@ -33,9 +33,7 @@ AUTH_PREFLIGHT_RESPONSE = "CLAUDE_AUTH_OK"
 AUTH_PREFLIGHT_BENIGN_NOTICES = {
     "Client.listTools() called but server does not advertise tools capability - returning empty list",
 }
-GOVERNED_CONFIG_VERSION = 1
-MAX_GOVERNED_ATTEMPTS = 3
-TRANSIENT_OUTER_RETRY_ERRORS = {"overloaded", "server_error"}
+GOVERNED_CONFIG_VERSION = 2
 SAFE_EXECUTABLES = {"git", "shasum"}
 INSTALLATION_SCHEMA_VERSION = 3
 QUALIFICATION_SCHEMA_VERSION = 3
@@ -2315,9 +2313,9 @@ class GovernedReviewConfig:
     evidence_directory: Path
     preflight_receipt: Path
     final_output: Path
-    attempt_artifacts: tuple[tuple[Path, Path], ...]
+    attempt_stream: Path
+    attempt_terminal_receipt: Path
     allowed_commands: tuple[tuple[str, ...], ...]
-    max_attempts: int
     observation_interval: float
     soft_liveness_threshold: float
     graceful_termination_seconds: float
@@ -2328,6 +2326,12 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
     body = json.loads(raw)
     if not isinstance(body, dict) or body.get("schema_version") != GOVERNED_CONFIG_VERSION:
         raise ValueError(f"review config must use schema_version {GOVERNED_CONFIG_VERSION}")
+    obsolete_attempt_fields = {"attempt_artifacts", "max_attempts"}.intersection(body)
+    if obsolete_attempt_fields:
+        raise ValueError(
+            "review config schema_version 2 uses one explicit provider attempt and rejects: "
+            + ", ".join(sorted(obsolete_attempt_fields))
+        )
     required_strings = (
         "review_id",
         "contract_id",
@@ -2386,26 +2390,18 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
         raise ValueError("every declared source root must be covered by a guarded no-delta root")
     if any(contained(evidence, root) or contained(root, evidence) for root in guard_roots):
         raise ValueError("evidence directory must be disjoint from every guarded source root")
-    max_attempts = body.get("max_attempts", MAX_GOVERNED_ATTEMPTS)
-    if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or not 1 <= max_attempts <= MAX_GOVERNED_ATTEMPTS:
-        raise ValueError(f"max_attempts must be between 1 and {MAX_GOVERNED_ATTEMPTS}")
-    attempt_artifacts: list[tuple[Path, Path]] = []
-    for item in body.get("attempt_artifacts", []):
-        if not isinstance(item, dict) or not isinstance(item.get("stream"), str) or not isinstance(
-            item.get("terminal_receipt"), str
-        ):
-            raise ValueError("each attempt_artifacts item requires stream and terminal_receipt paths")
-        paths: list[Path] = []
-        for value in (item["stream"], item["terminal_receipt"]):
-            parent = Path(value).parent.resolve(strict=True)
-            artifact = parent / Path(value).name
-            if not contained(artifact, evidence):
-                raise ValueError("every attempt artifact must be inside the declared evidence directory")
-            paths.append(artifact)
-        attempt_artifacts.append((paths[0], paths[1]))
-    if len(attempt_artifacts) != max_attempts:
-        raise ValueError("attempt_artifacts must provide one exact stream/receipt pair for each allowed attempt")
-    artifact_paths = [preflight_receipt, final_output, *(path for pair in attempt_artifacts for path in pair)]
+    attempt_paths: list[Path] = []
+    for key in ("attempt_stream", "attempt_terminal_receipt"):
+        value = body.get(key)
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"review config requires non-empty {key}")
+        parent = Path(value).parent.resolve(strict=True)
+        artifact = parent / Path(value).name
+        if not contained(artifact, evidence):
+            raise ValueError("every attempt artifact must be inside the declared evidence directory")
+        attempt_paths.append(artifact)
+    attempt_stream, attempt_terminal_receipt = attempt_paths
+    artifact_paths = [preflight_receipt, final_output, attempt_stream, attempt_terminal_receipt]
     if len(set(artifact_paths)) != len(artifact_paths):
         raise ValueError("governed artifact paths must be distinct")
     validated_commands = [validate_command(value) for value in body.get("allowed_commands", [])]
@@ -2437,9 +2433,9 @@ def load_governed_config(path: Path) -> GovernedReviewConfig:
         evidence_directory=evidence,
         preflight_receipt=preflight_receipt,
         final_output=final_output,
-        attempt_artifacts=tuple(attempt_artifacts),
+        attempt_stream=attempt_stream,
+        attempt_terminal_receipt=attempt_terminal_receipt,
         allowed_commands=commands,
-        max_attempts=max_attempts,
         observation_interval=observation,
         soft_liveness_threshold=soft,
         graceful_termination_seconds=grace,
@@ -2615,10 +2611,9 @@ def git_worktree_capability_error(
 def preflight_review(config: GovernedReviewConfig, environment: dict[str, str]) -> dict[str, object]:
     if config.final_output.exists() or config.final_output.is_symlink():
         raise RuntimeError(f"configured governed artifact already exists: {config.final_output}")
-    for stream_path, terminal_receipt_path in config.attempt_artifacts:
-        for artifact in (stream_path, terminal_receipt_path):
-            if artifact.exists() or artifact.is_symlink():
-                raise RuntimeError(f"configured governed artifact already exists: {artifact}")
+    for artifact in (config.attempt_stream, config.attempt_terminal_receipt):
+        if artifact.exists() or artifact.is_symlink():
+            raise RuntimeError(f"configured governed artifact already exists: {artifact}")
     path_results: list[dict[str, object]] = []
     for root, representative in config.source_locations:
         if representative.is_dir():
@@ -2746,6 +2741,7 @@ def governed_claude_arguments(
         "stream-json",
         "--verbose",
         "--no-session-persistence",
+        "--restricted",
         "--disable-slash-commands",
         "--no-chrome",
         "--permission-mode",
@@ -2757,8 +2753,6 @@ def governed_claude_arguments(
         "--strict-mcp-config",
         "--mcp-config",
         '{"mcpServers":{}}',
-        "--setting-sources",
-        "",
         "--settings",
         json.dumps(hook_settings, separators=(",", ":")),
         "--append-system-prompt",
@@ -3024,20 +3018,20 @@ def effort_qualification_evidence(path: Path | None, requested_effort: str | Non
     return evidence, None
 
 
-def retry_classification(parsed: dict[str, object], exit_code: int) -> tuple[str, bool]:
+def terminal_classification(parsed: dict[str, object], exit_code: int) -> str:
     result = parsed.get("result")
     retries = parsed.get("retry_events")
     if isinstance(result, dict) and result.get("subtype") == "success" and not result.get("is_error") and exit_code == 0:
-        return "success", False
+        return "success"
     if isinstance(retries, list) and retries:
         last_error = retries[-1].get("error")
-        if last_error in TRANSIENT_OUTER_RETRY_ERRORS and isinstance(result, dict) and result.get("is_error"):
-            return f"terminal_transient_{last_error}", True
         if last_error == "rate_limit":
-            return "terminal_rate_limit_policy_owned_by_cak_154", False
+            return "terminal_rate_limit_policy_owned_by_cak_154"
         if last_error in {"authentication_failed", "oauth_org_not_allowed", "billing_error"}:
-            return "terminal_auth_or_billing_failure", False
-    return "terminal_unclassified_failure", False
+            return "terminal_auth_or_billing_failure"
+        if isinstance(last_error, str):
+            return f"terminal_provider_{last_error}"
+    return "terminal_unclassified_failure"
 
 
 def terminate_recorded_group(live_state_path: Path, authority: str, *, force_authorized: bool, grace_seconds: float | None) -> int:
@@ -3214,7 +3208,7 @@ def run_governed_review(
         final_exit = REVIEWER_FAILURE_EXIT
         last_verified_snapshot = post_preflight_snapshot
         expected_symbolic_ref = preflight["candidate_identity"]["symbolic_ref"]
-        for attempt_number in range(1, config.max_attempts + 1):
+        for attempt_number in (1,):
             try:
                 candidate_identity = verified_candidate_head(
                     config.candidate,
@@ -3251,7 +3245,7 @@ def run_governed_review(
                         "failure_classification": "candidate_identity_changed_before_attempt",
                         "candidate_verdict": "not_produced",
                         "substantive_review_started": bool(attempt_summaries),
-                        "automated_retry_attempted": attempt_number > 1,
+                        "automated_retry_attempted": False,
                         "candidate_identity_stage": "before_attempt_baseline",
                         "candidate_identity_checks": candidate_identity_checks,
                         "candidate_identity_observation": getattr(error, "observation", None),
@@ -3276,7 +3270,8 @@ def run_governed_review(
             attempt_snapshot = source_snapshot(
                 list(config.guard_roots), config.candidate, environment, config.allowed_commands, config.candidate_head
             )
-            output_path, receipt_path = config.attempt_artifacts[attempt_number - 1]
+            output_path = config.attempt_stream
+            receipt_path = config.attempt_terminal_receipt
             live_state_path = scratch / f"{attempt_id}-live-state.json"
             if not contained(live_state_path, scratch):
                 raise RuntimeError("live-state path escaped controller scratch")
@@ -3306,7 +3301,7 @@ def run_governed_review(
                         "attempts": attempt_summaries,
                         "attempt_number": attempt_number,
                         "substantive_review_started": bool(attempt_summaries),
-                        "automated_retry_attempted": attempt_number > 1,
+                        "automated_retry_attempted": False,
                         "no_delta_postflight": comparison,
                         "attempt_scratch": {**scratch_record, "cleanup": {"passed": True}},
                         "error": bounded_redacted(str(error)),
@@ -3353,7 +3348,7 @@ def run_governed_review(
                         "failure_classification": "candidate_identity_changed_before_execution",
                         "candidate_verdict": "not_produced",
                         "substantive_review_started": bool(attempt_summaries),
-                        "automated_retry_attempted": attempt_number > 1,
+                        "automated_retry_attempted": False,
                         "candidate_identity_stage": "immediately_before_provider_spawn",
                         "candidate_identity_checks": candidate_identity_checks,
                         "candidate_identity_observation": getattr(error, "observation", None),
@@ -3623,7 +3618,7 @@ def run_governed_review(
                 requested_effort,
             )
             canary_failure = provider_command_canary_failure(parsed, config.allowed_commands[0])
-            classification, retryable = retry_classification(parsed, process.returncode)
+            classification = terminal_classification(parsed, process.returncode)
             auth_failure = classify_failure(
                 stderr.decode("utf-8", errors="replace"),
                 stdout.decode("utf-8", errors="replace"),
@@ -3631,20 +3626,15 @@ def run_governed_review(
             )
             if auth_failure and auth_failure.startswith("AUTH_"):
                 classification = auth_failure
-                retryable = False
             if capability_failure or capability_signal_sent:
                 classification = capability_failure or live_capability_failure or "startup_capability_error"
-                retryable = False
                 live_state["capability_failure"] = classification
             elif effort_failure:
                 classification = effort_failure
-                retryable = False
             elif canary_failure:
                 classification = canary_failure
-                retryable = False
             if live_state.get("termination_authority"):
                 classification = "operator_authorized_termination"
-                retryable = False
             post_snapshot, postflight_observation_failure = observed_source_snapshot(
                 list(config.guard_roots),
                 config.candidate,
@@ -3660,10 +3650,8 @@ def run_governed_review(
                 changes = list(postflight_comparison["blocking_paths"])
             if live_observation_failure is not None or postflight_observation_failure is not None:
                 classification = "source_observation_failure"
-                retryable = False
             elif changes:
                 classification = "reviewer_side_effect_failure"
-                retryable = False
             claude_version = execution_identity.get("version")
             scratch_record = attempt_scratch.record()
             try:
@@ -3676,7 +3664,6 @@ def run_governed_review(
                     "error": bounded_redacted(str(error)),
                 }
                 classification = "attempt_scratch_cleanup_failure"
-                retryable = False
             result = parsed.get("result")
             if classification == "success" and isinstance(result, dict) and isinstance(result.get("result"), str):
                 final_output = result["result"]
@@ -3693,7 +3680,7 @@ def run_governed_review(
                 "controller_id": controller_id,
                 "attempt_id": attempt_id,
                 "attempt_number": attempt_number,
-                "execution_kind": "fresh_execution_exact_input_repeat" if attempt_number > 1 else "fresh_execution",
+                "execution_kind": "fresh_execution",
                 "contract_identity": contract_identity,
                 "candidate_identity_checks": list(candidate_identity_checks),
                 "preflight": preflight,
@@ -3736,7 +3723,6 @@ def run_governed_review(
                 },
                 "attempt_scratch": {**scratch_record, "cleanup": scratch_cleanup},
                 "failure_classification": None if classification == "success" else classification,
-                "retry_eligible": retryable,
                 "candidate_verdict": "uninterpreted" if classification == "success" else "not_produced",
                 "substantive_review_output": classification == "success",
                 "raw_output": {"path": str(output_path), "size": len(stdout), "sha256": sha256_bytes(stdout)},
@@ -3829,14 +3815,9 @@ def run_governed_review(
                     "attempt_id": attempt_id,
                     "receipt": str(receipt_path),
                     "classification": classification,
-                    "retry_eligible": retryable,
                     "live_state": str(live_state_path),
                 }
             )
-            if retryable and post_snapshot is not None and not changes:
-                last_verified_snapshot = post_snapshot
-            if classification == "success" or not retryable or attempt_number == config.max_attempts:
-                break
 
         overall = {
             "kind": "claude_governed_review",
@@ -3849,7 +3830,7 @@ def run_governed_review(
             "candidate_verdict": "uninterpreted" if final_exit == 0 else "not_produced",
             "substantive_review_output": final_exit == 0,
             "failure_classification": None if final_exit == 0 else attempt_summaries[-1]["classification"],
-            "automated_retry_attempted": len(attempt_summaries) > 1,
+            "automated_retry_attempted": False,
         }
         if final_output is not None:
             final_output_bytes = final_output.encode("utf-8")
@@ -4163,7 +4144,8 @@ def main(argv: list[str] | None = None) -> int:
                 config.path,
                 config.preflight_receipt,
                 config.final_output,
-                *(path for pair in config.attempt_artifacts for path in pair),
+                config.attempt_stream,
+                config.attempt_terminal_receipt,
             }
             diagnostics_destination = qualified_diagnostics_destination(
                 args.diagnostics_file,
