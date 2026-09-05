@@ -48,6 +48,8 @@ HOOK_LIVENESS_EVIDENCE_NAME = "permission-hook-liveness.json"
 WORKTREE_ADMIN_PATHS = ("HEAD", "index", "logs/HEAD", "COMMIT_EDITMSG", "ORIG_HEAD")
 LIVE_TELEMETRY_SCHEMA_VERSION = 2
 LIVE_TELEMETRY_PRIVACY_CLASSIFICATION = "metadata_only"
+MAX_LIVE_TELEMETRY_RECEIPTS = 1_024
+MAX_LIVE_TELEMETRY_TRACKED_IDENTITIES = 8_192
 LIVE_TOOL_CLASSES = {
     "Bash": "shell",
     "Glob": "search",
@@ -2885,6 +2887,8 @@ class LiveTelemetry:
         self._tool_classes: dict[str, str] = {}
         self._seen_usage_samples: set[str] = set()
         self._stream_ordinal = 0
+        self._receipt_total = 0
+        self._receipt_dropped = 0
         self._lock = threading.Lock()
 
     def snapshot(self) -> dict[str, object]:
@@ -2893,6 +2897,11 @@ class LiveTelemetry:
                 "schema_version": LIVE_TELEMETRY_SCHEMA_VERSION,
                 "privacy_classification": LIVE_TELEMETRY_PRIVACY_CLASSIFICATION,
                 "receipts": [dict(receipt) for receipt in self._receipts],
+                "retention": {
+                    "receipt_limit": MAX_LIVE_TELEMETRY_RECEIPTS,
+                    "total_receipts": self._receipt_total,
+                    "dropped_receipts": self._receipt_dropped,
+                },
             }
 
     def observe(self, raw_line: bytes, arrival_monotonic: float) -> None:
@@ -2900,10 +2909,15 @@ class LiveTelemetry:
             self._stream_ordinal += 1
             ordinal = self._stream_ordinal
             record_digest = sha256_bytes(raw_line)
-            if record_digest in self._seen_raw_record_digests:
+            if not self._track_identity(
+                self._seen_raw_record_digests,
+                record_digest,
+                ordinal,
+                arrival_monotonic,
+                "record_deduplication_capacity_exhausted",
+            ):
                 self._emit_degraded(ordinal, arrival_monotonic, "duplicate_or_replayed_record")
                 return
-            self._seen_raw_record_digests.add(record_digest)
             if not raw_line.endswith(b"\n"):
                 self._emit_degraded(ordinal, arrival_monotonic, "truncated_record")
                 return
@@ -2970,12 +2984,10 @@ class LiveTelemetry:
 
     def collector_failed(self, arrival_monotonic: float) -> None:
         with self._lock:
-            self._stream_ordinal += 1
             self._emit_degraded(self._stream_ordinal, arrival_monotonic, "collector_error")
 
     def interpretation_failed(self, arrival_monotonic: float) -> None:
         with self._lock:
-            self._stream_ordinal += 1
             self._emit_degraded(self._stream_ordinal, arrival_monotonic, "telemetry_interpretation_error")
 
     def _emit_tool_request(
@@ -2987,6 +2999,9 @@ class LiveTelemetry:
             return
         name = item.get("name")
         tool_class = LIVE_TOOL_CLASSES.get(name, "other") if isinstance(name, str) else "other"
+        if tool_id not in self._tool_classes and len(self._tool_classes) >= MAX_LIVE_TELEMETRY_TRACKED_IDENTITIES:
+            self._emit_degraded(ordinal, arrival_monotonic, "tool_correlation_capacity_exhausted")
+            return
         self._tool_classes[tool_id] = tool_class
         self._emit(
             "source_tool_request",
@@ -3035,7 +3050,7 @@ class LiveTelemetry:
         counters = {
             key: usage[key]
             for key in ("input_tokens", "output_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")
-            if isinstance(usage.get(key), int) and usage[key] >= 0
+            if isinstance(usage.get(key), int) and not isinstance(usage[key], bool) and usage[key] >= 0
         }
         if not counters:
             return
@@ -3044,9 +3059,15 @@ class LiveTelemetry:
                 self._emit_degraded(ordinal, arrival_monotonic, "missing_provider_session_identity")
                 return
             usage_key = f"{message_id}:{canonical_json_bytes(counters).decode('utf-8')}"
-            if usage_key in self._seen_usage_samples:
+            if not self._track_identity(
+                self._seen_usage_samples,
+                usage_key,
+                ordinal,
+                arrival_monotonic,
+                "usage_deduplication_capacity_exhausted",
+            ):
+                self._emit_degraded(ordinal, arrival_monotonic, "duplicate_usage_sample")
                 return
-            self._seen_usage_samples.add(usage_key)
         self._emit(
             "usage_sample",
             ordinal,
@@ -3078,12 +3099,21 @@ class LiveTelemetry:
         provider_message_value = message.get("id") if isinstance(message, dict) else None
         if not isinstance(provider_message_value, str) or not provider_message_value:
             provider_message_value = None
-        dedupe_identity = provider_tool_id or provider_event_value or provider_message_value
+        # A message identity can legitimately span multiple cumulative usage or
+        # activity records. Only provider event and tool identities are safe
+        # event-level dedupe keys; exact repeated raw records are handled above.
+        dedupe_identity = provider_tool_id or provider_event_value
         if dedupe_identity is not None:
             dedupe_key = f"{event_type}:{dedupe_identity}"
-            if dedupe_key in self._seen_event_ids:
+            if not self._track_identity(
+                self._seen_event_ids,
+                dedupe_key,
+                ordinal,
+                arrival_monotonic,
+                "event_deduplication_capacity_exhausted",
+            ):
+                self._emit_degraded(ordinal, arrival_monotonic, "duplicate_event_identity")
                 return
-            self._seen_event_ids.add(dedupe_key)
         receipt: dict[str, object] = {
             "schema_version": LIVE_TELEMETRY_SCHEMA_VERSION,
             "controller_attempt_id": self.controller_attempt_id,
@@ -3102,10 +3132,10 @@ class LiveTelemetry:
             receipt["provider_message_correlation_id"] = correlation_identity("message", provider_message_value)
         if provider_tool_id is not None:
             receipt["provider_tool_correlation_id"] = correlation_identity("tool", provider_tool_id)
-        self._receipts.append(receipt)
+        self._append_receipt(receipt)
 
     def _emit_degraded(self, ordinal: int, arrival_monotonic: float, reason: str) -> None:
-        self._receipts.append(
+        self._append_receipt(
             {
                 "schema_version": LIVE_TELEMETRY_SCHEMA_VERSION,
                 "controller_attempt_id": self.controller_attempt_id,
@@ -3117,6 +3147,51 @@ class LiveTelemetry:
                 "privacy_classification": LIVE_TELEMETRY_PRIVACY_CLASSIFICATION,
             }
         )
+
+    def _track_identity(
+        self,
+        tracked: set[str],
+        identity: str,
+        ordinal: int,
+        arrival_monotonic: float,
+        capacity_reason: str,
+    ) -> bool:
+        if identity in tracked:
+            return False
+        if len(tracked) >= MAX_LIVE_TELEMETRY_TRACKED_IDENTITIES:
+            self._emit_degraded(ordinal, arrival_monotonic, capacity_reason)
+            return True
+        tracked.add(identity)
+        return True
+
+    def _append_receipt(self, receipt: dict[str, object]) -> None:
+        self._receipt_total += 1
+        if len(self._receipts) < MAX_LIVE_TELEMETRY_RECEIPTS:
+            self._receipts.append(receipt)
+            return
+
+        # Preserve a stable early window and the latest two receipts, including
+        # provider terminal plus its terminal-scoped usage when both are emitted.
+        # The synthetic marker makes bounded retention explicit without growing
+        # the live-state document or delaying the raw-stream reader indefinitely.
+        retained_real_receipts = MAX_LIVE_TELEMETRY_RECEIPTS - 1
+        self._receipt_dropped = self._receipt_total - retained_real_receipts
+        head_count = MAX_LIVE_TELEMETRY_RECEIPTS - 3
+        latest_prior_receipt = self._receipts[-1]
+        marker = {
+            "schema_version": LIVE_TELEMETRY_SCHEMA_VERSION,
+            "controller_attempt_id": self.controller_attempt_id,
+            "monotonic_arrival_seconds": latest_prior_receipt["monotonic_arrival_seconds"],
+            "stream_ordinal": latest_prior_receipt["stream_ordinal"],
+            "event_type": "telemetry_degraded",
+            "evidence": "direct",
+            "metadata": {
+                "reason": "receipt_retention_limit",
+                "dropped_receipts": self._receipt_dropped,
+            },
+            "privacy_classification": LIVE_TELEMETRY_PRIVACY_CLASSIFICATION,
+        }
+        self._receipts = [*self._receipts[:head_count], marker, latest_prior_receipt, receipt]
 
 
 def normalized_provider_error(value: object) -> str:
