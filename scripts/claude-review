@@ -1221,6 +1221,13 @@ def replace_live_state(path: Path, record: dict[str, Any]) -> None:
     os.replace(temporary, path)
 
 
+def live_state_needs_reassertion(path: Path, record: dict[str, Any]) -> bool:
+    try:
+        return path.read_bytes() != canonical_json_bytes(record)
+    except OSError:
+        return True
+
+
 def live_control_path(live_state_path: Path) -> Path:
     return live_state_path.with_name(live_state_path.name.replace("-live-state.json", "-control-state.json"))
 
@@ -3197,19 +3204,44 @@ class LiveTelemetry:
             self._receipts.append(receipt)
             return
 
-        # Preserve a stable early window and the latest two receipts, including
-        # provider terminal plus its terminal-scoped usage when both are emitted.
+        # Preserve a stable early window, provider terminal evidence, and the
+        # latest receipt. Terminal evidence is selected by meaning rather than
+        # position so later degradation receipts cannot evict it.
         # The synthetic marker makes bounded retention explicit without growing
         # the live-state document or delaying the raw-stream reader indefinitely.
-        retained_real_receipts = MAX_LIVE_TELEMETRY_RECEIPTS - 1
+        candidates = [
+            *(
+                existing
+                for existing in self._receipts
+                if not (
+                    existing["event_type"] == "telemetry_degraded"
+                    and existing["metadata"].get("reason") == "receipt_retention_limit"
+                )
+            ),
+            receipt,
+        ]
+        terminal_receipts = [
+            existing
+            for existing in candidates
+            if existing["event_type"] == "provider_terminal"
+            or (
+                existing["event_type"] == "usage_sample"
+                and existing["metadata"].get("scope") == "review_attempt_terminal"
+            )
+        ][-2:]
+        protected_ids = {id(existing) for existing in terminal_receipts}
+        protected_ids.add(id(receipt))
+        tail = [existing for existing in candidates if id(existing) in protected_ids]
+        head_count = MAX_LIVE_TELEMETRY_RECEIPTS - 1 - len(tail)
+        head = [existing for existing in candidates if id(existing) not in protected_ids][:head_count]
+        retained_real_receipts = len(head) + len(tail)
         self._receipt_dropped = self._receipt_total - retained_real_receipts
-        head_count = MAX_LIVE_TELEMETRY_RECEIPTS - 3
-        latest_prior_receipt = self._receipts[-1]
+        marker_reference = tail[0]
         marker = {
             "schema_version": LIVE_TELEMETRY_SCHEMA_VERSION,
             "controller_attempt_id": self.controller_attempt_id,
-            "monotonic_arrival_seconds": latest_prior_receipt["monotonic_arrival_seconds"],
-            "stream_ordinal": latest_prior_receipt["stream_ordinal"],
+            "monotonic_arrival_seconds": marker_reference["monotonic_arrival_seconds"],
+            "stream_ordinal": marker_reference["stream_ordinal"],
             "event_type": "telemetry_degraded",
             "evidence": "direct",
             "metadata": {
@@ -3218,7 +3250,7 @@ class LiveTelemetry:
             },
             "privacy_classification": LIVE_TELEMETRY_PRIVACY_CLASSIFICATION,
         }
-        self._receipts = [*self._receipts[:head_count], marker, latest_prior_receipt, receipt]
+        self._receipts = [*head, marker, *tail]
 
 
 def refresh_live_telemetry(
@@ -3230,6 +3262,17 @@ def refresh_live_telemetry(
     live_state["live_telemetry"] = snapshot
     live_state["last_supported_evidence_at_epoch"] = time.time()
     return int(snapshot["retention"]["total_receipts"]), True
+
+
+def finalize_live_telemetry(
+    live_telemetry: LiveTelemetry, stdout_collector: PipeCollector
+) -> dict[str, object]:
+    if stdout_collector.error is not None:
+        live_telemetry.collector_failed(time.monotonic())
+    return {
+        "snapshot": live_telemetry.snapshot(),
+        "callback_error": stdout_collector.callback_error,
+    }
 
 
 def normalized_provider_error(value: object) -> str:
@@ -4029,7 +4072,11 @@ def run_governed_review(
                 published_telemetry_total, telemetry_changed = refresh_live_telemetry(
                     live_state, live_telemetry, published_telemetry_total
                 )
-                if live_state_dirty or telemetry_changed:
+                if (
+                    live_state_dirty
+                    or telemetry_changed
+                    or live_state_needs_reassertion(live_state_path, live_state)
+                ):
                     replace_live_state(live_state_path, live_state)
             live_state["direct_process_exit_code"] = process.returncode
             while process_group_exists(pgid):
@@ -4129,7 +4176,11 @@ def run_governed_review(
                 published_telemetry_total, telemetry_changed = refresh_live_telemetry(
                     live_state, live_telemetry, published_telemetry_total
                 )
-                if live_state_dirty or telemetry_changed:
+                if (
+                    live_state_dirty
+                    or telemetry_changed
+                    or live_state_needs_reassertion(live_state_path, live_state)
+                ):
                     replace_live_state(live_state_path, live_state)
                 time.sleep(config.observation_interval)
             external_state = merged_external_state(live_state_path, live_state)
@@ -4147,8 +4198,7 @@ def run_governed_review(
             replace_live_state(live_state_path, live_state)
             stdout_collector.thread.join()
             stderr_collector.thread.join()
-            if stdout_collector.error is not None:
-                live_telemetry.collector_failed(time.monotonic())
+            finalized_live_telemetry = finalize_live_telemetry(live_telemetry, stdout_collector)
             stdout = stdout_collector.bytes()
             stderr = stderr_collector.bytes()
             exclusive_write(output_path, stdout)
@@ -4295,14 +4345,14 @@ def run_governed_review(
                         "stdout": stdout_collector.error,
                         "stderr": stderr_collector.error,
                     },
-                    "live_telemetry_callback_error": stdout_collector.callback_error,
+                    "live_telemetry_callback_error": finalized_live_telemetry["callback_error"],
                     "provider_command_canary": {
                         "command": list(config.allowed_commands[0]),
                         "passed": canary_failure is None,
                         "failure_classification": canary_failure,
                     },
                 },
-                "live_telemetry": live_telemetry.snapshot(),
+                "live_telemetry": finalized_live_telemetry["snapshot"],
                 "lifecycle": {
                     key: live_state[key]
                     for key in (
