@@ -21,5 +21,11 @@
     "reader": "docs/source-first-retrieval.md#recovery",
     "rule": "pb.retrieval-recovery",
     "source": "semantics/source-retrieval.yaml"
-  }
+  },
+  "reader_mappings": [
+    {
+      "clause": "action.retrieval-recovery/does",
+      "reader": "docs/source-first-retrieval.md#recovery"
+    }
+  ]
 }

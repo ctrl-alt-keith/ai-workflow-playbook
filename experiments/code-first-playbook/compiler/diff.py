@@ -1,10 +1,23 @@
 """First-class normative definition changes and old/new reference fan-out."""
 
 from collections import defaultdict
-from .model import canonical, reference_sites
+from .model import canonical, reference_sites, require
 
 
-def semantic_diff(old, new, old_locations=None, new_locations=None):
+def semantic_diff(old, new, old_locations=None, new_locations=None, reader_mappings=()):
+    """Report semantic fan-out and explicitly declared generated-reader effects."""
+    readers = {}
+    records = old | new
+    for mapping in reader_mappings:
+        require(type(mapping) is dict and set(mapping) == {'clause', 'reader'},
+                'malformed reader mapping')
+        clause, reader = mapping['clause'], mapping['reader']
+        require(type(clause) is str and clause.count('/') == 1, 'malformed reader mapping clause')
+        require(type(reader) is str and '#' in reader, 'malformed reader mapping reader')
+        record_id, field = clause.split('/')
+        require(record_id in records and field in records[record_id], 'stale reader mapping clause: ' + clause)
+        require(clause not in readers, 'duplicate reader mapping clause: ' + clause)
+        readers[clause] = reader
     reverse = defaultdict(set)
     sites = defaultdict(set)
     for records in (old, new):
@@ -46,6 +59,8 @@ def semantic_diff(old, new, old_locations=None, new_locations=None):
         rules = sorted(i for i in impacted if (new.get(i) or old.get(i))["kind"] == "rule")
         dimensions = sorted(k for k in (a or {}).keys() | (b or {}).keys()
                             if canonical((a or {}).get(k)) != canonical((b or {}).get(k)))
+        changed_clauses = [rid + '/' + field for field in dimensions
+                           if rid + '/' + field in readers]
         events.append({"id": rid, "owner": record["owner"], "category": category,
                        "dimensions": dimensions, "old": a, "new": b,
                        "old_location": old_location, "new_location": new_location,
@@ -53,13 +68,12 @@ def semantic_diff(old, new, old_locations=None, new_locations=None):
                        else "unresolved_semantic_impact",
                        "direct_reference_sites": [{"id": i, "site": s} for i, s in sorted(sites[rid])],
                        "affected_ids": sorted(impacted), "affected_rules": rules,
-                       "affected_outputs": ["ai/startup-retrieval.json", "operator-sre/startup-retrieval.md",
-                                            "support/startup-retrieval.md"] if rules else []})
+                       "affected_reader_outputs": sorted({readers[clause] for clause in changed_clauses}),
+                       "reader_mapping_status": "mapped" if changed_clauses else "no_direct_reader_clause"})
         if category == 'source_location_changed':
             # A copied evaluation bundle moves every file. Preserve relocation
             # evidence without mislabeling that noise as normative fan-out.
             events[-1].update(old=None,new=None,impact='source_provenance_only',affected_ids=[],
-                              affected_rules=[],affected_outputs=[],direct_reference_sites=[])
-        elif 'pb.retrieval-recovery' in rules:
-            events[-1]['affected_outputs'].append('docs/source-first-retrieval.md#recovery')
+                              affected_rules=[],affected_reader_outputs=[],direct_reference_sites=[],
+                              reader_mapping_status='not_applicable')
     return {"status": "evidence_only", "events": events, "permission": "not_evaluated"}

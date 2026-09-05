@@ -13,7 +13,7 @@ from compiler.validate import validate
 from compiler.diff import semantic_diff
 from compiler.provenance import binding, read_json, write_outputs
 from compiler.recovery_section import (READER, RULE, ACTION, SOURCE, OWNERSHIP,
-                                       BEGIN, END, replace)
+                                       BEGIN, END, replace, reader_mappings)
 
 ROOT = Path(__file__).resolve().parent
 MODULES = ['semantics/startup.yaml', 'semantics/source-retrieval.yaml']
@@ -60,6 +60,7 @@ def section(records):
 
 def render(records, contract):
     require(contract['ownership'] == OWNERSHIP, 'wrong Recovery ownership mapping')
+    reader_mappings(contract, records)
     expected, observed = contract['envelope_sha256'], envelope(records)
     changed = sorted(rid for rid in expected.keys() | observed.keys()
                      if expected.get(rid) != observed.get(rid))
@@ -127,9 +128,10 @@ def definition_probe(records, locations):
     """A hypothetical edit exercises the existing semantic diff, not new policy."""
     changed = copy.deepcopy(records)
     changed[ACTION]['does'] += '\nSIMULATION: Record the correction location for mock review.\n'
-    report = semantic_diff(records, changed, locations, locations)
-    # Exercise the real renderer as well as the shared definition-diff path.
     contract = read_json(ROOT, 'recovery/contract.json')
+    report = semantic_diff(records, changed, locations, locations,
+                           reader_mappings(contract, records))
+    # Exercise the real renderer as well as the shared definition-diff path.
     prose_diff = ''.join(difflib.unified_diff(
         render(records, contract).decode().splitlines(keepends=True),
         render(changed, contract).decode().splitlines(keepends=True),
@@ -137,9 +139,9 @@ def definition_probe(records, locations):
     return {'simulation_only': True, 'shared_semantic_diff': report,
             'generated_prose_diff': prose_diff,
             'reader_effects': [
-                {'event': event['id'], 'output': OWNERSHIP['reader'],
+                 {'event': event['id'], 'output': OWNERSHIP['reader'],
                  'effect': 'body_changed' if event['id'] == ACTION else 'envelope_review_required'}
-                for event in report['events'] if RULE in event['affected_rules']]}
+                for event in report['events'] if event['affected_reader_outputs']]}
 
 
 def main():

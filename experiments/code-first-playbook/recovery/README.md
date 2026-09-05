@@ -72,10 +72,10 @@ surrounding document with only the Recovery body excluded. Other source files
 retain their whole-file checks. Recovery itself must match its semantic source,
 so an author never refreshes historical prose parity to change this body.
 
-The existing persona checks still require their exact input-commit binding and
-explicit preview refresh when shared inputs change. Those previews are evidence
-only, not extra Recovery owners. This retained pilot maintenance is a known cost;
-its removal or redesign is outside this transition.
+CAK-238 retired the persona previews, their input-commit binding and their
+mock rehearsal because none protected a Recovery reader or a distinct ongoing
+failure boundary. Recovery keeps its own deterministic provenance, hand-edit
+check and exact transition rehearsal.
 
 ## Semantic changes and surrounding owners
 
@@ -107,16 +107,17 @@ New incoming references or changes elsewhere in the corpus are outside the
 focused guard. Review the shared semantic diff of the complete old/new corpus,
 as well as the generated prose diff; incoming semantics can matter even when
 Recovery's rendered bytes do not change. The shared diff preserves changed
-records, reference sites, affected rules and unresolved semantic impact. It
-also names `docs/source-first-retrieval.md#recovery` for affected Recovery rules.
-No claim of incoming-edge completeness is made by the focused guard.
+records, reference sites, affected rules and unresolved semantic impact. The
+Recovery contract maps its rendered `action.retrieval-recovery/does` clause
+explicitly to `docs/source-first-retrieval.md#recovery`; unmapped direct clauses
+report no invented reader effect, and stale mappings fail. No claim of
+incoming-edge completeness is made by the focused guard.
 
 `make code-first-recovery-diff` demonstrates a hypothetical meaningful action
-edit through that shared diff. It changes no source. Actual bundle comparisons
-use `pilot.py diff --old-bundle ... --bundle ...`, as documented in
-[language.md](../language.md#f2-diff). Tests also edit the real semantic file in an
-isolated fixture, regenerate the reader and show that no old prose parity is
-needed. Review both semantic and reader changes before accepting new meaning.
+edit through that shared diff. It changes no source. Tests also edit the real
+semantic file in an isolated fixture, regenerate the reader and show that no
+old prose parity is needed. Review both semantic and reader changes before
+accepting new meaning.
 
 ## Exact cutover and rollback
 
@@ -169,7 +170,7 @@ no comprehension-time, authoring-effort or maintenance improvement is claimed.
 | Mixed document ownership | Exact section boundary; generation preserves all surrounding bytes. |
 | Historical parity | Retired for Recovery; external-owner freshness remains separately checked. |
 | Unrendered normative envelope | Existing compatibility guard blocks drift; incoming changes still need corpus review. |
-| Shared pilot dependencies | Retained in place with a narrow permanent permission; old preview rebinding still costs work. |
+| Shared semantic dependencies | Retained in place with a narrow permanent permission; they protect Recovery generation and validation. |
 | Language pressure | No new construct required by this transition. New top-level headings or marker injection are rejected as outside the section contract. |
 
 ## Next governed review

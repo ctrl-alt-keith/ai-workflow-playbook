@@ -1,6 +1,6 @@
 import copy
 import unittest
-from common import ROOT,corpus
+from pathlib import Path
 from compiler.load import parse,load_modules,safe_path
 from compiler.validate import validate
 from compiler.model import Invalid,condition
@@ -15,11 +15,14 @@ class Language(unittest.TestCase):
             with self.subTest(raw=raw),self.assertRaises(Invalid):parse(raw)
         self.assertEqual(parse(b'a: true\nb: "no"\nc: |\n  exact text\n'),{'a':True,'b':'no','c':'exact text\n'})
         for path in ('../outside','/absolute'):
-            with self.assertRaises(Invalid):safe_path(ROOT,path)
+            with self.assertRaises(Invalid):safe_path(self.root,path)
 
     def baseline(self):
-        b=corpus()[0]
-        return load_modules(ROOT,b['semantics'])
+        return load_modules(self.root, ['semantics/startup.yaml', 'semantics/source-retrieval.yaml'])
+
+    @property
+    def root(self):
+        return Path(__file__).resolve().parents[1]
 
     def mutate(self, edit):
         m,l=self.baseline();r={x['id']:x for module in m.values() for x in module['records']};edit(m,r)

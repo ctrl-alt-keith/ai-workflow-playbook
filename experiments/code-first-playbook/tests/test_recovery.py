@@ -2,7 +2,7 @@ import copy
 import unittest
 from pathlib import Path
 
-from common import ROOT
+ROOT = Path(__file__).resolve().parents[1]
 from compiler.model import Invalid
 from compiler.provenance import read_json
 import recovery as candidate
@@ -10,7 +10,8 @@ import shutil
 import tempfile
 from compiler.diff import semantic_diff
 from compiler.provenance import binding
-from compiler.recovery_section import BEGIN, END, READER, SOURCE, surrounding, replace
+from compiler.recovery_section import (BEGIN, END, READER, SOURCE, surrounding,
+                                       replace, reader_mappings)
 
 
 class RecoveryTests(unittest.TestCase):
@@ -30,7 +31,33 @@ class RecoveryTests(unittest.TestCase):
         event, = report['shared_semantic_diff']['events']
         self.assertEqual(event['category'], 'action_definition_changed')
         self.assertIn(candidate.RULE, event['affected_rules'])
+        self.assertEqual(event['affected_reader_outputs'], [READER + '#recovery'])
         self.assertEqual(report['reader_effects'][0]['effect'], 'body_changed')
+
+    def test_reader_mapping_is_bounded_and_stale_mappings_fail(self):
+        changed = copy.deepcopy(self.records)
+        changed[candidate.ACTION]['does'] += '\nA hypothetical reader change.\n'
+        event, = semantic_diff(self.records, changed, self.locations, self.locations,
+                               reader_mappings(self.contract, self.records))['events']
+        self.assertEqual(event['affected_reader_outputs'], [READER + '#recovery'])
+
+        nonreader = copy.deepcopy(self.records)
+        nonreader['action.startup-floor']['does'] += ' Reader unaffected.\n'
+        event, = semantic_diff(self.records, nonreader, self.locations, self.locations,
+                               reader_mappings(self.contract, self.records))['events']
+        self.assertEqual(event['affected_reader_outputs'], [])
+        self.assertEqual(event['reader_mapping_status'], 'no_direct_reader_clause')
+
+        for mutate in (
+            lambda c: c.pop('reader_mappings'),
+            lambda c: c['reader_mappings'][0].update(clause='action.missing/does'),
+            lambda c: c['reader_mappings'].append(copy.deepcopy(c['reader_mappings'][0])),
+        ):
+            with self.subTest(mutate=mutate):
+                broken = copy.deepcopy(self.contract)
+                mutate(broken)
+                with self.assertRaisesRegex(Invalid, 'reader mapping'):
+                    candidate.render(self.records, broken)
 
     def test_unrendered_normative_changes_fail_closed(self):
         changes = [
@@ -84,8 +111,9 @@ class RecoveryTests(unittest.TestCase):
                               'Halt continuity reasoning and record the correction location.'))
             changed, locations = candidate.corpus(root)
             self.assertEqual(binding(root, read_json(root, 'provenance/sources.json'), changed)['status'], 'bound')
-            event, = semantic_diff(self.records, changed, self.locations, locations)['events']
-            self.assertIn(READER + '#recovery', event['affected_outputs'])
+            event, = semantic_diff(self.records, changed, self.locations, locations,
+                                   reader_mappings(self.contract, self.records))['events']
+            self.assertIn(READER + '#recovery', event['affected_reader_outputs'])
             with self.assertRaisesRegex(Invalid, 'stale_or_hand_edited'):
                 candidate.check(root)
             candidate.write(root)
@@ -113,10 +141,11 @@ class RecoveryTests(unittest.TestCase):
         changed = copy.deepcopy(self.records)
         changed['pb.mode-persistence']['references'].append(candidate.RULE)
         self.assertEqual(candidate.envelope(changed), candidate.envelope(self.records))
-        event, = semantic_diff(self.records, changed)['events']
+        event, = semantic_diff(self.records, changed, reader_mappings=reader_mappings(self.contract, self.records))['events']
         self.assertEqual(event['id'], 'pb.mode-persistence')
         self.assertIn(candidate.RULE, event['new']['references'])
         self.assertEqual(event['impact'], 'unresolved_semantic_impact')
+        self.assertEqual(event['affected_reader_outputs'], [])
 
     def test_section_spacing_preserves_list_boundaries_and_all_tokens(self):
         section = candidate.section(self.records)
