@@ -242,6 +242,27 @@ Keep this policy in the shared playbook. Repo-local `AGENTS.md` files should
 reference or rely on it rather than duplicate it, except where a repository
 truly requires different behavior.
 
+### Discussion to tracked execution
+
+Ordinary brainstorming and conceptual discussion remain lightweight. Detailed
+discussion, a worked-out design, or convergence on a recommendation does not
+establish commitment to execute. Recognize the transition when current human
+direction explicitly selects proceeding with the bounded work, for example
+"let's do this" in an unambiguous discussion of that work. Resolve what was
+selected under the interaction-mode preflight; intent to track or hand off
+work does not by itself authorize this controller to implement it.
+
+When the governing repository workflow requires a planning or task artifact,
+establish that owning artifact before producing downstream execution handoffs.
+Retrieve and use an existing applicable item, or create the required item
+within current authority, with the bounded outcome and completion boundary.
+If the required artifact cannot be established, stop the dependent handoff and
+report the blocker. Follow
+[`Issue And Planning Coordination`](feature-lifecycle.md#issue-and-planning-coordination)
+for planning ownership and completed-item or successor disposition; do not
+invent a ticket requirement for workflows that do not have one. The artifact
+records intent and scope; its existence supplies no execution authority.
+
 ### Repository mutation and decision boundaries
 
 Resolve the current requested deliverable and mutation authority before

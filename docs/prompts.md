@@ -382,7 +382,10 @@ single-record request and response limits. The permitted Airtable route owns
 that runtime limit check. Payloads that do not qualify remain outside this
 normal text route; they do not trigger a fallback from it.
 
-Use one new Airtable record per producer attempt with these required fields:
+Apply the
+[`material-attempt and conversational-steering boundary`](prompt-contracts.md#material-attempts-and-conversational-steering)
+before selecting a new durable handoff. Use one new Airtable record per
+producer attempt with these required fields:
 
 - `Handoff Key`
 - `Payload`
