@@ -105,25 +105,27 @@ client-forced output as a limitation rather than claiming it was suppressed.
 
 ### Successful completion projection
 
-A successful completion report is an operator review surface, not a replay of
-the durable receipt. For delegated repository execution, normally report only
-the completed outcome, the reviewable repository result and its current
-status, the canonical validation and review outcome at a useful summary level,
-the exact implementation identity when it materially aids review or approval,
-and the current stop boundary. This is a semantic minimum, not a required
-sentence template or layout.
+A successful completion report orients the operator to the review surface.
+For an ordinary successful repository run, default to roughly 2–4 short
+sentences covering only the completed outcome, the reviewable artifact and its
+current status, canonical validation at a useful summary level, and the current
+stop boundary. Include one additional fact only when it materially changes
+what the operator should review, decide, or do next. This is a semantic
+projection, not an exact wording template or layout.
 
-Leave prompt acquisition and delivery mechanics, byte counts and digests,
-provider object metadata, routine preflight attempts, temporary-scratch and
-cleanup mechanics, retained evidence identities, routine artifact-deletion
-authority reminders, command history, and raw test counts in their owning
-durable evidence rather than routinely replaying them in normal completion
-prose. This projection reduces operator-facing repetition only; it does not
-weaken evidence collection, verification, identity, retention, or
-retrievability.
+The PR, issue, and durable evidence remain the detailed record. Do not routinely
+replay prompt transport or Airtable verification, hashes, byte counts, record
+IDs, receipts, source inventories, retrieval or preflight mechanics, temporary
+scratch or cleanup mechanics, command history, or raw test counts. Leave
+runtime/model evidence, adjacent issue dispositions, research findings, and
+unresolved claims there unless they materially affect operator review or
+action. Omit unchanged authority reminders, implementation mechanics already
+visible in the review artifact, and exhaustive lists of unchanged surfaces.
+This projection reduces operator-facing repetition only; it does not weaken
+evidence collection, verification, identity, retention, or retrievability.
 
-Surface additional detail when it changes what the operator needs to know or
-do, including failure or partial success, identity or integrity mismatch, a
+Expand beyond the normal projection for a material exception, including failure
+or partial success, identity or integrity mismatch, a
 retry that materially affected execution, validation or review failure,
 capability or authentication limits, unexpected state, unresolved risk or
 blocker, a required human decision, or cleanup residue. Report the material
