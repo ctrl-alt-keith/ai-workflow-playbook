@@ -60,9 +60,11 @@ promise that those external rules have been read or applied.
 
 [`contract.json`](contract.json) guards the existing rule and its referenced
 definitions, excluding only the emitted action body. Unknown facts are never
-resolved or used to prune this documentation. Changes to unrendered failure,
-authority, lifetime, precedence, context or vocabulary definitions reject
-regeneration until the section mapping is explicitly reviewed. The external
+resolved or used to prune this documentation. Changes to the rule's unrendered
+fields and its referenced failure, authority, lifetime, precedence, context or
+vocabulary definitions reject regeneration until the section mapping is
+explicitly reviewed. New incoming edges from unguarded rules are outside this
+guard; the shared semantic diff and corpus review remain necessary for them. The external
 claim-verification rule is guarded at its boundary; its entire dependency
 graph is not claimed as part of this section.
 
@@ -190,3 +192,6 @@ actual sources/capability gaps. A material architecture/safety defect stops
 the task. Bounded corrections preserve the original review where applicable;
 otherwise return incomplete/follow-up instead of an open-ended review loop.
 Review and validation provide evidence only; the human owns adoption and merge.
+
+The completed review and bounded clarification are recorded in
+[review-disposition.md](review-disposition.md).
