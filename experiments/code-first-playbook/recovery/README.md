@@ -19,6 +19,14 @@ doctrine promotion and merge remain pending separate human authorization.
 The predecessor's [review disposition](review-disposition.md) concerns its
 shadow candidate only and does not qualify this transition.
 
+CAK-239 is a later semantic-body change under the established owner. It is a
+**material doctrine change: mandatory lifecycle gate** because it changes when
+retrieval recovery continues through another qualified route and when the
+verification gate may fail closed. The exact CAK-239 implementation head is its
+review and promotion surface. The change does not transfer ownership, add a
+semantic-language construct, authorize a transport, or launch authentication
+repair.
+
 The [repo-local carve-out](../../../AGENTS.md#recovery-generated-section-ownership)
 separates permanent Recovery ownership from the still-experimental CAK-233
 infrastructure and its unchanged expiry. The shared semantic modules and
@@ -157,14 +165,15 @@ semantic ownership and must still regenerate and validate its current reader.
 
 ## Reading cost and representational friction
 
-The normative body remains the same **144 words**, in the same sequence, at the
-same reader location. No appendix or extra navigation hop is required. The source
-marker adds a small maintainer cue. Reading cost is unchanged apart from that cue;
-no comprehension-time, authoring-effort or maintenance improvement is claimed.
+CAK-239 expands the normative body at the same reader location to make the
+transport-failure, unverified-fact, and source-unavailability states explicit.
+No appendix or additional navigation hop is introduced. The added prose is the
+review cost of making the demonstrated recovery failure testable; no measured
+comprehension-time or maintenance improvement is claimed.
 
 | Observed edge | Handling and limit |
 | --- | --- |
-| Normative rationale, examples and unknowns | Existing action body already represents them; preserved verbatim after list spacing. |
+| Normative rationale, examples and unknowns | The action body represents the recovery sequence, route sufficiency, authentication boundary, and specialized API exception; the renderer preserves its tokens after list spacing. |
 | Reader navigation | Inline generation preserves the stable heading and surrounding reading flow. |
 | Source link and provenance | One relative editor link; detailed hashes stay on engineering surfaces. |
 | Mixed document ownership | Exact section boundary; generation preserves all surrounding bytes. |
@@ -175,18 +184,20 @@ no comprehension-time, authoring-effort or maintenance improvement is claimed.
 
 ## Next governed review
 
-No independent review is launched by this implementation run. The next human
-decision is whether to authorize a bounded governed review of the exact PR head.
-Recommended scope: changed ownership/reader/Make surfaces; this renderer,
-section boundary and rehearsal; the shared parser/model/validator, provenance
-and diff; the two semantic modules and source bindings; focused tests; current
-surrounding owners; and required reviewer startup/authority guidance. Use
-supplemental sources only for a concrete recorded gap.
+No independent review is launched by the CAK-239 implementation run. The next
+human decision is whether to authorize a bounded governed review of the exact PR
+head. Recommended scope: the generated Recovery clause and its semantic source;
+focused transport-routing tests; surrounding Minimum-Sufficient Retrieval,
+freshness, verification, and executor rules; reader mapping, provenance,
+hand-edit detection, and exact rollback behavior; and CAK-239 with CAK-236 as
+the repeated-failure evidence. Use supplemental sources only for a concrete
+recorded gap.
 
-Review one-source ownership, exact reader fidelity, boundary protection,
-hand-edit behavior, unrendered and incoming semantics, pilot-expiry separation,
-and the precise reverse operation. Require actual source attribution, capability
-gaps, anchored findings and an explicit verdict. Preserve the complete review
-and disposition substantive findings under the current governed-review contract.
-Only after that boundary may the human promote and authorize merging the exact
-reviewed transition.
+Review one-source ownership, exact reader fidelity, the distinction among
+transport failure, unverified fact, and source unavailability, route-specific
+evidence limits, authentication non-mutation, first-class route preference,
+fail-closed behavior, and the specialized API exception. Require actual source
+attribution, capability gaps, anchored findings, and an explicit verdict.
+Preserve the complete review and disposition substantive findings under the
+current governed-review contract. Only after that boundary may the human
+promote and authorize merging the exact reviewed change.

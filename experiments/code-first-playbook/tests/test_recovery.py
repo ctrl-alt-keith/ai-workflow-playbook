@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-from compiler.model import Invalid
+from compiler.model import Invalid, evaluate
 from compiler.provenance import read_json
 import recovery as candidate
 import shutil
@@ -152,3 +152,16 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(section.split(), self.records[candidate.ACTION]['does'].split())
         self.assertIn('includes:\n\n- ', section)
         self.assertIn('repair:\n\n1. ', section)
+
+    def test_failure_gate_requires_aggregate_source_unavailability(self):
+        availability = self.records['fact.source_available']
+        self.assertEqual(availability['resolution_class'], 'external_judgment')
+        self.assertEqual(availability['evaluators'], ['controller'])
+        self.assertEqual(availability['sources'], ['source.retrieval'])
+
+        failure = self.records[candidate.RULE]['failure']
+        self.assertEqual(failure['when'], {'is': ['fact.source_available', False]})
+        self.assertEqual(failure['action'], 'action.retrieval-recovery-failure')
+        self.assertEqual(failure['alternatives'], [])
+        self.assertFalse(evaluate(failure['when'], {'fact.source_available': True}))
+        self.assertTrue(evaluate(failure['when'], {'fact.source_available': False}))

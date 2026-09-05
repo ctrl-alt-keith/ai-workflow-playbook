@@ -64,8 +64,8 @@
       "sha256": "0969da99a0bc2a1b71ed50584560f4588a37567ac63af3ddbaf3c4617ca5621a"
     },
     "semantics/source-retrieval.yaml": {
-      "bytes": 16880,
-      "sha256": "02f4d6ec287bd157090649ad01e3b2f1a816cbd40d4594a754f53a414399a1f8"
+      "bytes": 19039,
+      "sha256": "2b7455246c73dac48e3fd23d5a3b35b7959632434f694ea8bc4b322511a708e4"
     },
     "semantics/startup.yaml": {
       "bytes": 26761,
@@ -73,9 +73,9 @@
     }
   },
   "output": {
-    "bytes": 1306,
+    "bytes": 3347,
     "section": "docs/source-first-retrieval.md#recovery",
-    "sha256": "4ae1764340054ff76f7fbfc2562ca13916cbae1f837dc0b638a19607304e5311"
+    "sha256": "9c80df0d5d1ea2287e67e318cfa1debd555391d1a781e9a6372aca4429a0f684"
   },
   "ownership": {
     "clause": "action.retrieval-recovery/does",
