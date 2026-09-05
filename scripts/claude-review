@@ -2881,7 +2881,7 @@ class LiveTelemetry:
     def __init__(self, controller_attempt_id: str):
         self.controller_attempt_id = controller_attempt_id
         self._receipts: list[dict[str, object]] = []
-        self._provider_session_value: str | None = None
+        self._provider_session_correlation_id: str | None = None
         self._seen_event_ids: set[str] = set()
         self._seen_raw_record_digests: set[str] = set()
         self._tool_classes: dict[str, str] = {}
@@ -2931,10 +2931,10 @@ class LiveTelemetry:
                 return
             session_id = record.get("session_id")
             if isinstance(session_id, str) and session_id:
-                self._provider_session_value = session_id
+                self._provider_session_correlation_id = correlation_identity("session", session_id)
             record_type = record.get("type")
             if record_type == "system" and record.get("subtype") == "init":
-                if self._provider_session_value is None:
+                if self._provider_session_correlation_id is None:
                     self._emit_degraded(ordinal, arrival_monotonic, "missing_provider_session_identity")
                     return
                 self._emit("provider_session_initialized", ordinal, arrival_monotonic, record, {})
@@ -2999,10 +2999,14 @@ class LiveTelemetry:
             return
         name = item.get("name")
         tool_class = LIVE_TOOL_CLASSES.get(name, "other") if isinstance(name, str) else "other"
-        if tool_id not in self._tool_classes and len(self._tool_classes) >= MAX_LIVE_TELEMETRY_TRACKED_IDENTITIES:
+        tool_correlation_id = correlation_identity("tool", tool_id)
+        if (
+            tool_correlation_id not in self._tool_classes
+            and len(self._tool_classes) >= MAX_LIVE_TELEMETRY_TRACKED_IDENTITIES
+        ):
             self._emit_degraded(ordinal, arrival_monotonic, "tool_correlation_capacity_exhausted")
             return
-        self._tool_classes[tool_id] = tool_class
+        self._tool_classes[tool_correlation_id] = tool_class
         self._emit(
             "source_tool_request",
             ordinal,
@@ -3019,7 +3023,7 @@ class LiveTelemetry:
         if not isinstance(tool_id, str) or not tool_id:
             self._emit_degraded(ordinal, arrival_monotonic, "missing_tool_correlation_identity")
             return
-        tool_class = self._tool_classes.get(tool_id)
+        tool_class = self._tool_classes.get(correlation_identity("tool", tool_id))
         if tool_class is None:
             self._emit_degraded(ordinal, arrival_monotonic, "unmatched_tool_completion")
             return
@@ -3055,10 +3059,12 @@ class LiveTelemetry:
         if not counters:
             return
         if scope == "assistant_event":
-            if self._provider_session_value is None:
+            if self._provider_session_correlation_id is None:
                 self._emit_degraded(ordinal, arrival_monotonic, "missing_provider_session_identity")
                 return
-            usage_key = f"{message_id}:{canonical_json_bytes(counters).decode('utf-8')}"
+            usage_key = sha256_bytes(
+                correlation_identity("message", message_id).encode("ascii") + canonical_json_bytes(counters)
+            )
             if not self._track_identity(
                 self._seen_usage_samples,
                 usage_key,
@@ -3088,8 +3094,8 @@ class LiveTelemetry:
         provider_tool_id: str | None = None,
         evidence: str = "direct",
     ) -> None:
-        provider_session_value = self._provider_session_value
-        if provider_session_value is None and event_type != "provider_session_initialized":
+        provider_session_correlation_id = self._provider_session_correlation_id
+        if provider_session_correlation_id is None and event_type != "provider_session_initialized":
             self._emit_degraded(ordinal, arrival_monotonic, "missing_provider_session_identity")
             return
         provider_event_value = record.get("uuid")
@@ -3104,7 +3110,7 @@ class LiveTelemetry:
         # event-level dedupe keys; exact repeated raw records are handled above.
         dedupe_identity = provider_tool_id or provider_event_value
         if dedupe_identity is not None:
-            dedupe_key = f"{event_type}:{dedupe_identity}"
+            dedupe_key = correlation_identity(f"event/{event_type}", dedupe_identity)
             if not self._track_identity(
                 self._seen_event_ids,
                 dedupe_key,
@@ -3124,8 +3130,8 @@ class LiveTelemetry:
             "metadata": metadata,
             "privacy_classification": LIVE_TELEMETRY_PRIVACY_CLASSIFICATION,
         }
-        if provider_session_value is not None:
-            receipt["provider_session_correlation_id"] = correlation_identity("session", provider_session_value)
+        if provider_session_correlation_id is not None:
+            receipt["provider_session_correlation_id"] = provider_session_correlation_id
         if provider_event_value is not None:
             receipt["provider_event_correlation_id"] = correlation_identity("event", provider_event_value)
         if provider_message_value is not None:
@@ -3195,6 +3201,8 @@ class LiveTelemetry:
 
 
 def normalized_provider_error(value: object) -> str:
+    if not isinstance(value, str):
+        return "provider_failure"
     if value == "rate_limit":
         return "rate_limit"
     if value in {"authentication_failed", "oauth_org_not_allowed", "billing_error"}:

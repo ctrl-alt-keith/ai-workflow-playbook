@@ -2995,6 +2995,36 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(snapshot["receipts"][-3]["metadata"], {"reason": "duplicate_or_replayed_record"})
         self.assertEqual(snapshot["receipts"][-2]["metadata"], {"reason": "truncated_record"})
         self.assertEqual(snapshot["receipts"][-1]["metadata"], {"reason": "unknown_provider_event"})
+        self.assertRegex(telemetry._provider_session_correlation_id, r"^[0-9a-f]{64}$")
+        for tracked in (
+            telemetry._seen_event_ids,
+            telemetry._seen_raw_record_digests,
+            telemetry._seen_usage_samples,
+            telemetry._tool_classes,
+        ):
+            self.assertTrue(all(len(identity) == 64 for identity in tracked))
+
+    def test_live_telemetry_normalizes_non_string_provider_errors(self):
+        module = load_script("claude_review_live_telemetry_error_type", LAUNCHER)
+        telemetry = module.LiveTelemetry("attempt-error")
+        telemetry.observe(
+            b'{"type":"system","subtype":"init","session_id":"session-1"}\n',
+            1.0,
+        )
+        for ordinal, value in enumerate(({"secret": "value"}, ["secret"]), start=2):
+            record = {
+                "type": "system",
+                "subtype": "api_retry",
+                "session_id": "session-1",
+                "uuid": f"event-{ordinal}",
+                "error": value,
+            }
+            telemetry.observe((json.dumps(record) + "\n").encode("utf-8"), float(ordinal))
+
+        snapshot = telemetry.snapshot()
+        failures = [receipt for receipt in snapshot["receipts"] if receipt["event_type"] == "provider_failure"]
+        self.assertEqual([receipt["metadata"] for receipt in failures], [{"error_class": "provider_failure"}] * 2)
+        self.assertNotIn("secret", json.dumps(snapshot, sort_keys=True))
 
     def test_live_telemetry_preserves_distinct_usage_without_event_uuid(self):
         module = load_script("claude_review_live_telemetry_usage_dedupe", LAUNCHER)
@@ -3025,6 +3055,40 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             len([receipt for receipt in receipts if receipt["event_type"] == "substantive_model_activity"]),
             2,
         )
+
+        duplicate_usage_record = {
+            "type": "assistant",
+            "session_id": "session-1",
+            "message": {
+                "id": "message-1",
+                "content": [{"type": "text", "text": "different sensitive body"}],
+                "usage": {"input_tokens": 3, "output_tokens": 2},
+            },
+        }
+        telemetry.observe((json.dumps(duplicate_usage_record) + "\n").encode("utf-8"), 4.0)
+        duplicate_event_record = {
+            "type": "assistant",
+            "session_id": "session-1",
+            "uuid": "event-1",
+            "message": {"id": "message-2", "content": [], "usage": {"output_tokens": 3}},
+        }
+        telemetry.observe((json.dumps(duplicate_event_record) + "\n").encode("utf-8"), 5.0)
+        duplicate_event_record["message"] = {
+            "id": "message-3",
+            "content": [{"type": "text", "text": "another sensitive body"}],
+            "usage": {"output_tokens": 4},
+        }
+        telemetry.observe((json.dumps(duplicate_event_record) + "\n").encode("utf-8"), 6.0)
+
+        reasons = [
+            receipt["metadata"]["reason"]
+            for receipt in telemetry.snapshot()["receipts"]
+            if receipt["event_type"] == "telemetry_degraded"
+        ]
+        self.assertIn("duplicate_usage_sample", reasons)
+        self.assertIn("duplicate_event_identity", reasons)
+        self.assertNotIn("different sensitive body", json.dumps(telemetry.snapshot(), sort_keys=True))
+        self.assertNotIn("another sensitive body", json.dumps(telemetry.snapshot(), sort_keys=True))
 
     def test_live_telemetry_bounds_retention_and_preserves_terminal_tail(self):
         module = load_script("claude_review_live_telemetry_retention", LAUNCHER)
@@ -3134,11 +3198,12 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         )
         process.wait(timeout=5)
         terminal_receipt = self.receipts()[0]
-        terminal_types = {
-            receipt["event_type"] for receipt in terminal_receipt["live_telemetry"]["receipts"]
-        }
+        terminal_receipts = terminal_receipt["live_telemetry"]["receipts"]
+        terminal_types = {receipt["event_type"] for receipt in terminal_receipts}
         self.assertIn("provider_terminal", terminal_types)
         self.assertTrue({receipt["event_type"] for receipt in live_receipts}.issubset(terminal_types))
+        self.assertEqual(terminal_receipt["live_telemetry"]["retention"]["dropped_receipts"], 0)
+        self.assertTrue(all(receipt in terminal_receipts for receipt in live_receipts))
 
     def test_provider_failure_and_auth_each_stop_after_one_explicit_attempt(self):
         exhausted, exhausted_diagnostic = self.run_governed("transient_always")
