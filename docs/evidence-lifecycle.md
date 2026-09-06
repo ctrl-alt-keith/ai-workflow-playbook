@@ -128,43 +128,18 @@ attempt-local scratch is not a substitute for required durable capture; see
 
 ### Dropbox issue-folder creation projection
 
-When the owning storage contract selects Dropbox and the issue-owned
-destination is `/issues/<ISSUE-ID>/`, apply this provider-specific projection
-to the parent-folder prerequisite. The shared candidate, admission, exact-byte,
-no-overwrite, verification, and receipt rules above remain unchanged. This
-projection does not apply to the Airtable canonical-text handoff in
-[`prompts.md`](prompts.md#airtable-canonical-text-handoff).
+For an admitted Dropbox issue-owned artifact, inspect `/issues/<ISSUE-ID>/`
+only when the artifact is ready to write; do not pre-create issue folders or
+persist approval state. If the folder exists, continue the already-authorized
+write without a folder-creation approval.
 
-Do not create the issue folder at issue creation, issue start, prompt creation,
-or another lifecycle transition. Only when an admitted artifact's frozen bytes
-are ready for an actual write, inspect the exact issue path. If it already
-exists as the expected folder, continue the authorized artifact write without
-a folder-creation approval. The folder's live provider state is sufficient;
-do not add a persisted approval flag or another lifecycle state.
+If the folder is absent, ask once to create exactly `/issues/<ISSUE-ID>/` and
+continue the already-authorized upload. If that confirmation is unavailable,
+including during unattended execution, or creation cannot proceed, fail closed
+without silently rerouting storage.
 
-If the folder is absent, present one concise mutation plan for creating exactly
-`/issues/<ISSUE-ID>/` and continuing the already-authorized artifact write,
-then obtain the explicit confirmation required by Dropbox's current
-`create_folder` action contract. That confirmation is scoped to the named
-folder creation and continuation of this artifact attempt. It is a connector
-runtime prerequisite, not broad future Dropbox write authority or a second
-approval of the artifact itself.
-
-After confirmation, create the folder and verify its returned provider
-identity, exact path, and folder type before continuing. When the current
-`upload_file` action contract treats the existing explicit request, unambiguous
-source file, and complete destination path as confirmation, perform that write
-without requesting another confirmation merely because it follows folder
-creation. Treat both action contracts as current runtime evidence under
-[`start-here.md`](start-here.md#connector-availability-is-runtime-evidence);
-Playbook prose does not waive a changed or narrower action prerequisite.
-
-If confirmation is declined or unavailable, folder creation fails, or the
-resulting folder identity or state cannot be verified, stop the artifact write
-and preserve the candidate or attempt under its existing owning workflow. Do
-not silently select another provider. An unattended execution surface that
-cannot obtain the first-folder confirmation stops with that exact blocker;
-automation authority does not supply interactive confirmation.
+Current connector action requirements remain [runtime evidence](start-here.md#connector-availability-is-runtime-evidence);
+Playbook prose does not override them, and Airtable canonical-text handoffs do not depend on Dropbox folder existence.
 
 ### Producing Receipt And Compact Delivery
 
