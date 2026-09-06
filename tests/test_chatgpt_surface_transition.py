@@ -10,7 +10,7 @@ SECTION_HEADING = "#### Chat-to-Work action qualification cases"
 EXPECTED_COLUMNS = (
     "Case",
     "Task authority",
-    "Chat-local capability",
+    "Execution capability or locality",
     "Work dependency or fit",
     "Work transition consent",
     "Eligible action",
@@ -48,24 +48,40 @@ class ChatGPTSurfaceTransitionTests(unittest.TestCase):
         cls.cases = parse_qualification_cases()
 
     def test_task_authority_does_not_grant_surface_transition_authority(self) -> None:
-        for case in ("cak-242-chat-local-operation", "cak-243-start-work"):
+        expected_actions = {
+            "cak-242-chat-local-operation": "execute-in-chat",
+            "cak-243-start-work": "remain-in-chat-use-authorized-executor",
+        }
+        for case, expected_action in expected_actions.items():
             with self.subTest(case=case):
                 row = self.cases[case]
                 self.assertEqual(row["Task authority"], "authorized")
                 self.assertEqual(row["Work transition consent"], "absent")
-                self.assertNotEqual(row["Eligible action"], "transition-to-work")
+                self.assertEqual(row["Eligible action"], expected_action)
 
     def test_chat_local_capability_keeps_authorized_action_in_chat(self) -> None:
         row = self.cases["cak-242-chat-local-operation"]
-        self.assertEqual(row["Chat-local capability"], "sufficient")
+        self.assertEqual(
+            row["Execution capability or locality"], "chat-local-sufficient"
+        )
         self.assertEqual(row["Eligible action"], "execute-in-chat")
 
     def test_work_only_dependency_is_offered_without_automatic_transition(self) -> None:
-        row = self.cases["work-only-no-consent"]
-        self.assertEqual(row["Chat-local capability"], "insufficient")
-        self.assertEqual(row["Work dependency or fit"], "required")
-        self.assertEqual(row["Work transition consent"], "absent")
-        self.assertEqual(row["Eligible action"], "offer-work-remain-in-chat")
+        work_only_without_consent = [
+            row
+            for row in self.cases.values()
+            if row["Execution capability or locality"] == "work-only"
+            and row["Work transition consent"] == "absent"
+        ]
+        self.assertEqual(len(work_only_without_consent), 1)
+        self.assertEqual(
+            {row["Work dependency or fit"] for row in work_only_without_consent},
+            {"required"},
+        )
+        self.assertEqual(
+            {row["Eligible action"] for row in work_only_without_consent},
+            {"offer-work-remain-in-chat"},
+        )
 
     def test_only_explicit_work_consent_qualifies_transition(self) -> None:
         transitions = [
@@ -81,6 +97,11 @@ class ChatGPTSurfaceTransitionTests(unittest.TestCase):
             {case for case, row in self.cases.items() if row in transitions},
             {"explicit-work-request", "accepted-work-offer"},
         )
+        requested = self.cases["explicit-work-request"]
+        self.assertEqual(
+            requested["Execution capability or locality"], "not-evaluated"
+        )
+        self.assertEqual(requested["Eligible action"], "transition-to-work")
 
 
 if __name__ == "__main__":

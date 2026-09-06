@@ -81,8 +81,9 @@ At the action boundary, resolve these decisions in order and keep their
 authority separate:
 
 1. whether the requested task or implementation is authorized;
-2. whether Chat-local capability is sufficient or a Work-only capability is
-   required; and
+2. which available capability and locality can perform it, including
+   Chat-local tools, a Work-only capability, or a separately delegated
+   executor route; and
 3. whether the operator explicitly requested Work or explicitly accepted an
    offered transition.
 
@@ -90,22 +91,21 @@ The first two decisions never satisfy the third. Before invoking any action
 that instantiates or transitions to Work, require the third decision to supply
 explicit consent. If consent is absent, invalidate the Work action even when
 the task is authorized or Work is required, preferred, or a better capability
-fit. Perform the authorized action in Chat when its tools are sufficient. When
-the action requires a Work-only capability, explain that dependency, offer
-Work, and remain in Chat unless the operator accepts.
+fit. Apply the shared boundary's eligible outcomes without replacing a
+separately authorized executor route.
 
 #### Chat-to-Work action qualification cases
 
 These cases exercise the action boundary above. Tests validate their authority
 and routing relationships rather than the surrounding prose.
 
-| Case | Task authority | Chat-local capability | Work dependency or fit | Work transition consent | Eligible action |
+| Case | Task authority | Execution capability or locality | Work dependency or fit | Work transition consent | Eligible action |
 | --- | --- | --- | --- | --- | --- |
-| `cak-242-chat-local-operation` | `authorized` | `sufficient` | `optional-fit` | `absent` | `execute-in-chat` |
-| `cak-243-start-work` | `authorized` | `sufficient` | `preferred-fit` | `absent` | `execute-in-chat` |
-| `work-only-no-consent` | `authorized` | `insufficient` | `required` | `absent` | `offer-work-remain-in-chat` |
+| `cak-242-chat-local-operation` | `authorized` | `chat-local-sufficient` | `optional-fit` | `absent` | `execute-in-chat` |
+| `cak-243-start-work` | `authorized` | `separate-executor-route` | `preferred-fit` | `absent` | `remain-in-chat-use-authorized-executor` |
+| `work-only-no-consent` | `authorized` | `work-only` | `required` | `absent` | `offer-work-remain-in-chat` |
 | `explicit-work-request` | `authorized` | `not-evaluated` | `selected` | `explicit-request` | `transition-to-work` |
-| `accepted-work-offer` | `authorized` | `insufficient` | `required` | `explicit-acceptance` | `transition-to-work` |
+| `accepted-work-offer` | `authorized` | `work-only` | `required` | `explicit-acceptance` | `transition-to-work` |
 
 ### Surface-role projection
 
