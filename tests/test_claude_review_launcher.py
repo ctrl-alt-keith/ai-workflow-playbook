@@ -2005,6 +2005,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             check=True,
         )
         self.count = self.root / "count"
+        self.live_receipts_release = self.root / "live-receipts-release"
         self.fake = self.root / "claude"
         self.fake.write_text(
             "#!/usr/bin/env python3\n"
@@ -2117,7 +2118,9 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "if scenario == 'escaped_output': (package / 'escaped-review.txt').write_text('escaped')\n"
             "if scenario == 'unsafe_scratch': (pathlib.Path(os.environ['TMPDIR']) / 'escape').symlink_to(candidate)\n"
             "if scenario == 'silent': time.sleep(0.08)\n"
-            "if scenario == 'live_receipts': time.sleep(0.15)\n"
+            "if scenario == 'live_receipts':\n"
+            "    release = pathlib.Path(os.environ['FAKE_LIVE_RECEIPTS_RELEASE'])\n"
+            "    while not release.exists(): time.sleep(0.005)\n"
             "if scenario == 'transient_with_lingering_child' and attempt == 1:\n"
             "    marker = os.environ['FAKE_LINGER_MARKER']\n"
             "    subprocess.Popen([sys.executable, '-c', f\"import pathlib,time; time.sleep(0.15); pathlib.Path({marker!r}).write_text('terminal')\"])\n"
@@ -2206,6 +2209,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 "CLAUDE_REVIEW_TEST_FIXTURE": "1",
                 "CLAUDE_REVIEW_TEST_SCRATCH_PARENT": str(self.root),
                 "FAKE_LINGER_MARKER": str(self.root / "lingering-child-terminal"),
+                "FAKE_LIVE_RECEIPTS_RELEASE": str(self.live_receipts_release),
             }
         )
         if hasattr(self, "other_worktree"):
@@ -3364,6 +3368,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             text=True,
             env=self.environment("live_receipts"),
         )
+        self.addCleanup(lambda: self.live_receipts_release.touch(exist_ok=True))
         self.addCleanup(lambda: process.poll() is None and process.kill())
         assert process.stdin is not None
         process.stdin.write("exact review prompt\n")
@@ -3381,13 +3386,14 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                     "substantive_model_activity",
                     "source_tool_request",
                     "source_tool_completion",
-                }.issubset(event_types) and process.poll() is None:
+                }.issubset(event_types):
                     observed = (state, receipts)
                     break
             time.sleep(0.01)
         self.assertIsNotNone(observed)
         state, live_receipts = observed
         self.assertEqual(state["state"], "running")
+        self.assertFalse(self.live_receipts_release.exists())
         self.assertTrue(
             all(receipt["controller_attempt_id"] == state["attempt_id"] for receipt in live_receipts)
         )
@@ -3395,6 +3401,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             [receipt["monotonic_arrival_seconds"] for receipt in live_receipts],
             sorted(receipt["monotonic_arrival_seconds"] for receipt in live_receipts),
         )
+        self.live_receipts_release.touch()
         process.wait(timeout=5)
         terminal_receipt = self.receipts()[0]
         terminal_receipts = terminal_receipt["live_telemetry"]["receipts"]
