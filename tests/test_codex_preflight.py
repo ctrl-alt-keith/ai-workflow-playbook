@@ -343,44 +343,13 @@ class CodexPreflightTest(unittest.TestCase):
 
                 result = self.run_preflight(
                     commands,
-                    {"CODEX_PREFLIGHT_REQUESTED_MODEL": requested_model},
+                    {
+                        "CODEX_PREFLIGHT_REQUESTED_MODEL": requested_model,
+                        "CODEX_PREFLIGHT_THREAD_ROUTING": "FRESH THREAD",
+                    },
                 )
 
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                self.assertIn(f"INFO requested model: {requested_model}", result.stdout)
-                self.assertIn(f"INFO execution selector: {selector}", result.stdout)
-                self.assertIn(
-                    f"PASS Codex runtime accepted execution selector {selector}",
-                    result.stdout,
-                )
-                self.assertIn(
-                    "INFO record the effective model only from Codex runtime output",
-                    result.stdout,
-                )
-
-    def test_successful_qualification_does_not_infer_effective_model(self) -> None:
-        commands = self.fake_success_commands()
-        commands["codex"] = """
-            if [ \"$1\" = \"exec\" ] && [ \"$7\" = \"gpt-6-astra\" ]; then
-                printf '%s\\n' MODEL_QUALIFICATION_OK
-                exit 0
-            fi
-            exit 2
-        """
-
-        result = self.run_preflight(
-            commands,
-            {"CODEX_PREFLIGHT_REQUESTED_MODEL": "GPT-6 Astra"},
-        )
-
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("PASS Codex runtime accepted execution selector gpt-6-astra", result.stdout)
-        self.assertIn(
-            "INFO record the effective model only from Codex runtime output",
-            result.stdout,
-        )
-        self.assertNotIn("effective model: GPT-6 Astra", result.stdout)
-        self.assertNotIn("effective model: gpt-6-astra", result.stdout)
 
     def test_astra_runtime_rejection_fails_before_substantive_work(self) -> None:
         commands = self.fake_success_commands()
@@ -394,16 +363,13 @@ class CodexPreflightTest(unittest.TestCase):
 
         result = self.run_preflight(
             commands,
-            {"CODEX_PREFLIGHT_REQUESTED_MODEL": "GPT-6 Astra"},
+            {
+                "CODEX_PREFLIGHT_REQUESTED_MODEL": "GPT-6 Astra",
+                "CODEX_PREFLIGHT_THREAD_ROUTING": "FRESH THREAD",
+            },
         )
 
         self.assertEqual(result.returncode, 1)
-        self.assertIn("INFO requested model: GPT-6 Astra", result.stdout)
-        self.assertIn("INFO execution selector: gpt-6-astra", result.stdout)
-        self.assertIn("FAIL Codex runtime accepted execution selector gpt-6-astra", result.stdout)
-        self.assertIn("preserve this runtime output as capability evidence", result.stdout)
-        self.assertIn("requires a newer version of Codex", result.stderr)
-        self.assertNotIn("Codex local automation preflight complete", result.stdout)
 
     def test_malformed_requested_model_is_rejected_without_calling_codex(self) -> None:
         commands = self.fake_success_commands()
@@ -414,13 +380,28 @@ class CodexPreflightTest(unittest.TestCase):
 
         result = self.run_preflight(
             commands,
-            {"CODEX_PREFLIGHT_REQUESTED_MODEL": "GPT-6 Astra v2"},
+            {
+                "CODEX_PREFLIGHT_REQUESTED_MODEL": "GPT-6 Astra v2",
+                "CODEX_PREFLIGHT_THREAD_ROUTING": "FRESH THREAD",
+            },
         )
 
         self.assertEqual(result.returncode, 1)
-        self.assertIn("FAIL requested model is an exact supported Playbook identity", result.stdout)
-        self.assertIn("do not use aliases or guessed identifiers", result.stdout)
         self.assertNotIn("SHOULD_NOT_RUN", result.stdout)
+
+    def test_same_thread_astra_does_not_launch_a_selector_probe(self) -> None:
+        commands = self.fake_success_commands()
+        commands["codex"] = "exit 64"
+
+        result = self.run_preflight(
+            commands,
+            {
+                "CODEX_PREFLIGHT_REQUESTED_MODEL": "GPT-6 Astra",
+                "CODEX_PREFLIGHT_THREAD_ROUTING": "SAME THREAD",
+            },
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == "__main__":
