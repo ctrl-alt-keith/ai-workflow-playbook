@@ -163,27 +163,52 @@ later drift checks have an explicit baseline.
 
 ## Local Reconciliation
 
-After the canonical router change is merged, update local files from
-[`bootstrap-router.md`](bootstrap-router.md), never from a copied body in an
-issue, PR, or chat:
+After the canonical router changes, reconcile an existing marked local file
+from [`bootstrap-router.md`](bootstrap-router.md), never from a copied body in
+an issue, PR, or chat. The operator path is explicit:
 
-1. For the immediate Codex repair, replace only the marked block in
-   `~/.codex/AGENTS.md` with the canonical router body.
-2. When adopting the broader Claude rollout, replace only the marked block in
-   `~/.claude/CLAUDE.md` with that same canonical body.
-3. Run `make check-local-bootstrap` for the immediate repair, or the documented
-   `python3 scripts/check_global_bootstrap.py --require-claude` command when
-   Claude is part of the completed rollout.
+```text
+check -> plan -> review -> apply -> verified pass
+```
 
-If either local file has no managed marker pair, add the marker pair around the
-canonical body without changing unrelated personal instructions. Local
-reconciliation is an explicit post-merge action; this repository change does
-not silently mutate either user-global file.
+```text
+make check-local-bootstrap
+make plan-local-bootstrap
+make apply-local-bootstrap
+make check-local-bootstrap
+```
+
+`check-local-bootstrap` remains read-only. `plan-local-bootstrap` is also
+read-only: it reports already-current surfaces and renders the exact unified
+diff for each managed body that needs replacement. Review that diff before
+running the distinct, explicit `apply-local-bootstrap` command.
+
+Apply re-reads each selected file immediately before it writes, accepts only a
+single existing marker pair in a regular UTF-8 file, atomically replaces only
+the managed body, preserves unrelated prefix and suffix content, and verifies
+the result against the canonical router. Missing, duplicate, malformed, or
+changed unsafe state fails closed. It never creates a marker pair or performs
+broader provider-home management.
+
+By default, plan and apply cover the Codex local file and the Claude local file
+when it is installed. To inspect or reconcile one existing provider surface,
+use the same canonical command with an explicit selector:
+
+```text
+python3 scripts/check_global_bootstrap.py --mode plan --provider codex
+python3 scripts/check_global_bootstrap.py --mode apply --provider claude
+```
+
+First-time installation is deliberately separate from reconciliation. Add and
+review a marker pair around the canonical body through the installation process
+before these commands can manage the file. Local reconciliation is an explicit
+post-merge action; this repository change does not silently mutate either
+user-global file.
 
 ## Installation Boundary
 
-The templates and validator are repository deliverables. Updating live
-provider-global files is a separate local reconciliation action: review the
-merged projection, replace only the marked block in the applicable user-global
-file, and run the read-only check. Do not edit repo-local `AGENTS.md` or
-`CLAUDE.md` files merely to install this global router.
+The templates and reconciliation helper are repository deliverables. Updating
+live provider-global files remains a separate local action: review the plan,
+explicitly apply the marked-block substitution, and run the read-only check.
+Do not edit repo-local `AGENTS.md` or `CLAUDE.md` files merely to install this
+global router.
