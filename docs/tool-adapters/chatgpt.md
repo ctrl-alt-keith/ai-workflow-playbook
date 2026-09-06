@@ -96,8 +96,7 @@ separately authorized executor route.
 
 #### Chat-to-Work action qualification cases
 
-These cases exercise the action boundary above. Tests validate their authority
-and routing relationships rather than the surrounding prose.
+These representative cases illustrate the action boundary above.
 
 | Case | Task authority | Execution capability or locality | Work dependency or fit | Work transition consent | Eligible action |
 | --- | --- | --- | --- | --- | --- |
