@@ -1,4 +1,4 @@
-.PHONY: help check check-env check-local-bootstrap authoritative-source-check scanner-test
+.PHONY: help check check-env check-local-bootstrap plan-local-bootstrap apply-local-bootstrap authoritative-source-check scanner-test
 
 .DEFAULT_GOAL := check
 
@@ -32,6 +32,12 @@ check-env: ## Verify local tools needed by make check are available.
 
 check-local-bootstrap: ## Compare local global routers with canonical projections.
 	PYTHONDONTWRITEBYTECODE=1 python3 scripts/check_global_bootstrap.py
+
+plan-local-bootstrap: ## Show the read-only exact managed-block reconciliation plan.
+	PYTHONDONTWRITEBYTECODE=1 python3 scripts/check_global_bootstrap.py --mode plan
+
+apply-local-bootstrap: ## Explicitly apply and verify safe managed-block reconciliation.
+	PYTHONDONTWRITEBYTECODE=1 python3 scripts/check_global_bootstrap.py --mode apply
 
 authoritative-source-check: ## Run advisory authoritative-source scanning.
 	python3 scripts/check_authoritative_sources.py --base-ref origin/main --head-ref HEAD
