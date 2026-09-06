@@ -126,6 +126,21 @@ artifact is admitted, the owning durable destination controls, and
 attempt-local scratch is not a substitute for required durable capture; see
 [`repo-readiness.md`](repo-readiness.md#repo-local-workflow-state).
 
+### Dropbox issue-folder creation projection
+
+For an admitted Dropbox issue-owned artifact, inspect `/issues/<ISSUE-ID>/`
+only when the artifact is ready to write; do not pre-create issue folders or
+persist approval state. If the folder exists, continue the already-authorized
+write without a folder-creation approval.
+
+If the folder is absent, ask once to create exactly `/issues/<ISSUE-ID>/` and
+continue the already-authorized upload. If that confirmation is unavailable,
+including during unattended execution, or creation cannot proceed, fail closed
+without silently rerouting storage.
+
+Current connector action requirements remain [runtime evidence](start-here.md#connector-availability-is-runtime-evidence);
+Playbook prose does not override them, and Airtable canonical-text handoffs do not depend on Dropbox folder existence.
+
 ### Producing Receipt And Compact Delivery
 
 Every admitted production that writes an artifact leaves exactly one
