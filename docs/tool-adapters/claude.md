@@ -327,15 +327,23 @@ Git-index, and Git-administration integrity checks because provider flags,
 hooks, command-canary evidence, and initialization metadata are defense in
 depth, not proof that no effect occurred. It snapshots candidate-worktree and
 shared Git administration separately, protects candidate HEAD, branch/ref logs,
-admitted command revisions, semantic Git controls, and candidate-reachable
-objects, then classifies every raw administration change. It explicitly models
+exact object revisions admitted by commands, semantic Git controls, and
+candidate-reachable objects, then classifies every raw administration change.
+An admitted `origin/main` comparison base remains moving after the candidate is
+selected: its ref or reflog may advance without invalidating evidence about the
+frozen candidate, even when the new main overlaps it semantically. The receipt
+records the exact changed path and before/after ref targets; current-main
+freshness and mergeability are evaluated after the attempt. Candidate HEAD,
+branch/ref logs, selected commit, and exact object revisions remain protected.
+The launcher explicitly models
 the primary worktree and every linked worktree, including their exact `HEAD`,
 `index`, `logs/HEAD`, `COMMIT_EDITMSG`, and `ORIG_HEAD` paths. Only a change to
 one of those exact paths, correlated with that worktree's HEAD and symbolic-ref
 transition, may be attributed to another worktree; every other path beneath a
 known worktree Git directory and every unknown common-root path remains
-blocking. Only another worktree's proven administration, unprotected ref/reflog activity, or shared
-object-storage layout may be tolerated, and only while protected resolution
+blocking. Only another worktree's proven administration, the named moving
+comparison base, unprotected ref/reflog activity, or shared object-storage
+layout may be tolerated, and only while protected resolution
 and reachability exact-match the baseline and the changed identities contain no
 lock, symlink, mode, vanished, special-object, or other ambiguity. Git
 configuration, packed refs, replacement, alternate, shallow, graft, attribute,

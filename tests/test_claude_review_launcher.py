@@ -2089,6 +2089,13 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             "        (candidate / 'tracked.txt').write_text('candidate mutation\\n')\n"
             "        time.sleep(10)\n"
             "    time.sleep(0.08)\n"
+            "if scenario == 'moving_main_then_wait':\n"
+            "    primary = pathlib.Path(os.environ['FAKE_PRIMARY_WORKTREE'])\n"
+            "    (primary / 'tracked.txt').write_text(f'moving main {attempt}\\n')\n"
+            "    subprocess.run(['git','-C',str(primary),'add','tracked.txt'], check=True)\n"
+            "    subprocess.run(['git','-C',str(primary),'-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm',f'moving main {attempt}'], check=True)\n"
+            "    subprocess.run(['git','-C',str(primary),'update-ref','refs/remotes/origin/main','HEAD'], check=True)\n"
+            "    time.sleep(0.08)\n"
             "if scenario == 'unattributed_object_then_wait':\n"
             "    subprocess.run(['git','-C',str(candidate),'hash-object','-w','--stdin'], input=b'unattached reviewer object\\n', check=True)\n"
             "    time.sleep(10)\n"
@@ -3819,6 +3826,49 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             )
         )
 
+    def test_live_moving_main_comparison_base_passes_for_a_frozen_linked_candidate(self):
+        primary, _ = self.use_linked_candidate("fixture-moving-main-candidate")
+        subprocess.run(["git", "-C", str(primary), "branch", "-M", "main"], check=True)
+        subprocess.run(
+            ["git", "-C", str(primary), "update-ref", "refs/remotes/origin/main", "HEAD"],
+            check=True,
+        )
+        body = self.config_body()
+        body["allowed_commands"].append(
+            [
+                "git",
+                "-C",
+                str(self.candidate),
+                "diff",
+                "--no-ext-diff",
+                "--no-textconv",
+                "--check",
+                "origin/main...HEAD",
+            ]
+        )
+        # Observe the completed main/ref transition rather than its transient locks.
+        body["observation_interval_seconds"] = 0.5
+
+        completed, diagnostic = self.run_governed("moving_main_then_wait", body=body)
+
+        self.assertEqual(completed.returncode, 0, diagnostic)
+        receipt = self.receipts()[0]
+        self.assertTrue(receipt["no_delta_postflight"]["passed"])
+        moving_ref = next(
+            record
+            for record in receipt["no_delta_postflight"]["git_admin_changes"]
+            if record["path"] == "refs/remotes/origin/main"
+        )
+        self.assertEqual(
+            moving_ref["classification"],
+            "tolerated_moving_comparison_base_ref_or_reflog",
+        )
+        self.assertEqual(moving_ref["disposition"], "tolerated")
+        self.assertEqual(
+            moving_ref["evidence"]["frozen_candidate_head"],
+            body["candidate_head"],
+        )
+
     def test_primary_worktree_activity_does_not_hide_linked_candidate_mutation(self):
         self.use_linked_candidate("fixture-primary-mixed")
         completed, diagnostic = self.run_governed(
@@ -4199,7 +4249,7 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             assert_blocking(baseline)
             path.unlink()
 
-    def test_protected_remote_ref_and_candidate_branch_reflog_remain_blocking(self):
+    def test_moving_comparison_ref_is_tolerated_but_candidate_branch_remains_blocking(self):
         module = load_script("claude_review_protected_refs", LAUNCHER)
         environment = os.environ.copy()
         linked = self.root / "protected-ref-worktree"
@@ -4219,7 +4269,30 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 "origin/main...HEAD",
             ),
         )
-        baseline = module.source_snapshot([self.candidate], self.candidate, environment, commands)
+        candidate_head = subprocess.run(
+            ["git", "-C", str(self.candidate), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        baseline = module.source_snapshot(
+            [self.candidate],
+            self.candidate,
+            environment,
+            commands,
+            candidate_head,
+        )
+        baseline_admin = baseline["body"]["git_admin"]
+        self.assertIn("HEAD", baseline_admin["protected_revisions"])
+        self.assertEqual(
+            baseline_admin["protected_revisions"]["HEAD"]["resolved"],
+            candidate_head,
+        )
+        self.assertNotIn("origin/main", baseline_admin["protected_revisions"])
+        self.assertEqual(
+            baseline_admin["moving_comparison_refs"],
+            ("refs/remotes/origin/main",),
+        )
         (linked / "tracked.txt").write_text("new protected target\n", encoding="utf-8")
         subprocess.run(["git", "-C", str(linked), "add", "tracked.txt"], check=True)
         subprocess.run(
@@ -4246,13 +4319,27 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
         subprocess.run(
             ["git", "-C", str(self.candidate), "update-ref", "refs/remotes/origin/main", linked_head], check=True
         )
-        changed = module.source_snapshot([self.candidate], self.candidate, environment, commands)
+        changed = module.source_snapshot(
+            [self.candidate],
+            self.candidate,
+            environment,
+            commands,
+            candidate_head,
+        )
         comparison = module.snapshot_comparison(baseline, changed)
-        self.assertFalse(comparison["passed"])
+        self.assertTrue(comparison["passed"])
         remote_record = next(
             record for record in comparison["git_admin_changes"] if record["path"] == "refs/remotes/origin/main"
         )
-        self.assertEqual(remote_record["classification"], "blocking_protected_ref_or_reflog")
+        self.assertEqual(
+            remote_record["classification"],
+            "tolerated_moving_comparison_base_ref_or_reflog",
+        )
+        self.assertEqual(remote_record["disposition"], "tolerated")
+        self.assertEqual(
+            remote_record["evidence"]["frozen_candidate_head"],
+            baseline["body"]["git_admin"]["expected_candidate_head"],
+        )
 
         branch = subprocess.run(
             ["git", "-C", str(self.candidate), "symbolic-ref", "HEAD"],
@@ -4261,7 +4348,13 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             stdout=subprocess.PIPE,
         ).stdout.strip()
         subprocess.run(["git", "-C", str(self.candidate), "update-ref", branch, linked_head], check=True)
-        branch_changed = module.source_snapshot([self.candidate], self.candidate, environment, commands)
+        branch_changed = module.source_snapshot(
+            [self.candidate],
+            self.candidate,
+            environment,
+            commands,
+            candidate_head,
+        )
         branch_comparison = module.snapshot_comparison(baseline, branch_changed)
         self.assertFalse(branch_comparison["passed"])
         self.assertTrue(

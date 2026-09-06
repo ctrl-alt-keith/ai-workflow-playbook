@@ -180,9 +180,16 @@ those paths is attributable to another worktree only when its observed HEAD
 transition and, when symbolic, exact branch-ref transition agree. Any other
 path beneath a known worktree Git directory, or any unknown common-root path,
 remains blocking. Positively protect the candidate index, HEAD and symbolic identity,
-selected commit, candidate branch ref and reflog, every ref or revision used by
+selected commit, candidate branch ref and reflog, exact object revisions used by
 an admitted review command, command-semantic configuration and administration,
 and the resolution and reachable-object closure of those protected revisions.
+Treat `origin/main` in an admitted comparison command as a moving comparison
+base rather than part of the frozen candidate identity. After candidate
+selection, its ref or reflog may advance without invalidating evidence about
+that exact candidate, including when the new main overlaps it semantically.
+Record the exact before and after ref targets and classify the change explicitly;
+freshness and mergeability against current main remain separate post-attempt
+questions. Candidate identity and exact object revisions remain protected.
 Apply equivalent index and administration coverage to another guarded source
 that is itself a repository. Repository status alone is insufficient. Reviewer
 output and receipts belong only in the declared, disjoint evidence destination
@@ -190,8 +197,8 @@ after its retention and visibility rules admit those bytes.
 
 A changed common-Git object is not automatically candidate contamination, but
 it is never ignored. Tolerate it only when current linked-worktree and ref
-evidence identifies the change as other-worktree administration, an unrelated
-ref or reflog, or shared object-storage activity; every protected ref,
+evidence identifies the change as other-worktree administration, a moving
+comparison base, an unrelated ref or reflog, or shared object-storage activity; every protected ref,
 revision, HEAD, and reachable object still resolves to the exact baseline
 identity; and the changed object has an ordinary file or directory identity
 with no lock, symlink, special-object, vanished-path, or mode ambiguity. Object
