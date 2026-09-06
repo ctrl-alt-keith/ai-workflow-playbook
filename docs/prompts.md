@@ -487,6 +487,24 @@ Complete that profile before reporting preservation or providing an
 exact-identity handoff. Routine handoffs do not acquire material-prompt
 governance merely because Airtable carries them.
 
+### Current terminal presentation boundary
+
+The presentation rules here and in the executor adapters are instructions to
+the producing assistant. This repository does not currently provide an
+executable terminal handoff renderer or a pre-emission gate for the assistant's
+final response. The recipient-routing tests read the qualification table;
+they do not observe or constrain a live response. Correct route selection and
+verified Airtable payload identity therefore do not mechanically guarantee the
+operator-facing block shape.
+
+A deterministic formatter could guarantee the text it returns, but a later
+assistant response could omit, combine, or wrap that text. Such a formatter
+would control an intermediate artifact, not the terminal presentation. A
+terminal guarantee depends on the actual response-emitting runtime consuming
+the resolved metadata and verified envelope through an unavoidable renderer
+or gate. No such integration is present in this repository's supported handoff
+path; its current presentation boundary remains assistant/client behavior.
+
 ## Quick Navigation
 
 - [Task-Shape Surface Selection And Thin Handoffs](#task-shape-surface-selection-and-thin-handoffs)
