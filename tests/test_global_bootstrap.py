@@ -263,6 +263,38 @@ class GlobalBootstrapTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "changed before"):
                     module.apply(check, router)
 
+    def test_apply_fails_closed_when_content_changes_at_final_replacement_check(self) -> None:
+        module = load_script_module()
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary) / "AGENTS.md"
+            router = module.normalize_router(ROUTER.read_text(encoding="utf-8"))
+            target.write_text(
+                self.marked(router.replace("first project action", "every action")),
+                encoding="utf-8",
+            )
+            check = module.Check("Codex", target)
+            original_inspect = module.inspect
+            initial = original_inspect(check)
+            current = original_inspect(check)
+            newer = self.marked(router.replace("first project action", "newer action"))
+
+            snapshots = [initial, current]
+
+            def inspect_with_final_check(_: object):
+                if snapshots:
+                    return snapshots.pop(0)
+                target.write_text(newer, encoding="utf-8")
+                return original_inspect(check)
+
+            with mock.patch.object(
+                module,
+                "inspect",
+                side_effect=inspect_with_final_check,
+            ):
+                with self.assertRaisesRegex(ValueError, "changed before"):
+                    module.apply(check, router)
+            self.assertEqual(target.read_text(encoding="utf-8"), newer)
+
 
 if __name__ == "__main__":
     unittest.main()

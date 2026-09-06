@@ -183,12 +183,20 @@ read-only: it reports already-current surfaces and renders the exact unified
 diff for each managed body that needs replacement. Review that diff before
 running the distinct, explicit `apply-local-bootstrap` command.
 
-Apply re-reads each selected file immediately before it writes, accepts only a
-single existing marker pair in a regular UTF-8 file, atomically replaces only
-the managed body, preserves unrelated prefix and suffix content, and verifies
-the result against the canonical router. Missing, duplicate, malformed, or
-changed unsafe state fails closed. It never creates a marker pair or performs
-broader provider-home management.
+Apply accepts only a single existing marker pair in a regular UTF-8 file and
+atomically replaces only the managed body, preserving unrelated prefix and
+suffix content. It prepares the replacement from an observed file, then
+immediately before replacement re-reads and compares the content, mode, and
+file identity; an observed change fails closed. It verifies the result against
+the canonical router. Missing, duplicate, malformed, or changed unsafe state
+fails closed. It never creates a marker pair or performs broader provider-home
+management.
+
+This is a final pre-replacement snapshot check, not a cross-process lock or a
+filesystem compare-and-swap primitive. An uncooperative writer that changes a
+file after that final comparison and before the atomic path replacement cannot
+be distinguished by this workflow; the command does not claim to prevent that
+last filesystem scheduling race.
 
 By default, plan and apply cover the Codex local file and the Claude local file
 when it is installed. To inspect or reconcile one existing provider surface,

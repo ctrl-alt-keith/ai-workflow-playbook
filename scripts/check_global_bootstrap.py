@@ -140,19 +140,27 @@ def render_plan(inspection: Inspection, expected: str) -> str:
 def replacement_contents(inspection: Inspection, expected: str) -> str:
     """Replace exactly the existing managed body, preserving surrounding text."""
     block = inspection.block
-    return inspection.contents[: block.body_start] + "\n" + expected + inspection.contents[block.body_end :]
+    return (
+        inspection.contents[: block.body_start]
+        + "\n"
+        + expected
+        + inspection.contents[block.body_end :]
+    )
+
+
+def matches_snapshot(before: Inspection, after: Inspection) -> bool:
+    """Return whether a local file still has the observed safe replacement input."""
+    return (
+        before.raw == after.raw
+        and before.mode == after.mode
+        and before.device == after.device
+        and before.inode == after.inode
+    )
 
 
 def write_atomically(inspection: Inspection, expected: str) -> None:
-    """Write one replacement in the target directory after a fresh safe read."""
+    """Write one replacement after a final matching snapshot immediately before replace."""
     destination = inspection.check.actual
-    current_stat = destination.lstat()
-    if (
-        not stat.S_ISREG(current_stat.st_mode)
-        or current_stat.st_dev != inspection.device
-        or current_stat.st_ino != inspection.inode
-    ):
-        raise ValueError(f"{destination}: changed before managed-body replacement")
     replacement = replacement_contents(inspection, expected).encode("utf-8")
     descriptor, temporary_name = tempfile.mkstemp(
         prefix=f".{destination.name}.global-bootstrap-", dir=destination.parent
@@ -163,6 +171,17 @@ def write_atomically(inspection: Inspection, expected: str) -> None:
             temporary.flush()
             os.fsync(temporary.fileno())
         os.chmod(temporary_name, inspection.mode)
+
+        final = inspect(inspection.check)
+        if not matches_snapshot(inspection, final):
+            raise ValueError(f"{destination}: changed before managed-body replacement")
+        current_stat = destination.lstat()
+        if (
+            not stat.S_ISREG(current_stat.st_mode)
+            or current_stat.st_dev != final.device
+            or current_stat.st_ino != final.inode
+        ):
+            raise ValueError(f"{destination}: changed before managed-body replacement")
         os.replace(temporary_name, destination)
     except BaseException:
         try:
@@ -179,11 +198,7 @@ def apply(check: Check, expected: str) -> str:
         return f"PASS {check.provider}: already current {check.actual}"
 
     current = inspect(check)
-    if (
-        initial.raw != current.raw
-        or initial.device != current.device
-        or initial.inode != current.inode
-    ):
+    if not matches_snapshot(initial, current):
         raise ValueError(f"{check.actual}: changed before managed-body replacement")
     write_atomically(current, expected)
 
