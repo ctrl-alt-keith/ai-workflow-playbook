@@ -72,6 +72,35 @@ observed action and outcome, the verified source state or action and outcome
 control. This matters because reasoning traces can be post-hoc, incomplete, or
 optimized toward what the workflow appears to reward.
 
+### Failed-thread diagnostic evidence
+
+When conversational state materially participates in a workflow failure, the
+affected thread can be a useful diagnostic witness. A focused diagnostic may
+ask it to describe the observable decision seam in concrete workflow terms or,
+after current sources have been retrieved, whether a candidate correction
+would have changed the earlier decision and where. Its explanation remains
+contaminated by the failed context and may be post-hoc. Treat it as
+supplementary diagnostic or
+counterfactual-review evidence, never as authoritative internal causation,
+acceptance, approval, or execution authority.
+
+For behavior intended to generalize across conversational histories, compare
+that evidence where useful with a deterministic fail-before/pass-after
+regression at the meaningful semantic or control seam under
+[`Regression Fixture Fidelity`](engineering-baseline.md#regression-fixture-fidelity),
+and with behavioral acceptance from a genuinely fresh or purged thread using
+ordinary task phrasing. The regression establishes only the path it exercises;
+the fresh thread is the stronger signal that the behavior survives a different
+history. Disagreement can reveal contamination, execution-path divergence,
+incomplete semantic repair, or unmodeled state rather than invalidating one
+surface by default.
+
+A richer shared workflow vocabulary can make a thread's diagnostic account
+more precise by naming activation, authority, interaction mode, handoff,
+source-ownership, transport, evidence, and completion seams. That vocabulary
+improves diagnostic resolution; it does not increase the authority of model
+self-report or require disclosure of private reasoning.
+
 ## Minimum-Sufficient Retrieval
 
 Source-first retrieval means obtaining the minimum sufficient authoritative
