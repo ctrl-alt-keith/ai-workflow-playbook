@@ -39,6 +39,26 @@ require_command "git" "Install Git, then rerun this preflight."
 qualify_requested_model() {
     requested_model="$1"
 
+    case "${CODEX_PREFLIGHT_THREAD_ROUTING:-}" in
+        "SAME THREAD")
+            info_check "requested parent model: $requested_model"
+            info_check "effective model: unobservable to this preflight; record runtime-visible parent evidence separately when available"
+            return
+            ;;
+        "FRESH THREAD"|"CHILD TASK")
+            ;;
+        "")
+            fail_check \
+                "thread routing is declared for requested-model qualification" \
+                "Set CODEX_PREFLIGHT_THREAD_ROUTING to FRESH THREAD, SAME THREAD, or CHILD TASK before requesting model preflight."
+            ;;
+        *)
+            fail_check \
+                "thread routing is a supported Playbook value" \
+                "Set CODEX_PREFLIGHT_THREAD_ROUTING to FRESH THREAD, SAME THREAD, or CHILD TASK before requesting model preflight."
+            ;;
+    esac
+
     case "$requested_model" in
         "GPT-6 Astra") execution_selector="gpt-6-astra" ;;
         "GPT-5.6 Luna") execution_selector="gpt-5.6-luna" ;;
@@ -53,7 +73,7 @@ qualify_requested_model() {
 
     require_command "codex" "Install or update Codex CLI, then rerun this model qualification."
     info_check "requested model: $requested_model"
-    info_check "execution selector: $execution_selector"
+    info_check "exact execution selector: $execution_selector"
 
     if codex exec \
         --ephemeral \

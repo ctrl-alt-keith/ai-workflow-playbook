@@ -105,12 +105,19 @@ Use only these exact mappings; reject aliases, near-matches, and guessed IDs.
 | `GPT-5.6 Terra` | `gpt-5.6-terra` |
 | `GPT-5.6 Sol` | `gpt-5.6-sol` |
 
-Use `scripts/codex-preflight` with the exact
-`CODEX_PREFLIGHT_REQUESTED_MODEL` value. Its read-only probe fails before
-substantive work on rejection; preserve and reuse its runtime evidence until
-the client, identity, policy, or surface changes. It never selects fallback:
-exact-model requirements fail closed, while advisory fallback remains
-orchestration-owned and explicit. Reasoning effort is independent.
+For a FRESH THREAD or eligible CHILD TASK, use `scripts/codex-preflight` with
+the exact `CODEX_PREFLIGHT_REQUESTED_MODEL` value and matching
+`CODEX_PREFLIGHT_THREAD_ROUTING`. Its read-only probe establishes selector
+acceptance for that new execution only; it does not identify a running parent
+model. The probe fails before substantive work on rejection; preserve and reuse
+its runtime evidence until the client, identity, policy, or surface changes.
+For SAME THREAD, declare `CODEX_PREFLIGHT_THREAD_ROUTING=SAME THREAD` when
+preflight receives a requested parent model: it preserves that value, does not
+launch a selector probe, and reports the effective model as unobservable to
+preflight unless separate runtime-visible parent evidence exists. It never
+selects fallback: exact-model requirements fail closed for new executions,
+while advisory fallback remains orchestration-owned and explicit. Reasoning
+effort is independent.
 
 ### Escalation And Delegation
 
