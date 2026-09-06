@@ -46,6 +46,7 @@ EFFORT_LEVELS = {"low", "medium", "high", "xhigh", "max"}
 EFFORT_EVIDENCE_NAME = "effective-effort.json"
 HOOK_LIVENESS_EVIDENCE_NAME = "permission-hook-liveness.json"
 WORKTREE_ADMIN_PATHS = ("HEAD", "index", "logs/HEAD", "COMMIT_EDITMSG", "ORIG_HEAD")
+MOVING_COMPARISON_REFS = {"origin/main": "refs/remotes/origin/main"}
 LIVE_TELEMETRY_SCHEMA_VERSION = 2
 LIVE_TELEMETRY_PRIVACY_CLASSIFICATION = "metadata_only"
 MAX_LIVE_TELEMETRY_RECEIPTS = 1_024
@@ -1414,16 +1415,54 @@ def revision_atoms_for_root(
         if argv[3] not in {"diff", "log"}:
             continue
         revision = argv[-1]
+        moving_comparison = (
+            moving_comparison_ref_for_revision(revision)
+            if candidate_head is not None
+            else None
+        )
+        moving_atom = moving_comparison[0] if moving_comparison is not None else None
         separated = False
         for separator in ("...", ".."):
             if separator in revision:
                 left, _, right = revision.partition(separator)
-                atoms.update((left, right))
+                atoms.update(
+                    atom
+                    for atom in (left, right)
+                    if atom != moving_atom
+                )
                 separated = True
                 break
         if not separated:
             atoms.add(revision)
     return tuple(sorted(atoms))
+
+
+def moving_comparison_ref_for_revision(revision: str) -> tuple[str, str] | None:
+    """Return the moving base only for an exact supported candidate comparison."""
+    for atom, ref in MOVING_COMPARISON_REFS.items():
+        if revision in {f"{atom}...HEAD", f"{atom}..HEAD"}:
+            return atom, ref
+    return None
+
+
+def moving_comparison_refs_for_root(
+    root: Path,
+    allowed_commands: tuple[tuple[str, ...], ...],
+    candidate_head: str | None,
+) -> tuple[str, ...]:
+    if candidate_head is None:
+        return ()
+    refs: set[str] = set()
+    for argv in allowed_commands:
+        if argv[0] != "git" or Path(argv[2]).resolve(strict=True) != root:
+            continue
+        if argv[3] not in {"diff", "log"}:
+            continue
+        moving_comparison = moving_comparison_ref_for_revision(argv[-1])
+        if moving_comparison is not None:
+            _, ref = moving_comparison
+            refs.add(ref)
+    return tuple(sorted(refs))
 
 
 def protected_revision_identity(
@@ -1608,6 +1647,11 @@ def git_admin_identity(
 
     resolved_candidate = candidate.resolve(strict=True)
     atoms = revision_atoms_for_root(resolved_candidate, allowed_commands, candidate_head)
+    moving_comparison_refs = moving_comparison_refs_for_root(
+        resolved_candidate,
+        allowed_commands,
+        candidate_head,
+    )
     symbolic_result = subprocess.run(
         ["git", "-C", str(resolved_candidate), "symbolic-ref", "-q", "HEAD"],
         check=False,
@@ -1660,6 +1704,7 @@ def git_admin_identity(
         "head": {"commit": head_commit, "symbolic_ref": head_symbolic or None},
         "expected_candidate_head": candidate_head,
         "candidate_head_matches_expected": candidate_head is None or head_commit == candidate_head,
+        "moving_comparison_refs": moving_comparison_refs,
         "protected_revisions": protected_revision_identity(resolved_candidate, environment, atoms),
     }
     if common_directory == git_directory:
@@ -1806,9 +1851,11 @@ def classify_git_admin_changes(before: dict[str, object], after: dict[str, objec
         and before.get("protected_revisions") == after.get("protected_revisions")
         and before.get("candidate_worktree_id") == after.get("candidate_worktree_id")
         and before.get("expected_candidate_head") == after.get("expected_candidate_head")
+        and before.get("moving_comparison_refs") == after.get("moving_comparison_refs")
         and before.get("candidate_head_matches_expected") is True
         and after.get("candidate_head_matches_expected") is True
     )
+    moving_comparison_refs = set(before.get("moving_comparison_refs", ()))
     protected_refs = {
         str(identity["symbolic_ref"])
         for identity in before.get("protected_revisions", {}).values()
@@ -2056,6 +2103,22 @@ def classify_git_admin_changes(before: dict[str, object], after: dict[str, objec
                 if ref in protected_refs or ref.startswith("refs/replace/"):
                     scope = "candidate_relevant_shared_state"
                     classification = "blocking_protected_ref_or_reflog"
+                elif (
+                    ref in moving_comparison_refs
+                    and protected_evidence_unchanged
+                    and safely_tolerable_identity_change(old_identity, new_identity)
+                ):
+                    scope = "moving_comparison_base"
+                    classification = "tolerated_moving_comparison_base_ref_or_reflog"
+                    disposition = "tolerated"
+                    evidence = {
+                        "moving_comparison_ref": ref,
+                        "before_ref_target": before_refs.get(ref),
+                        "after_ref_target": after_refs.get(ref),
+                        "frozen_candidate_head": before.get("expected_candidate_head"),
+                        "protected_candidate_evidence_unchanged": True,
+                        "freshness_and_mergeability_are_post_attempt": True,
+                    }
                 elif protected_evidence_unchanged and safely_tolerable_identity_change(old_identity, new_identity):
                     scope = "unrelated_ref"
                     classification = "tolerated_unrelated_ref_or_reflog"
