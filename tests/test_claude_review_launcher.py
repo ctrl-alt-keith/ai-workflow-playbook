@@ -3869,6 +3869,41 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
             body["candidate_head"],
         )
 
+    def test_live_standalone_origin_main_fails_closed_when_ref_moves(self):
+        primary, _ = self.use_linked_candidate("fixture-standalone-moving-main-candidate")
+        subprocess.run(["git", "-C", str(primary), "branch", "-M", "main"], check=True)
+        subprocess.run(
+            ["git", "-C", str(primary), "update-ref", "refs/remotes/origin/main", "HEAD"],
+            check=True,
+        )
+        body = self.config_body()
+        body["allowed_commands"].append(
+            [
+                "git",
+                "-C",
+                str(self.candidate),
+                "log",
+                "--oneline",
+                "origin/main",
+            ]
+        )
+        # Observe the completed main/ref transition rather than its transient locks.
+        body["observation_interval_seconds"] = 0.5
+
+        completed, diagnostic = self.run_governed("moving_main_then_wait", body=body)
+
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(diagnostic["failure_classification"], "reviewer_side_effect_failure")
+        receipt = self.receipts()[0]
+        self.assertFalse(receipt["no_delta_postflight"]["passed"])
+        remote_record = next(
+            record
+            for record in receipt["no_delta_postflight"]["git_admin_changes"]
+            if record["path"] == "refs/remotes/origin/main"
+        )
+        self.assertEqual(remote_record["classification"], "blocking_protected_ref_or_reflog")
+        self.assertEqual(remote_record["disposition"], "blocking")
+
     def test_primary_worktree_activity_does_not_hide_linked_candidate_mutation(self):
         self.use_linked_candidate("fixture-primary-mixed")
         completed, diagnostic = self.run_governed(
@@ -4268,6 +4303,14 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 "--no-textconv",
                 "origin/main...HEAD",
             ),
+            (
+                "git",
+                "-C",
+                str(self.candidate),
+                "log",
+                "--oneline",
+                "origin/main..HEAD",
+            ),
         )
         candidate_head = subprocess.run(
             ["git", "-C", str(self.candidate), "rev-parse", "HEAD"],
@@ -4364,6 +4407,82 @@ class GovernedClaudeReviewLauncherTests(unittest.TestCase):
                 for record in branch_comparison["git_admin_changes"]
             )
         )
+
+    def test_standalone_origin_main_remains_protected(self):
+        module = load_script("claude_review_standalone_origin_main", LAUNCHER)
+        environment = os.environ.copy()
+        linked = self.root / "standalone-origin-main-worktree"
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(self.candidate),
+                "worktree",
+                "add",
+                "-q",
+                "-b",
+                "fixture-standalone-main",
+                str(linked),
+            ],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.candidate), "update-ref", "refs/remotes/origin/main", "HEAD"],
+            check=True,
+        )
+        commands = (
+            (
+                "git",
+                "-C",
+                str(self.candidate),
+                "log",
+                "--oneline",
+                "origin/main",
+            ),
+        )
+        candidate_head = subprocess.run(
+            ["git", "-C", str(self.candidate), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        baseline = module.source_snapshot(
+            [self.candidate],
+            self.candidate,
+            environment,
+            commands,
+            candidate_head,
+        )
+        baseline_admin = baseline["body"]["git_admin"]
+        self.assertEqual(baseline_admin["moving_comparison_refs"], ())
+        self.assertIn("origin/main", baseline_admin["protected_revisions"])
+
+        self.commit_tracked(linked, "standalone main moved\n", "move standalone main")
+        linked_head = subprocess.run(
+            ["git", "-C", str(linked), "rev-parse", "HEAD"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.strip()
+        subprocess.run(
+            ["git", "-C", str(self.candidate), "update-ref", "refs/remotes/origin/main", linked_head],
+            check=True,
+        )
+
+        changed = module.source_snapshot(
+            [self.candidate],
+            self.candidate,
+            environment,
+            commands,
+            candidate_head,
+        )
+        comparison = module.snapshot_comparison(baseline, changed)
+        self.assertFalse(comparison["passed"])
+        remote_record = next(
+            record for record in comparison["git_admin_changes"] if record["path"] == "refs/remotes/origin/main"
+        )
+        self.assertEqual(remote_record["classification"], "blocking_protected_ref_or_reflog")
+        self.assertEqual(remote_record["disposition"], "blocking")
 
     def test_semantic_object_lookup_controls_remain_fail_closed(self):
         module = load_script("claude_review_object_controls", LAUNCHER)

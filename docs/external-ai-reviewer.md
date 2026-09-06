@@ -183,10 +183,12 @@ remains blocking. Positively protect the candidate index, HEAD and symbolic iden
 selected commit, candidate branch ref and reflog, exact object revisions used by
 an admitted review command, command-semantic configuration and administration,
 and the resolution and reachable-object closure of those protected revisions.
-Treat `origin/main` in an admitted comparison command as a moving comparison
-base rather than part of the frozen candidate identity. After candidate
-selection, its ref or reflog may advance without invalidating evidence about
-that exact candidate, including when the new main overlaps it semantically.
+Treat `origin/main` as a moving comparison base only in the explicitly supported
+candidate comparisons `origin/main...HEAD` and `origin/main..HEAD`, rather than
+as part of the frozen candidate identity. After candidate selection, its ref or
+reflog may advance without invalidating evidence about that exact candidate,
+including when the new main overlaps it semantically. A standalone
+`origin/main` revision remains protected review input.
 Record the exact before and after ref targets and classify the change explicitly;
 freshness and mergeability against current main remain separate post-attempt
 questions. Candidate identity and exact object revisions remain protected.

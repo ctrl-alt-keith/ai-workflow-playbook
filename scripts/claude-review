@@ -1415,6 +1415,12 @@ def revision_atoms_for_root(
         if argv[3] not in {"diff", "log"}:
             continue
         revision = argv[-1]
+        moving_comparison = (
+            moving_comparison_ref_for_revision(revision)
+            if candidate_head is not None
+            else None
+        )
+        moving_atom = moving_comparison[0] if moving_comparison is not None else None
         separated = False
         for separator in ("...", ".."):
             if separator in revision:
@@ -1422,14 +1428,21 @@ def revision_atoms_for_root(
                 atoms.update(
                     atom
                     for atom in (left, right)
-                    if candidate_head is None or atom not in MOVING_COMPARISON_REFS
+                    if atom != moving_atom
                 )
                 separated = True
                 break
         if not separated:
-            if candidate_head is None or revision not in MOVING_COMPARISON_REFS:
-                atoms.add(revision)
+            atoms.add(revision)
     return tuple(sorted(atoms))
+
+
+def moving_comparison_ref_for_revision(revision: str) -> tuple[str, str] | None:
+    """Return the moving base only for an exact supported candidate comparison."""
+    for atom, ref in MOVING_COMPARISON_REFS.items():
+        if revision in {f"{atom}...HEAD", f"{atom}..HEAD"}:
+            return atom, ref
+    return None
 
 
 def moving_comparison_refs_for_root(
@@ -1445,18 +1458,10 @@ def moving_comparison_refs_for_root(
             continue
         if argv[3] not in {"diff", "log"}:
             continue
-        revision = argv[-1]
-        revision_atoms = [revision]
-        for separator in ("...", ".."):
-            if separator in revision:
-                left, _, right = revision.partition(separator)
-                revision_atoms = [left, right]
-                break
-        refs.update(
-            MOVING_COMPARISON_REFS[atom]
-            for atom in revision_atoms
-            if atom in MOVING_COMPARISON_REFS
-        )
+        moving_comparison = moving_comparison_ref_for_revision(argv[-1])
+        if moving_comparison is not None:
+            _, ref = moving_comparison
+            refs.add(ref)
     return tuple(sorted(refs))
 
 
