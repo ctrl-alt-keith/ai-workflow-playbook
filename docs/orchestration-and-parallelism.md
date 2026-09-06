@@ -248,6 +248,30 @@ prompt bytes, or other inputs cannot be reconstructed faithfully, stop rather
 than presenting a new execution as replay. A later attempt should state whether
 it is fresh execution, replay, or a contract-valid continuation.
 
+## Lightweight DAG Planning Model
+
+For a nontrivial parallel plan, use a lightweight directed acyclic graph (DAG)
+as a mental model when dependencies matter. Bounded work items, review points,
+human-controlled decisions, and integration steps can be nodes. A directed edge
+means the upstream dependency must complete before the downstream node becomes
+eligible; nodes without a dependency relationship may execute concurrently.
+
+Lane readiness is distinct from eligibility for downstream integration, merge,
+or another gate. A lane may be implementation-ready while a gated fan-in is
+still waiting for another lane or a human-controlled decision. Integration
+remains normal sequential repository reconciliation, and showing a decision as
+a node does not give automation approval authority.
+
+```mermaid
+flowchart LR
+    A[Lane A ready] --> G{Human review decision}
+    B[Lane B ready] --> G
+    G --> I[Sequential integration eligible]
+```
+
+Mermaid is optional explanatory documentation only. It is not a required plan
+artifact or a machine-consumed contract.
+
 ## Reconciliation And Merge Sequence
 
 Parallel execution ends at lane readiness. Integration is a sequential workflow.
