@@ -49,6 +49,10 @@ Repo-local rules take precedence only for repo-specific behavior.
 ## Validation
 
 - Use `make check` as the canonical local validation entrypoint.
+- In a fresh implementation worktree, run `make code-first-setup` before the
+  first `make check` to establish the isolated Recovery semantic tooling.
+  This is an explicit startup step; `make check` remains non-mutating and
+  fails closed if the tooling is unavailable.
 - Run `make check` before opening or updating a PR.
 - `make check` runs Markdown lint and scanner unit tests.
 - Treat direct validation tool calls as implementation details of the Makefile

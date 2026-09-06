@@ -324,6 +324,13 @@ lists available repo-local Makefile targets with short descriptions so a fresh
 worker can discover setup, validation, generation, and maintenance commands
 without reading the whole file first.
 
+Before the first canonical validation attempt in a fresh implementation
+worktree, use the repository's startup guidance and `make help` to identify
+required repo-local tooling. Run any documented explicit setup target before
+validation. The canonical validation target must remain non-mutating: it should
+fail clearly when a required prerequisite is unavailable instead of silently
+installing or repairing it.
+
 Prefer the self-documenting `##` comment pattern when it fits the existing
 Makefile style, for example `check: ## Run canonical local validation`.
 
