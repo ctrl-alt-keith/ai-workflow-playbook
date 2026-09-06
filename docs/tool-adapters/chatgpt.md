@@ -77,6 +77,35 @@ in this adapter, it governs Chat-to-Work transitions. Codex remains the distinct
 repository executor selected through explicit delegation; authoring or
 presenting a Codex prompt does not select Work.
 
+At the action boundary, resolve these decisions in order and keep their
+authority separate:
+
+1. whether the requested task or implementation is authorized;
+2. which available capability and locality can perform it, including
+   Chat-local tools, a Work-only capability, or a separately delegated
+   executor route; and
+3. whether the operator explicitly requested Work or explicitly accepted an
+   offered transition.
+
+The first two decisions never satisfy the third. Before invoking any action
+that instantiates or transitions to Work, require the third decision to supply
+explicit consent. If consent is absent, invalidate the Work action even when
+the task is authorized or Work is required, preferred, or a better capability
+fit. Apply the shared boundary's eligible outcomes without replacing a
+separately authorized executor route.
+
+#### Chat-to-Work action qualification cases
+
+These representative cases illustrate the action boundary above.
+
+| Case | Task authority | Execution capability or locality | Work dependency or fit | Work transition consent | Eligible action |
+| --- | --- | --- | --- | --- | --- |
+| `cak-242-chat-local-operation` | `authorized` | `chat-local-sufficient` | `optional-fit` | `absent` | `execute-in-chat` |
+| `cak-243-start-work` | `authorized` | `separate-executor-route` | `preferred-fit` | `absent` | `remain-in-chat-use-authorized-executor` |
+| `work-only-no-consent` | `authorized` | `work-only` | `required` | `absent` | `offer-work-remain-in-chat` |
+| `explicit-work-request` | `authorized` | `not-evaluated` | `selected` | `explicit-request` | `transition-to-work` |
+| `accepted-work-offer` | `authorized` | `work-only` | `required` | `explicit-acceptance` | `transition-to-work` |
+
 ### Surface-role projection
 
 Under the core
