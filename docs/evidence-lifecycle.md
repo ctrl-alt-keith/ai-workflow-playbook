@@ -128,18 +128,30 @@ attempt-local scratch is not a substitute for required durable capture; see
 
 ### Dropbox issue-folder creation projection
 
-For an admitted Dropbox issue-owned artifact, inspect `/issues/<ISSUE-ID>/`
-only when the artifact is ready to write; do not pre-create issue folders or
-persist approval state. If the folder exists, continue the already-authorized
-write without a folder-creation approval.
+When the current authorized downstream execution contract declares one or more
+issue-owned durable artifacts in Dropbox, establish `/issues/<ISSUE-ID>/`
+before handing off that execution. Do not pre-create the folder merely because
+an issue exists. Folder creation is execution-readiness only: it does not admit
+an artifact, authorize retention or execution, grant transition authority, or
+weaken later candidate, storage-admission, identity, no-overwrite, containment,
+receipt, or verification checks.
 
-If the folder is absent, ask once to create exactly `/issues/<ISSUE-ID>/` and
-continue the already-authorized upload. If that confirmation is unavailable,
-including during unattended execution, or creation cannot proceed, fail closed
-without silently rerouting storage.
+Otherwise, retain the lazy path: for an admitted Dropbox issue-owned artifact,
+inspect `/issues/<ISSUE-ID>/` only when the artifact is ready to write. If the
+folder exists, continue the already-authorized write without a folder-creation
+approval.
+
+If a required folder is absent, ask once to create exactly
+`/issues/<ISSUE-ID>/` and continue the applicable handoff or already-authorized
+upload only after creation. If that confirmation is unavailable, including
+during unattended execution, or creation cannot proceed, fail closed without
+the handoff or upload and without silently rerouting storage.
 
 Current connector action requirements remain [runtime evidence](start-here.md#connector-availability-is-runtime-evidence);
-Playbook prose does not override them, and Airtable canonical-text handoffs do not depend on Dropbox folder existence.
+Playbook prose does not override them, and Airtable canonical-text handoffs do
+not depend on Dropbox folder existence. Such a handoff uses the pre-execution
+path only when its downstream execution contract separately declares Dropbox
+artifact output.
 
 ### Producing Receipt And Compact Delivery
 
