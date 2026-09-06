@@ -430,15 +430,90 @@ def replace_expected(path: Path, payload: bytes, expected_sha256: str | None) ->
     return {"result": "replaced" if prior else "created", "prior": prior}
 
 
+def check_installed_projection() -> tuple[str, str]:
+    """Inspect the production launcher projection without changing local state."""
+    install_root = production_install_root()
+    launcher = install_root / "claude-review"
+    record_path = install_root / ".claude-review.json"
+
+    if (
+        not launcher.exists()
+        and not launcher.is_symlink()
+        and not record_path.exists()
+        and not record_path.is_symlink()
+    ):
+        return "SKIP", f"claude-review: not installed at {install_root}"
+    if not launcher.exists() and not launcher.is_symlink():
+        raise ValueError("installed claude-review launcher is missing")
+    if not record_path.exists() and not record_path.is_symlink():
+        raise ValueError("installed claude-review record is missing")
+
+    secure_install_directory(install_root)
+    launcher_bytes = secure_regular_bytes(launcher, mode=0o500)
+    record_bytes = secure_regular_bytes(record_path, mode=0o400)
+    try:
+        record = json.loads(record_bytes)
+    except json.JSONDecodeError as error:
+        raise ValueError("installed claude-review record is malformed") from error
+    if not isinstance(record, dict):
+        raise ValueError("installed claude-review record is malformed")
+
+    if (
+        record.get("installed_launcher_path") != str(launcher)
+        or record.get("installation_directory") != str(install_root)
+        or record.get("installed_launcher_sha256") != digest(launcher_bytes)
+    ):
+        raise ValueError(
+            "installed claude-review record does not bind the production launcher"
+        )
+    source_launcher_sha256 = digest(SOURCE_LAUNCHER.read_bytes())
+    if source_launcher_sha256 != record["installed_launcher_sha256"]:
+        raise ValueError("installed claude-review launcher differs from current reviewed source")
+    contract = record.get("entry_contract")
+    if (
+        not isinstance(contract, dict)
+        or entry_contract_identity(contract) != record.get("entry_contract_id")
+    ):
+        raise ValueError("installed claude-review entry contract is invalid")
+    if (
+        contract.get("launcher_sha256") != source_launcher_sha256
+        or contract.get("rule_template_sha256") != digest(RULE_TEMPLATE.read_bytes())
+        or contract.get("installation_directory") != str(install_root)
+        or contract.get("claude_selector") != record.get("claude_selector")
+        or contract.get("active_rule_path") != record.get("active_rule_path")
+        or contract.get("forbidden_roots") != record.get("forbidden_roots")
+    ):
+        raise ValueError("installed claude-review entry contract differs from current source")
+
+    _, receipt, _ = validated_existing_qualification(record)
+    selector = Path(str(record["claude_selector"]))
+    forbidden = [Path(str(root)) for root in record["forbidden_roots"]]
+    if exact_executable_file_identity(selector, forbidden) != receipt["file_identity"]:
+        raise ValueError(
+            "configured Claude selector differs from the current qualification record"
+        )
+
+    active_rule = Path(str(record["active_rule_path"]))
+    expected_rule = RULE_TEMPLATE.read_text(encoding="utf-8").replace(
+        "__CLAUDE_REVIEW_LAUNCHER__", str(launcher)
+    ).encode("utf-8")
+    if secure_regular_bytes(active_rule, mode=0o600) != expected_rule:
+        raise ValueError("active claude-review rule differs from the reviewed template")
+    if record.get("active_rule_sha256") != digest(expected_rule):
+        raise ValueError("installed claude-review record does not bind the active rule")
+    return "PASS", f"claude-review: {launcher}"
+
+
 def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--claude-bin", required=True, type=Path)
+    parser.add_argument("--check-installed", action="store_true")
+    parser.add_argument("--claude-bin", type=Path)
     parser.add_argument(
         "--active-rule",
         type=Path,
         default=production_active_rule(),
     )
-    parser.add_argument("--activation-receipt", required=True, type=Path)
+    parser.add_argument("--activation-receipt", type=Path)
     parser.add_argument("--expected-existing-rule-sha256")
     parser.add_argument("--forbidden-root", action="append", default=[], type=Path)
     return parser.parse_args(argv)
@@ -446,6 +521,27 @@ def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main() -> int:
     args = parse_arguments()
+    if getattr(args, "check_installed", False):
+        if any(
+            (
+                args.claude_bin,
+                args.activation_receipt,
+                args.expected_existing_rule_sha256,
+                args.forbidden_root,
+            )
+        ):
+            raise ValueError("--check-installed does not accept installation arguments")
+        try:
+            state, detail = check_installed_projection()
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            print(f"DRIFT claude-review: {error}")
+            return 1
+        print(f"{state} {detail}")
+        return 0
+    if args.claude_bin is None or args.activation_receipt is None:
+        raise ValueError(
+            "--claude-bin and --activation-receipt are required for installation"
+        )
     args.install_root = production_install_root().resolve(strict=False)
     args.active_rule = args.active_rule.parent.resolve(strict=False) / args.active_rule.name
     args.activation_receipt = (

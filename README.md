@@ -65,6 +65,21 @@ Reusable pattern:
 
 The first core module is delivery. Additional workflow families may be added later, but only if they meet the same discipline standards and stay aligned with the repository intent.
 
+## Local Projections
+
+For the narrow set of workstation projections whose implementation is owned by
+this Playbook, use the discoverable operator loop:
+
+```text
+make check-local
+make plan-local
+make apply-local
+```
+
+It composes component-owned contracts rather than treating provider homes as a
+general configuration store. See the [global-bootstrap distribution](distributions/global-bootstrap/README.md#unified-local-projection-workflow)
+for included components, the read-only boundary, and the explicit apply path.
+
 ## Initial Map
 
 - [`docs/start-here.md`](docs/start-here.md): task-neutral startup routing and

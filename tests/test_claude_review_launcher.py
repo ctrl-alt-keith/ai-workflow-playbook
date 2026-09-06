@@ -249,6 +249,24 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                     account_home / ".local" / "bin",
                 )
 
+    def test_installed_projection_check_verifies_the_real_installation_contract_read_only(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            selector, _ = self.create_installer_targets(root)
+            installed, _ = self.run_installer(root, selector, "activation.json", "1" * 40)
+            install_root = Path(installed["installation_directory"])
+            before = {
+                path: path.read_bytes()
+                for path in (install_root / "claude-review", install_root / ".claude-review.json")
+            }
+
+            with mock.patch.object(self.installer, "production_install_root", return_value=install_root):
+                state, detail = self.installer.check_installed_projection()
+
+            self.assertEqual(state, "PASS")
+            self.assertIn("claude-review", detail)
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
     def test_rule_template_binds_only_one_exact_absolute_launcher(self):
         template = CODEX_RULE_TEMPLATE.read_text(encoding="utf-8")
         rendered = template.replace("__CLAUDE_REVIEW_LAUNCHER__", "/operator/bin/claude-review")

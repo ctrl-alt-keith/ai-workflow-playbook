@@ -220,3 +220,34 @@ live provider-global files remains a separate local action: review the plan,
 explicitly apply the marked-block substitution, and run the read-only check.
 Do not edit repo-local `AGENTS.md` or `CLAUDE.md` files merely to install this
 global router.
+
+## Unified Local Projection Workflow
+
+Use the top-level commands to inspect every currently qualified
+Playbook-managed local projection:
+
+```text
+make check-local
+make plan-local
+make apply-local
+```
+
+The aggregate is orchestration only. It delegates global instruction-file
+inspection and reconciliation to `check_global_bootstrap.py`, and it inspects
+the governed `claude-review` launcher together with its current qualification
+record and active Codex rule through `install-claude-review --check-installed`.
+It does not manage arbitrary content under provider homes. `codex-safe-rm` is
+not included because current Playbook source has no active component-owned
+projection implementation for it; unknown local objects remain unmanaged.
+
+`check-local` and `plan-local` are read-only. `apply-local` first checks every
+selected component whose installer has no general reconciliation mode, then
+delegates mutations only to components that already own a safe apply path. A
+drifted `claude-review` installation therefore blocks a combined apply before a
+later component can change state; reinstallation or qualification remains the
+installer's separate, explicit contract. Select just the file-backed component
+when that is the intended bounded operation:
+
+```text
+python3 scripts/local_projections.py --mode apply --component global-bootstrap
+```
