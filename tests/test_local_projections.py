@@ -120,16 +120,12 @@ class LocalProjectionTests(unittest.TestCase):
 
     def test_apply_delegates_only_the_component_owned_claude_review_operation(self) -> None:
         module = load_module()
-        receipt = Path("/private/operator/activation.json")
-        record_sha256 = "a" * 64
         arguments = SimpleNamespace(
             mode="apply",
             component=["claude-review"],
             codex_file=None,
             claude_file=None,
             require_claude=False,
-            claude_review_activation_receipt=receipt,
-            expected_claude_review_record_sha256=record_sha256,
         )
         planned = module.CommandResult("claude-review", 0, "DRIFT claude-review: fixture\n")
         applied = module.CommandResult("claude-review", 0, "{\"result\":\"verified\"}\n")
@@ -142,9 +138,10 @@ class LocalProjectionTests(unittest.TestCase):
 
         self.assertEqual(run.call_count, 3)
         apply_arguments = run.call_args_list[1].args[1]
-        self.assertIn("--reconcile-installed", apply_arguments)
-        self.assertIn(str(receipt), apply_arguments)
-        self.assertIn(record_sha256, apply_arguments)
+        self.assertEqual(
+            apply_arguments,
+            [sys.executable, str(module.CLAUDE_REVIEW), "--reconcile-installed"],
+        )
         self.assertNotIn(str(module.GLOBAL_BOOTSTRAP), apply_arguments)
 
     def test_apply_does_not_mutate_later_components_after_claude_review_failure(self) -> None:
@@ -155,8 +152,6 @@ class LocalProjectionTests(unittest.TestCase):
             codex_file=None,
             claude_file=None,
             require_claude=False,
-            claude_review_activation_receipt=Path("/private/operator/activation.json"),
-            expected_claude_review_record_sha256="a" * 64,
         )
         global_plan = module.CommandResult("global-bootstrap", 0, "PLAN global fixture\n")
         claude_plan = module.CommandResult("claude-review", 0, "DRIFT claude-review: fixture\n")

@@ -252,14 +252,20 @@ the clean current repository's `HEAD` history. Unknown, manually modified,
 unsafe, or unrecognized state is blocked rather than overwritten.
 
 For an eligible predecessor, the plan prints the exact installed-record digest
-and requires a fresh, absent activation-receipt path in a private
-operator-controlled directory. Supply those operator-selected values explicitly:
+for review and the deterministic private Playbook-owned activation-receipt
+path. The aggregate carries that verified state into component apply directly:
 
 ```text
-make apply-local \
-  CLAUDE_REVIEW_EXPECTED_RECORD_SHA256=<digest-from-plan> \
-  CLAUDE_REVIEW_ACTIVATION_RECEIPT=/absolute/private/path/activation.json
+make apply-local
 ```
+
+No plan output is an input to parse or copy. The component freezes the exact
+predecessor record, compares it again before every replacement, and creates or
+exact-verifies the deterministic receipt with no overwrite. The invocation of
+`apply-local` is the operator's explicit approval boundary. Direct component
+callers may still provide both `--expected-installed-record-sha256` and
+`--activation-receipt` together as an advanced destination override; a partial
+override is blocked.
 
 The aggregate completes every selected component's read-only plan before any
 write, then invokes only the component-owned `--reconcile-installed` operation
@@ -278,7 +284,7 @@ current object combinations can resume. If the projection commits but final
 activation-receipt publication fails, rerunning the same exact command may
 publish that receipt from the verified record's reconciliation provenance.
 
-The operator loop is `make check-local`, `make plan-local`, the displayed
-`make apply-local` command with explicit values, then `make check-local` again.
+The operator loop is `make check-local`, `make plan-local`, `make apply-local`,
+then `make check-local` again.
 No command in this workflow merges, releases, or reconciles an unrecognized
 workstation object.

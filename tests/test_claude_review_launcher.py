@@ -509,17 +509,52 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             self.assertEqual(plan.state, "DRIFT")
             self.assertIn("--reconcile-installed", rendered)
             self.assertIn(expected, rendered)
-            self.assertIn("REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH", rendered)
-            self.assertIn(
-                f"make apply-local CLAUDE_REVIEW_EXPECTED_RECORD_SHA256={expected}",
-                rendered,
-            )
+            self.assertNotIn("REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH", rendered)
+            self.assertIn("for aggregate apply, run make apply-local", rendered)
+            self.assertIn(str(fixture["root"] / "state"), rendered)
             self.assertIn("multi-file atomicity is not claimed", rendered)
             self.assertEqual(before, {path: path.read_bytes() for path in before})
 
-    def test_recognized_predecessor_apply_requires_both_explicit_inputs(self):
+    def test_recognized_predecessor_apply_owns_the_plan_binding_and_receipt_path(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+
+            with self.reconciliation_context(fixture):
+                result = self.installer.reconcile_installed_projection(
+                    activation_receipt=None,
+                    expected_record_sha256=None,
+                )
+
+            self.assertEqual(result["reconciliation_result"], "verified")
+            receipt = Path(result["qualification_receipt_path"])
+            self.assertEqual(receipt, fixture["record"])
+            activation_directory = (
+                fixture["root"] / "state" / "ai-workflow-playbook" / "claude-review"
+            )
+            activation_receipts = list(activation_directory.iterdir())
+            self.assertEqual(len(activation_receipts), 1)
+            self.assertEqual(result["activation_receipt_path"], str(activation_receipts[0]))
+            self.assertEqual(stat.S_IMODE(activation_directory.stat().st_mode), 0o700)
+            self.assertEqual(stat.S_IMODE(activation_receipts[0].stat().st_mode), 0o600)
+            self.assertEqual(
+                json.loads(activation_receipts[0].read_text(encoding="utf-8"))[
+                    "reconciliation_result"
+                ],
+                "verified",
+            )
+
+            with self.reconciliation_context(fixture):
+                rerun = self.installer.reconcile_installed_projection(
+                    activation_receipt=None,
+                    expected_record_sha256=None,
+                )
+
+            self.assertEqual(rerun["activation_receipt_result"], "existing_verified")
+
+    def test_recognized_predecessor_apply_rejects_a_partial_explicit_override(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            expected = self.installer.digest(fixture["record"].read_bytes())
             before = {
                 path: path.read_bytes()
                 for path in (fixture["launcher"], fixture["record"], fixture["active_rule"])
@@ -527,11 +562,11 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
 
             with self.reconciliation_context(fixture), self.assertRaisesRegex(
                 ValueError,
-                "recognized predecessor reconciliation requires both explicit operator inputs",
+                "an explicit reconciliation override requires both",
             ):
                 self.installer.reconcile_installed_projection(
                     activation_receipt=None,
-                    expected_record_sha256=None,
+                    expected_record_sha256=expected,
                 )
 
             self.assertEqual(before, {path: path.read_bytes() for path in before})
@@ -709,8 +744,11 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
     def test_reconciliation_recovers_a_receipt_after_full_projection_commit(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
-            expected = self.installer.digest(fixture["record"].read_bytes())
-            activation = fixture["root"] / "activation" / "recovered.json"
+            with self.reconciliation_context(fixture):
+                reconciliation = self.installer.prepare_installed_reconciliation()
+                activation = self.installer.default_reconciliation_activation_receipt(
+                    reconciliation
+                )
             original_exclusive = self.installer.exclusive_or_identical
 
             def fail_receipt(path, payload, mode):
@@ -722,15 +760,15 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 self.installer, "exclusive_or_identical", side_effect=fail_receipt
             ), self.assertRaisesRegex(OSError, "fixture receipt failure"):
                 self.installer.reconcile_installed_projection(
-                    activation_receipt=activation,
-                    expected_record_sha256=expected,
+                    activation_receipt=None,
+                    expected_record_sha256=None,
                 )
 
             self.assertFalse(activation.exists())
             with self.reconciliation_context(fixture):
                 recovered = self.installer.reconcile_installed_projection(
-                    activation_receipt=activation,
-                    expected_record_sha256=expected,
+                    activation_receipt=None,
+                    expected_record_sha256=None,
                 )
 
             self.assertTrue(recovered["receipt_recovery"])

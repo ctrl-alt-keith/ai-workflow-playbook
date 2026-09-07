@@ -677,10 +677,15 @@ The component's separate `--reconcile-installed` operation may replace a
 non-identical installation only when its canonical schema-v3 record,
 qualification, launcher, and rendered active rule resolve to one exact
 historical launcher/rule-template pair in the clean current repository's
-`HEAD` history. The plan binds the action to the predecessor record digest and
-requires an operator-selected fresh private activation-receipt path; neither
-value is inferred from ambient state. Unknown, manually modified, unsafe, or
-changed-during-operation objects remain fail-closed.
+`HEAD` history. The plan exposes the predecessor record digest for review. A
+direct reconciliation freezes that exact record as its expected identity,
+compares it again before each replacement, and publishes the activation receipt
+at a deterministic private Playbook-owned state path shown by the plan. This
+keeps `make apply-local` a single explicit approval action without parsing or
+copying plan output. Unknown, manually modified, unsafe, or
+changed-during-operation objects remain fail-closed. Direct component callers
+may override the default only by supplying the expected digest and a fresh
+private receipt path together; partial overrides are blocked.
 
 An eligible reconciliation preserves the exact already-qualified selector
 identity and version in a successor qualification receipt bound to the new

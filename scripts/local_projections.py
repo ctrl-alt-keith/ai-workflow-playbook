@@ -69,8 +69,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--codex-file", type=Path)
     parser.add_argument("--claude-file", type=Path)
     parser.add_argument("--require-claude", action="store_true")
-    parser.add_argument("--claude-review-activation-receipt", type=Path)
-    parser.add_argument("--expected-claude-review-record-sha256")
     return parser.parse_args()
 
 
@@ -78,17 +76,6 @@ def main() -> int:
     args = parse_args()
     selected = args.component or ["global-bootstrap", "claude-review"]
     selected = list(dict.fromkeys(selected))
-
-    if args.mode != "apply" and (
-        getattr(args, "claude_review_activation_receipt", None) is not None
-        or getattr(args, "expected_claude_review_record_sha256", None) is not None
-    ):
-        raise ValueError("claude-review apply inputs require --mode apply")
-    if "claude-review" not in selected and (
-        getattr(args, "claude_review_activation_receipt", None) is not None
-        or getattr(args, "expected_claude_review_record_sha256", None) is not None
-    ):
-        raise ValueError("claude-review apply inputs require the claude-review component")
 
     # Every selected component plan is read-only. Complete the full batch
     # preflight before the first component-owned mutation.
@@ -118,20 +105,6 @@ def main() -> int:
             str(CLAUDE_REVIEW),
             "--reconcile-installed",
         ]
-        if getattr(args, "claude_review_activation_receipt", None) is not None:
-            claude_arguments.extend(
-                [
-                    "--activation-receipt",
-                    str(args.claude_review_activation_receipt),
-                ]
-            )
-        if getattr(args, "expected_claude_review_record_sha256", None) is not None:
-            claude_arguments.extend(
-                [
-                    "--expected-installed-record-sha256",
-                    args.expected_claude_review_record_sha256,
-                ]
-            )
         claude_apply = run("claude-review", claude_arguments)
         render(claude_apply)
         if claude_apply.returncode:

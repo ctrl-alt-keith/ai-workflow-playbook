@@ -1,9 +1,5 @@
 .PHONY: help check check-env check-local plan-local apply-local check-local-bootstrap plan-local-bootstrap apply-local-bootstrap authoritative-source-check scanner-test
 
-CLAUDE_REVIEW_ACTIVATION_RECEIPT ?=
-CLAUDE_REVIEW_EXPECTED_RECORD_SHA256 ?=
-CLAUDE_REVIEW_APPLY_ARGUMENTS = $(if $(strip $(CLAUDE_REVIEW_ACTIVATION_RECEIPT)),--claude-review-activation-receipt "$(CLAUDE_REVIEW_ACTIVATION_RECEIPT)") $(if $(strip $(CLAUDE_REVIEW_EXPECTED_RECORD_SHA256)),--expected-claude-review-record-sha256 "$(CLAUDE_REVIEW_EXPECTED_RECORD_SHA256)")
-
 .DEFAULT_GOAL := check
 
 help: ## List available repo-local Makefile targets with short descriptions.
@@ -44,7 +40,7 @@ plan-local: ## Show read-only component-owned local reconciliation plans.
 	PYTHONDONTWRITEBYTECODE=1 python3 scripts/local_projections.py --mode plan
 
 apply-local: ## Explicitly apply safe component-owned local reconciliation.
-	PYTHONDONTWRITEBYTECODE=1 python3 scripts/local_projections.py --mode apply $(CLAUDE_REVIEW_APPLY_ARGUMENTS)
+	PYTHONDONTWRITEBYTECODE=1 python3 scripts/local_projections.py --mode apply
 
 plan-local-bootstrap: ## Show the read-only exact managed-block reconciliation plan.
 	PYTHONDONTWRITEBYTECODE=1 python3 scripts/check_global_bootstrap.py --mode plan

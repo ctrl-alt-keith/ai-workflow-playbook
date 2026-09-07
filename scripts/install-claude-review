@@ -1009,6 +1009,29 @@ def activation_receipt_for_reconciliation(
     }
 
 
+def default_reconciliation_activation_receipt(
+    reconciliation: InstalledReconciliation,
+) -> Path:
+    """Own one deterministic private evidence path for a reconciliation."""
+    provenance = reconciliation.current_record.get("reconciliation_provenance")
+    if not isinstance(provenance, dict):
+        raise ValueError("current reconciliation provenance is unavailable")
+    predecessor_sha256 = provenance.get("predecessor_receipt_sha256")
+    if (
+        not isinstance(predecessor_sha256, str)
+        or re.fullmatch(r"[0-9a-f]{64}", predecessor_sha256) is None
+    ):
+        raise ValueError("current reconciliation predecessor identity is unavailable")
+    current_sha256 = digest(reconciliation.current_record_bytes)
+    return (
+        reconciliation.install_root.parent
+        / "state"
+        / "ai-workflow-playbook"
+        / "claude-review"
+        / f"reconciliation-{predecessor_sha256}-to-{current_sha256}.json"
+    )
+
+
 def validate_activation_destination(path: Path, forbidden_roots: list[Path]) -> Path:
     exact = path.parent.resolve(strict=False) / path.name
     validate_destination(exact, forbidden_roots)
@@ -1117,11 +1140,16 @@ def reconcile_installed_projection(
     if current is not None and current_bytes is not None:
         predecessor = current.get("predecessor_receipt_sha256")
         if activation_receipt is None and expected_record_sha256 is None:
-            return {
-                "kind": "claude_review_reconciliation",
-                "result": "existing_current",
-                "installation_manifest_sha256": digest(current_bytes),
-            }
+            provenance = current.get("reconciliation_provenance")
+            if not isinstance(provenance, dict):
+                return {
+                    "kind": "claude_review_reconciliation",
+                    "result": "existing_current",
+                    "installation_manifest_sha256": digest(current_bytes),
+                }
+            expected_record_sha256 = str(predecessor)
+            recovery = prepare_recovery_reconciliation(current, current_bytes)
+            activation_receipt = default_reconciliation_activation_receipt(recovery)
         if activation_receipt is None or expected_record_sha256 is None:
             raise ValueError(
                 "activation-receipt recovery requires both --expected-installed-record-sha256 "
@@ -1146,7 +1174,11 @@ def reconcile_installed_projection(
                 current_bytes=current_bytes,
                 expected_predecessor_sha256=expected_record_sha256,
             )
-            return {**receipt, "activation_receipt_result": "existing_verified"}
+            return {
+                **receipt,
+                "activation_receipt_path": str(receipt_path),
+                "activation_receipt_result": "existing_verified",
+            }
         receipt = activation_receipt_for_reconciliation(
             reconciliation,
             launcher_result="existing_current",
@@ -1155,15 +1187,21 @@ def reconcile_installed_projection(
             recovery=True,
         )
         receipt_result = exclusive_or_identical(receipt_path, canonical(receipt), 0o600)
-        return {**receipt, "activation_receipt_result": receipt_result}
+        return {
+            **receipt,
+            "activation_receipt_path": str(receipt_path),
+            "activation_receipt_result": receipt_result,
+        }
 
     reconciliation = prepare_installed_reconciliation()
     predecessor_sha256 = digest(reconciliation.predecessor_record_bytes)
-    if expected_record_sha256 is None or activation_receipt is None:
+    if expected_record_sha256 is None and activation_receipt is None:
+        expected_record_sha256 = predecessor_sha256
+        activation_receipt = default_reconciliation_activation_receipt(reconciliation)
+    elif expected_record_sha256 is None or activation_receipt is None:
         raise ValueError(
-            "recognized predecessor reconciliation requires both explicit operator inputs: "
-            "--expected-installed-record-sha256 and --activation-receipt; run "
-            "--plan-installed and use its exact predecessor digest plus a fresh absent receipt path"
+            "an explicit reconciliation override requires both "
+            "--expected-installed-record-sha256 and --activation-receipt"
         )
     if expected_record_sha256 != predecessor_sha256:
         raise ValueError("reconciliation request names a stale installed record")
@@ -1229,7 +1267,11 @@ def reconcile_installed_projection(
         recovery=False,
     )
     receipt_result = exclusive_or_identical(receipt_path, canonical(receipt), 0o600)
-    return {**receipt, "activation_receipt_result": receipt_result}
+    return {
+        **receipt,
+        "activation_receipt_path": str(receipt_path),
+        "activation_receipt_result": receipt_result,
+    }
 
 
 def prepare_recovery_reconciliation(
@@ -1370,12 +1412,9 @@ def installed_projection_plan() -> InstalledProjectionPlan:
             str(Path(sys.executable).resolve()),
             str(Path(__file__).resolve()),
             "--reconcile-installed",
-            "--expected-installed-record-sha256",
-            record_sha256,
-            "--activation-receipt",
-            "REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH",
         ]
     )
+    activation_receipt = default_reconciliation_activation_receipt(reconciliation)
     findings = (
         "recognized predecessor source "
         f"commit={reconciliation.predecessor_source_commit} "
@@ -1388,10 +1427,8 @@ def installed_projection_plan() -> InstalledProjectionPlan:
         "again and atomically replaced, while multi-file atomicity is not claimed",
     )
     requirements = (
-        "replace REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH with a fresh, absent path in a private operator-controlled directory; the component creates the activation receipt there",
-        "for aggregate apply, run make apply-local "
-        f"CLAUDE_REVIEW_EXPECTED_RECORD_SHA256={record_sha256} "
-        "CLAUDE_REVIEW_ACTIVATION_RECEIPT=REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH",
+        f"the component will publish or exact-verify its immutable activation receipt at {activation_receipt}",
+        "for aggregate apply, run make apply-local; no plan output needs to be parsed or copied",
         "run from this clean reviewed source checkout; the component verifies repository cleanliness before changing state",
         "if a partial failure occurs before the combined record changes, rerun this exact command; only predecessor/current object combinations produced by this order are accepted",
     )
