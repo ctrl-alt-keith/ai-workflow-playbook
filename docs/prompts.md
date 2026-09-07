@@ -8,21 +8,13 @@ Prompts should remain routing and execution envelopes, not duplicated workflow
 doctrine. For the rationale, see
 [`sparse-rehydration-and-source-grounding.md`](sparse-rehydration-and-source-grounding.md).
 
-For repository-scoped prompts, route through current
-[`start-here.md`](start-here.md) and hydrate established state from
-authoritative Repository or History artifacts instead of copying doctrine into
-the prompt. Every generated prompt or handoff is a complete drop-in artifact:
-it is self-contained for its intended receiving context and directly usable.
-Thread routing and still-current context may reduce duplicated background, but
-never produce a partial executable artifact. Apply the governing
-[complete-prompt rule](repo-readiness.md#interaction-mode-preflight) rather
-than reconstructing the requested action from conversation history or another
-prompt.
-
-Keep exact values prompt-local when identity, authority, safety, validation, or
-unambiguous retrieval requires them. Complete does not mean reproducing all
-doctrine, history, or durable state. Reducing redundant context is execution
-engineering, not methodology or architecture evidence.
+For repository-scoped prompts, apply the
+[complete-prompt rule](repo-readiness.md#interaction-mode-preflight): carry the
+execution delta and resolve inherited rules through current
+[`start-here.md`](start-here.md). The templates below are authoring aids, not
+checklists to copy wholesale. Resolve task-specific values and omit inherited
+boilerplate and unused fields; keep the resulting action complete for its
+intended receiving context.
 
 ## Task-Shape Surface Selection And Thin Handoffs
 
@@ -489,26 +481,10 @@ governance merely because Airtable carries them.
 
 ### Current terminal presentation boundary
 
-This repository provides presentation instructions and routing-table tests,
-not a gate on the assistant's live final response. Correct routing and verified
-Airtable identity cannot guarantee the two-block presentation; an intermediate
-formatter cannot prevent later assistant rewriting.
-
-CAK-261 found **SOFT-ONLY ON CURRENT CHATGPT SURFACE**: the assistant constructs
-the final message, and the native client controls display/copy interaction.
-No exposed user-controlled intercept was found that rejects malformed final
-presentation before display or guarantees exactly two copyable blocks without
-surrounding prose. Hard enforcement requires an owned display/emission surface
-or equivalent provider/client interception.
-
-- [Plugins/widgets](https://developers.openai.com/plugins/build/chatgpt-ui)
-  render alongside the conversation without guaranteed suppression of
-  surrounding assistant text.
-- [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
-  constrain API data to a schema; hard presentation still requires an owned
-  display path after data validation.
-- The existing [Enforcement terminal emitter](https://github.com/ctrl-alt-keith/ai-workflow-enforcement/blob/02d63615c103dbcd4bcfacfe368e6fc8132223fa/enforcement/prompt_handoff_emission.py)
-  serves a separate Dropbox-to-terminal path, outside this ChatGPT failure path.
+Repository routing and presentation rules do not hard-enforce the live ChatGPT
+final response. Native ChatGPT remains **soft-only** for the two-block
+invariant. Hard enforcement requires an owned display/emission surface or an
+equivalent provider/client intercept before display.
 
 ## Quick Navigation
 
@@ -527,95 +503,38 @@ or equivalent provider/client interception.
 
 ## Repository Implementation Task
 
-Use this template only when the intended interaction mode is direct
-implementation. For review or orchestration, use the matching template instead.
-Use the matching executor adapter to select model and reasoning/thinking
-configuration. For a complete generated prompt, precede this executable body
-with the shared operator-metadata block in [Complete Prompt Shape](#complete-prompt-shape).
+Use this template for direct implementation. Resolve the executor metadata
+through [Complete Prompt Shape](#complete-prompt-shape) and apply the
+[complete-prompt rule](repo-readiness.md#interaction-mode-preflight).
 
 ```text
-Role:
-- You are implementing a scoped repository change in [repository].
-- Work layer: implementation.
+Task:
+Implement [bounded outcome] in [repository].
+Governing issue/source: [current task and authority reference]
 
-Goal:
-- [desired outcome]
-
-Success criteria:
-- [observable condition that proves the goal is met]
-- The diff is limited to the intended repository and scope.
-- Canonical validation has run or any inability to run it is reported.
-- PR delivery is complete unless explicitly excluded.
-
-Context:
-- Repository: [repository]
-- Working directory: [working_directory]
-- Relevant background: [short context]
-- GitHub issues or planning references: [none or identifiers]
-- Dependencies: [none or required predecessors, inputs, or services]
+State:
+- [source locations and exact predecessor/input identities needed for this action]
+- [required locality or unresolved dependency, if material]
 
 [resolved thread-name section when applicable]
+[minimal startup route if not already supplied by the receiving context]
 
-Retrieval:
-- Read `ai-workflow-playbook/docs/start-here.md`, the target repo's
-  `AGENTS.md`, and any required tool adapter before acting.
-- Apply
-  `docs/source-first-retrieval.md#minimum-sufficient-retrieval`: state the claim
-  or decision and its evidence boundary, then retrieve only the authoritative
-  state needed to support it. Do not prescribe speculative provider-object
-  inventories.
-- For overlap or collision risk, inspect current `main`, relevant pull
-  requests, target files, and specifically identified refs as needed. Do not
-  inventory every branch, ref, workflow, or provider object unless that
-  inventory is materially necessary to the decision.
+Scope and constraints:
+- [task-specific changes, exclusions, and overrides of repository defaults]
 
-Scope:
-- In scope: [files, behavior, or workflow area]
-- Out of scope: [explicit non-goals]
+Acceptance:
+- [observable behavior or evidence that establishes the result]
+- [task-specific validation or delivery requirements, if not inherited]
 
-Constraints:
-- Keep the change minimal, scoped, and structurally local.
-- Follow existing repo patterns and canonical validation.
-- Follow `docs/repo-readiness.md`, the matching executor adapter, and
-  repo-local `AGENTS.md` for interaction mode, command form, worktree,
-  validation, and delivery.
-- Surface blockers, validation failures, unresolved risks, and material
-  uncertainty.
+[resolved task-appropriate kickoff mutation boundary when applicable]
 
-Tasks:
-1. Inspect the existing structure and relevant source material.
-2. Make the smallest scoped change that satisfies the goal.
-3. Update nearby docs or tests only when they are part of the same change.
-
-Validation:
-- Run [validation_path].
-- Report the canonical outcome and any material validation exception.
-
-Delivery:
-- [branch, commit, push, and PR expectation, or explicit exclusion]
-- Apply `docs/core-model.md#successful-completion-projection` to the final
-  report.
-
-Permissions and completion boundary:
-- Authorized actions: [local edits, validation, commit, push, PR, or narrower]
-- Kickoff mutation boundary:
-  - Orchestration/evidence mutations: [task-owned writes allowed now, their
-    prerequisites, and the authority that permits them; or none]
-  - Delegated substantive execution: [work separately authorized here under
-    its own bounded authority, or reserved for a later executor or phase]
-  - Human-gated transitions: [decisions requiring separate human authorization]
-  - Unrelated state: [planning items, repositories, providers, and execution
-    state that remain untouched]
-  - Blocked kickoff: [do not falsely advance the governing task; record the
-    exact blocker only when useful and authorized]
-- Completion ends at: [validated artifact, review packet, draft PR, or other]
-
-Stop rules:
-- Stop before merge, release, tag, destructive, externally visible, or
-  permissions-sensitive actions unless explicitly authorized.
-- Stop and report if required source state cannot be retrieved, the repo
-  context is mismatched, or validation failure implies broader work.
+Completion:
+- [required result and stop boundary]
 ```
+
+Resolve any applicable
+[kickoff mutation boundary](#explicit-kickoff-mutation-boundary) from current
+authority; retain its task-specific permissions and restrictions.
 
 ## Parallel Batch Add-On
 
@@ -640,134 +559,37 @@ Parallel execution:
 
 ## Orchestration Handoff
 
-Use this prompt when the deliverable is a complete downstream task envelope, not
-direct mutation by the current agent.
-
-A compact fresh-thread handoff can use this shape when the named artifacts
-already carry the established state:
-
-```text
-Startup:
-- Retrieve current `docs/start-here.md` through GitHub source access when
-  available and follow its repository startup route.
-Governing issue:
-- [issue identifier or durable authority source]
-[resolved thread-name section when applicable]
-Authoritative state:
-- [Repository or History artifact locations and exact identities when needed]
-Authorized action:
-- [the new bounded action]
-Constraints:
-- [only task-specific constraints not already owned by the referenced sources]
-Completion and stop boundary:
-- [required result, validation, delivery, and conditions that require stopping]
-Kickoff mutation boundary:
-- Orchestration/evidence mutations: [task-owned writes allowed now, their
-  prerequisites, and the authority that permits them; or none]
-- Delegated substantive execution: [work reserved for a later executor or
-  phase and prohibited here, or work separately authorized here under its own
-  bounded authority]
-- Human-gated transitions: [decisions requiring separate human authorization]
-- Unrelated state: [planning items, repositories, providers, and execution
-  state that remain untouched]
-- Blocked kickoff: [do not falsely advance the governing task; record the exact
-  blocker only when useful and authorized]
-```
-
-Required inputs:
-
-- `repository`
-- `working_directory`
-- `canonical_source`
-- `source_evidence`
-- `interaction_mode`
-- `kickoff_mutation_boundary`
-- `validation_path`
-- `delivery_expectation`
-
-Use the matching executor adapter to select model and reasoning/thinking
-configuration. For a complete generated prompt, precede this executable body
-with the shared operator-metadata block in [Complete Prompt Shape](#complete-prompt-shape).
+Use this template when the current deliverable is a downstream task envelope.
+Resolve the executor metadata through
+[Complete Prompt Shape](#complete-prompt-shape) and apply the
+[complete-prompt rule](repo-readiness.md#interaction-mode-preflight).
+Point to recoverable state instead of reproducing it.
 
 ```text
-Role:
-- You are a downstream agent completing a bounded task for [repository].
-- Work layer: [research, design, implementation, review, or coordination]
+Task:
+[bounded action and intended work layer] in [repository].
+Governing issue/source: [current task and authority reference]
 
-Goal:
-- [clear user-visible outcome]
-
-Success criteria:
-- [what must be true before final response]
-- The work stays within the named repository and scope.
-- Required validation has run or a blocker is reported.
-- The final answer includes the requested artifact, PR, review packet, or
-  handoff evidence.
-
-Inputs:
-- Repository: [repository]
-- Working directory: [working_directory]
-- Canonical source: [canonical_source]
-- Repo-local guidance: [AGENTS.md or equivalent]
-- Source evidence: [source_evidence]
-- Interaction mode: [implementation, review/audit, or orchestration]
-- Validation path: [validation_path]
-- Delivery expectation: [delivery_expectation]
-- Dependencies: [none or required predecessors, inputs, or services]
+State:
+- [authoritative source locations and exact predecessor/input identities]
+- [required locality, unavailable context, or unresolved dependency, if material]
 
 [resolved thread-name section when applicable]
-
-Retrieval:
-- Read the shared playbook startup guidance and repo-local `AGENTS.md` first.
-- Retrieve authoritative state from only the files, issues, PRs, docs, or
-  artifacts needed for the goal; treat summaries as navigation only.
-- Stop once the target surface, constraints, validation path, and delivery
-  expectation are clear.
-
-Scope:
-- In scope: [files, behavior, docs, or workflow area]
-- Out of scope: [explicit exclusions]
+[minimal startup route if not already supplied by the receiving context]
 
 Constraints:
-- Keep changes minimal, scoped, and structurally local.
-- Do not rely on staging, runtime, generated, or local instruction surfaces as
-  policy unless the rule has been promoted into the canonical source.
-- Follow the referenced playbook, adapter, and repo-local guidance.
-- Report blockers, validation failures, residual risks, and uncertainty.
+- [task-specific scope, permissions, and exceptions to inherited rules]
 
-Tasks:
-1. [ordered task]
-2. [ordered task]
-3. [ordered task]
+[resolved task-appropriate kickoff mutation boundary]
 
-Validation:
-- Run [validation_path], or report why it cannot run.
-
-Delivery:
-- [branch, commit, push, PR, review packet, or report expectation]
-- Include summary, validation, source evidence, and residual risks.
-
-Permissions and completion boundary:
-- Authorized actions: [read-only inspection, local edits, delivery, or narrower]
-- Kickoff mutation boundary:
-  - Orchestration/evidence mutations: [task-owned writes allowed now, their
-    prerequisites, and the authority that permits them; or none]
-  - Delegated substantive execution: [work reserved for a later executor or
-    phase and prohibited here, or work separately authorized here under its own
-    bounded authority]
-  - Human-gated transitions: [decisions requiring separate human authorization]
-  - Unrelated state: [planning items, repositories, providers, and execution
-    state that remain untouched]
-  - Blocked kickoff: [do not falsely advance the governing task; record the
-    exact blocker only when useful and authorized]
-- Completion ends at: [artifact, review packet, PR, report, or other]
-
-Stop rules:
-- Stop before merge, release, tag, destructive, externally visible, or
-  permissions-sensitive actions unless explicitly authorized.
-- Ask for human input when required evidence is unavailable or the next step
-  depends on a human judgment call.
+Completion:
+- [task-specific decision/acceptance criterion, required result, and stop boundary]
 ```
+
+Resolve the
+[kickoff mutation boundary](#explicit-kickoff-mutation-boundary) for the
+receiving actor and phase. A source pointer does not replace an explicit
+task-specific authorization or restriction.
 
 ## Operator-Visible Progress Add-On
 
@@ -832,26 +654,10 @@ Correction:
 
 ## Implementation Delivery Add-On
 
-Append this only when the task is implementation mode and normal PR delivery is
-expected.
-
-```text
-Delivery:
-- Follow the branch, worktree, validation, and PR delivery rules in
-  `docs/repo-readiness.md`, the matching executor adapter, and repo-local
-  `AGENTS.md`.
-- Stage, commit, push, and open or update the intended PR only with relevant
-  changes.
-- Include expected GitHub issue closing keywords and planning references when
-  those identifiers are provided.
-- At successful completion, apply the
-  `docs/core-model.md#successful-completion-projection` rule. Report the
-  completed outcome, reviewable repository result and status, canonical
-  validation and review summary, useful exact implementation identity, and
-  stop boundary.
-  Add changed-file, risk, or evidence detail only when it materially affects
-  operator review or action.
-```
+Normal implementation delivery is inherited from the repository operating mode.
+Use an add-on only for a task-specific delivery requirement or exception, such
+as an existing PR to update or an explicitly local-only result; omit it when
+current canonical owners already supply the requirement.
 
 ## PR Review
 

@@ -220,3 +220,48 @@ live provider-global files remains a separate local action: review the plan,
 explicitly apply the marked-block substitution, and run the read-only check.
 Do not edit repo-local `AGENTS.md` or `CLAUDE.md` files merely to install this
 global router.
+
+## Unified Local Projection Workflow
+
+Use the top-level commands to inspect every currently qualified
+Playbook-managed local projection:
+
+```text
+make check-local
+make plan-local
+make apply-local
+```
+
+The aggregate is orchestration only. It delegates global instruction-file
+inspection and reconciliation to `check_global_bootstrap.py`, and delegates the
+governed `claude-review` launcher, current qualification record, and active
+Codex rule to `install-claude-review --check-installed` or its separate
+`--plan-installed` review surface.
+It does not manage arbitrary content under provider homes. `codex-safe-rm` is
+not included because current Playbook source has no active component-owned
+projection implementation for it; unknown local objects remain unmanaged.
+
+`check-local` answers whether each component is current, drifted, skipped, or
+blocked. `plan-local` remains read-only but delegates to each component's own
+review surface. For `claude-review`, that surface identifies launcher, rule,
+entry-contract, or qualification evidence and renders an exact bounded
+qualification command when its compare-and-swap inputs are observable. For an
+active-rule-only correction, it renders the existing installer command template
+with every reconstructable contract input and a `REQUIRES` line for the fresh
+private activation-receipt path that only the operator can choose.
+
+Follow the operator flow: run `make plan-local`, perform the displayed
+component-owned action, rerun `make check-local`, then run `make apply-local`
+only if its selected components have an already-owned safe apply path. A
+non-identical installed launcher or entry record remains intentionally
+human-gated: the current installer refuses an overwrite, so the plan says so
+instead of inventing a force-reinstall command. `apply-local` invokes only
+components with an already-owned safe apply path, after first checking every
+selected component that lacks one. A drifted `claude-review` installation
+therefore blocks a combined apply before a later component can change state.
+Select just the file-backed component when that is the intended bounded
+operation:
+
+```text
+python3 scripts/local_projections.py --mode apply --component global-bootstrap
+```
