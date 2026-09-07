@@ -504,6 +504,16 @@ def identity_without_containment(identity: dict[str, object]) -> dict[str, objec
     }
 
 
+def validate_persisted_forbidden_root(root: Path) -> None:
+    """Accept an exact historical root even after its directory is retired."""
+    try:
+        normalized = root.resolve(strict=False)
+    except (OSError, RuntimeError) as error:
+        raise ValueError("an operator-supplied forbidden root is ambiguous") from error
+    if normalized != root:
+        raise ValueError("an operator-supplied forbidden root is no longer exact")
+
+
 def atomic_replace_exact(
     path: Path,
     expected: bytes,
@@ -730,9 +740,7 @@ def validate_record_contract(
         ):
             raise ValueError("installed state overlaps a forbidden writable root")
     for extra_root in forbidden_roots[1:]:
-        root = Path(extra_root)
-        if root.resolve(strict=True) != root:
-            raise ValueError("an operator-supplied forbidden root is no longer exact")
+        validate_persisted_forbidden_root(Path(extra_root))
     auth_diagnostics = record.get("auth_diagnostics_directory")
     if auth_diagnostics is not None:
         diagnostics = Path(str(auth_diagnostics))

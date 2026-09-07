@@ -220,9 +220,17 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         selector.symlink_to(targets[0])
         return selector, targets
 
-    def create_reconciliation_fixture(self, root: Path):
+    def create_reconciliation_fixture(
+        self, root: Path, forbidden_roots: list[Path] | None = None
+    ):
         selector, targets = self.create_installer_targets(root)
-        installed, _ = self.run_installer(root, selector, "initial.json", "1" * 40)
+        installed, _ = self.run_installer(
+            root,
+            selector,
+            "initial.json",
+            "1" * 40,
+            forbidden_roots,
+        )
         install_root = Path(installed["installation_directory"])
         launcher = install_root / "claude-review"
         record = install_root / ".claude-review.json"
@@ -503,6 +511,57 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             self.assertIn(expected, rendered)
             self.assertIn("REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH", rendered)
             self.assertIn("multi-file atomicity is not claimed", rendered)
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_reconciliation_preserves_an_exact_retired_forbidden_root(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            retired_root = root / "retired-attempt-root"
+            retired_root.mkdir()
+            fixture = self.create_reconciliation_fixture(root, [retired_root])
+            retired_root.rmdir()
+            expected = self.installer.digest(fixture["record"].read_bytes())
+
+            with self.reconciliation_context(fixture):
+                plan = self.installer.installed_projection_plan()
+                result = self.installer.reconcile_installed_projection(
+                    activation_receipt=root / "activation" / "retired-root.json",
+                    expected_record_sha256=expected,
+                )
+                current, _ = self.installer.current_projection_record()
+
+            self.assertEqual(plan.state, "DRIFT")
+            self.assertEqual(result["reconciliation_result"], "verified")
+            self.assertIn(str(retired_root), current["forbidden_roots"])
+            self.assertEqual(
+                current["file_identity"]["forbidden_root_containment"][-1],
+                {
+                    "root": str(retired_root),
+                    "selector_contained": False,
+                    "resolved_contained": False,
+                },
+            )
+
+    def test_reconciliation_rejects_a_rebound_retired_forbidden_root(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            retired_root = root / "retired-attempt-root"
+            retired_root.mkdir()
+            fixture = self.create_reconciliation_fixture(root, [retired_root])
+            retired_root.rmdir()
+            rebound_target = root / "rebound-target"
+            rebound_target.mkdir()
+            retired_root.symlink_to(rebound_target)
+            before = {
+                path: path.read_bytes()
+                for path in (fixture["launcher"], fixture["record"], fixture["active_rule"])
+            }
+
+            with self.reconciliation_context(fixture):
+                plan = self.installer.installed_projection_plan()
+
+            self.assertEqual(plan.state, "BLOCKED")
+            self.assertIn("no longer exact", plan.summary)
             self.assertEqual(before, {path: path.read_bytes() for path in before})
 
     def test_reconciliation_rejects_unknown_launcher_record_and_rule_without_mutation(self):
