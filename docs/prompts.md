@@ -499,11 +499,33 @@ operator-facing block shape.
 
 A deterministic formatter could guarantee the text it returns, but a later
 assistant response could omit, combine, or wrap that text. Such a formatter
-would control an intermediate artifact, not the terminal presentation. A
-terminal guarantee depends on the actual response-emitting runtime consuming
-the resolved metadata and verified envelope through an unavoidable renderer
-or gate. No such integration is present in this repository's supported handoff
-path; its current presentation boundary remains assistant/client behavior.
+would control an intermediate artifact, not the terminal presentation.
+
+The CAK-261 follow-up finding is **SOFT-ONLY ON CURRENT CHATGPT SURFACE**:
+OpenAI's assistant constructs the final message, and the native ChatGPT client
+controls display and copy interaction. No exposed user-controlled native
+ChatGPT gate was found that can reject malformed final presentation before
+display or guarantee exactly two copyable blocks without surrounding prose.
+The evaluated boundaries were:
+
+- [Plugins/widgets](https://developers.openai.com/plugins/build/chatgpt-ui)
+  render UI alongside the conversation; they cannot guarantee suppression of
+  surrounding assistant text. The
+  [widget description](https://developers.openai.com/plugins/reference)
+  helps reduce redundant narration but does not provide that guarantee.
+- [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
+  can constrain API data to a schema; hard presentation enforcement still
+  requires an owned display path after validated data production.
+- The existing [Enforcement terminal emitter](https://github.com/ctrl-alt-keith/ai-workflow-enforcement/blob/02d63615c103dbcd4bcfacfe368e6fc8132223fa/enforcement/prompt_handoff_emission.py)
+  serves a separate Dropbox-to-terminal path and is not on this ChatGPT
+  failure path.
+
+Hard enforcement requires an owned display/emission surface, or a provider/client
+feature exposing equivalent interception: resolved prompt-delivery state →
+validated response object → deterministic owned display projection → exactly
+two fixed copy regions. No such user-controlled native ChatGPT intercept was
+found. This follow-up identifies the enforcement boundary; it implements
+nothing and adopts no wrapper design.
 
 ## Quick Navigation
 
