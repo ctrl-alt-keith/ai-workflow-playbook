@@ -4,6 +4,10 @@ This file holds reusable, executor-neutral prompt shapes. Keep workflow rules
 in the core playbook docs, executor-specific execution guidance in the matching
 tool adapter, and repo-local execution rules in `AGENTS.md`.
 
+Apply the canonical
+[agent-need test](engineering-baseline.md#agent-read-documentation)
+when authoring prompt content.
+
 Prompts should remain routing and execution envelopes, not duplicated workflow
 doctrine. For the rationale, see
 [`sparse-rehydration-and-source-grounding.md`](sparse-rehydration-and-source-grounding.md).
@@ -19,74 +23,61 @@ intended receiving context.
 ## Task-Shape Surface Selection And Thin Handoffs
 
 Apply the core model's
-[`interactive and execution surface`](core-model.md#interactive-and-execution-surfaces)
-roles. Keep discussion, judgment, clarification, steering, review, and
-disposition interactive. Use an execution surface once a bounded outcome needs
-tools, mutation, validation, or evidence production. When that requires a
-transition from an interactive surface, apply the shared
-[consent boundary](core-model.md#interactive-to-execution-transition-consent).
-The matching adapter owns each concrete product mapping; difficulty, model
-choice, and product identity do not select the role.
+[surface roles](core-model.md#interactive-and-execution-surfaces): discussion,
+judgment, clarification, steering, review, and disposition stay interactive;
+bounded work needing tools, mutation, validation, or evidence production uses
+execution. Apply its
+[transition consent](core-model.md#interactive-to-execution-transition-consent)
+when moving from interactive to execution. The matching adapter owns product
+mappings; difficulty, model/reasoning choice, and product identity do not select
+the role.
 
-Keep these dimensions distinct:
+Keep surface role (interactive/execution), executor identity (acting runtime or
+agent), task shape (interactive reasoning/general delegation/repository
+execution), and model/reasoning settings distinct. Likewise distinguish the
+handoff contract (current sources, authority declaration and owning reference,
+constraints, locality, validation, outputs, stop boundary), durable package
+pointer (exact external manifest/sealed-package identity), and durable
+continuity (owning authoritative sources and recovery records).
 
-| Dimension | Meaning |
-| --- | --- |
-| Surface role | Interactive or execution. |
-| Executor identity | The runtime or agent that performs the bounded work. |
-| Task shape | Interactive reasoning, a general delegated outcome, or repository execution. |
-| Model or reasoning choice | An execution setting that does not by itself change semantic role. |
-| Handoff contract | Current sources, authority declaration and owning reference, constraints, locality, validation, outputs, and stop boundary. |
-| Durable package pointer | The exact external manifest or sealed-package identity used to hydrate recoverable state. |
-| Durable continuity | The owning authoritative sources and records from which the work can be recovered. |
-
-An interface change does not create a new durable executor identity or
-authority contract when the underlying executor identity and authority remain
-the same. A transition to a distinct repository executor is a repository-
-execution handoff and must make repository, locality, tools, validation,
-delivery, and stop boundaries explicit. Shared application chrome, project
-membership, conversation history, product branding, or a folder name does not
-prove that context or authority transferred.
+Interface changes alone do not change durable executor identity or authority.
+A distinct repository executor requires an explicit repository-execution
+handoff covering repository, locality, tools, validation, delivery, and stop
+boundaries. Shared chrome, project membership, history, branding, or folder
+names do not prove context or authority transfer.
 
 ### Surface-transition check
 
-At a surface transition, re-evaluate context sufficiency and any materially
-changed source, authority, locality, acting identity, tool, validation, output,
-or completion boundary. Retrieve newly activated owners and refresh mutable
-repository, planning-system, and provider facts from the systems that own them
-before relying on those facts. Reuse still-current verified context; a surface
-change does not require blanket rehydration or replay of unchanged doctrine.
+At transitions, re-evaluate context sufficiency and materially changed source,
+authority, locality, acting identity, tool, validation, output, or completion
+boundaries. Retrieve newly activated owners; refresh mutable repository,
+planning, and provider facts from their owners before use. Reuse still-current
+verified context; the transition alone requires no blanket rehydration or
+replay of unchanged doctrine.
 
 ### Thin semantic handoff envelope
 
-When complete recoverable state is held outside the conversation, a thin
-role-specific envelope remains a complete current handoff while pointing to
-that state instead of reproducing it. Include, as applicable:
+A role-specific envelope may point to complete external recoverable state
+instead of reproducing it. Include applicable semantic fields, not a package
+schema: target surface/executor role; bounded outcome; exact self-describing governed
+manifest/sealed-package identity; current human direction, bounded authority
+declaration, live owning authority reference, and prohibited actions; mutable
+sources to refresh from their owners; locality/tools; validation, outputs, and
+completion/stop boundary.
 
-- target surface or executor role;
-- bounded requested outcome;
-- exact self-describing governed manifest or sealed-package identity;
-- current human direction and bounded authority declaration, its owning
-  authority reference, and prohibited actions;
-- mutable sources that the target must refresh from their owners;
-- required locality and tools;
-- validation, outputs, and completion or stop boundary.
-
-These are semantic fields, not a package schema. Verify the exact identity
-required by the owning package contract before relying on its payload; a mutable
-directory or bare folder path is navigation only. The envelope declares bounded
-authority and its live owning reference but creates none. If package identity
-or current authority is unavailable, stale, mismatched, or ambiguous, stop the
-affected execution rather than reconstructing it from conversation.
+Verify exact package identity under its owning contract before using the
+payload; mutable directories or bare paths are navigation only. Envelopes create
+no authority. If package identity or current authority is unavailable, stale,
+mismatched, or ambiguous, stop affected execution; do not reconstruct from
+conversation.
 
 ### Target-shaped projections
 
-Shape the thin envelope through the matching target adapter rather than sending
-one generic prompt. A general-purpose bounded-executor projection emphasizes
-the delegated outcome, permitted sources and tools, source refresh, output
-form, quality checks, and return boundary. A repository-executor projection
-also makes repository identity and locality, repository tools, canonical
-validation, delivery, and the stop-before-merge boundary explicit.
+Use the matching target adapter: general bounded-executor envelopes emphasize
+delegated outcome, permitted sources/tools, source refresh, output form, quality
+checks, and return boundary; repository-executor envelopes additionally specify
+repository identity/locality/tools, canonical validation, delivery, and stop
+before merge.
 
 ## Explicit Kickoff Mutation Boundary
 
