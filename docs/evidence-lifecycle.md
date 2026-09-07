@@ -128,32 +128,36 @@ attempt-local scratch is not a substitute for required durable capture; see
 
 ### Dropbox issue-folder creation projection
 
-When the current authorized downstream execution contract declares issue-owned
-durable artifact output in Dropbox (for example, a required issue-owned report
-or receipt) and the owning storage contract permits the destination, use the
-confirmation path below to establish `/issues/<ISSUE-ID>/` before handoff;
-issue existence alone is insufficient.
+For fresh executions declaring issue-owned Dropbox artifact output under the
+current authorized contract, the receiving artifact-producing executor owns
+provisioning at kickoff after resolving the handoff, before the first durable
+issue artifact. Without declared Dropbox output, perform these checks lazily
+when an admitted artifact is ready to write.
 
-Otherwise, retain lazy creation: inspect `/issues/<ISSUE-ID>/` only when an
-admitted Dropbox issue-owned artifact is ready to write, and continue without
-folder-creation approval if it already exists.
+Verify the exact governing issue from its current owner and the permitted
+destination under the storage contract before deriving or using
+`/issues/<ISSUE-ID>/`. Inspect that exact folder through a permitted provider
+route:
 
-If either path requires an absent folder, ask once at the first applicable
-trigger in the current execution to create exactly `/issues/<ISSUE-ID>/`, and
-continue only after creation. If confirmation is unavailable, including during
-unattended execution, or creation fails, fail closed without handing off or
-uploading and without silently rerouting storage.
+- Existing: verify provider identity and containment, then reuse without
+  creation approval. Chat/operator pre-creation is optional, including for
+  handoff, and uses this same verified-reuse path.
+- Absent: obtain confirmation once using the executor's native confirmation or
+  selector affordance when available; create through the authorized provider
+  mutation path, then verify resulting identity and containment before artifact
+  production. Honor the storage contract and
+  [current connector requirements](start-here.md#connector-availability-is-runtime-evidence).
 
-Folder creation is execution-readiness only: do not persist its confirmation
-as approval state or treat it as artifact admission, retention or execution
-authority, transition authority, or a relaxation of later storage-admission,
-integrity, and verification requirements.
+Unknown or ambiguous lookup is not absence. Any unmet verification,
+authorization, confirmation, or creation requirement stops issue-owned durable
+artifact production without fallback storage or a local substitute.
 
-Current connector action requirements remain [runtime evidence](start-here.md#connector-availability-is-runtime-evidence);
-Playbook prose does not override them. Airtable canonical-text handoff
-qualification does not generally depend on Dropbox folder existence and uses
-the pre-execution path only when its downstream execution contract separately
-declares Dropbox artifact output.
+Folder setup grants no artifact admission, retention permission, or downstream
+authority; do not persist confirmation as approval state. Apply
+[storage admission](#storage-admission),
+[no-overwrite capture and integrity verification](#direct-durable-capture), and
+[producing-receipt requirements](#producing-receipt-and-compact-delivery)
+unchanged.
 
 ### Producing Receipt And Compact Delivery
 
