@@ -484,10 +484,8 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
 
             rendered = self.installer.render_installed_projection_plan(plan)
             self.assertEqual(plan.state, "DRIFT")
-            self.assertIn("--reconcile-installed", rendered)
-            self.assertIn(expected, rendered)
-            self.assertIn("for aggregate apply, run make apply-local", rendered)
-            self.assertIn("multi-file atomicity is not claimed", rendered)
+            self.assertIn("APPLY run:\n  make apply-local", rendered)
+            self.assertNotIn(expected, rendered)
             self.assertEqual(before, {path: path.read_bytes() for path in before})
 
     def test_reconciliation_preserves_an_exact_retired_forbidden_root(self):
@@ -705,7 +703,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             rendered = output.getvalue()
             record = json.loads(before)
             observed = self.installer.exact_executable_file_identity(selector, [ROOT])
-            self.assertIn("RECONCILE run:", rendered)
+            self.assertIn("APPLY run:", rendered)
             self.assertIn("--qualify-claude-identity", rendered)
             self.assertIn(
                 record["qualification_receipt_sha256"]

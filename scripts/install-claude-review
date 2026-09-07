@@ -1117,34 +1117,19 @@ def installed_projection_plan() -> InstalledProjectionPlan:
             ("use a clean reviewed source checkout before reconciliation",),
         )
 
-    record_sha256 = digest(reconciliation.predecessor_record_bytes)
-    command = shlex.join(
-        [
-            str(Path(sys.executable).resolve()),
-            str(Path(__file__).resolve()),
-            "--reconcile-installed",
-        ]
-    )
     findings = (
-        f"managed predecessor record_sha256={record_sha256}",
-        "installed object state "
-        f"launcher={reconciliation.launcher_state} rule={reconciliation.rule_state}",
-        "qualification will become a successor receipt bound to the current entry contract; "
-        "the already-qualified selector identity and version are preserved without executing Claude",
-        "replacement order is active rule, launcher, then combined record; each file is compared "
-        "again and atomically replaced, while multi-file atomicity is not claimed",
+        "managed launcher, rule, and qualification state are internally consistent",
+        "the already-qualified Claude selector identity and version will be preserved",
     )
     requirements = (
-        "for aggregate apply, run make apply-local; no plan output needs to be parsed or copied",
-        "run from this clean reviewed source checkout; the component verifies repository cleanliness before changing state",
-        "if a partial failure occurs before the combined record changes, rerun this exact command; only predecessor/current object combinations produced by this order are accepted",
+        "if apply is interrupted, rerun the same command; the managed record anchors recovery",
     )
     return InstalledProjectionPlan(
         "DRIFT",
         f"claude-review has an exact managed predecessor at {launcher}",
         findings,
         (),
-        (command,),
+        ("make apply-local",),
         requirements,
     )
 
@@ -1162,7 +1147,7 @@ def render_installed_projection_plan(plan: InstalledProjectionPlan) -> str:
     lines = [f"{plan.state} claude-review: {plan.summary}"]
     lines.extend(f"FACT {finding}" for finding in plan.findings)
     for command in plan.commands:
-        lines.extend(("RECONCILE run:", f"  {command}"))
+        lines.extend(("APPLY run:", f"  {command}"))
     lines.extend(f"REQUIRES {requirement}" for requirement in plan.requirements)
     lines.extend(f"RECONCILE {action}" for action in plan.required_actions)
     return "\n".join(lines)

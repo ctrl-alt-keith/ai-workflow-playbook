@@ -678,10 +678,11 @@ non-identical installation only when its canonical schema-v3 record,
 qualification, launcher, and rendered active rule resolve to one exact
 managed state: each installed object must match its digest in the canonical
 combined record or the current reviewed source bytes in a resumable update
-state. The plan exposes the predecessor record digest for review. Direct
-reconciliation freezes that exact record and compares it again before each
-replacement. This keeps `make apply-local` a single explicit approval action
-without parsing or copying plan output. Unknown, manually modified, unsafe, or
+state. The plan reports eligibility and the single `make apply-local` action;
+the digest remains internal. Direct reconciliation freezes the exact record and
+compares it again before each replacement. This keeps `make apply-local` a
+single explicit approval action without parsing or copying plan output.
+Unknown, manually modified, unsafe, or
 changed-during-operation objects remain fail-closed.
 
 An eligible reconciliation preserves the exact already-qualified selector

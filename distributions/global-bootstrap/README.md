@@ -252,9 +252,9 @@ must match either its exact digest in the managed record or the current reviewed
 source bytes in a resumable update state. Unknown, manually modified, unsafe,
 or unrecognized state is blocked rather than overwritten.
 
-For an eligible predecessor, the plan prints the exact installed-record digest
-for review. The aggregate carries that verified state into component apply
-directly:
+For an eligible managed installation, the plan reports whether its state is
+internally consistent and presents one action. The aggregate carries the exact
+verified state into component apply directly:
 
 ```text
 make apply-local
