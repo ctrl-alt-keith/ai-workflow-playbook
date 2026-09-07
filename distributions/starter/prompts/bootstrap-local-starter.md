@@ -72,8 +72,9 @@ path without weakening local authority.
 Before writing to any repository, inspect contributor docs, READMEs, validation
 commands, package metadata, Makefile/task runner, CI, review guidance, and
 existing `AGENTS.md`. Establish the current validation, review, release, and
-team-process owners from files and command output. Respect team/workplace
-process; assume neither administrator rights nor solo-operator governance.
+team-process owners from inspected files and command output, not memory,
+summaries, or assumptions. Respect team/workplace process; assume neither
+administrator rights nor solo-operator governance.
 
 | Destination | Output and boundary |
 | --- | --- |

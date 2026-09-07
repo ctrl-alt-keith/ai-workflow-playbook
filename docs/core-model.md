@@ -64,8 +64,9 @@ question needs, not a fixed taxonomy.
 
 Derived reports, dashboards, receipts, summaries, and caches may evidence their
 own production or history. Verify them against the owner before concluding
-anything about the authoritative state they summarize. This is an execution
-invariant; [source-first-retrieval.md](source-first-retrieval.md) owns repository
+anything about the authoritative state they summarize. A derived artifact must
+never become evidence for the authoritative state it summarizes. This is an
+execution invariant; [source-first-retrieval.md](source-first-retrieval.md) owns repository
 triggers, ordering, verification, and recovery.
 
 ## Operator Observability
@@ -73,7 +74,8 @@ triggers, ordering, verification, and recovery.
 Surface operational transitions when they materially change human review,
 workflow authority, or subsequent execution. State the entered mode, contract,
 evidence boundary, validation/readiness state, or blocker and its consequence.
-Do not narrate private reasoning or impose a fixed phase list or template.
+Do not expose or request private reasoning or impose a fixed phase list or
+template.
 
 For bounded bulk or connector-heavy work, report aggregate milestones and
 retain complete item evidence outside conversation. Report material blockers,

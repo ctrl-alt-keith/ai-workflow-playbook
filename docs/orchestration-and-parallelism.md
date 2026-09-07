@@ -13,9 +13,9 @@ Workers have partial state and may drift or conflict. Preserve these boundaries:
   or reports;
 - lanes have explicit ownership, scope, exclusions, and stop conditions;
 - sequence or reconcile overlapping writes before mutation;
-- make commands and validation safely rerunnable where possible;
+- commands and validation should support safe retry;
 - orchestrator/human owns coordination, merge order, and trust decisions;
-- worker authority stops at its lane;
+- worker authority stops at its lane unless explicitly extended;
 - canonical validation precedes readiness/reconciliation; and
 - reconcile through review, rebase, validation, and merge sequencing.
 

@@ -40,8 +40,8 @@ precondition: do not respond, reason about the task, or invoke another tool
 first.
 
 After successful bootstrap, reuse still-current repository operating mode and
-verified sources. A follow-up, tool call, or elapsed turn alone does not restart
-bootstrap. Apply [active bounded-task continuity](core-model.md#active-bounded-task-continuity)
+verified sources. A response, reasoning step, follow-up, tool call, or elapsed
+turn alone does not restart bootstrap. Apply [active bounded-task continuity](core-model.md#active-bounded-task-continuity)
 before treating a strongly unrelated instruction as a task change. Re-route
 when repository, interaction mode, workflow, authoritative-source requirements,
 execution locality, or authority boundary materially changes.
