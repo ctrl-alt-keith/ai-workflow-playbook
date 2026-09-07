@@ -4,6 +4,10 @@ This file holds reusable, executor-neutral prompt shapes. Keep workflow rules
 in the core playbook docs, executor-specific execution guidance in the matching
 tool adapter, and repo-local execution rules in `AGENTS.md`.
 
+Apply the canonical
+[agent-need test](engineering-baseline.md#agent-read-documentation)
+when authoring prompt content.
+
 Prompts should remain routing and execution envelopes, not duplicated workflow
 doctrine. For the rationale, see
 [`sparse-rehydration-and-source-grounding.md`](sparse-rehydration-and-source-grounding.md).

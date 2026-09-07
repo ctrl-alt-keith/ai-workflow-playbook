@@ -111,6 +111,34 @@ text-presence checks. Exact-text assertions are appropriate only when the exact
 bytes or tokens are themselves a machine-consumed contract or externally
 required interface.
 
+## Agent-Read Documentation
+
+Classify a surface by its primary use: agent-read when it directs agent
+execution; human-facing when it supports human understanding, review, or
+decisions. Apply this distinction to sections of mixed documents; human-facing
+placement does not exempt operative agent instructions.
+
+Apply one agent-need test to agent-read documentation and prompt content:
+retain material only when it can change an agent's action, decision, authority
+interpretation, safety or evidence boundary, validation obligation, or stop or
+failure behavior, or when another canonical contract specifically requires it.
+Preserve those semantics, including precedence, identity, and source ownership.
+
+Use the smallest unambiguous normative representation. Prefer dense rules,
+tables, schemas, or references over narrative when they preserve the contract;
+natural-language flow is secondary to semantic clarity for the agent. Reference
+canonical owners instead of copying doctrine, while keeping required sources
+resolvable.
+
+Exclude rationale, design history, unused implementation mechanics, explanatory
+restatement, defensive narration, and redundant permutations that fail the
+agent-need test. Retain examples or enumerated cases only when they protect
+materially distinct behavior not already clear from the rule. Keep necessary
+operational mechanics. Put useful human rationale, history, and change
+explanation in issues, PRs, design records, or other human-facing surfaces.
+Do not add a taxonomy, scoring system, checklist, or ceremony to enforce this
+editing constraint.
+
 ## Config And CLI Default Changes
 
 When extending config/default precedence or CLI override logic, identify every
