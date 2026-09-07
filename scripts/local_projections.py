@@ -69,6 +69,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--codex-file", type=Path)
     parser.add_argument("--claude-file", type=Path)
     parser.add_argument("--require-claude", action="store_true")
+    parser.add_argument("--claude-review-activation-receipt", type=Path)
+    parser.add_argument("--expected-claude-review-record-sha256")
     return parser.parse_args()
 
 
@@ -77,18 +79,64 @@ def main() -> int:
     selected = args.component or ["global-bootstrap", "claude-review"]
     selected = list(dict.fromkeys(selected))
 
-    # Apply must establish that every selected component which lacks an owned
-    # reconciliation path is already current before any other component writes.
-    if args.mode == "apply" and "claude-review" in selected:
-        claude_status = run(
-            "claude-review", [sys.executable, str(CLAUDE_REVIEW), "--check-installed"]
-        )
-        render(claude_status)
-        if claude_status.returncode:
-            print("FAIL apply preflight: claude-review is not safe to leave unreconciled")
+    if args.mode != "apply" and (
+        getattr(args, "claude_review_activation_receipt", None) is not None
+        or getattr(args, "expected_claude_review_record_sha256", None) is not None
+    ):
+        raise ValueError("claude-review apply inputs require --mode apply")
+    if "claude-review" not in selected and (
+        getattr(args, "claude_review_activation_receipt", None) is not None
+        or getattr(args, "expected_claude_review_record_sha256", None) is not None
+    ):
+        raise ValueError("claude-review apply inputs require the claude-review component")
+
+    # Every selected component plan is read-only. Complete the full batch
+    # preflight before the first component-owned mutation.
+    if args.mode == "apply":
+        preflight: list[CommandResult] = []
+        if "global-bootstrap" in selected:
+            preflight.append(
+                run("global-bootstrap", global_bootstrap_arguments(args, "plan"))
+            )
+        if "claude-review" in selected:
+            preflight.append(
+                run(
+                    "claude-review",
+                    [sys.executable, str(CLAUDE_REVIEW), "--plan-installed"],
+                )
+            )
+        for result in preflight:
+            render(result)
+        if any(result.returncode for result in preflight):
+            print("FAIL apply preflight: a selected component is blocked")
             return 1
 
     results: list[CommandResult] = []
+    if args.mode == "apply" and "claude-review" in selected:
+        claude_arguments = [
+            sys.executable,
+            str(CLAUDE_REVIEW),
+            "--reconcile-installed",
+        ]
+        if getattr(args, "claude_review_activation_receipt", None) is not None:
+            claude_arguments.extend(
+                [
+                    "--activation-receipt",
+                    str(args.claude_review_activation_receipt),
+                ]
+            )
+        if getattr(args, "expected_claude_review_record_sha256", None) is not None:
+            claude_arguments.extend(
+                [
+                    "--expected-installed-record-sha256",
+                    args.expected_claude_review_record_sha256,
+                ]
+            )
+        claude_apply = run("claude-review", claude_arguments)
+        render(claude_apply)
+        if claude_apply.returncode:
+            print("FAIL apply: claude-review reconciliation did not complete")
+            return 1
     if "global-bootstrap" in selected:
         results.append(
             run(
@@ -111,11 +159,23 @@ def main() -> int:
 
     if any(result.returncode for result in results):
         return 1
-    if args.mode == "apply" and "global-bootstrap" in selected:
-        verified = run("global-bootstrap", global_bootstrap_arguments(args, "check"))
-        render(verified)
-        if verified.returncode:
-            print("FAIL apply verification: global-bootstrap did not reach a current state")
+    if args.mode == "apply":
+        verified: list[CommandResult] = []
+        if "global-bootstrap" in selected:
+            verified.append(
+                run("global-bootstrap", global_bootstrap_arguments(args, "check"))
+            )
+        if "claude-review" in selected:
+            verified.append(
+                run(
+                    "claude-review",
+                    [sys.executable, str(CLAUDE_REVIEW), "--check-installed"],
+                )
+            )
+        for result in verified:
+            render(result)
+        if any(result.returncode for result in verified):
+            print("FAIL apply verification: a selected component did not reach current state")
             return 1
     return 0
 

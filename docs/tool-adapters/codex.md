@@ -673,6 +673,25 @@ The installer renders the user rule with the exact installed absolute path,
 refuses a different existing object, and requires the caller to name the
 expected digest before replacing an existing active rule. An identical-contract
 rerun securely validates and preserves the current receipt.
+The component's separate `--reconcile-installed` operation may replace a
+non-identical installation only when its canonical schema-v3 record,
+qualification, launcher, and rendered active rule resolve to one exact
+historical launcher/rule-template pair in the clean current repository's
+`HEAD` history. The plan binds the action to the predecessor record digest and
+requires an operator-selected fresh private activation-receipt path; neither
+value is inferred from ambient state. Unknown, manually modified, unsafe, or
+changed-during-operation objects remain fail-closed.
+
+An eligible reconciliation preserves the exact already-qualified selector
+identity and version in a successor qualification receipt bound to the new
+entry contract and refreshed forbidden-root evidence. Selector drift must
+complete the existing explicit qualification transition before replacement.
+The component compares again and atomically replaces the active rule, launcher,
+and combined record in that order; it does not claim multi-file atomicity. The
+old record remains the recovery anchor until the final replacement, so only
+the exact partial states produced by that order can resume. A verified current
+record retains the immediate predecessor and source provenance needed to
+recover activation-receipt publication after a post-commit receipt failure.
 Selector drift on a rerun is qualification-required and occurs before rule or
 activation-receipt mutation. Older installation schemas remain historical
 state; do not reinterpret or migrate them automatically. Supply every

@@ -244,24 +244,41 @@ projection implementation for it; unknown local objects remain unmanaged.
 `check-local` answers whether each component is current, drifted, skipped, or
 blocked. `plan-local` remains read-only but delegates to each component's own
 review surface. For `claude-review`, that surface identifies launcher, rule,
-entry-contract, or qualification evidence and renders an exact bounded
-qualification command when its compare-and-swap inputs are observable. For an
-active-rule-only correction, it renders the existing installer command template
-with every reconstructable contract input and a `REQUIRES` line for the fresh
-private activation-receipt path that only the operator can choose.
+entry-contract, rule, or qualification evidence. It renders an exact bounded
+qualification command when selector drift must be qualified first. Otherwise,
+it offers reconciliation only when the canonical schema-v3 record, launcher,
+active rule, and qualification resolve to an exact historical source pair in
+the clean current repository's `HEAD` history. Unknown, manually modified,
+unsafe, or unrecognized state is blocked rather than overwritten.
 
-Follow the operator flow: run `make plan-local`, perform the displayed
-component-owned action, rerun `make check-local`, then run `make apply-local`
-only if its selected components have an already-owned safe apply path. A
-non-identical installed launcher or entry record remains intentionally
-human-gated: the current installer refuses an overwrite, so the plan says so
-instead of inventing a force-reinstall command. `apply-local` invokes only
-components with an already-owned safe apply path, after first checking every
-selected component that lacks one. A drifted `claude-review` installation
-therefore blocks a combined apply before a later component can change state.
-Select just the file-backed component when that is the intended bounded
-operation:
+For an eligible predecessor, the plan prints the exact installed-record digest
+and requires a fresh, absent activation-receipt path in a private
+operator-controlled directory. Supply those operator-selected values explicitly:
 
 ```text
-python3 scripts/local_projections.py --mode apply --component global-bootstrap
+make apply-local \
+  CLAUDE_REVIEW_EXPECTED_RECORD_SHA256=<digest-from-plan> \
+  CLAUDE_REVIEW_ACTIVATION_RECEIPT=/absolute/private/path/activation.json
 ```
+
+The aggregate completes every selected component's read-only plan before any
+write, then invokes only the component-owned `--reconcile-installed` operation
+before applying later components. It does not reproduce launcher, rule,
+qualification, receipt, or predecessor semantics. `check-local` and
+`plan-local` remain read-only.
+
+Reconciliation preserves the already-qualified selector identity and recorded
+version in a successor qualification receipt bound to the current entry
+contract; selector drift must use the existing explicit qualification action
+first. The component compares each exact predecessor again and atomically
+replaces the active rule, launcher, and combined record in that order. It does
+not claim multi-file atomicity. Until the final record replacement, the old
+record remains the recovery anchor and only the order's exact predecessor or
+current object combinations can resume. If the projection commits but final
+activation-receipt publication fails, rerunning the same exact command may
+publish that receipt from the verified record's reconciliation provenance.
+
+The operator loop is `make check-local`, `make plan-local`, the displayed
+`make apply-local` command with explicit values, then `make check-local` again.
+No command in this workflow merges, releases, or reconciles an unrecognized
+workstation object.
