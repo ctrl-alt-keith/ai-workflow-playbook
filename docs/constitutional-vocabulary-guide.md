@@ -29,7 +29,8 @@ documentation consistently distinguish:
 
 The central rule is:
 
-> A Product owns the bounded domain question and contract meaning.
+> A Product owns the bounded domain question.
+> The [Semantic Contract Producer](#semantic-contract-producer) owns shared contract meaning.
 > An authorized human makes consequential decisions.
 > A Repository currently hosts, records, and implements accepted state.
 > A Capability, Subsystem, or runtime component performs work.

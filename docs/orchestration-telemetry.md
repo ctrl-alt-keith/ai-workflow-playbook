@@ -2,8 +2,8 @@
 
 ## Purpose
 
-Orchestration telemetry is lightweight local logging for AI-assisted workflow
-runs. It records operational events such as orchestrator reasoning, worker-lane
+Orchestration telemetry is lightweight operational logging for AI-assisted
+workflow runs. It records operational events such as orchestrator reasoning, worker-lane
 progression, source-verification transitions, overlap detection, reconciliation
 decisions, and final handoff notes.
 
@@ -68,9 +68,9 @@ Neither file is canonical workflow state. Preserve corrections by appending;
 freeze retained artifacts under new immutable identities rather than editing
 prior evidence.
 
-Optional telemetry does not introduce databases, ingestion daemons, telemetry
-agents, centralized orchestration frameworks, CI gates, automatic uploads, or
-cloud dependencies. Any required durable capture uses its existing owner and
+Do not introduce databases, ingestion daemons, telemetry agents, centralized
+orchestration frameworks, CI gates, automatic uploads, or cloud dependencies
+for optional telemetry. Any required durable capture uses its existing owner and
 authorized route; telemetry itself grants no retention or upload authority.
 
 ## Event Shape
@@ -135,9 +135,10 @@ useful. It is illustrative, not mandatory.
 ```text
 Optional local telemetry:
 - Apply `docs/orchestration-telemetry.md#local-shape` and its linked ownership
-  and evidence contracts before append-only capture. Keep adequate runtime logs with their
-  owner; otherwise use `[declared-tool-owned-run-location]` only when its owner
-  explicitly permits `events.jsonl` and `transcript.md` with a retention rule.
+  and evidence contracts before append-only capture. Keep adequate runtime logs
+  with their owner; otherwise use `[declared-tool-owned-run-location]` only when
+  its owner explicitly permits `events.jsonl` and `transcript.md` with a retention
+  rule.
 - Omit optional capture and report an unavailable owner/route; required evidence
   fails closed. Never fall back to workspace logs or the current directory.
 - Use `events.jsonl` for sparse JSONL events and `transcript.md` for compact

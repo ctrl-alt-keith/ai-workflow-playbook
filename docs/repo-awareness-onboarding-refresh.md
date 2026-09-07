@@ -168,8 +168,11 @@ Use this order:
 
 1. Before mutation, declare the target repository, intended setting change,
    operator or authorizing context when available, authoritative central-policy
-   ref, target repository governance ref, governing issue, permitted durable
-   evidence destination, and immutable evidence names. Apply
+   ref, target repository governance ref, natural durable evidence owner,
+   permitted destination, and immutable evidence names. Use the governing issue
+   when one exists; otherwise resolve an existing natural durable owner under
+   the owning storage contract, without creating an issue merely for storage.
+   Apply
    [governed-artifact capture](evidence-lifecycle.md#governed-artifact-capture)
    to confirm storage admission, privacy/retention, access, and exact-verification
    capability before mutation. Confirm that the operator is authorized to make
@@ -201,12 +204,15 @@ Use this order:
    or hide a finding in the completion receipt.
 
 The raw hosted-state response, complete audit JSON, and completion receipt are
-required issue-owned evidence of this bounded hosted change. Preserve them in
-the governing issue's permitted durable destination under the current workspace
-storage contract; they do not belong to the scanner's checkout, disposable
-scratch, or a workspace log directory. An automation performing this bounded
-audit does not change its issue ownership. Separate recurring report-only scans
-use their declared [automation-owned record location](maintenance-automations.md#authority-and-evidence-classes).
+required durable evidence of this bounded hosted change. When issue-owned,
+preserve them in that issue's permitted destination; otherwise use the existing
+natural durable owner resolved before mutation. The current workspace/storage
+contract must permit the selected route. Do not invent a destination or create
+an issue merely for storage. Running the scanner from a checkout does not make
+its evidence repository-owned; disposable scratch and workspace logs cannot
+serve as durable destinations. An automation performing an issue-bounded audit
+does not change its issue ownership. Separate recurring
+report-only scans use their declared [automation-owned record location](maintenance-automations.md#authority-and-evidence-classes).
 
 Create a new uniquely timestamped set with exclusive no-overwrite behavior;
 never replace or edit prior evidence. Apply the evidence lifecycle's
