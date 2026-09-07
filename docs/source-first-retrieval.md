@@ -34,8 +34,8 @@ Prefer evidence in this order when repository state is available:
 6. Prior-thread summaries.
 7. Agent-generated summaries, completion reports, or status claims.
 
-Summaries and reports from users, prior tasks, or agents are navigation only
-when the underlying artifact is inspectable. Verify it before review,
+Summaries and reports from users, prior tasks, or agents are navigation, not
+evidence. When the underlying artifact is inspectable, verify it before review,
 approval, critique, validation, merge/readiness/completion advice, or
 implementation judgment.
 
