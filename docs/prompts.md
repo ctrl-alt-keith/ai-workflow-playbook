@@ -487,6 +487,29 @@ Complete that profile before reporting preservation or providing an
 exact-identity handoff. Routine handoffs do not acquire material-prompt
 governance merely because Airtable carries them.
 
+### Current terminal presentation boundary
+
+This repository provides presentation instructions and routing-table tests,
+not a gate on the assistant's live final response. Correct routing and verified
+Airtable identity cannot guarantee the two-block presentation; an intermediate
+formatter cannot prevent later assistant rewriting.
+
+CAK-261 found **SOFT-ONLY ON CURRENT CHATGPT SURFACE**: the assistant constructs
+the final message, and the native client controls display/copy interaction.
+No exposed user-controlled intercept was found that rejects malformed final
+presentation before display or guarantees exactly two copyable blocks without
+surrounding prose. Hard enforcement requires an owned display/emission surface
+or equivalent provider/client interception.
+
+- [Plugins/widgets](https://developers.openai.com/plugins/build/chatgpt-ui)
+  render alongside the conversation without guaranteed suppression of
+  surrounding assistant text.
+- [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
+  constrain API data to a schema; hard presentation still requires an owned
+  display path after data validation.
+- The existing [Enforcement terminal emitter](https://github.com/ctrl-alt-keith/ai-workflow-enforcement/blob/02d63615c103dbcd4bcfacfe368e6fc8132223fa/enforcement/prompt_handoff_emission.py)
+  serves a separate Dropbox-to-terminal path, outside this ChatGPT failure path.
+
 ## Quick Navigation
 
 - [Task-Shape Surface Selection And Thin Handoffs](#task-shape-surface-selection-and-thin-handoffs)
