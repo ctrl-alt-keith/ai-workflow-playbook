@@ -93,10 +93,10 @@ candidates for later qualification on their actual execution surfaces.
 
 ### Codex Selector Routing And Acceptance
 
-For FRESH THREAD and CHILD TASK attempts, record the requested model, exact
-selector, runtime-reported effective model (or `unobservable`), and any
-substitution separately. API IDs are candidates, not Codex acceptance proof.
-Use only these exact mappings; reject aliases, near-matches, and guessed IDs.
+For FRESH THREAD and CHILD TASK, record the requested model, exact selector,
+runtime-reported effective model (or `unobservable`), and any permitted
+fallback or substitution separately. Use only these exact mappings; reject
+aliases, near-matches, and guessed IDs.
 
 | Requested model | Exact Codex selector |
 | --- | --- |
@@ -105,23 +105,13 @@ Use only these exact mappings; reject aliases, near-matches, and guessed IDs.
 | `GPT-5.6 Terra` | `gpt-5.6-terra` |
 | `GPT-5.6 Sol` | `gpt-5.6-sol` |
 
-For a FRESH THREAD or eligible CHILD TASK, pass the exact selector to the real
-task launch. That launch is the authoritative selector-acceptance event: if the
-runtime rejects the requested selector, fail closed before treating the task as
-started. Record any permitted fallback or substitution at that same launch
-boundary rather than in a separate probe. Advisory fallback remains
-orchestration-owned and explicit; exact-model requirements do not fall back.
+Pass the exact selector to the real task launch. Reject it before task start if
+the runtime does not accept it. Record any permitted fallback or substitution
+at that boundary; exact-model requirements do not fall back.
 
-Run `scripts/codex-preflight` only for its independent GitHub authentication and
-repository-reachability checks. It does not launch Codex, validate a selector,
-identify the running parent, or prove task-launch success. A sacrificial child
-probe can fail for parent execution-surface reasons that the requested selector
-did not cause, and its success does not establish that the real task launch will
-succeed or inherit the same outer approval state.
-
-For SAME THREAD, preserve the requested parent model and record the effective
-model as unobservable unless separate runtime-visible parent evidence exists.
-Reasoning effort is independent.
+`scripts/codex-preflight` checks independent local prerequisites only; it does
+not launch Codex or qualify selectors. For SAME THREAD, preserve the parent
+configuration and use runtime-visible effective-model evidence when available.
 
 ### Escalation And Delegation
 
@@ -145,17 +135,10 @@ work for other purposes.
 ### Thread Routing And Configuration Continuity
 
 Apply the shared `FRESH THREAD`, `SAME THREAD`, and `CHILD TASK` vocabulary in
-[`prompts.md`](../prompts.md#thread-routing-and-configuration-continuity). For
-a FRESH THREAD, select the task-appropriate model and effort using the matrix
-and provisional Astra guidance above, then pass its exact selector to the real
-task launch and apply the acceptance boundary above.
-For a SAME THREAD, preserve the requested parent model and effort by default:
-task-class sufficiency alone does not justify intentionally mutating an
-already-running configuration. Record the effective model and effort separately
-when the runtime exposes them, along with any fallback or substitution event.
-For a CHILD TASK, independently select the lowest-cost sufficient model and
-effort for that bounded child and retain the child evidence required by the
-governing workflow.
+[`prompts.md`](../prompts.md#thread-routing-and-configuration-continuity).
+Select model and effort using the matrix and selector contract above. For a
+CHILD TASK, independently choose the lowest-cost sufficient configuration and
+retain the evidence required by the governing workflow.
 
 When a SAME THREAD crosses a capability boundary, use a bounded child or an
 explicit fresh-thread transition rather than silently changing the parent.
