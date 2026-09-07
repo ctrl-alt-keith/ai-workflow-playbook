@@ -221,10 +221,23 @@ user intent, such as "make the change", "implement it", "open the PR",
 "commit this", or equivalent wording.
 
 In orchestration/prompt-authoring mode, do enough direct inspection to make the
-handoff usable without hidden assumptions. A prompt that asks another agent to
-act should include the repository, goal, relevant context, constraints,
-validation path, deliverable expectations, and any known blockers or
-uncertainty. The handoff must be complete, self-contained, and directly usable.
+handoff usable without hidden assumptions. A complete repository prompt carries
+the execution delta: the bounded action, repository and governing source,
+task-specific constraints, required result and stop boundary, and exact values
+or unresolved facts the receiver cannot safely recover. Stable startup,
+workflow, validation, and delivery rules remain binding through current
+canonical sources; rationale and history stay in the issue, PR, or docs.
+
+Self-contained means the receiver can execute that action using the prompt and
+its resolvable sources, without assembling prior prompts or conversation.
+Include a minimal startup/source route when the receiving context does not
+already supply it. Before delivery, remove copied material recoverable through
+that route; retain task-specific overrides and any exact identity, authority,
+safety, or acceptance detail whose omission would change or obscure execution.
+Retain needed context when the receiver cannot recover it; an unavailable
+required live source remains a blocker, not a reason to treat copied context
+as current verification.
+
 Do not produce partial prompts, continuation fragments, diffs, partial edits,
 or "change X to Y" pseudo-prompts unless the human explicitly requested that
 form.
@@ -234,7 +247,7 @@ review brief, automation prompt, or agent instruction, provide the full
 drop-in version by default. This remains true when the human asks how to "add",
 "incorporate", "fold in", or otherwise update something in an existing
 artifact. Do not assume the human will manually stitch prior context,
-conversation history, or earlier snippets into the final artifact. Use a delta,
+conversation history, or earlier snippets into the final artifact. Return a
 patch, diff, targeted edit, or terse "change X to Y" response only when the
 human explicitly asks for that form.
 
