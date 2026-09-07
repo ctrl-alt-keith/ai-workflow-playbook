@@ -76,9 +76,11 @@ make plan-local
 make apply-local
 ```
 
-`check-local` reports current, drifted, or blocked state. `plan-local` shows the
-next action; `apply-local` performs eligible updates without requiring copied
-arguments. Rerun `check-local` after apply. See the
+Run these targets in order when reconciling local projections: start with
+`check-local`, inspect the read-only `plan-local` output, and run
+`apply-local` only when you intend to perform the proposed updates. The apply
+step performs eligible updates without requiring copied arguments; rerun
+`check-local` afterward to verify the resulting state. See the
 [global-bootstrap distribution](distributions/global-bootstrap/README.md#unified-local-projection-workflow)
 for included components and boundaries.
 
