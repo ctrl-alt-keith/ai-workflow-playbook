@@ -449,53 +449,6 @@ def secure_operator_directory(path: Path) -> None:
         raise ValueError(f"directory is not exact operator-controlled state: {path}")
 
 
-def git_blob(commit: str, path: str) -> bytes:
-    """Read one exact historical repository blob without a checkout."""
-    result = subprocess.run(
-        ["git", "-C", str(ROOT), "show", f"{commit}:{path}"],
-        check=False,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    if result.returncode != 0:
-        raise ValueError("recorded installation source is unavailable from current HEAD history")
-    return result.stdout
-
-
-def recognized_predecessor_source(
-    launcher_sha256: str, rule_template_sha256: str
-) -> dict[str, object]:
-    """Resolve an installed source pair to exact reviewed bytes in HEAD history."""
-    commits = git(
-        "rev-list",
-        "HEAD",
-        "--",
-        "scripts/claude-review",
-        ".codex/rule-templates/claude-review.rules",
-    ).splitlines()
-    for commit in commits:
-        try:
-            launcher_bytes = git_blob(commit, "scripts/claude-review")
-            rule_template_bytes = git_blob(
-                commit, ".codex/rule-templates/claude-review.rules"
-            )
-        except ValueError:
-            continue
-        if (
-            digest(launcher_bytes) == launcher_sha256
-            and digest(rule_template_bytes) == rule_template_sha256
-        ):
-            return {
-                "commit": commit,
-                "launcher_bytes": launcher_bytes,
-                "rule_template_bytes": rule_template_bytes,
-            }
-    raise ValueError(
-        "installed launcher and rule identities are not an exact recognized predecessor in current HEAD history"
-    )
-
-
 def identity_without_containment(identity: dict[str, object]) -> dict[str, object]:
     return {
         key: value
@@ -576,7 +529,6 @@ class InstalledReconciliation:
     predecessor_record_bytes: bytes
     predecessor_launcher_bytes: bytes
     predecessor_rule_bytes: bytes
-    predecessor_source_commit: str
     current_launcher_bytes: bytes
     current_rule_bytes: bytes
     current_record: dict[str, object]
@@ -637,8 +589,8 @@ def validate_record_contract(
             "schema_version",
             "predecessor_entry_contract_id",
             "predecessor_receipt_sha256",
-            "predecessor_source_commit",
             "predecessor_launcher_sha256",
+            "predecessor_active_rule_sha256",
             "predecessor_rule_template_sha256",
             "source_repository",
             "source_commit",
@@ -653,15 +605,17 @@ def validate_record_contract(
         for field in (
             "predecessor_receipt_sha256",
             "predecessor_launcher_sha256",
+            "predecessor_active_rule_sha256",
             "predecessor_rule_template_sha256",
         ):
             value = reconciliation_provenance.get(field)
             if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None:
                 raise ValueError("installed reconciliation provenance has an invalid digest")
-        for field in ("predecessor_source_commit", "source_commit"):
-            value = reconciliation_provenance.get(field)
-            if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{40}", value) is None:
-                raise ValueError("installed reconciliation provenance has an invalid commit")
+        source_commit = reconciliation_provenance.get("source_commit")
+        if not isinstance(source_commit, str) or re.fullmatch(
+            r"[0-9a-f]{40}", source_commit
+        ) is None:
+            raise ValueError("installed reconciliation provenance has an invalid commit")
         if not Path(str(reconciliation_provenance.get("source_repository", ""))).is_absolute():
             raise ValueError("installed reconciliation provenance has an invalid source path")
         predecessor_entry_contract_id = reconciliation_provenance.get(
@@ -678,9 +632,9 @@ def validate_record_contract(
             raise ValueError("installed reconciliation provenance does not bind its predecessor")
     contract = record.get("entry_contract")
     if record.get("schema_version") != INSTALLATION_SCHEMA_VERSION:
-        raise ValueError("installed launcher schema is not a recognized predecessor")
+        raise ValueError("installed launcher schema is not supported managed state")
     if record.get("qualification_schema_version") != QUALIFICATION_SCHEMA_VERSION:
-        raise ValueError("installed qualification schema is not a recognized predecessor")
+        raise ValueError("installed qualification schema is not supported managed state")
     if not isinstance(contract, dict) or record.get("entry_contract_id") != entry_contract_identity(
         contract
     ):
@@ -710,7 +664,7 @@ def validate_record_contract(
         or contract.get("installation_directory") != str(install_root)
         or record.get("installed_launcher_sha256") != contract.get("launcher_sha256")
     ):
-        raise ValueError("installed record does not bind the exact predecessor entry")
+        raise ValueError("installed record does not bind its exact managed entry")
     for field in ("claude_selector", "active_rule_path", "forbidden_roots"):
         if record.get(field) != contract.get(field):
             raise ValueError(f"installed record diverges from its entry contract at {field}")
@@ -722,6 +676,22 @@ def validate_record_contract(
         value = contract.get(field)
         if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None:
             raise ValueError(f"entry contract has an invalid {field}")
+    for field in (
+        "installed_launcher_sha256",
+        "active_rule_sha256",
+        "producing_launcher_sha256",
+    ):
+        value = record.get(field)
+        if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None:
+            raise ValueError(f"installed record has an invalid {field}")
+    predecessor_receipt_sha256 = record.get("predecessor_receipt_sha256")
+    if predecessor_receipt_sha256 is not None and (
+        not isinstance(predecessor_receipt_sha256, str)
+        or re.fullmatch(r"[0-9a-f]{64}", predecessor_receipt_sha256) is None
+    ):
+        raise ValueError("installed record has an invalid predecessor receipt identity")
+    if record["producing_launcher_sha256"] != record["installed_launcher_sha256"]:
+        raise ValueError("installed record producer does not match its managed launcher")
     active_rule = Path(str(record.get("active_rule_path", "")))
     selector = Path(str(record.get("claude_selector", "")))
     forbidden_roots = record.get("forbidden_roots")
@@ -764,15 +734,6 @@ def prepare_installed_reconciliation() -> InstalledReconciliation:
         raise ValueError("installed combined record is malformed")
     contract = validate_record_contract(record, launcher=launcher, install_root=install_root)
     _, qualification, _ = validated_existing_qualification(record)
-    predecessor = recognized_predecessor_source(
-        str(contract["launcher_sha256"]), str(contract["rule_template_sha256"])
-    )
-    predecessor_launcher = bytes(predecessor["launcher_bytes"])
-    predecessor_rule = bytes(predecessor["rule_template_bytes"]).decode("utf-8").replace(
-        "__CLAUDE_REVIEW_LAUNCHER__", str(launcher)
-    ).encode("utf-8")
-    if record.get("active_rule_sha256") != digest(predecessor_rule):
-        raise ValueError("installed record does not bind the recognized predecessor rule")
     active_rule = Path(str(record["active_rule_path"]))
     secure_operator_directory(active_rule.parent)
     launcher_bytes = secure_regular_bytes(launcher, mode=0o500)
@@ -781,14 +742,16 @@ def prepare_installed_reconciliation() -> InstalledReconciliation:
     current_rule = RULE_TEMPLATE.read_text(encoding="utf-8").replace(
         "__CLAUDE_REVIEW_LAUNCHER__", str(launcher)
     ).encode("utf-8")
+    predecessor_launcher_sha256 = str(record["installed_launcher_sha256"])
+    predecessor_rule_sha256 = str(record["active_rule_sha256"])
     launcher_state = (
         "predecessor"
-        if launcher_bytes == predecessor_launcher
+        if digest(launcher_bytes) == predecessor_launcher_sha256
         else "current" if launcher_bytes == current_launcher else "unknown"
     )
     rule_state = (
         "predecessor"
-        if active_rule_bytes == predecessor_rule
+        if digest(active_rule_bytes) == predecessor_rule_sha256
         else "current" if active_rule_bytes == current_rule else "unknown"
     )
     if launcher_state == "unknown":
@@ -866,11 +829,9 @@ def prepare_installed_reconciliation() -> InstalledReconciliation:
             "schema_version": 1,
             "predecessor_entry_contract_id": record["entry_contract_id"],
             "predecessor_receipt_sha256": digest(record_bytes),
-            "predecessor_source_commit": predecessor["commit"],
-            "predecessor_launcher_sha256": digest(predecessor_launcher),
-            "predecessor_rule_template_sha256": digest(
-                bytes(predecessor["rule_template_bytes"])
-            ),
+            "predecessor_launcher_sha256": predecessor_launcher_sha256,
+            "predecessor_active_rule_sha256": predecessor_rule_sha256,
+            "predecessor_rule_template_sha256": contract["rule_template_sha256"],
             "source_repository": str(ROOT),
             "source_commit": source_commit,
             "source_remote": source_remote,
@@ -886,9 +847,8 @@ def prepare_installed_reconciliation() -> InstalledReconciliation:
         selector=selector,
         predecessor_record=record,
         predecessor_record_bytes=record_bytes,
-        predecessor_launcher_bytes=predecessor_launcher,
-        predecessor_rule_bytes=predecessor_rule,
-        predecessor_source_commit=str(predecessor["commit"]),
+        predecessor_launcher_bytes=launcher_bytes,
+        predecessor_rule_bytes=active_rule_bytes,
         current_launcher_bytes=current_launcher,
         current_rule_bytes=current_rule,
         current_record=current_record,
@@ -963,158 +923,8 @@ def current_projection_record() -> tuple[dict[str, object], bytes]:
     return record, record_bytes
 
 
-def activation_receipt_for_reconciliation(
-    reconciliation: InstalledReconciliation,
-    *,
-    launcher_result: str,
-    rule_result: str,
-    record_result: str,
-    recovery: bool,
-) -> dict[str, object]:
-    provenance = reconciliation.current_record["reconciliation_provenance"]
-    assert isinstance(provenance, dict)
-    return {
-        **reconciliation.current_record,
-        "kind": "claude_review_activation_receipt",
-        "source_commit": provenance["source_commit"],
-        "source_remote": provenance["source_remote"],
-        "source_provenance": {
-            "kind": "claude_review_source_provenance",
-            "schema_version": 1,
-            "entry_contract_id": reconciliation.current_record["entry_contract_id"],
-            "source_repository": provenance["source_repository"],
-            "source_remote": provenance["source_remote"],
-            "source_commit": provenance["source_commit"],
-            "source_launcher_path": str(
-                Path(str(provenance["source_repository"])) / "scripts" / "claude-review"
-            ),
-            "source_launcher_sha256": digest(reconciliation.current_launcher_bytes),
-            "source_rule_template_path": str(
-                Path(str(provenance["source_repository"]))
-                / ".codex"
-                / "rule-templates"
-                / "claude-review.rules"
-            ),
-            "source_rule_template_sha256": digest(RULE_TEMPLATE.read_bytes()),
-        },
-        "installation_manifest_path": str(reconciliation.record_path),
-        "installation_manifest_sha256": digest(reconciliation.current_record_bytes),
-        "launcher_result": launcher_result,
-        "manifest_result": record_result,
-        "active_rule_result": {"result": rule_result},
-        "qualification_receipt_path": str(reconciliation.record_path),
-        "qualification_receipt_sha256": digest(reconciliation.current_record_bytes),
-        "reconciliation_result": "verified",
-        "receipt_recovery": recovery,
-    }
-
-
-def default_reconciliation_activation_receipt(
-    reconciliation: InstalledReconciliation,
-) -> Path:
-    """Own one deterministic private evidence path for a reconciliation."""
-    provenance = reconciliation.current_record.get("reconciliation_provenance")
-    if not isinstance(provenance, dict):
-        raise ValueError("current reconciliation provenance is unavailable")
-    predecessor_sha256 = provenance.get("predecessor_receipt_sha256")
-    if (
-        not isinstance(predecessor_sha256, str)
-        or re.fullmatch(r"[0-9a-f]{64}", predecessor_sha256) is None
-    ):
-        raise ValueError("current reconciliation predecessor identity is unavailable")
-    current_sha256 = digest(reconciliation.current_record_bytes)
-    return (
-        reconciliation.install_root.parent
-        / "state"
-        / "ai-workflow-playbook"
-        / "claude-review"
-        / f"reconciliation-{predecessor_sha256}-to-{current_sha256}.json"
-    )
-
-
-def validate_activation_destination(path: Path, forbidden_roots: list[Path]) -> Path:
-    exact = path.parent.resolve(strict=False) / path.name
-    validate_destination(exact, forbidden_roots)
-    if exact.parent.exists():
-        secure_private_directory(exact.parent)
-    else:
-        validate_destination(exact.parent, forbidden_roots)
-        exact.parent.mkdir(parents=True, exist_ok=False, mode=0o700)
-        secure_private_directory(exact.parent)
-    return exact
-
-
-def validated_existing_reconciliation_receipt(
-    path: Path,
-    *,
-    current: dict[str, object],
-    current_bytes: bytes,
-    expected_predecessor_sha256: str,
-) -> dict[str, object]:
-    """Accept only the exact verified operation evidence for the current entry."""
-    payload = secure_regular_bytes(path, mode=0o600)
-    try:
-        receipt = json.loads(payload)
-    except json.JSONDecodeError as error:
-        raise ValueError("existing activation receipt is malformed") from error
-    provenance = current.get("reconciliation_provenance")
-    if not isinstance(receipt, dict) or not isinstance(provenance, dict):
-        raise ValueError("existing activation receipt is not reconciliation evidence")
-    required_fields = (set(current) - {"kind"}) | {
-        "kind",
-        "source_commit",
-        "source_remote",
-        "source_provenance",
-        "installation_manifest_path",
-        "installation_manifest_sha256",
-        "launcher_result",
-        "manifest_result",
-        "active_rule_result",
-        "qualification_receipt_path",
-        "qualification_receipt_sha256",
-        "reconciliation_result",
-        "receipt_recovery",
-    }
-    source_provenance = receipt.get("source_provenance")
-    if any(
-        receipt.get(key) != value for key, value in current.items() if key != "kind"
-    ) or (
-        canonical(receipt) != payload
-        or set(receipt) != required_fields
-        or receipt.get("kind") != "claude_review_activation_receipt"
-        or not isinstance(source_provenance, dict)
-        or source_provenance.get("entry_contract_id") != current["entry_contract_id"]
-        or source_provenance.get("source_commit") != provenance["source_commit"]
-        or source_provenance.get("source_remote") != provenance["source_remote"]
-        or source_provenance.get("source_launcher_sha256")
-        != current["installed_launcher_sha256"]
-        or source_provenance.get("source_rule_template_sha256")
-        != current["entry_contract"]["rule_template_sha256"]
-        or receipt.get("installation_manifest_path")
-        != str(production_install_root().resolve(strict=True) / ".claude-review.json")
-        or receipt.get("installation_manifest_sha256") != digest(current_bytes)
-        or receipt.get("qualification_receipt_sha256") != digest(current_bytes)
-        or receipt.get("reconciliation_result") != "verified"
-        or receipt.get("launcher_result") not in {"replaced", "existing_current"}
-        or receipt.get("manifest_result") not in {"replaced", "existing_current"}
-        or not isinstance(receipt.get("active_rule_result"), dict)
-        or receipt["active_rule_result"].get("result")
-        not in {"replaced", "existing_current"}
-        or not isinstance(receipt.get("receipt_recovery"), bool)
-        or provenance.get("predecessor_receipt_sha256") != expected_predecessor_sha256
-    ):
-        raise ValueError("existing activation receipt does not bind the verified reconciliation")
-    return receipt
-
-
-def reconcile_installed_projection(
-    *, activation_receipt: Path | None, expected_record_sha256: str | None
-) -> dict[str, object]:
-    """Apply or resume one exact component-owned installed reconciliation."""
-    if expected_record_sha256 is not None and re.fullmatch(
-        r"[0-9a-f]{64}", expected_record_sha256
-    ) is None:
-        raise ValueError("expected installed record identity is not a lowercase SHA-256")
+def reconcile_installed_projection() -> dict[str, object]:
+    """Apply or resume one exact component-owned managed projection update."""
     status = git("status", "--porcelain=v1", "--untracked-files=all")
     if status:
         raise RuntimeError("reviewed source repository must be completely clean before reconciliation")
@@ -1127,8 +937,6 @@ def reconcile_installed_projection(
         and not record_path.exists()
         and not record_path.is_symlink()
     ):
-        if activation_receipt is not None or expected_record_sha256 is not None:
-            raise ValueError("claude-review is not installed; reconciliation inputs are invalid")
         return {"kind": "claude_review_reconciliation", "result": "not_installed"}
     try:
         current, current_bytes = current_projection_record()
@@ -1138,77 +946,15 @@ def reconcile_installed_projection(
         current = None
         current_bytes = None
     if current is not None and current_bytes is not None:
-        predecessor = current.get("predecessor_receipt_sha256")
-        if activation_receipt is None and expected_record_sha256 is None:
-            provenance = current.get("reconciliation_provenance")
-            if not isinstance(provenance, dict):
-                return {
-                    "kind": "claude_review_reconciliation",
-                    "result": "existing_current",
-                    "installation_manifest_sha256": digest(current_bytes),
-                }
-            expected_record_sha256 = str(predecessor)
-            recovery = prepare_recovery_reconciliation(current, current_bytes)
-            activation_receipt = default_reconciliation_activation_receipt(recovery)
-        if activation_receipt is None or expected_record_sha256 is None:
-            raise ValueError(
-                "activation-receipt recovery requires both --expected-installed-record-sha256 "
-                "and --activation-receipt"
-            )
-        if predecessor != expected_record_sha256:
-            raise ValueError(
-                "current installation does not match the named predecessor receipt recovery"
-            )
-        provenance = current.get("reconciliation_provenance")
-        if not isinstance(provenance, dict) or provenance.get(
-            "predecessor_receipt_sha256"
-        ) != expected_record_sha256:
-            raise ValueError("current installation lacks exact reconciliation recovery evidence")
-        reconciliation = prepare_recovery_reconciliation(current, current_bytes)
-        roots = [Path(str(root)) for root in current["forbidden_roots"]]
-        receipt_path = validate_activation_destination(activation_receipt, roots)
-        if receipt_path.exists() or receipt_path.is_symlink():
-            receipt = validated_existing_reconciliation_receipt(
-                receipt_path,
-                current=current,
-                current_bytes=current_bytes,
-                expected_predecessor_sha256=expected_record_sha256,
-            )
-            return {
-                **receipt,
-                "activation_receipt_path": str(receipt_path),
-                "activation_receipt_result": "existing_verified",
-            }
-        receipt = activation_receipt_for_reconciliation(
-            reconciliation,
-            launcher_result="existing_current",
-            rule_result="existing_current",
-            record_result="existing_current",
-            recovery=True,
-        )
-        receipt_result = exclusive_or_identical(receipt_path, canonical(receipt), 0o600)
         return {
-            **receipt,
-            "activation_receipt_path": str(receipt_path),
-            "activation_receipt_result": receipt_result,
+            "kind": "claude_review_reconciliation",
+            "result": "existing_current",
+            "installation_manifest_sha256": digest(current_bytes),
         }
 
     reconciliation = prepare_installed_reconciliation()
     predecessor_sha256 = digest(reconciliation.predecessor_record_bytes)
-    if expected_record_sha256 is None and activation_receipt is None:
-        expected_record_sha256 = predecessor_sha256
-        activation_receipt = default_reconciliation_activation_receipt(reconciliation)
-    elif expected_record_sha256 is None or activation_receipt is None:
-        raise ValueError(
-            "an explicit reconciliation override requires both "
-            "--expected-installed-record-sha256 and --activation-receipt"
-        )
-    if expected_record_sha256 != predecessor_sha256:
-        raise ValueError("reconciliation request names a stale installed record")
     roots = [Path(str(root)) for root in reconciliation.current_record["forbidden_roots"]]
-    receipt_path = validate_activation_destination(activation_receipt, roots)
-    if receipt_path.exists() or receipt_path.is_symlink():
-        raise ValueError("activation receipt destination must be absent before reconciliation")
 
     launcher_result = "existing_current" if reconciliation.launcher_state == "current" else "pending"
     rule_result = "existing_current" if reconciliation.rule_state == "current" else "pending"
@@ -1259,50 +1005,15 @@ def reconcile_installed_projection(
     verified, verified_bytes = current_projection_record()
     if verified != reconciliation.current_record or verified_bytes != reconciliation.current_record_bytes:
         raise ValueError("complete reconciled projection did not verify")
-    receipt = activation_receipt_for_reconciliation(
-        reconciliation,
-        launcher_result=launcher_result,
-        rule_result=rule_result,
-        record_result=record_result,
-        recovery=False,
-    )
-    receipt_result = exclusive_or_identical(receipt_path, canonical(receipt), 0o600)
     return {
-        **receipt,
-        "activation_receipt_path": str(receipt_path),
-        "activation_receipt_result": receipt_result,
+        "kind": "claude_review_reconciliation",
+        "result": "verified",
+        "predecessor_manifest_sha256": predecessor_sha256,
+        "installation_manifest_sha256": digest(verified_bytes),
+        "active_rule_result": rule_result,
+        "launcher_result": launcher_result,
+        "manifest_result": record_result,
     }
-
-
-def prepare_recovery_reconciliation(
-    current: dict[str, object], current_bytes: bytes
-) -> InstalledReconciliation:
-    """Reconstruct deterministic receipt evidence after a verified post-update failure."""
-    provenance = current.get("reconciliation_provenance")
-    if not isinstance(provenance, dict):
-        raise ValueError("current installation lacks reconciliation provenance")
-    install_root = production_install_root().resolve(strict=True)
-    launcher = install_root / "claude-review"
-    active_rule = Path(str(current["active_rule_path"]))
-    return InstalledReconciliation(
-        install_root=install_root,
-        launcher=launcher,
-        record_path=install_root / ".claude-review.json",
-        active_rule=active_rule,
-        selector=Path(str(current["claude_selector"])),
-        predecessor_record={},
-        predecessor_record_bytes=b"",
-        predecessor_launcher_bytes=b"",
-        predecessor_rule_bytes=b"",
-        predecessor_source_commit=str(provenance["predecessor_source_commit"]),
-        current_launcher_bytes=SOURCE_LAUNCHER.read_bytes(),
-        current_rule_bytes=secure_regular_bytes(active_rule, mode=0o600),
-        current_record=current,
-        current_record_bytes=current_bytes,
-        current_selector_identity=dict(current["file_identity"]),
-        launcher_state="current",
-        rule_state="current",
-    )
 
 
 @dataclass(frozen=True)
@@ -1384,7 +1095,7 @@ def installed_projection_plan() -> InstalledProjectionPlan:
     except (OSError, ValueError, KeyError, TypeError, UnicodeDecodeError) as error:
         return InstalledProjectionPlan(
             "BLOCKED",
-            f"installed claude-review state is not an authorized predecessor: {error}",
+            f"installed claude-review state is not an internally consistent managed projection: {error}",
             (),
             ("manual component inspection is required; no aggregate apply is safe",),
         )
@@ -1414,11 +1125,8 @@ def installed_projection_plan() -> InstalledProjectionPlan:
             "--reconcile-installed",
         ]
     )
-    activation_receipt = default_reconciliation_activation_receipt(reconciliation)
     findings = (
-        "recognized predecessor source "
-        f"commit={reconciliation.predecessor_source_commit} "
-        f"record_sha256={record_sha256}",
+        f"managed predecessor record_sha256={record_sha256}",
         "installed object state "
         f"launcher={reconciliation.launcher_state} rule={reconciliation.rule_state}",
         "qualification will become a successor receipt bound to the current entry contract; "
@@ -1427,14 +1135,13 @@ def installed_projection_plan() -> InstalledProjectionPlan:
         "again and atomically replaced, while multi-file atomicity is not claimed",
     )
     requirements = (
-        f"the component will publish or exact-verify its immutable activation receipt at {activation_receipt}",
         "for aggregate apply, run make apply-local; no plan output needs to be parsed or copied",
         "run from this clean reviewed source checkout; the component verifies repository cleanliness before changing state",
         "if a partial failure occurs before the combined record changes, rerun this exact command; only predecessor/current object combinations produced by this order are accepted",
     )
     return InstalledProjectionPlan(
         "DRIFT",
-        f"claude-review has an exact recognized predecessor at {launcher}",
+        f"claude-review has an exact managed predecessor at {launcher}",
         findings,
         (),
         (command,),
@@ -1474,7 +1181,6 @@ def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--activation-receipt", type=Path)
     parser.add_argument("--expected-existing-rule-sha256")
-    parser.add_argument("--expected-installed-record-sha256")
     parser.add_argument("--forbidden-root", action="append", default=[], type=Path)
     return parser.parse_args(argv)
 
@@ -1488,7 +1194,6 @@ def main() -> int:
                 getattr(args, "active_rule", None),
                 args.activation_receipt,
                 args.expected_existing_rule_sha256,
-                getattr(args, "expected_installed_record_sha256", None),
                 args.forbidden_root,
             )
         ):
@@ -1510,23 +1215,17 @@ def main() -> int:
             (
                 args.claude_bin,
                 getattr(args, "active_rule", None),
+                args.activation_receipt,
                 args.expected_existing_rule_sha256,
                 args.forbidden_root,
             )
         ):
             raise ValueError(
-                "--reconcile-installed accepts only its expected record and activation receipt inputs"
+                "--reconcile-installed does not accept installation arguments"
             )
-        result = reconcile_installed_projection(
-            activation_receipt=args.activation_receipt,
-            expected_record_sha256=args.expected_installed_record_sha256,
-        )
+        result = reconcile_installed_projection()
         print(json.dumps(result, sort_keys=True))
         return 0
-    if getattr(args, "expected_installed_record_sha256", None) is not None:
-        raise ValueError(
-            "--expected-installed-record-sha256 is only valid with --reconcile-installed"
-        )
     if args.claude_bin is None or args.activation_receipt is None:
         raise ValueError(
             "--claude-bin and --activation-receipt are required for installation"

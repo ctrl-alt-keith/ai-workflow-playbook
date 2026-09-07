@@ -676,16 +676,13 @@ rerun securely validates and preserves the current receipt.
 The component's separate `--reconcile-installed` operation may replace a
 non-identical installation only when its canonical schema-v3 record,
 qualification, launcher, and rendered active rule resolve to one exact
-historical launcher/rule-template pair in the clean current repository's
-`HEAD` history. The plan exposes the predecessor record digest for review. A
-direct reconciliation freezes that exact record as its expected identity,
-compares it again before each replacement, and publishes the activation receipt
-at a deterministic private Playbook-owned state path shown by the plan. This
-keeps `make apply-local` a single explicit approval action without parsing or
-copying plan output. Unknown, manually modified, unsafe, or
-changed-during-operation objects remain fail-closed. Direct component callers
-may override the default only by supplying the expected digest and a fresh
-private receipt path together; partial overrides are blocked.
+managed state: each installed object must match its digest in the canonical
+combined record or the current reviewed source bytes in a resumable update
+state. The plan exposes the predecessor record digest for review. Direct
+reconciliation freezes that exact record and compares it again before each
+replacement. This keeps `make apply-local` a single explicit approval action
+without parsing or copying plan output. Unknown, manually modified, unsafe, or
+changed-during-operation objects remain fail-closed.
 
 An eligible reconciliation preserves the exact already-qualified selector
 identity and version in a successor qualification receipt bound to the new
@@ -694,15 +691,15 @@ complete the existing explicit qualification transition before replacement.
 The component compares again and atomically replaces the active rule, launcher,
 and combined record in that order; it does not claim multi-file atomicity. The
 old record remains the recovery anchor until the final replacement, so only
-the exact partial states produced by that order can resume. A verified current
-record retains the immediate predecessor and source provenance needed to
-recover activation-receipt publication after a post-commit receipt failure.
-Selector drift on a rerun is qualification-required and occurs before rule or
-activation-receipt mutation. Older installation schemas remain historical
+the exact partial states produced by that order can resume. The verified
+successor record retains the immediate predecessor and current source
+provenance; it is both the qualification receipt and durable reconciliation
+evidence. Selector drift on a rerun is qualification-required and occurs before
+rule mutation. Older installation schemas remain historical
 state; do not reinterpret or migrate them automatically. Supply every
 candidate, evidence, workspace, and attempt-scratch root as a forbidden root.
-The activation receipt is explicit operation evidence and does not become
-durable launcher state. Production auth preflight reports its bounded record on
+The initial-install activation receipt is explicit operation evidence and does
+not become durable launcher state. Production auth preflight reports its bounded record on
 standard error and does not accept a diagnostics-file destination. Governed
 review diagnostics remain inside the config's exact evidence directory. A
 diagnostics-path or config failure is reported on standard error without
