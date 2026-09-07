@@ -25,6 +25,8 @@ commit, or update SSH configuration. SSH checks use batch mode and strict host
 key checking so a missing `known_hosts` entry fails instead of being added by
 the preflight.
 
+It does not launch Codex or qualify model selectors.
+
 ## Usage
 
 At the start of a Codex automation prompt, add a short preflight step before
