@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import pwd
 import re
+import shlex
 import stat
 import subprocess
 import sys
@@ -439,6 +440,48 @@ class InstalledProjectionPlan:
     summary: str
     findings: tuple[str, ...]
     required_actions: tuple[str, ...]
+    commands: tuple[str, ...] = ()
+    requirements: tuple[str, ...] = ()
+
+
+def installer_reconciliation_template(
+    record: dict[str, object],
+    *,
+    active_rule_sha256: str,
+) -> tuple[str | None, tuple[str, ...]]:
+    """Render the existing installer contract without supplying operator-only state."""
+    selector = record.get("claude_selector")
+    active_rule = record.get("active_rule_path")
+    forbidden_roots = record.get("forbidden_roots")
+    if (
+        not isinstance(selector, str)
+        or not isinstance(active_rule, str)
+        or not isinstance(forbidden_roots, list)
+        or not all(isinstance(root, str) for root in forbidden_roots)
+        or not Path(selector).is_absolute()
+        or not Path(active_rule).is_absolute()
+        or not all(Path(root).is_absolute() for root in forbidden_roots)
+        or forbidden_roots[:1] != [str(ROOT)]
+    ):
+        return None, ()
+    command = [
+        str(Path(sys.executable).resolve()),
+        str(Path(__file__).resolve()),
+        "--claude-bin",
+        selector,
+        "--active-rule",
+        active_rule,
+        "--activation-receipt",
+        "REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH",
+        "--expected-existing-rule-sha256",
+        active_rule_sha256,
+    ]
+    for forbidden_root in forbidden_roots[1:]:
+        command.extend(("--forbidden-root", forbidden_root))
+    return shlex.join(command), (
+        "replace REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH with a fresh, absent path in a private operator-controlled directory; the installer creates the activation receipt there",
+        "run from this clean reviewed source checkout; the installer verifies repository cleanliness before changing state",
+    )
 
 
 def installed_projection_plan() -> InstalledProjectionPlan:
@@ -504,33 +547,40 @@ def installed_projection_plan() -> InstalledProjectionPlan:
 
     findings: list[str] = []
     actions: list[str] = []
+    commands: list[str] = []
+    requirements: list[str] = []
     source_launcher_sha256 = digest(SOURCE_LAUNCHER.read_bytes())
     source_rule_sha256 = digest(RULE_TEMPLATE.read_bytes())
-    if (
+    launcher_record_matches = not (
         record.get("installed_launcher_path") != str(launcher)
         or record.get("installation_directory") != str(install_root)
         or record.get("installed_launcher_sha256") != digest(launcher_bytes)
-    ):
+    )
+    if not launcher_record_matches:
         findings.append("installation record does not bind the production launcher")
         actions.append("manual component inspection is required before reconciliation")
+    source_replacement_required = False
     if digest(launcher_bytes) != source_launcher_sha256:
         findings.append(
             "launcher source and installed identities differ "
             f"(source sha256={source_launcher_sha256}, "
             f"installed sha256={digest(launcher_bytes)})"
         )
-        actions.append("reinstall through the component-owned installer is required")
+        source_replacement_required = True
     if record.get("installed_launcher_sha256") != source_launcher_sha256:
         findings.append(
             "installation record launcher identity differs from current reviewed source "
             f"(source sha256={source_launcher_sha256}, "
             f"recorded sha256={record.get('installed_launcher_sha256')})"
         )
-        actions.append("reinstall through the component-owned installer is required")
+        source_replacement_required = True
     contract = record.get("entry_contract")
+    contract_valid = isinstance(contract, dict) and entry_contract_identity(contract) == record.get(
+        "entry_contract_id"
+    )
+    contract_current = False
     if (
-        not isinstance(contract, dict)
-        or entry_contract_identity(contract) != record.get("entry_contract_id")
+        not contract_valid
     ):
         findings.append("entry-contract identity is invalid")
         actions.append("manual component inspection is required before reconciliation")
@@ -543,17 +593,34 @@ def installed_projection_plan() -> InstalledProjectionPlan:
         or contract.get("forbidden_roots") != record.get("forbidden_roots")
     ):
         findings.append("entry contract differs from current launcher, rule, or installation inputs")
-        actions.append("reinstall through the component-owned installer is required")
+        source_replacement_required = True
+    else:
+        contract_current = True
 
     try:
-        _, receipt, _ = validated_existing_qualification(record)
+        current_qualification, receipt, _ = validated_existing_qualification(record)
         selector = Path(str(record["claude_selector"]))
         forbidden = [Path(str(root)) for root in record["forbidden_roots"]]
-        if exact_executable_file_identity(selector, forbidden) != receipt["file_identity"]:
+        observed_identity = exact_executable_file_identity(selector, forbidden)
+        if observed_identity != receipt["file_identity"]:
             findings.append("configured Claude selector differs from the qualification record")
-            actions.append(
-                "requalify through the installed launcher's bounded qualification flow is required"
-            )
+            if launcher_record_matches and contract_valid:
+                commands.append(
+                    shlex.join(
+                        [
+                            str(launcher),
+                            "--qualify-claude-identity",
+                            "--expected-current-receipt-sha256",
+                            str(current_qualification["receipt_sha256"]),
+                            "--expected-observed-file-identity-sha256",
+                            digest(canonical(observed_identity)),
+                        ]
+                    )
+                )
+            else:
+                actions.append(
+                    "manual component inspection is required before qualification because the installed launcher is not bound to a valid entry contract"
+                )
     except (OSError, ValueError, KeyError, TypeError) as error:
         findings.append(f"qualification or receipt evidence is invalid: {error}")
         actions.append("manual component inspection is required before reconciliation")
@@ -563,18 +630,39 @@ def installed_projection_plan() -> InstalledProjectionPlan:
         expected_rule = RULE_TEMPLATE.read_text(encoding="utf-8").replace(
             "__CLAUDE_REVIEW_LAUNCHER__", str(launcher)
         ).encode("utf-8")
-        if secure_regular_bytes(active_rule, mode=0o600) != expected_rule:
+        active_rule_bytes = secure_regular_bytes(active_rule, mode=0o600)
+        if active_rule_bytes != expected_rule:
             findings.append(
                 f"active rule differs from the current reviewed template "
                 f"(template sha256={digest(expected_rule)})"
             )
-            actions.append("rerun the component-owned installer with its exact active-rule identity is required")
+            if launcher_record_matches and contract_current and not source_replacement_required:
+                command, command_requirements = installer_reconciliation_template(
+                    record,
+                    active_rule_sha256=digest(active_rule_bytes),
+                )
+                if command is None:
+                    actions.append(
+                        "manual component inspection is required because the installer inputs cannot be reconstructed from the entry contract"
+                    )
+                else:
+                    commands.append(command)
+                    requirements.extend(command_requirements)
+            else:
+                actions.append(
+                    "component replacement must be resolved before the active rule can be reconciled"
+                )
         if record.get("active_rule_sha256") != digest(expected_rule):
             findings.append("installation record does not bind the current active rule template")
-            actions.append("reinstall through the component-owned installer is required")
+            source_replacement_required = True
     except (OSError, ValueError, KeyError, TypeError) as error:
         findings.append(f"active rule cannot be safely verified: {error}")
         actions.append("manual component inspection is required before reconciliation")
+
+    if source_replacement_required:
+        actions.append(
+            "human-approved component replacement is required; the current installer intentionally refuses to overwrite a non-identical installed launcher or entry record"
+        )
 
     if findings:
         return InstalledProjectionPlan(
@@ -582,6 +670,8 @@ def installed_projection_plan() -> InstalledProjectionPlan:
             f"claude-review requires component-owned reconciliation at {launcher}",
             tuple(findings),
             tuple(dict.fromkeys(actions)),
+            tuple(dict.fromkeys(commands)),
+            tuple(dict.fromkeys(requirements)),
         )
     return InstalledProjectionPlan("PASS", f"claude-review is current at {launcher}", (), ())
 
@@ -598,6 +688,9 @@ def render_installed_projection_plan(plan: InstalledProjectionPlan) -> str:
         return f"{plan.state} {plan.summary}"
     lines = [f"{plan.state} claude-review: {plan.summary}"]
     lines.extend(f"FACT {finding}" for finding in plan.findings)
+    for command in plan.commands:
+        lines.extend(("RECONCILE run:", f"  {command}"))
+    lines.extend(f"REQUIRES {requirement}" for requirement in plan.requirements)
     lines.extend(f"RECONCILE {action}" for action in plan.required_actions)
     return "\n".join(lines)
 
