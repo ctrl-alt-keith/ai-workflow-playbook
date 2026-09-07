@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 import hashlib
 import json
 import os
 from pathlib import Path
 import pwd
 import re
+import shlex
 import stat
 import subprocess
 import sys
@@ -430,15 +432,281 @@ def replace_expected(path: Path, payload: bytes, expected_sha256: str | None) ->
     return {"result": "replaced" if prior else "created", "prior": prior}
 
 
+@dataclass(frozen=True)
+class InstalledProjectionPlan:
+    """Read-only status, evidence, and component-owned recovery guidance."""
+
+    state: str
+    summary: str
+    findings: tuple[str, ...]
+    required_actions: tuple[str, ...]
+    commands: tuple[str, ...] = ()
+    requirements: tuple[str, ...] = ()
+
+
+def installer_reconciliation_template(
+    record: dict[str, object],
+    *,
+    active_rule_sha256: str,
+) -> tuple[str | None, tuple[str, ...]]:
+    """Render the existing installer contract without supplying operator-only state."""
+    selector = record.get("claude_selector")
+    active_rule = record.get("active_rule_path")
+    forbidden_roots = record.get("forbidden_roots")
+    if (
+        not isinstance(selector, str)
+        or not isinstance(active_rule, str)
+        or not isinstance(forbidden_roots, list)
+        or not all(isinstance(root, str) for root in forbidden_roots)
+        or not Path(selector).is_absolute()
+        or not Path(active_rule).is_absolute()
+        or not all(Path(root).is_absolute() for root in forbidden_roots)
+        or forbidden_roots[:1] != [str(ROOT)]
+    ):
+        return None, ()
+    command = [
+        str(Path(sys.executable).resolve()),
+        str(Path(__file__).resolve()),
+        "--claude-bin",
+        selector,
+        "--active-rule",
+        active_rule,
+        "--activation-receipt",
+        "REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH",
+        "--expected-existing-rule-sha256",
+        active_rule_sha256,
+    ]
+    for forbidden_root in forbidden_roots[1:]:
+        command.extend(("--forbidden-root", forbidden_root))
+    return shlex.join(command), (
+        "replace REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH with a fresh, absent path in a private operator-controlled directory; the installer creates the activation receipt there",
+        "run from this clean reviewed source checkout; the installer verifies repository cleanliness before changing state",
+    )
+
+
+def installed_projection_plan() -> InstalledProjectionPlan:
+    """Inspect the production launcher projection without changing local state."""
+    install_root = production_install_root()
+    launcher = install_root / "claude-review"
+    record_path = install_root / ".claude-review.json"
+
+    if (
+        not launcher.exists()
+        and not launcher.is_symlink()
+        and not record_path.exists()
+        and not record_path.is_symlink()
+    ):
+        return InstalledProjectionPlan(
+            "SKIP",
+            f"claude-review is not installed at {install_root}",
+            (),
+            (),
+        )
+    if not launcher.exists() and not launcher.is_symlink():
+        return InstalledProjectionPlan(
+            "BLOCKED",
+            "installed claude-review launcher is missing",
+            (),
+            ("manual component inspection is required; no aggregate apply is safe",),
+        )
+    if not record_path.exists() and not record_path.is_symlink():
+        return InstalledProjectionPlan(
+            "BLOCKED",
+            "installed claude-review record is missing",
+            (),
+            ("manual component inspection is required; no aggregate apply is safe",),
+        )
+
+    try:
+        secure_install_directory(install_root)
+        launcher_bytes = secure_regular_bytes(launcher, mode=0o500)
+        record_bytes = secure_regular_bytes(record_path, mode=0o400)
+    except (OSError, ValueError) as error:
+        return InstalledProjectionPlan(
+            "BLOCKED",
+            f"installed claude-review objects are unsafe: {error}",
+            (),
+            ("manual component inspection is required; no aggregate apply is safe",),
+        )
+    try:
+        record = json.loads(record_bytes)
+    except json.JSONDecodeError as error:
+        return InstalledProjectionPlan(
+            "BLOCKED",
+            "installed claude-review record is malformed",
+            (),
+            ("manual component inspection is required; no aggregate apply is safe",),
+        )
+    if not isinstance(record, dict):
+        return InstalledProjectionPlan(
+            "BLOCKED",
+            "installed claude-review record is malformed",
+            (),
+            ("manual component inspection is required; no aggregate apply is safe",),
+        )
+
+    findings: list[str] = []
+    actions: list[str] = []
+    commands: list[str] = []
+    requirements: list[str] = []
+    source_launcher_sha256 = digest(SOURCE_LAUNCHER.read_bytes())
+    source_rule_sha256 = digest(RULE_TEMPLATE.read_bytes())
+    launcher_record_matches = not (
+        record.get("installed_launcher_path") != str(launcher)
+        or record.get("installation_directory") != str(install_root)
+        or record.get("installed_launcher_sha256") != digest(launcher_bytes)
+    )
+    if not launcher_record_matches:
+        findings.append("installation record does not bind the production launcher")
+        actions.append("manual component inspection is required before reconciliation")
+    source_replacement_required = False
+    if digest(launcher_bytes) != source_launcher_sha256:
+        findings.append(
+            "launcher source and installed identities differ "
+            f"(source sha256={source_launcher_sha256}, "
+            f"installed sha256={digest(launcher_bytes)})"
+        )
+        source_replacement_required = True
+    if record.get("installed_launcher_sha256") != source_launcher_sha256:
+        findings.append(
+            "installation record launcher identity differs from current reviewed source "
+            f"(source sha256={source_launcher_sha256}, "
+            f"recorded sha256={record.get('installed_launcher_sha256')})"
+        )
+        source_replacement_required = True
+    contract = record.get("entry_contract")
+    contract_valid = isinstance(contract, dict) and entry_contract_identity(contract) == record.get(
+        "entry_contract_id"
+    )
+    contract_current = False
+    if (
+        not contract_valid
+    ):
+        findings.append("entry-contract identity is invalid")
+        actions.append("manual component inspection is required before reconciliation")
+    elif (
+        contract.get("launcher_sha256") != source_launcher_sha256
+        or contract.get("rule_template_sha256") != source_rule_sha256
+        or contract.get("installation_directory") != str(install_root)
+        or contract.get("claude_selector") != record.get("claude_selector")
+        or contract.get("active_rule_path") != record.get("active_rule_path")
+        or contract.get("forbidden_roots") != record.get("forbidden_roots")
+    ):
+        findings.append("entry contract differs from current launcher, rule, or installation inputs")
+        source_replacement_required = True
+    else:
+        contract_current = True
+
+    try:
+        current_qualification, receipt, _ = validated_existing_qualification(record)
+        selector = Path(str(record["claude_selector"]))
+        forbidden = [Path(str(root)) for root in record["forbidden_roots"]]
+        observed_identity = exact_executable_file_identity(selector, forbidden)
+        if observed_identity != receipt["file_identity"]:
+            findings.append("configured Claude selector differs from the qualification record")
+            if launcher_record_matches and contract_valid:
+                commands.append(
+                    shlex.join(
+                        [
+                            str(launcher),
+                            "--qualify-claude-identity",
+                            "--expected-current-receipt-sha256",
+                            str(current_qualification["receipt_sha256"]),
+                            "--expected-observed-file-identity-sha256",
+                            digest(canonical(observed_identity)),
+                        ]
+                    )
+                )
+            else:
+                actions.append(
+                    "manual component inspection is required before qualification because the installed launcher is not bound to a valid entry contract"
+                )
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        findings.append(f"qualification or receipt evidence is invalid: {error}")
+        actions.append("manual component inspection is required before reconciliation")
+
+    try:
+        active_rule = Path(str(record["active_rule_path"]))
+        expected_rule = RULE_TEMPLATE.read_text(encoding="utf-8").replace(
+            "__CLAUDE_REVIEW_LAUNCHER__", str(launcher)
+        ).encode("utf-8")
+        active_rule_bytes = secure_regular_bytes(active_rule, mode=0o600)
+        if active_rule_bytes != expected_rule:
+            findings.append(
+                f"active rule differs from the current reviewed template "
+                f"(template sha256={digest(expected_rule)})"
+            )
+            if launcher_record_matches and contract_current and not source_replacement_required:
+                command, command_requirements = installer_reconciliation_template(
+                    record,
+                    active_rule_sha256=digest(active_rule_bytes),
+                )
+                if command is None:
+                    actions.append(
+                        "manual component inspection is required because the installer inputs cannot be reconstructed from the entry contract"
+                    )
+                else:
+                    commands.append(command)
+                    requirements.extend(command_requirements)
+            else:
+                actions.append(
+                    "component replacement must be resolved before the active rule can be reconciled"
+                )
+        if record.get("active_rule_sha256") != digest(expected_rule):
+            findings.append("installation record does not bind the current active rule template")
+            source_replacement_required = True
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        findings.append(f"active rule cannot be safely verified: {error}")
+        actions.append("manual component inspection is required before reconciliation")
+
+    if source_replacement_required:
+        actions.append(
+            "human-approved component replacement is required; the current installer intentionally refuses to overwrite a non-identical installed launcher or entry record"
+        )
+
+    if findings:
+        return InstalledProjectionPlan(
+            "DRIFT",
+            f"claude-review requires component-owned reconciliation at {launcher}",
+            tuple(findings),
+            tuple(dict.fromkeys(actions)),
+            tuple(dict.fromkeys(commands)),
+            tuple(dict.fromkeys(requirements)),
+        )
+    return InstalledProjectionPlan("PASS", f"claude-review is current at {launcher}", (), ())
+
+
+def check_installed_projection() -> tuple[str, str]:
+    """Return the concise status surface used by aggregate apply preflight."""
+    plan = installed_projection_plan()
+    return plan.state, plan.summary
+
+
+def render_installed_projection_plan(plan: InstalledProjectionPlan) -> str:
+    """Render only the component-owned facts and bounded next actions."""
+    if plan.state in {"PASS", "SKIP"}:
+        return f"{plan.state} {plan.summary}"
+    lines = [f"{plan.state} claude-review: {plan.summary}"]
+    lines.extend(f"FACT {finding}" for finding in plan.findings)
+    for command in plan.commands:
+        lines.extend(("RECONCILE run:", f"  {command}"))
+    lines.extend(f"REQUIRES {requirement}" for requirement in plan.requirements)
+    lines.extend(f"RECONCILE {action}" for action in plan.required_actions)
+    return "\n".join(lines)
+
+
 def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--claude-bin", required=True, type=Path)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--check-installed", action="store_true")
+    group.add_argument("--plan-installed", action="store_true")
+    parser.add_argument("--claude-bin", type=Path)
     parser.add_argument(
         "--active-rule",
         type=Path,
         default=production_active_rule(),
     )
-    parser.add_argument("--activation-receipt", required=True, type=Path)
+    parser.add_argument("--activation-receipt", type=Path)
     parser.add_argument("--expected-existing-rule-sha256")
     parser.add_argument("--forbidden-root", action="append", default=[], type=Path)
     return parser.parse_args(argv)
@@ -446,6 +714,32 @@ def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main() -> int:
     args = parse_arguments()
+    if getattr(args, "check_installed", False) or getattr(args, "plan_installed", False):
+        if any(
+            (
+                args.claude_bin,
+                args.activation_receipt,
+                args.expected_existing_rule_sha256,
+                args.forbidden_root,
+            )
+        ):
+            raise ValueError(
+                "--check-installed and --plan-installed do not accept installation arguments"
+            )
+        try:
+            plan = installed_projection_plan()
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            print(f"BLOCKED claude-review: {error}")
+            return 1
+        if getattr(args, "plan_installed", False):
+            print(render_installed_projection_plan(plan))
+            return 1 if plan.state == "BLOCKED" else 0
+        print(f"{plan.state} claude-review: {plan.summary}")
+        return 0 if plan.state in {"PASS", "SKIP"} else 1
+    if args.claude_bin is None or args.activation_receipt is None:
+        raise ValueError(
+            "--claude-bin and --activation-receipt are required for installation"
+        )
     args.install_root = production_install_root().resolve(strict=False)
     args.active_rule = args.active_rule.parent.resolve(strict=False) / args.active_rule.name
     args.activation_receipt = (

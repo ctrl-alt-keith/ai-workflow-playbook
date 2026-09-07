@@ -168,14 +168,21 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         )
         return completed, diagnostics
 
-    def run_installer(self, root: Path, selector: Path, activation_name: str, commit: str):
+    def run_installer(
+        self,
+        root: Path,
+        selector: Path,
+        activation_name: str,
+        commit: str,
+        forbidden_roots: list[Path] | None = None,
+    ):
         activation_receipt = root / "activation" / activation_name
         arguments = SimpleNamespace(
             claude_bin=selector,
             active_rule=root / "active.rules",
             activation_receipt=activation_receipt,
             expected_existing_rule_sha256=None,
-            forbidden_root=[],
+            forbidden_root=forbidden_roots or [],
         )
 
         def fake_git(*git_arguments):
@@ -248,6 +255,147 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                     self.installer.production_install_root(),
                     account_home / ".local" / "bin",
                 )
+
+    def test_installed_projection_check_verifies_the_real_installation_contract_read_only(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            selector, _ = self.create_installer_targets(root)
+            installed, _ = self.run_installer(root, selector, "activation.json", "1" * 40)
+            install_root = Path(installed["installation_directory"])
+            before = {
+                path: path.read_bytes()
+                for path in (install_root / "claude-review", install_root / ".claude-review.json")
+            }
+
+            with mock.patch.object(self.installer, "production_install_root", return_value=install_root):
+                state, detail = self.installer.check_installed_projection()
+
+            self.assertEqual(state, "PASS")
+            self.assertIn("claude-review", detail)
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_installed_projection_plan_is_read_only_for_current_and_drifted_launcher(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            selector, _ = self.create_installer_targets(root)
+            installed, _ = self.run_installer(root, selector, "activation.json", "1" * 40)
+            install_root = Path(installed["installation_directory"])
+            launcher = install_root / "claude-review"
+
+            arguments = SimpleNamespace(
+                check_installed=False,
+                plan_installed=True,
+                claude_bin=None,
+                activation_receipt=None,
+                expected_existing_rule_sha256=None,
+                forbidden_root=[],
+            )
+            current_output = io.StringIO()
+            with mock.patch.object(self.installer, "parse_arguments", return_value=arguments), mock.patch.object(
+                self.installer, "production_install_root", return_value=install_root
+            ), contextlib.redirect_stdout(current_output):
+                self.assertEqual(self.installer.main(), 0)
+            self.assertIn("PASS claude-review", current_output.getvalue())
+
+            launcher.chmod(0o700)
+            launcher.write_bytes(b"#!/usr/bin/env python3\nprint('drift')\n")
+            launcher.chmod(0o500)
+            before = launcher.read_bytes()
+            drifted_output = io.StringIO()
+            with mock.patch.object(self.installer, "parse_arguments", return_value=arguments), mock.patch.object(
+                self.installer, "production_install_root", return_value=install_root
+            ), contextlib.redirect_stdout(drifted_output):
+                self.assertEqual(self.installer.main(), 0)
+
+            self.assertIn("DRIFT claude-review", drifted_output.getvalue())
+            self.assertIn("launcher source and installed identities differ", drifted_output.getvalue())
+            self.assertIn("human-approved component replacement", drifted_output.getvalue())
+            self.assertEqual(before, launcher.read_bytes())
+
+    def test_installed_projection_plan_renders_exact_rule_reconciliation_template_read_only(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            selector, _ = self.create_installer_targets(root)
+            additional_forbidden_root = root / "additional-forbidden-root"
+            additional_forbidden_root.mkdir()
+            installed, _ = self.run_installer(
+                root,
+                selector,
+                "activation.json",
+                "1" * 40,
+                [additional_forbidden_root],
+            )
+            install_root = Path(installed["installation_directory"])
+            launcher = install_root / "claude-review"
+            active_rule = root / "active.rules"
+            active_rule.write_text("drifted active rule\n", encoding="utf-8")
+            active_rule.chmod(0o600)
+            before = {
+                path: path.read_bytes()
+                for path in (launcher, install_root / ".claude-review.json", active_rule)
+            }
+            arguments = SimpleNamespace(
+                check_installed=False,
+                plan_installed=True,
+                claude_bin=None,
+                activation_receipt=None,
+                expected_existing_rule_sha256=None,
+                forbidden_root=[],
+            )
+            output = io.StringIO()
+            with mock.patch.object(self.installer, "parse_arguments", return_value=arguments), mock.patch.object(
+                self.installer, "production_install_root", return_value=install_root
+            ), contextlib.redirect_stdout(output):
+                self.assertEqual(self.installer.main(), 0)
+
+            rendered = output.getvalue()
+            self.assertIn("RECONCILE run:", rendered)
+            self.assertIn(f"--claude-bin {selector}", rendered)
+            self.assertIn(f"--active-rule {active_rule}", rendered)
+            self.assertIn("--expected-existing-rule-sha256", rendered)
+            self.assertIn(self.installer.digest(before[active_rule]), rendered)
+            self.assertIn(f"--forbidden-root {additional_forbidden_root}", rendered)
+            self.assertIn("REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH", rendered)
+            self.assertIn("REQUIRES replace REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH", rendered)
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_installed_projection_plan_renders_exact_qualification_command_read_only(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            selector, targets = self.create_installer_targets(root)
+            installed, _ = self.run_installer(root, selector, "activation.json", "1" * 40)
+            install_root = Path(installed["installation_directory"])
+            record_path = install_root / ".claude-review.json"
+            before = record_path.read_bytes()
+            selector.unlink()
+            selector.symlink_to(targets[1])
+            arguments = SimpleNamespace(
+                check_installed=False,
+                plan_installed=True,
+                claude_bin=None,
+                activation_receipt=None,
+                expected_existing_rule_sha256=None,
+                forbidden_root=[],
+            )
+            output = io.StringIO()
+            with mock.patch.object(self.installer, "parse_arguments", return_value=arguments), mock.patch.object(
+                self.installer, "production_install_root", return_value=install_root
+            ), contextlib.redirect_stdout(output):
+                self.assertEqual(self.installer.main(), 0)
+
+            rendered = output.getvalue()
+            record = json.loads(before)
+            observed = self.installer.exact_executable_file_identity(selector, [ROOT])
+            self.assertIn("RECONCILE run:", rendered)
+            self.assertIn("--qualify-claude-identity", rendered)
+            self.assertIn(
+                record["qualification_receipt_sha256"]
+                if "qualification_receipt_sha256" in record
+                else self.installer.digest(before),
+                rendered,
+            )
+            self.assertIn(self.installer.digest(self.installer.canonical(observed)), rendered)
+            self.assertEqual(before, record_path.read_bytes())
 
     def test_rule_template_binds_only_one_exact_absolute_launcher(self):
         template = CODEX_RULE_TEMPLATE.read_text(encoding="utf-8")
