@@ -673,32 +673,24 @@ The installer renders the user rule with the exact installed absolute path,
 refuses a different existing object, and requires the caller to name the
 expected digest before replacing an existing active rule. An identical-contract
 rerun securely validates and preserves the current receipt.
-The component's separate `--reconcile-installed` operation may replace a
-non-identical installation only when its canonical schema-v3 record,
-qualification, launcher, and rendered active rule resolve to one exact
-managed state: each installed object must match its digest in the canonical
-combined record or the current reviewed source bytes in a resumable update
-state. The plan reports eligibility and the single `make apply-local` action;
-the digest remains internal. Direct reconciliation freezes the exact record and
-compares it again before each replacement. This keeps `make apply-local` a
-single explicit approval action without parsing or copying plan output.
-Unknown, manually modified, unsafe, or
-changed-during-operation objects remain fail-closed.
+The component's `--reconcile-installed` authority is the canonical schema-v3
+managed record itself, not a repository-history lookup or historical `HEAD`.
+A fully self-consistent record is intentionally sufficient when its launcher,
+active rule, selector qualification, absolute paths, ownership, modes, and
+digests agree exactly. Each installed object must match its recorded digest or
+the current reviewed source in a recognized resumable partial state. This also
+means a coordinated local rewrite that produces a fully self-consistent valid
+record is accepted by design; the record is the local authority boundary, not
+an authenticity claim about its history.
 
-An eligible reconciliation preserves the exact already-qualified selector
-identity and version in a successor qualification receipt bound to the new
-entry contract and refreshed forbidden-root evidence. Selector drift must
-complete the existing explicit qualification transition before replacement.
-The component compares again and atomically replaces the active rule, launcher,
-and combined record in that order; it does not claim multi-file atomicity. The
-old record remains the recovery anchor until the final replacement, so only
-the exact partial states produced by that order can resume. The verified
-successor record retains the immediate predecessor and current source
-provenance; it is both the qualification receipt and durable reconciliation
-evidence. Selector drift on a rerun is qualification-required and occurs before
-rule mutation. Older installation schemas remain historical
-state; do not reinterpret or migrate them automatically. Supply every
-candidate, evidence, workspace, and attempt-scratch root as a forbidden root.
+Reconciliation targets the current clean reviewed source, preserves the
+qualified selector identity and version, and compare-and-swap checks the record
+and affected objects at every mutation seam. It replaces the active rule,
+launcher, and combined record in that order so interrupted states can resume.
+Inconsistent records, unsafe paths or metadata, selector drift, impossible
+partial states, and changes during mutation fail closed. Older schemas are not
+silently migrated. Supply every candidate, evidence, workspace, and
+attempt-scratch root as a forbidden root.
 The initial-install activation receipt is explicit operation evidence and does
 not become durable launcher state. Production auth preflight reports its bounded record on
 standard error and does not accept a diagnostics-file destination. Governed

@@ -232,59 +232,11 @@ make plan-local
 make apply-local
 ```
 
-The aggregate is orchestration only. It delegates global instruction-file
-inspection and reconciliation to `check_global_bootstrap.py`, and delegates the
-governed `claude-review` launcher, current qualification record, and active
-Codex rule to `install-claude-review --check-installed` or its separate
-`--plan-installed` review surface.
-It does not manage arbitrary content under provider homes. `codex-safe-rm` is
-not included because current Playbook source has no active component-owned
-projection implementation for it; unknown local objects remain unmanaged.
+`check-local` reports current, drifted, skipped, or blocked state. `plan-local`
+is read-only and prints the exact next action; no output needs to be parsed or
+copied. If apply is interrupted, rerun the same command. Finish with
+`make check-local`.
 
-`check-local` answers whether each component is current, drifted, skipped, or
-blocked. `plan-local` remains read-only but delegates to each component's own
-review surface. For `claude-review`, that surface identifies launcher, rule,
-entry-contract, rule, or qualification evidence. It renders an exact bounded
-qualification command when selector drift must be qualified first. Otherwise,
-it offers reconciliation only when the canonical schema-v3 record, launcher,
-active rule, and qualification are internally consistent: each installed object
-must match either its exact digest in the managed record or the current reviewed
-source bytes in a resumable update state. Unknown, manually modified, unsafe,
-or unrecognized state is blocked rather than overwritten.
-
-For an eligible managed installation, the plan reports whether its state is
-internally consistent and presents one action. The aggregate carries the exact
-verified state into component apply directly:
-
-```text
-make apply-local
-```
-
-No plan output is an input to parse or copy. The component freezes the exact
-managed record and compares it again before every replacement. The invocation
-of `apply-local` is the operator's explicit approval boundary. The successor
-combined record contains the new entry contract, preserved qualification,
-immediate predecessor digest, and current source provenance; there is no
-separate reconciliation receipt or destination.
-
-The aggregate completes every selected component's read-only plan before any
-write, then invokes only the component-owned `--reconcile-installed` operation
-before applying later components. It does not reproduce launcher, rule,
-qualification, receipt, or predecessor semantics. `check-local` and
-`plan-local` remain read-only.
-
-Reconciliation preserves the already-qualified selector identity and recorded
-version in a successor qualification receipt bound to the current entry
-contract; selector drift must use the existing explicit qualification action
-first. The component compares each exact predecessor again and atomically
-replaces the active rule, launcher, and combined record in that order. It does
-not claim multi-file atomicity. Until the final record replacement, the old
-record remains the recovery anchor and only the order's exact predecessor or
-current object combinations can resume. If the projection commits but final
-record verification is interrupted, rerunning the same command verifies the
-current projection from that record.
-
-The operator loop is `make check-local`, `make plan-local`, `make apply-local`,
-then `make check-local` again.
-No command in this workflow merges, releases, or reconciles an unrecognized
-workstation object.
+The aggregate updates only Playbook-owned projections and blocks unrecognized
+or unsafe state. The canonical `claude-review` reconciliation contract is in
+[`docs/tool-adapters/codex.md`](../../docs/tool-adapters/codex.md#qualified-direct-claude-code-path).

@@ -721,7 +721,7 @@ def validate_record_contract(
 
 
 def prepare_installed_reconciliation() -> InstalledReconciliation:
-    """Freeze and validate one exact predecessor or resumable partial state."""
+    """Freeze one self-consistent managed record or its resumable partial state."""
     install_root = production_install_root().resolve(strict=True)
     secure_install_directory(install_root)
     launcher = install_root / "claude-review"
@@ -1117,20 +1117,13 @@ def installed_projection_plan() -> InstalledProjectionPlan:
             ("use a clean reviewed source checkout before reconciliation",),
         )
 
-    findings = (
-        "managed launcher, rule, and qualification state are internally consistent",
-        "the already-qualified Claude selector identity and version will be preserved",
-    )
-    requirements = (
-        "if apply is interrupted, rerun the same command; the managed record anchors recovery",
-    )
     return InstalledProjectionPlan(
         "DRIFT",
-        f"claude-review has an exact managed predecessor at {launcher}",
-        findings,
+        "managed state is internally consistent",
+        (),
         (),
         ("make apply-local",),
-        requirements,
+        ("rerun the same command if interrupted",),
     )
 
 
@@ -1141,15 +1134,16 @@ def check_installed_projection() -> tuple[str, str]:
 
 
 def render_installed_projection_plan(plan: InstalledProjectionPlan) -> str:
-    """Render only the component-owned facts and bounded next actions."""
-    if plan.state in {"PASS", "SKIP"}:
-        return f"{plan.state} {plan.summary}"
-    lines = [f"{plan.state} claude-review: {plan.summary}"]
-    lines.extend(f"FACT {finding}" for finding in plan.findings)
+    """Render status, one useful reason, the next action, and recovery."""
+    lines = [f"{plan.state} claude-review"]
+    if plan.state in {"BLOCKED", "SKIP"} or plan.findings:
+        reason = plan.findings[0] if plan.findings else plan.summary
+        lines.append(f"WHY {reason}")
     for command in plan.commands:
         lines.extend(("APPLY run:", f"  {command}"))
     lines.extend(f"REQUIRES {requirement}" for requirement in plan.requirements)
-    lines.extend(f"RECONCILE {action}" for action in plan.required_actions)
+    if not plan.commands:
+        lines.extend(f"NEXT {action}" for action in plan.required_actions)
     return "\n".join(lines)
 
 
@@ -1193,7 +1187,7 @@ def main() -> int:
         if getattr(args, "plan_installed", False):
             print(render_installed_projection_plan(plan))
             return 1 if plan.state == "BLOCKED" else 0
-        print(f"{plan.state} claude-review: {plan.summary}")
+        print(render_installed_projection_plan(plan))
         return 0 if plan.state in {"PASS", "SKIP"} else 1
     if getattr(args, "reconcile_installed", False):
         if any(

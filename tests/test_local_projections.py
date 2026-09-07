@@ -131,9 +131,10 @@ class LocalProjectionTests(unittest.TestCase):
         applied = module.CommandResult("claude-review", 0, "{\"result\":\"verified\"}\n")
         verified = module.CommandResult("claude-review", 0, "PASS claude-review: fixture\n")
 
+        output = io.StringIO()
         with mock.patch.object(module, "parse_args", return_value=arguments), mock.patch.object(
             module, "run", side_effect=(planned, applied, verified)
-        ) as run:
+        ) as run, contextlib.redirect_stdout(output):
             self.assertEqual(module.main(), 0)
 
         self.assertEqual(run.call_count, 3)
@@ -143,6 +144,9 @@ class LocalProjectionTests(unittest.TestCase):
             [sys.executable, str(module.CLAUDE_REVIEW), "--reconcile-installed"],
         )
         self.assertNotIn(str(module.GLOBAL_BOOTSTRAP), apply_arguments)
+        self.assertNotIn("DRIFT claude-review: fixture", output.getvalue())
+        self.assertNotIn('{"result":"verified"}', output.getvalue())
+        self.assertIn("APPLY claude-review: complete", output.getvalue())
 
     def test_apply_does_not_mutate_later_components_after_claude_review_failure(self) -> None:
         module = load_module()

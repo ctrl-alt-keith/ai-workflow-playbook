@@ -448,7 +448,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             self.assertEqual(result["result"], "not_installed")
             self.assertFalse(install_root.exists())
 
-    def test_exact_managed_predecessor_reconciles_and_verifies_complete_projection(self):
+    def test_exact_managed_state_reconciles_and_verifies_complete_projection(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
             expected = self.installer.digest(fixture["record"].read_bytes())
@@ -470,7 +470,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 rerun = self.installer.reconcile_installed_projection()
             self.assertEqual(rerun["result"], "existing_current")
 
-    def test_managed_predecessor_plan_is_exact_and_read_only(self):
+    def test_managed_state_plan_is_concise_and_read_only(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
             before = {
@@ -484,9 +484,49 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
 
             rendered = self.installer.render_installed_projection_plan(plan)
             self.assertEqual(plan.state, "DRIFT")
-            self.assertIn("APPLY run:\n  make apply-local", rendered)
+            self.assertEqual(
+                rendered,
+                "DRIFT claude-review\n"
+                "APPLY run:\n"
+                "  make apply-local\n"
+                "REQUIRES rerun the same command if interrupted",
+            )
             self.assertNotIn(expected, rendered)
             self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_self_consistent_managed_record_is_sufficient_authority_without_history(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            local_launcher = fixture["predecessor_launcher"] + b"# coordinated local rewrite\n"
+            local_rule = fixture["active_rule"].read_bytes() + b"# coordinated local rewrite\n"
+            record = json.loads(fixture["record"].read_text(encoding="utf-8"))
+            launcher_sha256 = self.installer.digest(local_launcher)
+            record["entry_contract"]["launcher_sha256"] = launcher_sha256
+            record["entry_contract"]["rule_template_sha256"] = self.installer.digest(
+                b"coordinated local rule template\n"
+            )
+            record["entry_contract_id"] = self.installer.entry_contract_identity(
+                record["entry_contract"]
+            )
+            record["installed_launcher_sha256"] = launcher_sha256
+            record["active_rule_sha256"] = self.installer.digest(local_rule)
+            record["producing_launcher_sha256"] = launcher_sha256
+
+            fixture["launcher"].chmod(0o700)
+            fixture["launcher"].write_bytes(local_launcher)
+            fixture["launcher"].chmod(0o500)
+            fixture["active_rule"].write_bytes(local_rule)
+            fixture["record"].chmod(0o600)
+            fixture["record"].write_bytes(self.installer.canonical(record))
+            fixture["record"].chmod(0o400)
+
+            with self.reconciliation_context(fixture):
+                plan = self.installer.installed_projection_plan()
+                result = self.installer.reconcile_installed_projection()
+
+            self.assertEqual(plan.state, "DRIFT")
+            self.assertEqual(result["result"], "verified")
+            self.assertEqual(fixture["launcher"].read_bytes(), fixture["current_launcher"].read_bytes())
 
     def test_reconciliation_preserves_an_exact_retired_forbidden_root(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

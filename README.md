@@ -76,14 +76,9 @@ make plan-local
 make apply-local
 ```
 
-It composes component-owned contracts rather than treating provider homes as a
-general configuration store. `check-local` answers whether a component is
-current, drifted, or blocked. `plan-local` shows the component-owned review
-surface and its bounded next action. For a recognized `claude-review`
-predecessor, `apply-local` carries the verified record identity directly into
-component-owned reconciliation. The successor combined record is the durable
-qualification and operation provenance; no extra receipt path or plan text must
-be managed by the operator. Rerun `check-local` after apply. See the
+`check-local` reports current, drifted, or blocked state. `plan-local` shows the
+next action; `apply-local` performs eligible updates without requiring copied
+arguments. Rerun `check-local` after apply. See the
 [global-bootstrap distribution](distributions/global-bootstrap/README.md#unified-local-projection-workflow)
 for included components and boundaries.
 

@@ -92,9 +92,9 @@ def main() -> int:
                     [sys.executable, str(CLAUDE_REVIEW), "--plan-installed"],
                 )
             )
-        for result in preflight:
-            render(result)
         if any(result.returncode for result in preflight):
+            for result in preflight:
+                render(result)
             print("FAIL apply preflight: a selected component is blocked")
             return 1
 
@@ -106,10 +106,11 @@ def main() -> int:
             "--reconcile-installed",
         ]
         claude_apply = run("claude-review", claude_arguments)
-        render(claude_apply)
         if claude_apply.returncode:
+            render(claude_apply)
             print("FAIL apply: claude-review reconciliation did not complete")
             return 1
+        print("APPLY claude-review: complete")
     if "global-bootstrap" in selected:
         results.append(
             run(
