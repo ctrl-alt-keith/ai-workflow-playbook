@@ -168,8 +168,15 @@ Use this order:
 
 1. Before mutation, declare the target repository, intended setting change,
    operator or authorizing context when available, authoritative central-policy
-   ref, target repository governance ref, and planned evidence names. Confirm
-   that the operator is authorized to make the hosted change.
+   ref, target repository governance ref, natural durable evidence owner,
+   permitted destination, and immutable evidence names. Use the governing issue
+   when one exists; otherwise resolve an existing natural durable owner under
+   the owning storage contract, without creating an issue merely for storage.
+   Apply
+   [governed-artifact capture](evidence-lifecycle.md#governed-artifact-capture)
+   to confirm storage admission, privacy/retention, access, and exact-verification
+   capability before mutation. Confirm that the operator is authorized to make
+   the hosted change.
 2. Perform only the authorized mutation, then retrieve the affected settings
    from the hosting provider again. Preserve that raw resulting-state response;
    do not treat the mutation request or its success response as proof of the
@@ -196,9 +203,26 @@ Use this order:
    problem and repeat hosted-state retrieval and the scoped audit; do not waive
    or hide a finding in the completion receipt.
 
-Append evidence by creating a new uniquely timestamped set under the existing
-workspace `logs/repo-governance-audit/` directory. Do not replace or edit prior
-evidence. Use names that keep the repository and run together, for example:
+The raw hosted-state response, complete audit JSON, and completion receipt are
+required durable evidence of this bounded hosted change. When issue-owned,
+preserve them in that issue's permitted destination; otherwise use the existing
+natural durable owner resolved before mutation. The current workspace/storage
+contract must permit the selected route. Do not invent a destination or create
+an issue merely for storage. Running the scanner from a checkout does not make
+its evidence repository-owned; disposable scratch and workspace logs cannot
+serve as durable destinations. An automation performing an issue-bounded audit
+does not change its issue ownership. Separate recurring
+report-only scans use their declared [automation-owned record location](maintenance-automations.md#authority-and-evidence-classes).
+
+Create a new uniquely timestamped set with exclusive no-overwrite behavior;
+never replace or edit prior evidence. Apply the evidence lifecycle's
+[exact retention verification](evidence-lifecycle.md#direct-durable-capture)
+and [producing receipt](evidence-lifecycle.md#producing-receipt-and-compact-delivery)
+requirements, including size/SHA-256, format, durable identity, containment,
+and lineage. The producing receipt is distinct from the gate's completion
+receipt. Unavailable admission, destination, or exact verification blocks
+completion; there is no workspace, current-directory, or local-alias fallback.
+Use names that keep the repository and run together, for example:
 
 - `<UTC timestamp>-<repo>-post-change-hosted-state.json` for the raw resulting
   hosted-state retrieval
@@ -209,11 +233,14 @@ evidence. Use names that keep the repository and run together, for example:
 The receipt must identify the repository and mutation, operator or authority
 context when supported, central-policy ref and resolved enforcement SHA, target
 governance source ref and resolved source SHA, audit start and finish times,
-hosted summary, scanner exit status, and the identities or paths of the raw
+hosted summary, scanner exit status, and the exact durable identities of the raw
 hosted-state and audit artifacts. Keep the full findings and errors in the raw
 audit artifact and link it from the receipt. Link any earlier evidence that the
 change supersedes or follows so the new receipt extends the history instead of
-obscuring it.
+obscuring it. For recovery, retrieve the named retained artifacts and verify
+those exact identities under the storage contract, then recheck live hosted
+state before a current-state conclusion. Retention, audit success, and receipts
+transfer no mutation or approval authority.
 
 ## Propagation Targets
 

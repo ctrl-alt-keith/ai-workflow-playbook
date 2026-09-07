@@ -29,7 +29,8 @@ documentation consistently distinguish:
 
 The central rule is:
 
-> A Product owns the bounded domain question and contract meaning.
+> A Product owns the bounded domain question.
+> The [Semantic Contract Producer](#semantic-contract-producer) owns shared contract meaning.
 > An authorized human makes consequential decisions.
 > A Repository currently hosts, records, and implements accepted state.
 > A Capability, Subsystem, or runtime component performs work.
@@ -167,8 +168,9 @@ or supporting Capabilities that are not Products.
 
 ### Semantic Contract Producer
 
-The Semantic Contract Producer is the Product identity responsible for the
-meaning of an emitted artifact or behavior.
+The Semantic Contract Producer is the Product or other typed identity
+responsible for shared contract meaning, emission semantics, and compatible
+evolution.
 
 **Valid verbs:**
 
@@ -403,8 +405,9 @@ Execution does not create authority or approval.
 
 ### 5. Separate Semantic Contract Producer From Runtime Producer
 
-A Product owns shared contract meaning. A component emits a conforming
-instance. A Repository hosts the contract and implementation.
+The Semantic Contract Producer owns shared contract meaning. The Runtime
+Producer emits a conforming instance. A Repository hosts the contract and
+implementation.
 
 Use all three subjects when the distinction is material:
 
@@ -620,8 +623,8 @@ authority," or "Product-promotion authority."
 
 ### Semantic Contract Producer Term
 
-The Product identity responsible for shared contract meaning, emission
-semantics, and compatible evolution.
+The Product or other typed identity responsible for shared contract meaning,
+emission semantics, and compatible evolution.
 
 ### Runtime Producer Term
 
