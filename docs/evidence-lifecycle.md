@@ -131,13 +131,17 @@ attempt-local scratch is not a substitute for required durable capture; see
 For fresh executions declaring issue-owned Dropbox artifact output under the
 current authorized contract, the receiving artifact-producing executor owns
 provisioning at kickoff after resolving the handoff, before the first durable
-issue artifact. Without declared Dropbox output, perform these checks lazily
-when an admitted artifact is ready to write.
+issue artifact, within the task's
+[kickoff mutation boundary](core-model.md#kickoff-mutation-boundaries).
+Without declared Dropbox output, perform these checks lazily when an admitted
+issue-owned Dropbox artifact is ready to write.
 
 Verify the exact governing issue from its current owner and the permitted
 destination under the storage contract before deriving or using
 `/issues/<ISSUE-ID>/`. Inspect that exact folder through a permitted provider
-route:
+route. Honor the storage contract and
+[current connector requirements](start-here.md#connector-availability-is-runtime-evidence)
+throughout:
 
 - Existing: verify provider identity and containment, then reuse without
   creation approval. Chat/operator pre-creation is optional, including for
@@ -145,8 +149,7 @@ route:
 - Absent: obtain confirmation once using the executor's native confirmation or
   selector affordance when available; create through the authorized provider
   mutation path, then verify resulting identity and containment before artifact
-  production. Honor the storage contract and
-  [current connector requirements](start-here.md#connector-availability-is-runtime-evidence).
+  production.
 
 Unknown or ambiguous lookup is not absence. Any unmet verification,
 authorization, confirmation, or creation requirement stops issue-owned durable
