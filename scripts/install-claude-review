@@ -1122,11 +1122,12 @@ def reconcile_installed_projection(
                 "result": "existing_current",
                 "installation_manifest_sha256": digest(current_bytes),
             }
-        if (
-            activation_receipt is None
-            or expected_record_sha256 is None
-            or predecessor != expected_record_sha256
-        ):
+        if activation_receipt is None or expected_record_sha256 is None:
+            raise ValueError(
+                "activation-receipt recovery requires both --expected-installed-record-sha256 "
+                "and --activation-receipt"
+            )
+        if predecessor != expected_record_sha256:
             raise ValueError(
                 "current installation does not match the named predecessor receipt recovery"
             )
@@ -1158,10 +1159,14 @@ def reconcile_installed_projection(
 
     reconciliation = prepare_installed_reconciliation()
     predecessor_sha256 = digest(reconciliation.predecessor_record_bytes)
+    if expected_record_sha256 is None or activation_receipt is None:
+        raise ValueError(
+            "recognized predecessor reconciliation requires both explicit operator inputs: "
+            "--expected-installed-record-sha256 and --activation-receipt; run "
+            "--plan-installed and use its exact predecessor digest plus a fresh absent receipt path"
+        )
     if expected_record_sha256 != predecessor_sha256:
         raise ValueError("reconciliation request names a stale installed record")
-    if activation_receipt is None:
-        raise ValueError("--activation-receipt is required for installed reconciliation")
     roots = [Path(str(root)) for root in reconciliation.current_record["forbidden_roots"]]
     receipt_path = validate_activation_destination(activation_receipt, roots)
     if receipt_path.exists() or receipt_path.is_symlink():
@@ -1384,6 +1389,9 @@ def installed_projection_plan() -> InstalledProjectionPlan:
     )
     requirements = (
         "replace REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH with a fresh, absent path in a private operator-controlled directory; the component creates the activation receipt there",
+        "for aggregate apply, run make apply-local "
+        f"CLAUDE_REVIEW_EXPECTED_RECORD_SHA256={record_sha256} "
+        "CLAUDE_REVIEW_ACTIVATION_RECEIPT=REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH",
         "run from this clean reviewed source checkout; the component verifies repository cleanliness before changing state",
         "if a partial failure occurs before the combined record changes, rerun this exact command; only predecessor/current object combinations produced by this order are accepted",
     )

@@ -510,7 +510,30 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             self.assertIn("--reconcile-installed", rendered)
             self.assertIn(expected, rendered)
             self.assertIn("REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH", rendered)
+            self.assertIn(
+                f"make apply-local CLAUDE_REVIEW_EXPECTED_RECORD_SHA256={expected}",
+                rendered,
+            )
             self.assertIn("multi-file atomicity is not claimed", rendered)
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_recognized_predecessor_apply_requires_both_explicit_inputs(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            before = {
+                path: path.read_bytes()
+                for path in (fixture["launcher"], fixture["record"], fixture["active_rule"])
+            }
+
+            with self.reconciliation_context(fixture), self.assertRaisesRegex(
+                ValueError,
+                "recognized predecessor reconciliation requires both explicit operator inputs",
+            ):
+                self.installer.reconcile_installed_projection(
+                    activation_receipt=None,
+                    expected_record_sha256=None,
+                )
+
             self.assertEqual(before, {path: path.read_bytes() for path in before})
 
     def test_reconciliation_preserves_an_exact_retired_forbidden_root(self):
