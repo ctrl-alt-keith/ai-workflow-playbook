@@ -26,7 +26,8 @@ Apply the core model's
 [surface roles](core-model.md#interactive-and-execution-surfaces): discussion,
 judgment, clarification, steering, review, and disposition stay interactive;
 bounded work needing tools, mutation, validation, or evidence production uses
-execution. Apply its [transition consent](core-model.md#interactive-to-execution-transition-consent)
+execution. Apply its
+[transition consent](core-model.md#interactive-to-execution-transition-consent)
 when moving from interactive to execution. The matching adapter owns product
 mappings; difficulty, model/reasoning choice, and product identity do not select
 the role.
@@ -36,8 +37,8 @@ agent), task shape (interactive reasoning/general delegation/repository
 execution), and model/reasoning settings distinct. Likewise distinguish the
 handoff contract (current sources, authority declaration and owning reference,
 constraints, locality, validation, outputs, stop boundary), durable package
-pointer (exact external manifest/sealed-package identity), and durable continuity
-(owning authoritative sources and recovery records).
+pointer (exact external manifest/sealed-package identity), and durable
+continuity (owning authoritative sources and recovery records).
 
 Interface changes alone do not change durable executor identity or authority.
 A distinct repository executor requires an explicit repository-execution
@@ -58,25 +59,25 @@ replay of unchanged doctrine.
 
 A role-specific envelope may point to complete external recoverable state
 instead of reproducing it. Include applicable semantic fields, not a package
-schema:
-target surface/executor role; bounded outcome; exact self-describing governed
+schema: target surface/executor role; bounded outcome; exact self-describing governed
 manifest/sealed-package identity; current human direction, bounded authority
 declaration, live owning authority reference, and prohibited actions; mutable
 sources to refresh from their owners; locality/tools; validation, outputs, and
 completion/stop boundary.
 
-Verify exact package identity under its owning contract before using the payload;
-mutable directories or bare paths are navigation only. Envelopes create no
-authority. If package identity or current authority is unavailable, stale,
+Verify exact package identity under its owning contract before using the
+payload; mutable directories or bare paths are navigation only. Envelopes create
+no authority. If package identity or current authority is unavailable, stale,
 mismatched, or ambiguous, stop affected execution; do not reconstruct from
 conversation.
 
 ### Target-shaped projections
 
 Use the matching target adapter: general bounded-executor envelopes emphasize
-delegated outcome, permitted sources/tools, source refresh, output form, quality checks, and return
-boundary; repository-executor envelopes additionally specify repository
-identity/locality/tools, canonical validation, delivery, and stop before merge.
+delegated outcome, permitted sources/tools, source refresh, output form, quality
+checks, and return boundary; repository-executor envelopes additionally specify
+repository identity/locality/tools, canonical validation, delivery, and stop
+before merge.
 
 ## Explicit Kickoff Mutation Boundary
 

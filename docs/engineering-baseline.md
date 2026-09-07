@@ -76,9 +76,9 @@ removed the failure mode, or another test now protects the same invariant.
 For deterministic extraction, parsing, normalization, or replay, shift to fast
 regression-fixture iteration once the failure shape is understood. Trust it
 only after fixtures faithfully reproduce a known real failure; retain
-fail-before/pass-after evidence whenever practical. Treat unproven "derived" or "representative"
-fixtures, unchanged integration replay, or identical integration failure
-signatures despite fixture success as fidelity warnings.
+fail-before/pass-after evidence whenever practical. Treat unproven "derived" or
+"representative" fixtures, unchanged integration replay, or identical
+integration failure signatures despite fixture success as fidelity warnings.
 
 If fixtures pass but integration behavior is unchanged, stop speculative
 fixtures or heuristics and compare the real execution path with the tested
@@ -274,8 +274,8 @@ limitations.
 
 For external providers, specs, CLIs, SDKs, or hosted platforms, distinguish
 officially documented guarantees, observations, and local assumptions in code
-comments, docs, tests, risks, and PR notes. Record the checked date for
-operationally important, time-sensitive, or changeable behavior. Prefer
+comments, docs, tests, risks, and PR notes. Record the checked date when behavior
+is operationally important, time-sensitive, or likely to change. Prefer
 conservative workflows when docs are incomplete, ambiguous, or silent; never
 encode unverified assumptions as architecture, public guarantees, or destructive
 defaults.
