@@ -479,6 +479,13 @@ Complete that profile before reporting preservation or providing an
 exact-identity handoff. Routine handoffs do not acquire material-prompt
 governance merely because Airtable carries them.
 
+### Current terminal presentation boundary
+
+Repository routing and presentation rules do not hard-enforce the live ChatGPT
+final response. Native ChatGPT remains **soft-only** for the two-block
+invariant. Hard enforcement requires an owned display/emission surface or an
+equivalent provider/client intercept before display.
+
 ## Quick Navigation
 
 - [Task-Shape Surface Selection And Thin Handoffs](#task-shape-surface-selection-and-thin-handoffs)

@@ -165,7 +165,7 @@ and emit its compact external envelope. Do not add file preview,
 download-link, or attempt-local retrieval steps.
 
 For a human execution recipient, use the existing
-[two-block inline renderer](#prompt-presentation). If Airtable capability for a
+[two-block inline presentation](#prompt-presentation). If Airtable capability for a
 machine recipient is unknown, inspect or attempt it before resolving the route.
 Material prompts also apply the durable profile below; routine prompts do not
 inherit it from transport.
