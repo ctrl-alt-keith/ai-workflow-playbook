@@ -122,19 +122,21 @@ Apply one agent-need test to agent-read documentation and prompt content:
 retain material only when it can change an agent's action, decision, authority
 interpretation, safety or evidence boundary, validation obligation, or stop or
 failure behavior, or when another canonical contract specifically requires it.
-Preserve those semantics, including precedence, identity, and source ownership.
+Preserve contract semantics, including precedence, identity, and source
+ownership.
 
 Use the smallest unambiguous normative representation. Prefer dense rules,
 tables, schemas, or references over narrative when they preserve the contract;
-natural-language flow is secondary to semantic clarity for the agent. Reference
-canonical owners instead of copying doctrine, while keeping required sources
-resolvable.
+natural-language flow is secondary to semantic clarity for the agent. Follow
+[canonical ownership](start-here.md#canonical-ownership) when replacing copied
+doctrine with references: preserve required activation and source access for
+the consuming context.
 
-Exclude rationale, design history, unused implementation mechanics, explanatory
-restatement, defensive narration, and redundant permutations that fail the
-agent-need test. Retain examples or enumerated cases only when they protect
-materially distinct behavior not already clear from the rule. Keep necessary
-operational mechanics. Put useful human rationale, history, and change
+Exclude material that fails the agent-need test, including rationale, design
+history, unused implementation mechanics, explanatory restatement, defensive
+narration, and redundant permutations. Retain examples or enumerated cases only
+when they protect materially distinct behavior not already clear from the rule.
+Keep necessary operational mechanics. Put useful human rationale, history, and change
 explanation in issues, PRs, design records, or other human-facing surfaces.
 Do not add a taxonomy, scoring system, checklist, or ceremony to enforce this
 editing constraint.
