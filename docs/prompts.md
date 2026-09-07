@@ -489,43 +489,26 @@ governance merely because Airtable carries them.
 
 ### Current terminal presentation boundary
 
-The presentation rules here and in the executor adapters are instructions to
-the producing assistant. This repository does not currently provide an
-executable terminal handoff renderer or a pre-emission gate for the assistant's
-final response. The recipient-routing tests read the qualification table;
-they do not observe or constrain a live response. Correct route selection and
-verified Airtable payload identity therefore do not mechanically guarantee the
-operator-facing block shape.
+This repository provides presentation instructions and routing-table tests,
+not a gate on the assistant's live final response. Correct routing and verified
+Airtable identity cannot guarantee the two-block presentation; an intermediate
+formatter cannot prevent later assistant rewriting.
 
-A deterministic formatter could guarantee the text it returns, but a later
-assistant response could omit, combine, or wrap that text. Such a formatter
-would control an intermediate artifact, not the terminal presentation.
-
-The CAK-261 follow-up finding is **SOFT-ONLY ON CURRENT CHATGPT SURFACE**:
-OpenAI's assistant constructs the final message, and the native ChatGPT client
-controls display and copy interaction. No exposed user-controlled native
-ChatGPT gate was found that can reject malformed final presentation before
-display or guarantee exactly two copyable blocks without surrounding prose.
-The evaluated boundaries were:
+CAK-261 found **SOFT-ONLY ON CURRENT CHATGPT SURFACE**: the assistant constructs
+the final message, and the native client controls display/copy interaction.
+No exposed user-controlled intercept was found that rejects malformed final
+presentation before display or guarantees exactly two copyable blocks without
+surrounding prose. Hard enforcement requires an owned display/emission surface
+or equivalent provider/client interception.
 
 - [Plugins/widgets](https://developers.openai.com/plugins/build/chatgpt-ui)
-  render UI alongside the conversation; they cannot guarantee suppression of
-  surrounding assistant text. The
-  [widget description](https://developers.openai.com/plugins/reference)
-  helps reduce redundant narration but does not provide that guarantee.
+  render alongside the conversation without guaranteed suppression of
+  surrounding assistant text.
 - [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
-  can constrain API data to a schema; hard presentation enforcement still
-  requires an owned display path after validated data production.
+  constrain API data to a schema; hard presentation still requires an owned
+  display path after data validation.
 - The existing [Enforcement terminal emitter](https://github.com/ctrl-alt-keith/ai-workflow-enforcement/blob/02d63615c103dbcd4bcfacfe368e6fc8132223fa/enforcement/prompt_handoff_emission.py)
-  serves a separate Dropbox-to-terminal path and is not on this ChatGPT
-  failure path.
-
-Hard enforcement requires an owned display/emission surface, or a provider/client
-feature exposing equivalent interception: resolved prompt-delivery state →
-validated response object → deterministic owned display projection → exactly
-two fixed copy regions. No such user-controlled native ChatGPT intercept was
-found. This follow-up identifies the enforcement boundary; it implements
-nothing and adopts no wrapper design.
+  serves a separate Dropbox-to-terminal path, outside this ChatGPT failure path.
 
 ## Quick Navigation
 
