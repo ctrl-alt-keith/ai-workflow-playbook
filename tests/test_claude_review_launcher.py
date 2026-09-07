@@ -220,6 +220,76 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         selector.symlink_to(targets[0])
         return selector, targets
 
+    def create_reconciliation_fixture(
+        self,
+        root: Path,
+        forbidden_roots: list[Path] | None = None,
+        *,
+        change_launcher: bool = True,
+        change_rule: bool = True,
+    ):
+        selector, targets = self.create_installer_targets(root)
+        installed, _ = self.run_installer(
+            root,
+            selector,
+            "initial.json",
+            "1" * 40,
+            forbidden_roots,
+        )
+        install_root = Path(installed["installation_directory"])
+        launcher = install_root / "claude-review"
+        record = install_root / ".claude-review.json"
+        active_rule = Path(installed["active_rule_path"])
+        predecessor_launcher = launcher.read_bytes()
+        predecessor_template = CODEX_RULE_TEMPLATE.read_bytes()
+        current_launcher = root / "current-claude-review"
+        current_launcher.write_bytes(
+            predecessor_launcher + (b"# reconciled source\n" if change_launcher else b"")
+        )
+        current_rule_template = root / "current-claude-review.rules"
+        current_rule_template.write_bytes(
+            predecessor_template + (b"# reconciled rule\n" if change_rule else b"")
+        )
+        return {
+            "root": root,
+            "selector": selector,
+            "targets": targets,
+            "installed": installed,
+            "install_root": install_root,
+            "launcher": launcher,
+            "record": record,
+            "active_rule": active_rule,
+            "predecessor_launcher": predecessor_launcher,
+            "predecessor_template": predecessor_template,
+            "current_launcher": current_launcher,
+            "current_rule_template": current_rule_template,
+        }
+
+    def reconciliation_context(self, fixture):
+        def fake_git(*arguments):
+            if arguments[0] == "status":
+                return ""
+            if arguments == ("rev-parse", "HEAD"):
+                return "2" * 40
+            if arguments == ("remote", "get-url", "origin"):
+                return "git@github.com:ctrl-alt-keith/ai-workflow-playbook.git"
+            raise AssertionError(arguments)
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(
+            mock.patch.object(
+                self.installer, "production_install_root", return_value=fixture["install_root"]
+            )
+        )
+        stack.enter_context(
+            mock.patch.object(self.installer, "SOURCE_LAUNCHER", fixture["current_launcher"])
+        )
+        stack.enter_context(
+            mock.patch.object(self.installer, "RULE_TEMPLATE", fixture["current_rule_template"])
+        )
+        stack.enter_context(mock.patch.object(self.installer, "git", side_effect=fake_git))
+        return stack
+
     def test_project_rule_never_allows_repository_relative_launcher(self):
         rule = CODEX_RULE.read_text(encoding="utf-8")
         self.assertNotIn('decision="allow"', rule)
@@ -305,14 +375,13 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             with mock.patch.object(self.installer, "parse_arguments", return_value=arguments), mock.patch.object(
                 self.installer, "production_install_root", return_value=install_root
             ), contextlib.redirect_stdout(drifted_output):
-                self.assertEqual(self.installer.main(), 0)
+                self.assertEqual(self.installer.main(), 1)
 
-            self.assertIn("DRIFT claude-review", drifted_output.getvalue())
-            self.assertIn("launcher source and installed identities differ", drifted_output.getvalue())
-            self.assertIn("human-approved component replacement", drifted_output.getvalue())
+            self.assertIn("BLOCKED claude-review", drifted_output.getvalue())
+            self.assertIn("not an internally consistent managed projection", drifted_output.getvalue())
             self.assertEqual(before, launcher.read_bytes())
 
-    def test_installed_projection_plan_renders_exact_rule_reconciliation_template_read_only(self):
+    def test_installed_projection_plan_fails_closed_for_unknown_active_rule(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory).resolve()
             selector, _ = self.create_installer_targets(root)
@@ -346,18 +415,483 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             with mock.patch.object(self.installer, "parse_arguments", return_value=arguments), mock.patch.object(
                 self.installer, "production_install_root", return_value=install_root
             ), contextlib.redirect_stdout(output):
-                self.assertEqual(self.installer.main(), 0)
+                self.assertEqual(self.installer.main(), 1)
 
             rendered = output.getvalue()
-            self.assertIn("RECONCILE run:", rendered)
-            self.assertIn(f"--claude-bin {selector}", rendered)
-            self.assertIn(f"--active-rule {active_rule}", rendered)
-            self.assertIn("--expected-existing-rule-sha256", rendered)
-            self.assertIn(self.installer.digest(before[active_rule]), rendered)
-            self.assertIn(f"--forbidden-root {additional_forbidden_root}", rendered)
-            self.assertIn("REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH", rendered)
-            self.assertIn("REQUIRES replace REPLACE_WITH_NEW_PRIVATE_ACTIVATION_RECEIPT_PATH", rendered)
+            self.assertIn("BLOCKED claude-review", rendered)
+            self.assertIn("active rule is neither the exact predecessor nor current source", rendered)
             self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_reconciliation_current_installation_is_an_idempotent_noop(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            selector, _ = self.create_installer_targets(root)
+            installed, _ = self.run_installer(root, selector, "initial.json", "1" * 40)
+            install_root = Path(installed["installation_directory"])
+            paths = (
+                install_root / "claude-review",
+                install_root / ".claude-review.json",
+                Path(installed["active_rule_path"]),
+            )
+            before = {path: path.read_bytes() for path in paths}
+
+            with mock.patch.object(
+                self.installer, "production_install_root", return_value=install_root
+            ), mock.patch.object(
+                self.installer,
+                "git",
+                side_effect=lambda *args: "" if args[0] == "status" else "2" * 40,
+            ):
+                result = self.installer.reconcile_installed_projection()
+
+            self.assertEqual(result["result"], "existing_current")
+            self.assertEqual(before, {path: path.read_bytes() for path in paths})
+
+    def test_reconciliation_skips_an_absent_installation_without_creating_state(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            install_root = Path(temporary_directory).resolve() / "absent" / "bin"
+            with mock.patch.object(
+                self.installer, "production_install_root", return_value=install_root
+            ), mock.patch.object(self.installer, "git", return_value=""):
+                result = self.installer.reconcile_installed_projection()
+            self.assertEqual(result["result"], "not_installed")
+            self.assertFalse(install_root.exists())
+
+    def test_exact_managed_state_reconciles_and_verifies_complete_projection(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            expected = self.installer.digest(fixture["record"].read_bytes())
+            with self.reconciliation_context(fixture):
+                result = self.installer.reconcile_installed_projection()
+                current, current_bytes = self.installer.current_projection_record()
+
+            self.assertEqual(fixture["launcher"].read_bytes(), fixture["current_launcher"].read_bytes())
+            expected_rule = fixture["current_rule_template"].read_text(encoding="utf-8").replace(
+                "__CLAUDE_REVIEW_LAUNCHER__", str(fixture["launcher"])
+            ).encode("utf-8")
+            self.assertEqual(fixture["active_rule"].read_bytes(), expected_rule)
+            self.assertEqual(current["qualification_event"], "entry_contract_reconciliation")
+            self.assertEqual(current["predecessor_receipt_sha256"], expected)
+            self.assertEqual(current_bytes, fixture["record"].read_bytes())
+            self.assertEqual(result["result"], "verified")
+            self.assertEqual(result["predecessor_manifest_sha256"], expected)
+            with self.reconciliation_context(fixture):
+                rerun = self.installer.reconcile_installed_projection()
+            self.assertEqual(rerun["result"], "existing_current")
+
+    def test_reconciliation_resumes_after_launcher_replacement_with_unchanged_rule(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(
+                Path(temporary_directory).resolve(), change_rule=False
+            )
+            predecessor_record = fixture["record"].read_bytes()
+            original_replace = self.installer.atomic_replace_exact
+
+            def fail_record(path, expected_bytes, replacement, mode, **kwargs):
+                if path == fixture["record"]:
+                    raise OSError("fixture record failure")
+                return original_replace(path, expected_bytes, replacement, mode, **kwargs)
+
+            with self.reconciliation_context(fixture), mock.patch.object(
+                self.installer, "atomic_replace_exact", side_effect=fail_record
+            ), self.assertRaisesRegex(OSError, "fixture record failure"):
+                self.installer.reconcile_installed_projection()
+
+            self.assertEqual(fixture["record"].read_bytes(), predecessor_record)
+            self.assertEqual(
+                fixture["launcher"].read_bytes(), fixture["current_launcher"].read_bytes()
+            )
+            self.assertEqual(
+                fixture["active_rule"].read_bytes(),
+                fixture["current_rule_template"].read_text(encoding="utf-8").replace(
+                    "__CLAUDE_REVIEW_LAUNCHER__", str(fixture["launcher"])
+                ).encode("utf-8"),
+            )
+
+            with self.reconciliation_context(fixture):
+                result = self.installer.reconcile_installed_projection()
+                current, current_bytes = self.installer.current_projection_record()
+
+            self.assertEqual(result["result"], "verified")
+            self.assertEqual(current_bytes, fixture["record"].read_bytes())
+            self.assertEqual(current["qualification_event"], "entry_contract_reconciliation")
+
+    def test_reconciliation_rejects_launcher_first_state_when_objects_both_changed(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            fixture["launcher"].chmod(0o700)
+            fixture["launcher"].write_bytes(fixture["current_launcher"].read_bytes())
+            fixture["launcher"].chmod(0o500)
+            before = {
+                path: path.read_bytes()
+                for path in (fixture["launcher"], fixture["record"], fixture["active_rule"])
+            }
+
+            with self.reconciliation_context(fixture), self.assertRaisesRegex(
+                ValueError, "not a recognized resumable partial state"
+            ):
+                self.installer.reconcile_installed_projection()
+
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_reconciliation_accepts_rule_only_update_with_unchanged_launcher(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(
+                Path(temporary_directory).resolve(), change_launcher=False
+            )
+
+            with self.reconciliation_context(fixture):
+                result = self.installer.reconcile_installed_projection()
+
+            self.assertEqual(result["result"], "verified")
+            self.assertEqual(result["launcher_result"], "existing_current")
+            self.assertEqual(
+                fixture["launcher"].read_bytes(), fixture["current_launcher"].read_bytes()
+            )
+            self.assertEqual(
+                fixture["active_rule"].read_bytes(),
+                fixture["current_rule_template"].read_text(encoding="utf-8").replace(
+                    "__CLAUDE_REVIEW_LAUNCHER__", str(fixture["launcher"])
+                ).encode("utf-8"),
+            )
+
+    def test_post_reconciliation_qualification_remains_a_current_projection(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            with self.reconciliation_context(fixture):
+                self.installer.reconcile_installed_projection()
+
+            installed_module = load_script(
+                "claude_review_post_reconciliation_qualification", fixture["launcher"]
+            )
+            predecessor_bytes = fixture["record"].read_bytes()
+            predecessor = json.loads(predecessor_bytes)
+            fixture["selector"].unlink()
+            fixture["selector"].symlink_to(fixture["targets"][1])
+            observed = installed_module.executable_file_identity(
+                fixture["selector"],
+                os.geteuid(),
+                [Path(root) for root in predecessor["forbidden_roots"]],
+            )
+
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(
+                    installed_module.qualify_claude_identity(
+                        os.geteuid(),
+                        expected_current_receipt_sha256=self.installer.digest(
+                            predecessor_bytes
+                        ),
+                        expected_observed_file_identity_sha256=installed_module.file_identity_digest(
+                            observed
+                        ),
+                    ),
+                    0,
+                )
+
+            qualified = json.loads(fixture["record"].read_text(encoding="utf-8"))
+            self.assertEqual(qualified["qualification_event"], "identity_transition")
+            self.assertNotIn("reconciliation_provenance", qualified)
+            with self.reconciliation_context(fixture):
+                current, current_bytes = self.installer.current_projection_record()
+                state, _ = self.installer.check_installed_projection()
+
+            self.assertEqual(current, qualified)
+            self.assertEqual(current_bytes, fixture["record"].read_bytes())
+            self.assertEqual(state, "PASS")
+
+    def test_reconciliation_preserves_auth_diagnostics_directory(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            diagnostics = fixture["root"] / "auth-diagnostics"
+            diagnostics.mkdir(mode=0o700)
+            predecessor = json.loads(fixture["record"].read_text(encoding="utf-8"))
+            predecessor["auth_diagnostics_directory"] = str(diagnostics)
+            predecessor["entry_contract"]["auth_diagnostics_directory"] = str(diagnostics)
+            predecessor["entry_contract_id"] = self.installer.entry_contract_identity(
+                predecessor["entry_contract"]
+            )
+            fixture["record"].chmod(0o600)
+            fixture["record"].write_bytes(self.installer.canonical(predecessor))
+            fixture["record"].chmod(0o400)
+
+            with self.reconciliation_context(fixture):
+                self.installer.reconcile_installed_projection()
+                current, _ = self.installer.current_projection_record()
+
+            self.assertEqual(current["auth_diagnostics_directory"], str(diagnostics))
+            self.assertEqual(
+                current["entry_contract"]["auth_diagnostics_directory"], str(diagnostics)
+            )
+
+    def test_invalid_successor_record_is_rejected_before_any_replacement(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            before = {
+                path: path.read_bytes()
+                for path in (fixture["launcher"], fixture["record"], fixture["active_rule"])
+            }
+            with self.reconciliation_context(fixture), mock.patch.object(
+                self.installer, "ROOT", Path("relative-source-root")
+            ), self.assertRaisesRegex(ValueError, "invalid source path"):
+                self.installer.reconcile_installed_projection()
+
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_managed_state_plan_is_concise_and_read_only(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            before = {
+                path: path.read_bytes()
+                for path in (fixture["launcher"], fixture["record"], fixture["active_rule"])
+            }
+            expected = self.installer.digest(before[fixture["record"]])
+
+            with self.reconciliation_context(fixture):
+                plan = self.installer.installed_projection_plan()
+
+            rendered = self.installer.render_installed_projection_plan(plan)
+            self.assertEqual(plan.state, "DRIFT")
+            self.assertEqual(
+                rendered,
+                "DRIFT claude-review\n"
+                "APPLY run:\n"
+                "  make apply-local\n"
+                "REQUIRES rerun the same command if interrupted",
+            )
+            self.assertNotIn(expected, rendered)
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_self_consistent_managed_record_is_sufficient_authority(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            local_launcher = fixture["predecessor_launcher"] + b"# coordinated local rewrite\n"
+            local_rule = fixture["active_rule"].read_bytes() + b"# coordinated local rewrite\n"
+            record = json.loads(fixture["record"].read_text(encoding="utf-8"))
+            launcher_sha256 = self.installer.digest(local_launcher)
+            record["entry_contract"]["launcher_sha256"] = launcher_sha256
+            record["entry_contract"]["rule_template_sha256"] = self.installer.digest(
+                b"coordinated local rule template\n"
+            )
+            record["entry_contract_id"] = self.installer.entry_contract_identity(
+                record["entry_contract"]
+            )
+            record["installed_launcher_sha256"] = launcher_sha256
+            record["active_rule_sha256"] = self.installer.digest(local_rule)
+            record["producing_launcher_sha256"] = launcher_sha256
+
+            fixture["launcher"].chmod(0o700)
+            fixture["launcher"].write_bytes(local_launcher)
+            fixture["launcher"].chmod(0o500)
+            fixture["active_rule"].write_bytes(local_rule)
+            fixture["record"].chmod(0o600)
+            fixture["record"].write_bytes(self.installer.canonical(record))
+            fixture["record"].chmod(0o400)
+
+            with self.reconciliation_context(fixture):
+                plan = self.installer.installed_projection_plan()
+                result = self.installer.reconcile_installed_projection()
+
+            self.assertEqual(plan.state, "DRIFT")
+            self.assertEqual(result["result"], "verified")
+            self.assertEqual(fixture["launcher"].read_bytes(), fixture["current_launcher"].read_bytes())
+
+    def test_reconciliation_preserves_an_exact_retired_forbidden_root(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            retired_root = root / "retired-attempt-root"
+            retired_root.mkdir()
+            fixture = self.create_reconciliation_fixture(root, [retired_root])
+            retired_root.rmdir()
+            with self.reconciliation_context(fixture):
+                plan = self.installer.installed_projection_plan()
+                result = self.installer.reconcile_installed_projection()
+                current, _ = self.installer.current_projection_record()
+
+            self.assertEqual(plan.state, "DRIFT")
+            self.assertEqual(result["result"], "verified")
+            self.assertIn(str(retired_root), current["forbidden_roots"])
+            self.assertEqual(
+                current["file_identity"]["forbidden_root_containment"][-1],
+                {
+                    "root": str(retired_root),
+                    "selector_contained": False,
+                    "resolved_contained": False,
+                },
+            )
+
+    def test_reconciliation_rejects_a_rebound_retired_forbidden_root(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            retired_root = root / "retired-attempt-root"
+            retired_root.mkdir()
+            fixture = self.create_reconciliation_fixture(root, [retired_root])
+            retired_root.rmdir()
+            rebound_target = root / "rebound-target"
+            rebound_target.mkdir()
+            retired_root.symlink_to(rebound_target)
+            before = {
+                path: path.read_bytes()
+                for path in (fixture["launcher"], fixture["record"], fixture["active_rule"])
+            }
+
+            with self.reconciliation_context(fixture):
+                plan = self.installer.installed_projection_plan()
+
+            self.assertEqual(plan.state, "BLOCKED")
+            self.assertIn("no longer exact", plan.summary)
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_reconciliation_rejects_unknown_launcher_record_and_rule_without_mutation(self):
+        scenarios = ("launcher", "record", "rule")
+        for scenario in scenarios:
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as temporary_directory:
+                fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+                if scenario == "launcher":
+                    fixture["launcher"].chmod(0o700)
+                    fixture["launcher"].write_bytes(b"unknown launcher\n")
+                    fixture["launcher"].chmod(0o500)
+                elif scenario == "record":
+                    record = json.loads(fixture["record"].read_text(encoding="utf-8"))
+                    record["manual_edit"] = True
+                    fixture["record"].chmod(0o600)
+                    fixture["record"].write_bytes(self.installer.canonical(record))
+                    fixture["record"].chmod(0o400)
+                else:
+                    fixture["active_rule"].write_bytes(b"unknown rule\n")
+                    fixture["active_rule"].chmod(0o600)
+                before = {
+                    path: path.read_bytes()
+                    for path in (fixture["launcher"], fixture["record"], fixture["active_rule"])
+                }
+
+                with self.reconciliation_context(fixture), self.assertRaises(ValueError):
+                    self.installer.reconcile_installed_projection()
+
+                self.assertEqual(
+                    before,
+                    {path: path.read_bytes() for path in before},
+                )
+
+    def test_reconciliation_requires_existing_qualification_before_any_replacement(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            fixture["selector"].unlink()
+            fixture["selector"].symlink_to(fixture["targets"][1])
+            before = {
+                path: path.read_bytes()
+                for path in (fixture["launcher"], fixture["record"], fixture["active_rule"])
+            }
+
+            with self.reconciliation_context(fixture), self.assertRaises(
+                self.installer.QualificationRequiredError
+            ):
+                self.installer.reconcile_installed_projection()
+
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_reconciliation_detects_selector_change_at_the_final_record_seam(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            predecessor_record = fixture["record"].read_bytes()
+            original_identity = self.installer.exact_executable_file_identity
+            observations = 0
+
+            def race_final_identity(selector, forbidden_roots=None):
+                nonlocal observations
+                observations += 1
+                observed = original_identity(selector, forbidden_roots)
+                if observations == 4:
+                    return {**observed, "selector_inode": observed["selector_inode"] + 1}
+                return observed
+
+            with self.reconciliation_context(fixture), mock.patch.object(
+                self.installer,
+                "exact_executable_file_identity",
+                side_effect=race_final_identity,
+            ), self.assertRaisesRegex(ValueError, "selector changed during final record replacement"):
+                self.installer.reconcile_installed_projection()
+
+            self.assertEqual(fixture["record"].read_bytes(), predecessor_record)
+            self.assertEqual(fixture["launcher"].read_bytes(), fixture["current_launcher"].read_bytes())
+
+            with self.reconciliation_context(fixture):
+                result = self.installer.reconcile_installed_projection()
+
+            self.assertEqual(result["result"], "verified")
+
+    def test_reconciliation_resumes_only_its_bounded_partial_order(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            original_replace = self.installer.atomic_replace_exact
+
+            def fail_launcher(path, expected_bytes, replacement, mode, **kwargs):
+                if path == fixture["launcher"]:
+                    raise OSError("fixture launcher failure")
+                return original_replace(path, expected_bytes, replacement, mode, **kwargs)
+
+            with self.reconciliation_context(fixture), mock.patch.object(
+                self.installer, "atomic_replace_exact", side_effect=fail_launcher
+            ), self.assertRaisesRegex(OSError, "fixture launcher failure"):
+                self.installer.reconcile_installed_projection()
+
+            self.assertEqual(fixture["launcher"].read_bytes(), fixture["predecessor_launcher"])
+            expected_current_rule = fixture["current_rule_template"].read_text(
+                encoding="utf-8"
+            ).replace(
+                "__CLAUDE_REVIEW_LAUNCHER__", str(fixture["launcher"])
+            ).encode("utf-8")
+            self.assertEqual(fixture["active_rule"].read_bytes(), expected_current_rule)
+
+            with self.reconciliation_context(fixture):
+                result = self.installer.reconcile_installed_projection()
+
+            self.assertEqual(result["result"], "verified")
+            self.assertEqual(fixture["launcher"].read_bytes(), fixture["current_launcher"].read_bytes())
+
+    def test_reconciliation_rejects_unsafe_modes_symlinks_and_containment(self):
+        scenarios = (
+            "launcher_mode",
+            "launcher_symlink",
+            "rule_mode",
+            "install_mode",
+            "forbidden_overlap",
+        )
+        for scenario in scenarios:
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as temporary_directory:
+                fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+                if scenario == "launcher_mode":
+                    fixture["launcher"].chmod(0o700)
+                elif scenario == "launcher_symlink":
+                    target = fixture["root"] / "launcher-target"
+                    target.write_bytes(fixture["launcher"].read_bytes())
+                    target.chmod(0o500)
+                    fixture["launcher"].unlink()
+                    fixture["launcher"].symlink_to(target)
+                elif scenario == "rule_mode":
+                    fixture["active_rule"].chmod(0o644)
+                elif scenario == "install_mode":
+                    fixture["install_root"].chmod(0o777)
+                else:
+                    record = json.loads(fixture["record"].read_text(encoding="utf-8"))
+                    roots = [*record["forbidden_roots"], str(fixture["install_root"])]
+                    record["forbidden_roots"] = roots
+                    record["entry_contract"]["forbidden_roots"] = roots
+                    record["entry_contract_id"] = self.installer.entry_contract_identity(
+                        record["entry_contract"]
+                    )
+                    record["file_identity"]["forbidden_root_containment"] = [
+                        *record["file_identity"]["forbidden_root_containment"],
+                        {
+                            "root": str(fixture["install_root"]),
+                            "selector_contained": False,
+                            "resolved_contained": False,
+                        },
+                    ]
+                    fixture["record"].chmod(0o600)
+                    fixture["record"].write_bytes(self.installer.canonical(record))
+                    fixture["record"].chmod(0o400)
+                with self.reconciliation_context(fixture), self.assertRaises((OSError, ValueError)):
+                    self.installer.reconcile_installed_projection()
 
     def test_installed_projection_plan_renders_exact_qualification_command_read_only(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -386,7 +920,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             rendered = output.getvalue()
             record = json.loads(before)
             observed = self.installer.exact_executable_file_identity(selector, [ROOT])
-            self.assertIn("RECONCILE run:", rendered)
+            self.assertIn("APPLY run:", rendered)
             self.assertIn("--qualify-claude-identity", rendered)
             self.assertIn(
                 record["qualification_receipt_sha256"]

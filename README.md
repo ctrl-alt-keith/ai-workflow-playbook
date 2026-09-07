@@ -76,12 +76,10 @@ make plan-local
 make apply-local
 ```
 
-It composes component-owned contracts rather than treating provider homes as a
-general configuration store. `check-local` answers whether a component is
-current, drifted, or blocked. `plan-local` shows the component-owned review
-surface and its bounded next action; follow that action, rerun `check-local`,
-and only then use `apply-local` for components that already own a safe apply
-path. See the [global-bootstrap distribution](distributions/global-bootstrap/README.md#unified-local-projection-workflow)
+`check-local` reports current, drifted, or blocked state. `plan-local` shows the
+next action; `apply-local` performs eligible updates without requiring copied
+arguments. Rerun `check-local` after apply. See the
+[global-bootstrap distribution](distributions/global-bootstrap/README.md#unified-local-projection-workflow)
 for included components and boundaries.
 
 ## Initial Map

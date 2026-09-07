@@ -77,18 +77,40 @@ def main() -> int:
     selected = args.component or ["global-bootstrap", "claude-review"]
     selected = list(dict.fromkeys(selected))
 
-    # Apply must establish that every selected component which lacks an owned
-    # reconciliation path is already current before any other component writes.
-    if args.mode == "apply" and "claude-review" in selected:
-        claude_status = run(
-            "claude-review", [sys.executable, str(CLAUDE_REVIEW), "--check-installed"]
-        )
-        render(claude_status)
-        if claude_status.returncode:
-            print("FAIL apply preflight: claude-review is not safe to leave unreconciled")
+    # Every selected component plan is read-only. Complete the full batch
+    # preflight before the first component-owned mutation.
+    if args.mode == "apply":
+        preflight: list[CommandResult] = []
+        if "global-bootstrap" in selected:
+            preflight.append(
+                run("global-bootstrap", global_bootstrap_arguments(args, "plan"))
+            )
+        if "claude-review" in selected:
+            preflight.append(
+                run(
+                    "claude-review",
+                    [sys.executable, str(CLAUDE_REVIEW), "--plan-installed"],
+                )
+            )
+        if any(result.returncode for result in preflight):
+            for result in preflight:
+                render(result)
+            print("FAIL apply preflight: a selected component is blocked")
             return 1
 
     results: list[CommandResult] = []
+    if args.mode == "apply" and "claude-review" in selected:
+        claude_arguments = [
+            sys.executable,
+            str(CLAUDE_REVIEW),
+            "--reconcile-installed",
+        ]
+        claude_apply = run("claude-review", claude_arguments)
+        if claude_apply.returncode:
+            render(claude_apply)
+            print("FAIL apply: claude-review reconciliation did not complete")
+            return 1
+        print("APPLY claude-review: complete")
     if "global-bootstrap" in selected:
         results.append(
             run(
@@ -111,11 +133,23 @@ def main() -> int:
 
     if any(result.returncode for result in results):
         return 1
-    if args.mode == "apply" and "global-bootstrap" in selected:
-        verified = run("global-bootstrap", global_bootstrap_arguments(args, "check"))
-        render(verified)
-        if verified.returncode:
-            print("FAIL apply verification: global-bootstrap did not reach a current state")
+    if args.mode == "apply":
+        verified: list[CommandResult] = []
+        if "global-bootstrap" in selected:
+            verified.append(
+                run("global-bootstrap", global_bootstrap_arguments(args, "check"))
+            )
+        if "claude-review" in selected:
+            verified.append(
+                run(
+                    "claude-review",
+                    [sys.executable, str(CLAUDE_REVIEW), "--check-installed"],
+                )
+            )
+        for result in verified:
+            render(result)
+        if any(result.returncode for result in verified):
+            print("FAIL apply verification: a selected component did not reach current state")
             return 1
     return 0
 

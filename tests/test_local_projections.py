@@ -78,7 +78,7 @@ class LocalProjectionTests(unittest.TestCase):
             self.assertIn("APPLY Codex: verified", apply.stdout)
             self.assertIn("PASS Codex", apply.stdout)
 
-    def test_apply_stops_before_other_components_when_claude_review_is_drifted(self) -> None:
+    def test_apply_stops_before_mutation_when_claude_review_plan_is_blocked(self) -> None:
         module = load_module()
         arguments = SimpleNamespace(
             mode="apply",
@@ -87,14 +87,17 @@ class LocalProjectionTests(unittest.TestCase):
             claude_file=None,
             require_claude=False,
         )
-        drifted = module.CommandResult("claude-review", 1, "DRIFT claude-review: fixture\n")
+        global_plan = module.CommandResult("global-bootstrap", 0, "PLAN global fixture\n")
+        blocked = module.CommandResult("claude-review", 1, "BLOCKED claude-review: fixture\n")
         output = io.StringIO()
         with mock.patch.object(module, "parse_args", return_value=arguments), mock.patch.object(
-            module, "run", return_value=drifted
+            module, "run", side_effect=(global_plan, blocked)
         ) as run, contextlib.redirect_stdout(output):
             self.assertEqual(module.main(), 1)
 
-        self.assertEqual(run.call_count, 1)
+        self.assertEqual(run.call_count, 2)
+        self.assertEqual(run.call_args_list[0].args[1][-1], "plan")
+        self.assertEqual(run.call_args_list[1].args[1][-1], "--plan-installed")
         self.assertIn("FAIL apply preflight", output.getvalue())
 
     def test_plan_delegates_to_the_component_owned_claude_review_plan(self) -> None:
@@ -114,6 +117,61 @@ class LocalProjectionTests(unittest.TestCase):
 
         self.assertEqual(run.call_count, 1)
         self.assertEqual(run.call_args.args[1][-1], "--plan-installed")
+
+    def test_apply_delegates_only_the_component_owned_claude_review_operation(self) -> None:
+        module = load_module()
+        arguments = SimpleNamespace(
+            mode="apply",
+            component=["claude-review"],
+            codex_file=None,
+            claude_file=None,
+            require_claude=False,
+        )
+        planned = module.CommandResult("claude-review", 0, "DRIFT claude-review: fixture\n")
+        applied = module.CommandResult("claude-review", 0, "{\"result\":\"verified\"}\n")
+        verified = module.CommandResult("claude-review", 0, "PASS claude-review: fixture\n")
+
+        output = io.StringIO()
+        with mock.patch.object(module, "parse_args", return_value=arguments), mock.patch.object(
+            module, "run", side_effect=(planned, applied, verified)
+        ) as run, contextlib.redirect_stdout(output):
+            self.assertEqual(module.main(), 0)
+
+        self.assertEqual(run.call_count, 3)
+        apply_arguments = run.call_args_list[1].args[1]
+        self.assertEqual(
+            apply_arguments,
+            [sys.executable, str(module.CLAUDE_REVIEW), "--reconcile-installed"],
+        )
+        self.assertNotIn(str(module.GLOBAL_BOOTSTRAP), apply_arguments)
+        self.assertNotIn("DRIFT claude-review: fixture", output.getvalue())
+        self.assertNotIn('{"result":"verified"}', output.getvalue())
+        self.assertIn("APPLY claude-review: complete", output.getvalue())
+
+    def test_apply_does_not_mutate_later_components_after_claude_review_failure(self) -> None:
+        module = load_module()
+        arguments = SimpleNamespace(
+            mode="apply",
+            component=None,
+            codex_file=None,
+            claude_file=None,
+            require_claude=False,
+        )
+        global_plan = module.CommandResult("global-bootstrap", 0, "PLAN global fixture\n")
+        claude_plan = module.CommandResult("claude-review", 0, "DRIFT claude-review: fixture\n")
+        failed_apply = module.CommandResult("claude-review", 1, "BLOCKED fixture\n")
+
+        with mock.patch.object(module, "parse_args", return_value=arguments), mock.patch.object(
+            module, "run", side_effect=(global_plan, claude_plan, failed_apply)
+        ) as run:
+            self.assertEqual(module.main(), 1)
+
+        self.assertEqual(run.call_count, 3)
+        self.assertIn("--reconcile-installed", run.call_args_list[2].args[1])
+        self.assertNotIn(
+            str(module.GLOBAL_BOOTSTRAP),
+            run.call_args_list[2].args[1],
+        )
 
 
 if __name__ == "__main__":

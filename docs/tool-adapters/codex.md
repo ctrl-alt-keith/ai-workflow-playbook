@@ -658,9 +658,7 @@ more than one repository.
 The installer verifies a clean exact source commit and derives one immutable,
 content-addressed entry contract from the launcher bytes, installation and
 qualification schemas, Codex rule-template bytes, configured Claude selector,
-active-rule path, forbidden roots, and the exact installation directory. An
-unrelated source commit remains activation provenance and does not change the
-entry contract when those execution-contract inputs are identical. The
+active-rule path, forbidden roots, and the exact installation directory. The
 installer publishes the stable command `~/.local/bin/claude-review` with one
 combined schema-v3 installation and current-qualification record at
 `~/.local/bin/.claude-review.json`. The content digest remains in that record
@@ -673,12 +671,11 @@ The installer renders the user rule with the exact installed absolute path,
 refuses a different existing object, and requires the caller to name the
 expected digest before replacing an existing active rule. An identical-contract
 rerun securely validates and preserves the current receipt.
-Selector drift on a rerun is qualification-required and occurs before rule or
-activation-receipt mutation. Older installation schemas remain historical
-state; do not reinterpret or migrate them automatically. Supply every
-candidate, evidence, workspace, and attempt-scratch root as a forbidden root.
-The activation receipt is explicit operation evidence and does not become
-durable launcher state. Production auth preflight reports its bounded record on
+Selector drift must be qualified before a managed update. Older installation
+schemas are not migrated automatically. Supply every candidate, evidence,
+workspace, and attempt-scratch root as a forbidden root.
+The initial-install activation receipt is explicit operation evidence and does
+not become durable launcher state. Production auth preflight reports its bounded record on
 standard error and does not accept a diagnostics-file destination. Governed
 review diagnostics remain inside the config's exact evidence directory. A
 diagnostics-path or config failure is reported on standard error without
