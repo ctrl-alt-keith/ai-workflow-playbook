@@ -25,6 +25,13 @@ commit, or update SSH configuration. SSH checks use batch mode and strict host
 key checking so a missing `known_hosts` entry fails instead of being added by
 the preflight.
 
+The script does not launch Codex or qualify a requested model selector. For a
+fresh thread or child task, the real task launch is the authoritative
+selector-acceptance event and must fail closed if the runtime rejects the exact
+requested selector. Keeping that check at the real launch also avoids treating
+an outer sandbox or approval failure in a sacrificial child as a model-selector
+rejection.
+
 ## Usage
 
 At the start of a Codex automation prompt, add a short preflight step before

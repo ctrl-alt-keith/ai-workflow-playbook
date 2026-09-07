@@ -91,7 +91,7 @@ Astra's existence does not require a change to the
 hosted stewardship gains no model dependency; residual model-backed jobs are
 candidates for later qualification on their actual execution surfaces.
 
-### Codex Selector Qualification
+### Codex Selector Routing And Acceptance
 
 For FRESH THREAD and CHILD TASK attempts, record the requested model, exact
 selector, runtime-reported effective model (or `unobservable`), and any
@@ -105,19 +105,23 @@ Use only these exact mappings; reject aliases, near-matches, and guessed IDs.
 | `GPT-5.6 Terra` | `gpt-5.6-terra` |
 | `GPT-5.6 Sol` | `gpt-5.6-sol` |
 
-For a FRESH THREAD or eligible CHILD TASK, use `scripts/codex-preflight` with
-the exact `CODEX_PREFLIGHT_REQUESTED_MODEL` value and matching
-`CODEX_PREFLIGHT_THREAD_ROUTING`. Its read-only probe establishes selector
-acceptance for that new execution only; it does not identify a running parent
-model. The probe fails before substantive work on rejection; preserve and reuse
-its runtime evidence until the client, identity, policy, or surface changes.
-For SAME THREAD, declare `CODEX_PREFLIGHT_THREAD_ROUTING=SAME THREAD` when
-preflight receives a requested parent model: it preserves that value, does not
-launch a selector probe, and reports the effective model as unobservable to
-preflight unless separate runtime-visible parent evidence exists. It never
-selects fallback: exact-model requirements fail closed for new executions,
-while advisory fallback remains orchestration-owned and explicit. Reasoning
-effort is independent.
+For a FRESH THREAD or eligible CHILD TASK, pass the exact selector to the real
+task launch. That launch is the authoritative selector-acceptance event: if the
+runtime rejects the requested selector, fail closed before treating the task as
+started. Record any permitted fallback or substitution at that same launch
+boundary rather than in a separate probe. Advisory fallback remains
+orchestration-owned and explicit; exact-model requirements do not fall back.
+
+Run `scripts/codex-preflight` only for its independent GitHub authentication and
+repository-reachability checks. It does not launch Codex, validate a selector,
+identify the running parent, or prove task-launch success. A sacrificial child
+probe can fail for parent execution-surface reasons that the requested selector
+did not cause, and its success does not establish that the real task launch will
+succeed or inherit the same outer approval state.
+
+For SAME THREAD, preserve the requested parent model and record the effective
+model as unobservable unless separate runtime-visible parent evidence exists.
+Reasoning effort is independent.
 
 ### Escalation And Delegation
 
@@ -143,8 +147,8 @@ work for other purposes.
 Apply the shared `FRESH THREAD`, `SAME THREAD`, and `CHILD TASK` vocabulary in
 [`prompts.md`](../prompts.md#thread-routing-and-configuration-continuity). For
 a FRESH THREAD, select the task-appropriate model and effort using the matrix
-and provisional Astra guidance above, after the selected runtime qualifies its
-exact selector.
+and provisional Astra guidance above, then pass its exact selector to the real
+task launch and apply the acceptance boundary above.
 For a SAME THREAD, preserve the requested parent model and effort by default:
 task-class sufficiency alone does not justify intentionally mutating an
 already-running configuration. Record the effective model and effort separately
@@ -239,7 +243,7 @@ executable prompt with this plain-text operator metadata:
 
 ```text
 Thread routing: <FRESH THREAD | SAME THREAD | CHILD TASK>
-Recommended model: <FRESH THREAD/CHILD TASK: GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol | GPT-6 Astra (provisional; exact Codex selector must be qualified); SAME THREAD: Preserve requested thread model and observe effective runtime model>
+Recommended model: <FRESH THREAD/CHILD TASK: GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol | GPT-6 Astra (provisional; exact Codex selector must be accepted at launch); SAME THREAD: Preserve requested thread model and observe effective runtime model>
 Recommended reasoning level: <FRESH THREAD/CHILD TASK: Light | Medium | High; SAME THREAD: Preserve requested thread setting and observe effective runtime setting>
 
 Reason:

@@ -322,86 +322,28 @@ class CodexPreflightTest(unittest.TestCase):
         self.assertNotIn("ssh-add -l", result.stdout)
         self.assertNotIn("GitHub SSH connectivity works", result.stdout)
 
-    def test_exact_requested_model_uses_the_qualified_selector(self) -> None:
-        cases = {
-            "GPT-6 Astra": "gpt-6-astra",
-            "GPT-5.6 Luna": "gpt-5.6-luna",
-            "GPT-5.6 Terra": "gpt-5.6-terra",
-            "GPT-5.6 Sol": "gpt-5.6-sol",
-        }
-
-        for requested_model, selector in cases.items():
-            with self.subTest(requested_model=requested_model):
-                commands = self.fake_success_commands()
-                commands["codex"] = f"""
-                    if [ \"$1\" = \"exec\" ] && [ \"$2\" = \"--ephemeral\" ] && [ \"$3\" = \"--skip-git-repo-check\" ] && [ \"$4\" = \"--sandbox\" ] && [ \"$5\" = \"read-only\" ] && [ \"$6\" = \"--model\" ] && [ \"$7\" = \"{selector}\" ]; then
-                        printf '%s\\n' MODEL_QUALIFICATION_OK
-                        exit 0
-                    fi
-                    exit 2
-                """
-
-                result = self.run_preflight(
-                    commands,
-                    {
-                        "CODEX_PREFLIGHT_REQUESTED_MODEL": requested_model,
-                        "CODEX_PREFLIGHT_THREAD_ROUTING": "FRESH THREAD",
-                    },
-                )
-
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-
-    def test_astra_runtime_rejection_fails_before_substantive_work(self) -> None:
+    def test_managed_parent_codex_failure_is_not_part_of_preflight(self) -> None:
         commands = self.fake_success_commands()
         commands["codex"] = """
-            if [ \"$1\" = \"exec\" ] && [ \"$7\" = \"gpt-6-astra\" ]; then
-                printf '%s\\n' 'The gpt-6-astra model requires a newer version of Codex.' >&2
-                exit 1
-            fi
-            exit 2
+            touch "$CODEX_TEST_MARKER"
+            exit 1
         """
 
-        result = self.run_preflight(
-            commands,
-            {
-                "CODEX_PREFLIGHT_REQUESTED_MODEL": "GPT-6 Astra",
-                "CODEX_PREFLIGHT_THREAD_ROUTING": "FRESH THREAD",
-            },
-        )
+        with tempfile.TemporaryDirectory() as tmp:
+            marker = Path(tmp) / "codex-invoked"
+            # These removed inputs are deliberately supplied to prove they are inert.
+            result = self.run_preflight(
+                commands,
+                {
+                    "CODEX_PREFLIGHT_REQUESTED_MODEL": "GPT-6 Astra",
+                    "CODEX_PREFLIGHT_THREAD_ROUTING": "FRESH THREAD",
+                    "CODEX_TEST_MARKER": str(marker),
+                },
+            )
 
-        self.assertEqual(result.returncode, 1)
-
-    def test_malformed_requested_model_is_rejected_without_calling_codex(self) -> None:
-        commands = self.fake_success_commands()
-        commands["codex"] = """
-            printf '%s\\n' SHOULD_NOT_RUN
-            exit 0
-        """
-
-        result = self.run_preflight(
-            commands,
-            {
-                "CODEX_PREFLIGHT_REQUESTED_MODEL": "GPT-6 Astra v2",
-                "CODEX_PREFLIGHT_THREAD_ROUTING": "FRESH THREAD",
-            },
-        )
-
-        self.assertEqual(result.returncode, 1)
-        self.assertNotIn("SHOULD_NOT_RUN", result.stdout)
-
-    def test_same_thread_astra_does_not_launch_a_selector_probe(self) -> None:
-        commands = self.fake_success_commands()
-        commands["codex"] = "exit 64"
-
-        result = self.run_preflight(
-            commands,
-            {
-                "CODEX_PREFLIGHT_REQUESTED_MODEL": "GPT-6 Astra",
-                "CODEX_PREFLIGHT_THREAD_ROUTING": "SAME THREAD",
-            },
-        )
-
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(result.stderr, "")
+            self.assertFalse(marker.exists())
 
 
 if __name__ == "__main__":
