@@ -658,9 +658,7 @@ more than one repository.
 The installer verifies a clean exact source commit and derives one immutable,
 content-addressed entry contract from the launcher bytes, installation and
 qualification schemas, Codex rule-template bytes, configured Claude selector,
-active-rule path, forbidden roots, and the exact installation directory. An
-unrelated source commit remains activation provenance and does not change the
-entry contract when those execution-contract inputs are identical. The
+active-rule path, forbidden roots, and the exact installation directory. The
 installer publishes the stable command `~/.local/bin/claude-review` with one
 combined schema-v3 installation and current-qualification record at
 `~/.local/bin/.claude-review.json`. The content digest remains in that record
@@ -673,24 +671,9 @@ The installer renders the user rule with the exact installed absolute path,
 refuses a different existing object, and requires the caller to name the
 expected digest before replacing an existing active rule. An identical-contract
 rerun securely validates and preserves the current receipt.
-The component's `--reconcile-installed` authority is the canonical schema-v3
-managed record itself, not a repository-history lookup or historical `HEAD`.
-A fully self-consistent record is intentionally sufficient when its launcher,
-active rule, selector qualification, absolute paths, ownership, modes, and
-digests agree exactly. Each installed object must match its recorded digest or
-the current reviewed source in a recognized resumable partial state. This also
-means a coordinated local rewrite that produces a fully self-consistent valid
-record is accepted by design; the record is the local authority boundary, not
-an authenticity claim about its history.
-
-Reconciliation targets the current clean reviewed source, preserves the
-qualified selector identity and version, and compare-and-swap checks the record
-and affected objects at every mutation seam. It replaces the active rule,
-launcher, and combined record in that order so interrupted states can resume.
-Inconsistent records, unsafe paths or metadata, selector drift, impossible
-partial states, and changes during mutation fail closed. Older schemas are not
-silently migrated. Supply every candidate, evidence, workspace, and
-attempt-scratch root as a forbidden root.
+Selector drift must be qualified before a managed update. Older installation
+schemas are not migrated automatically. Supply every candidate, evidence,
+workspace, and attempt-scratch root as a forbidden root.
 The initial-install activation receipt is explicit operation evidence and does
 not become durable launcher state. Production auth preflight reports its bounded record on
 standard error and does not accept a diagnostics-file destination. Governed

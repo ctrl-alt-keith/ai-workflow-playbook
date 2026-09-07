@@ -494,7 +494,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             self.assertNotIn(expected, rendered)
             self.assertEqual(before, {path: path.read_bytes() for path in before})
 
-    def test_self_consistent_managed_record_is_sufficient_authority_without_history(self):
+    def test_self_consistent_managed_record_is_sufficient_authority(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
             local_launcher = fixture["predecessor_launcher"] + b"# coordinated local rewrite\n"

@@ -721,7 +721,7 @@ def validate_record_contract(
 
 
 def prepare_installed_reconciliation() -> InstalledReconciliation:
-    """Freeze one self-consistent managed record or its resumable partial state."""
+    """Treat exact schema-v3 internal agreement as sufficient update authority."""
     install_root = production_install_root().resolve(strict=True)
     secure_install_directory(install_root)
     launcher = install_root / "claude-review"

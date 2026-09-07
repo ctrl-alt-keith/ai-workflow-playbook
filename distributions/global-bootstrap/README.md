@@ -238,5 +238,4 @@ copied. If apply is interrupted, rerun the same command. Finish with
 `make check-local`.
 
 The aggregate updates only Playbook-owned projections and blocks unrecognized
-or unsafe state. The canonical `claude-review` reconciliation contract is in
-[`docs/tool-adapters/codex.md`](../../docs/tool-adapters/codex.md#qualified-direct-claude-code-path).
+or unsafe state.
