@@ -73,34 +73,20 @@ removed the failure mode, or another test now protects the same invariant.
 
 ## Regression Fixture Fidelity
 
-For deterministic extraction, parsing, normalization, or replay behavior, shift
-from slow integration loops to fast regression-fixture iteration once the
-failure shape is understood.
+For deterministic extraction, parsing, normalization, or replay, shift to fast
+regression-fixture iteration once the failure shape is understood. Trust it
+only after fixtures faithfully reproduce a known real failure; retain
+fail-before/pass-after evidence whenever practical. Treat unproven "derived" or "representative"
+fixtures, unchanged integration replay, or identical integration failure
+signatures despite fixture success as fidelity warnings.
 
-Trust that loop only after the fixture faithfully reproduces a known real
-failure. Whenever practical, keep fail-before/pass-after evidence: the new
-fixture should fail on the broken implementation and pass after the fix.
-
-Treat fixture fidelity as suspect when the local fixture loop passes but
-milestone or integration replay remains unchanged, integration validation shows
-identical failure signatures, or "DORA-derived", "derived", or
-"representative" fixtures were never proven against the actual failing shape.
-
-Faithful fixtures do not guarantee execution-path equivalence. A
-fail-before/pass-after fixture is necessary, but not always sufficient, when
-the real system still behaves as if nothing changed.
-
-If the fixture passes but integration behavior remains unchanged, stop adding
-speculative fixtures or heuristics and treat the problem as possible
-execution-path divergence. Compare the real integration path against the tested
-layer before making another logic change. Check stage ordering, alternate code
-paths, configuration skew, preprocessing differences, caching or state reuse,
-runtime wiring, and artifact generation paths.
-
-Run periodic integration validation to confirm the fixture loop is still
-anchored to real behavior, not just a convenient local approximation.
-Use integration validation to confirm path equivalence at milestones, not as
-the repeated inner loop for every candidate fix.
+If fixtures pass but integration behavior is unchanged, stop speculative
+fixtures or heuristics and compare the real execution path with the tested
+layer before another logic change. Check stage order, alternate paths,
+configuration, preprocessing, caching/state reuse, runtime wiring, and artifact
+generation. Fail-before/pass-after evidence is necessary but may be insufficient
+in this case. Validate integration periodically and at milestones to confirm
+path equivalence, not for every candidate fix.
 
 ## Documentation Validation
 
@@ -263,67 +249,41 @@ Parallelism must not weaken:
 
 ## Public API Baselines
 
-When a task changes code, tests, docs, risks, or user-facing claims that depend
-on external public API behavior, establish the current behavior from official
-sources before making the change.
+Before changing code, tests, docs, risks, or user-facing claims dependent on
+external behavior, establish current behavior from official sources. This
+includes public/SaaS/cloud/GitHub APIs, SDKs, CLIs, package managers, and other
+external systems; it excludes trivial changes or internal-only refactors that
+do not depend on external API semantics.
 
-- Applies to public APIs, SDKs, SaaS APIs, cloud providers, GitHub APIs, CLIs,
-  package managers, and other external systems.
-- Prefer authoritative, provider-controlled sources:
-  - official provider documentation, such as TechDocs or API references
-  - official OpenAPI or schema definitions
-  - official SDK documentation
-  - official release notes or changelogs
-- Treat a source as authoritative only when it is controlled by the provider or
-  standards body responsible for the behavior and is specific enough to support
-  the claim being made. Product API references, developer portals, schema
-  definitions, SDK docs, and provider release notes are good evidence.
-- Do not treat generic corporate home pages, marketing pages, blogs, forums,
-  community answers, issue comments, StackOverflow answers, third-party
-  tutorials, AI-generated content, or search-result snippets as authoritative
-  evidence for public API behavior.
-- Check official sources for behavior such as resource lifecycle or status
-  semantics, region or location availability, pagination, rate limits and
-  retryability, auth or token error behavior, deletion and idempotency
-  semantics, eventual consistency or timing behavior, and SDK or CLI command
-  behavior.
-- If authoritative docs exist, use them as the primary source.
-- Do not rely on blogs, forum posts, StackOverflow, third-party summaries,
-  AI-generated content, model memory, stale historical knowledge, or inference
-  where authoritative docs are available.
-- If authoritative docs are ambiguous or cannot confirm the behavior, state the
-  uncertainty, choose conservative behavior, and avoid asserting or encoding a
-  false guarantee or limitation.
-- When citing sources in PRs, link directly to official docs and avoid indirect
-  or derivative sources.
-- If a third-party source is still useful for context, keep it secondary and add
-  an explicit source justification near the link.
+Use authoritative docs as primary evidence: controlled by the responsible
+provider or standards body and specific enough to support the claim, such as
+API references, schemas, SDK docs, or release notes.
+Corporate home pages, marketing, blogs, forums, community answers,
+issue comments, third-party tutorials, AI output, and search snippets are not
+authoritative. Neither these nor memory, stale knowledge, or inference may
+substitute for available authoritative docs. In PRs, link directly to official
+docs; justify any secondary third-party context beside its link.
 
-This requirement does not apply to trivial changes or internal-only refactors
-that do not depend on external API semantics.
+Verify relevant lifecycle/status, location availability, pagination, limits,
+retries, auth/token errors, deletion/idempotency, consistency/timing, and
+SDK/CLI behavior. If official docs are ambiguous or cannot confirm behavior,
+state uncertainty, choose conservative behavior, and avoid false guarantees or
+limitations.
 
 ### External Dependency Boundaries
 
-For repositories that depend on external providers, specs, CLIs, SDKs, or
-hosted platforms, keep the boundary between documented behavior and local
-assumption visible. This boundary is part of the repository's safety posture,
-not just a citation habit:
+For external providers, specs, CLIs, SDKs, or hosted platforms, distinguish
+officially documented guarantees, observations, and local assumptions in code
+comments, docs, tests, risks, and PR notes. Record the checked date for
+operationally important, time-sensitive, or changeable behavior. Prefer
+conservative workflows when docs are incomplete, ambiguous, or silent; never
+encode unverified assumptions as architecture, public guarantees, or destructive
+defaults.
 
-- Treat official provider or specification docs as authoritative for behavior
-  claims.
-- Distinguish documented guarantees from observed behavior in code comments,
-  docs, tests, risks, and PR notes.
-- Record the checked date when the behavior is operationally important,
-  time-sensitive, or likely to change.
-- Prefer conservative workflows when docs are incomplete, ambiguous, or silent.
-- Do not turn unverified assumptions into architecture, public guarantees, or
-  destructive default behavior.
-- Keep credentials in the environment or approved secret stores; do not encode
-  account-specific state, private topology, or local paths into reusable docs.
-
-Provider-specific API semantics belong in the repository that uses that
-provider, backed by direct official sources. The playbook should define the
-verification posture, not repeat external documentation.
+Keep credentials in the environment or approved secret stores, and
+account-specific state, private topology, and local paths out of reusable docs.
+Provider-specific semantics belong in the consuming repository with direct
+official sources; the Playbook owns verification posture.
 
 ## Advisory Source Check Operations
 
