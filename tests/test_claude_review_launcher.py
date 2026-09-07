@@ -225,6 +225,7 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         root: Path,
         forbidden_roots: list[Path] | None = None,
         *,
+        change_launcher: bool = True,
         change_rule: bool = True,
     ):
         selector, targets = self.create_installer_targets(root)
@@ -242,7 +243,9 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         predecessor_launcher = launcher.read_bytes()
         predecessor_template = CODEX_RULE_TEMPLATE.read_bytes()
         current_launcher = root / "current-claude-review"
-        current_launcher.write_bytes(predecessor_launcher + b"# reconciled source\n")
+        current_launcher.write_bytes(
+            predecessor_launcher + (b"# reconciled source\n" if change_launcher else b"")
+        )
         current_rule_template = root / "current-claude-review.rules"
         current_rule_template.write_bytes(
             predecessor_template + (b"# reconciled rule\n" if change_rule else b"")
@@ -530,6 +533,27 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 self.installer.reconcile_installed_projection()
 
             self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_reconciliation_accepts_rule_only_update_with_unchanged_launcher(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(
+                Path(temporary_directory).resolve(), change_launcher=False
+            )
+
+            with self.reconciliation_context(fixture):
+                result = self.installer.reconcile_installed_projection()
+
+            self.assertEqual(result["result"], "verified")
+            self.assertEqual(result["launcher_result"], "existing_current")
+            self.assertEqual(
+                fixture["launcher"].read_bytes(), fixture["current_launcher"].read_bytes()
+            )
+            self.assertEqual(
+                fixture["active_rule"].read_bytes(),
+                fixture["current_rule_template"].read_text(encoding="utf-8").replace(
+                    "__CLAUDE_REVIEW_LAUNCHER__", str(fixture["launcher"])
+                ).encode("utf-8"),
+            )
 
     def test_post_reconciliation_qualification_remains_a_current_projection(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
