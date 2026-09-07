@@ -81,12 +81,10 @@ before merge.
 
 ## Explicit Kickoff Mutation Boundary
 
-Every generated kickoff or orchestration prompt must declare an explicit,
-task-appropriate mutation boundary. Apply the three-class model in
-[`core-model.md`](core-model.md#kickoff-mutation-boundaries); do not use vague
-blanket phrases such as `read-only first response`, `no mutation on kickoff`,
-`do not touch anything yet`, or `do not mutate the planning or artifact system
-in the first response` as substitutes for the actual boundary.
+Every generated kickoff or orchestration prompt must declare the task-specific
+mutation boundary under [core-model.md](core-model.md#kickoff-mutation-boundaries).
+Blanket “read-only” or “no mutation on kickoff” language cannot replace actor,
+phase, permitted/prohibited surfaces, prerequisites, and authority.
 
 Use this provider-neutral projection and resolve each field for the task:
 
@@ -105,43 +103,31 @@ Kickoff mutation boundary:
   blocker only when that task-owned write is useful and authorized]
 ```
 
-When the kickoff is genuinely fully read-only, say why, name the actor and
-mutation surfaces covered, and keep the restriction no broader or longer than
-the owning workflow requires. When orchestration or evidence writes are
-allowed, state that they do not authorize delegated substantive execution or a
-human-gated transition. Prompt text, digests, receipts, artifacts, planning
-status, successful calls, storage objects, comments, validation, retrieval,
-review, branches, commits, and pull requests create zero authority.
+For fully read-only kickoff, state why and scope the actor, surfaces, and
+duration. Permitted orchestration/evidence writes authorize neither delegated
+substance nor human-gated transitions. Prompts and execution evidence create
+zero authority.
 
-This prompt projection does not redefine interactive-control or target-surface
-routing, artifact storage admission, transport, delivery, retention, cleanup,
-or replay, or operator-visible progress and client behavior. It governs the
-controller's declared boundary, not prompt-contract machinery: hydrators,
-adapters, renderers, validators, receipts, and checkpoints remain unable to
-drive lifecycle state or orchestration.
+This projection owns only the controller's declared boundary. Existing surface
+routing, storage/admission, delivery/retention, cleanup/replay, and progress
+contracts still apply. Prompt-contract machinery cannot drive lifecycle or
+orchestration.
 
 ### Repository mutation and decision-boundary check
 
-Before a generated prompt or handoff requires implementation mode or Git
-mutation, identify the current human direction or narrower owning-workflow rule
-that authorizes it. Apply the canonical decision rule in
-[`repo-readiness.md#repository-mutation-and-decision-boundaries`](repo-readiness.md#repository-mutation-and-decision-boundaries).
+Before requiring implementation or Git mutation in a prompt, identify current
+human direction or the narrower workflow that authorizes it. Apply
+[repository mutation and decision boundaries](repo-readiness.md#repository-mutation-and-decision-boundaries).
 
-A direct request to implement and open a pull request should produce one
-focused implementation branch and pull request unless the human explicitly
-requests another artifact or a narrowly applicable workflow requires one.
-Materiality, design work, or an independent-review requirement may add a
-semantic decision or review boundary, but does not independently add a design
-document, staging branch, or proposal-only pull request. Put required review or
-approval against the exact implementation artifact when the owning workflow
-permits it.
+Direct implementation-and-PR requests default to one focused branch/PR.
+Materiality, design, or independent review may add a semantic boundary, not a
+separate design document, staging branch, or proposal PR. Review the exact
+implementation artifact when the owner permits it.
 
-When current intent asks only for discussion, design, a specification, or a
-review, select review/audit or orchestration/prompt-authoring mode and omit
-implementation topology. Create a separate repository artifact only when it is
-explicitly requested or narrowly required, and keep its authority distinct
-from later implementation authority. Do not infer current repository mutation
-from recorded future intent.
+Discussion, design, specification, or review requests select review/audit or
+orchestration/prompt-authoring without implementation topology. Separate repo
+artifacts need explicit request or narrow workflow requirement; their authority
+is distinct from later implementation. Recorded future intent is insufficient.
 
 ## Thread Routing And Configuration Continuity
 

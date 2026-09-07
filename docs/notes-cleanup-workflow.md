@@ -35,62 +35,34 @@ By the end of the workflow:
 
 ## Cleanup Loop
 
-Use the cleanup loop in this order:
-
-1. Audit
-2. Trim
-3. Re-audit
+Repeat `audit -> trim -> re-audit` until the notes converge on the Playbook as
+the canonical source.
 
 ### 1. Audit
 
-Audit the notes project after promotion work has landed.
-
-During the audit:
-
-- stay inside the notes project root
-- classify relevant files as `remove`, `trim`, `keep`, or `defer`
-- point each `remove` or `trim` recommendation at the canonical playbook
-  location that now owns the guidance
-- keep the audit operational and file-specific
-
-The audit output should identify the highest-leverage cleanup work without
-reopening already-settled promotion decisions.
+After promotion lands, stay inside the notes project root. Classify relevant
+files as `remove`, `trim`, `keep`, or `defer`; identify the canonical Playbook
+owner for every `remove` or `trim` recommendation. Keep findings file-specific,
+prioritize useful cleanup, and do not reopen settled promotion decisions.
 
 ### 2. Trim
 
-Apply the audit recommendations in a focused batch.
+Apply a focused batch:
 
-During trim:
-
-- remove files that are fully superseded by the playbook
-- trim files that still belong in notes but contain redundant or promoted
-  material
-- preserve valid staging-layer context, local follow-up material, and notes that
-  do not conflict with the playbook
-- leave `defer` items alone until the blocking local decision or dependency is
-  resolved
-
-If multiple files overlap the same promoted rule, consolidate the surviving
-notes so one clear staging reference remains instead of several partial copies.
+- remove fully superseded files
+- trim redundant/promoted guidance while preserving valid staging context,
+  local follow-up material, and nonconflicting notes
+- leave `defer` items until their blocking local decision or dependency resolves
+- consolidate overlapping survivors into one clear staging reference
 
 ### 3. Re-audit
 
-Run the same audit again after cleanup changes land in the notes project.
-
-Use the re-audit to confirm that:
-
-- earlier `remove` and `trim` items were addressed cleanly
-- remaining notes still serve a valid staging purpose
-- no duplicate guidance was left behind during consolidation
-- any `defer` items are still deferred for a concrete reason rather than because
-  cleanup stalled
-
-If the re-audit still finds avoidable overlap, repeat the trim step and rerun
-the audit until the notes set converges.
+After cleanup changes land, repeat the audit. Confirm earlier recommendations
+were addressed, remaining notes serve a staging purpose, consolidation left no
+duplicate guidance, and each deferred item still has a concrete blocker.
+Repeat trim and audit when avoidable overlap remains.
 
 ## Practical Rule
 
-Treat this workflow as `audit -> trim -> re-audit`, not as a one-pass deletion
-exercise. The audit identifies cleanup targets, the trim step reduces the notes
-set, and the re-audit verifies that the repository now reflects the playbook as
-the canonical source.
+Use the [cleanup loop](#cleanup-loop) through re-audit; deletion alone does not
+complete this workflow.

@@ -2,36 +2,25 @@
 
 ## Purpose
 
-For repository workflows with a source-of-truth trigger, detect the trigger
-first, retrieve authoritative state next, and only then use conversational
-continuity to interpret intent or explain the result.
-
-This avoids coherent but unverified answers about PRs, issues, branches,
-files, validation, CI, runtime state, or external provider/API behavior.
+For repository/software work, detect source triggers, retrieve authoritative
+state, then interpret intent using conversational continuity. General chat,
+brainstorming, and conceptual discussion need no live retrieval unless they
+depend on current repository, PR, issue, ref, validation, runtime, provider, or
+external API state.
 
 ## Scope
 
-This applies to repository and software workflows. It does not require live
-source retrieval for ordinary general chat, brainstorming, or conceptual
-discussion unless the answer depends on current repository, pull request,
-issue, branch, commit, validation, runtime, provider, or external API state.
-
-This guidance describes observable workflow behavior and operational
-safeguards. It does not assume or describe platform internals.
+This governs observable repository workflow, not platform internals.
 
 ## Authority Selection
 
-Apply the question-typed authority rule in
-[`core-model.md`](core-model.md#authority-follows-the-question) and its
-[`Evidence Classification Invariant`](core-model.md#evidence-classification-invariant)
-before using the evidence hierarchy below. The core model owns those semantic
-requirements; this document owns repository retrieval triggers, source
-ordering, verification gates, and recovery mechanics. The hierarchy orders
-evidence for a claim only after the source that owns that kind of fact has been
-identified; it is not a global system-of-record ranking. When a question spans
-planning, repository, runtime, or historical evidence boundaries, retrieve
-each applicable owner and preserve their separate claims during
-reconciliation.
+Before ordering evidence, apply the core model's
+[question-typed authority](core-model.md#authority-follows-the-question) and
+[Evidence Classification Invariant](core-model.md#evidence-classification-invariant).
+Identify each fact's owner; the hierarchy below ranks evidence only within
+that scope. Retrieve separate planning, repository, runtime, and historical
+owners when a question crosses boundaries. This document owns repository
+retrieval triggers, ordering, gates, and recovery.
 
 ## Evidence Hierarchy
 
@@ -45,32 +34,19 @@ Prefer evidence in this order when repository state is available:
 6. Prior-thread summaries.
 7. Agent-generated summaries, completion reports, or status claims.
 
-Summaries, reports, and completion narratives, including user-provided PR,
-implementation, repository, issue, audit, status, and change summaries, are
-navigation rather than evidence for source-verifiable judgments. They may guide
-what to inspect, but when a live artifact, repository, check, workflow, log, or
-file can be inspected directly, verify the underlying source before reviewing,
-approving, critiquing, validating, recommending merge, assessing completion, or
-making implementation judgments.
+Summaries and reports from users, prior tasks, or agents are navigation, not
+evidence. When the underlying artifact is inspectable, verify it before review,
+approval, critique, validation, merge/readiness/completion advice, or
+implementation judgment.
 
-When a task asks for direct review of GitHub state, pull requests, issues,
-repository files, checks, comments, or review threads, inspect the GitHub
-artifact through the available connector or source-of-truth tool before giving
-a conclusion. PR receipts, implementation summaries, validation summaries, and
-automation reports are navigation aids, not evidence, when that access is
-available. Before claiming connector access is unavailable, apply the runtime
-verification rule in
-[`start-here.md`](start-here.md#connector-availability-is-runtime-evidence).
-If verified connector or source access is unavailable, say so explicitly
-before offering any summary-based analysis. Do not imply direct inspection
-happened unless it actually did.
+For direct review of GitHub state, inspect the artifact through the available
+connector or source-of-truth tool first. Before claiming unavailable access,
+apply [runtime capability verification](start-here.md#connector-availability-is-runtime-evidence).
+If access is verified unavailable, disclose that before any summary-based
+analysis; never imply inspection occurred.
 
-Reasoning traces, telemetry, generated summaries, and agent self-reports are
-supplementary evidence only. They are not authoritative proof of source state,
-intent, or correctness. When they conflict with verified source state or
-observed action and outcome, the verified source state or action and outcome
-control. This matters because reasoning traces can be post-hoc, incomplete, or
-optimized toward what the workflow appears to reward.
+Reasoning traces, telemetry, and self-reports are supplementary. Verified source
+state and observed actions/outcomes control when they conflict.
 
 ### Failed-thread diagnostic evidence
 
@@ -189,19 +165,12 @@ inference.
 
 ## Ordering
 
-For repository workflows:
-
-1. Detect deterministic triggers in the request, visible context, and provided
-   artifacts.
-2. Classify each trigger as mandatory, optional, or ambiguous.
-3. For every mandatory trigger, inspect referenced PRs, issues, branches,
-   checks, workflows, files, or other authoritative sources directly.
-4. Verify current live state.
-5. Summarize verified findings first.
-6. Only then interpret, prioritize, recommend, or explain.
-7. Use conversational continuity only after source retrieval establishes the
-   current state.
-8. Treat any source that could not be checked as unknown or unverified.
+1. Detect mandatory, optional, or ambiguous triggers in the request, visible
+   context, and supplied artifacts.
+2. Resolve ambiguity and directly inspect every mandatory source.
+3. Verify live state and report verified findings and remaining unknowns.
+4. Only then interpret, prioritize, recommend, or explain using continuity for
+   intent, constraints, tone, decisions, and output shape.
 
 ### Existing Checkout Freshness And Bounded Recovery
 
@@ -300,19 +269,13 @@ repository, GitHub, CI, runtime, or provider evidence.
 
 ## Repo-Aware Advisory
 
-Treat repo-aware suggestions as retrieval tasks first and advisory tasks
-second. When a repository is explicitly named and the human asks for analysis,
-review, suggestions, evaluation, "what should we add", "what do you think",
-architecture direction, or repo-aware prioritization, inspect enough current
-repository state to ground the answer.
+For analysis, review, evaluation, architecture, suggestions, or prioritization
+about a named repository, inspect enough current source to ground the answer.
+Match depth to the question; do not broaden into an unrequested audit.
+Conceptual discussion needs retrieval only for state-dependent claims.
 
-Keep inspection proportional to the question. Do not turn this into a full
-audit unless the request calls for one. Purely conceptual discussion remains
-optional unless the answer claims or depends on current repository state.
-
-If this step was missed, recovery starts by retrieving the referenced
-repository state. Then correct, discard, or mark prior repo-specific advice as
-unverified before explaining the failure pattern.
+If retrieval was missed, retrieve first, then correct, discard, or mark prior
+repo-specific advice unverified before explaining the failure.
 
 ## Verification Gate
 
@@ -433,43 +396,15 @@ that still matter after inspection.
 
 ## Failure Modes
 
-Watch for these observable failure patterns:
-
-- continuity-first resumption: answering from prior thread flow before opening
-  the referenced PR, issue, branch, path, or provider source
-- stale conversational carry-forward: treating an earlier plan, summary, or
-  status report as current after repo or remote state may have changed
-- inferred repo or PR state: claiming files, checks, comments, mergeability, or
-  readiness from expectations instead of inspection
-- summary substitution for live state: using cached summaries, completion
-  reports, pasted PR summaries, or copied diffs as the source of truth when a
-  live artifact is available
-- local-state versus remote-state confusion: treating a clean local checkout as
-  proof of GitHub mergeability, CI success, review resolution, or issue closure
-- coherent but unverified responses: producing plausible recommendations
-  without verified source state
-- acknowledged-but-unrecovered drift: recognizing the source-first violation
-  while continuing from the same conversational state
-- explanation replacing remediation: describing the correct ordering instead
-  of re-entering it
-- meta-analysis replacing action: discussing a concrete operational request
-  instead of inspecting, reviewing, updating, or generating the requested
-  artifact
+Treat continuity-first answers, stale carry-forward, inferred state,
+summary-for-source substitution, local/hosted confusion, and acknowledgment or
+meta-analysis without retrieval as source-first drift. Apply [Recovery](#recovery)
+before continuing.
 
 ## Rules
 
-- Detect repository triggers before continuity.
-- Retrieve authoritative source state before stateful reasoning.
-- Treat summaries as leads, not state, whenever live inspection is available.
-- Provide no evaluative commentary before direct live inspection.
-- Block readiness, mergeability, approval, closure, and implementation-scope
-  claims until verification completes.
-- Use summaries and memory only as navigation aids after source retrieval.
-- Mark unavailable source state as unknown; do not infer it.
-- Separate local checkout facts from remote PR, issue, CI, and review facts.
-- Treat partial verification as partial; do not issue full recommendations from
-  missing checks.
-- Stop on source-access failure when the requested output depends on that
-  source.
-- After source-first drift, halt continuity and re-enter retrieval before
-  continuing.
+Apply [Triggers](#triggers), [Ordering](#ordering), and the
+[Verification Gate](#verification-gate). Preserve partial/unknown results,
+separate local from hosted claims, and block dependent conclusions when required
+verification fails. After drift, perform [Recovery](#recovery); acknowledgment
+alone is insufficient.

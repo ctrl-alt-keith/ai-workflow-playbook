@@ -7,57 +7,32 @@ work easier to review, validate, and merge.
 
 ## Distributed-Systems Lens For Multi-Agent Work
 
-Treat multi-agent repository work like a small distributed system. The analogy
-is operational, not literal: each worker has partial local state, can drift from
-current truth, and may conflict with other workers unless ownership, source of
-truth, validation, and reconciliation rules are explicit.
+Workers have partial state and may drift or conflict. Preserve these boundaries:
 
-Use the lens to reinforce the existing rules:
+- authoritative repository/provider/planning sources control over agent context
+  or reports;
+- lanes have explicit ownership, scope, exclusions, and stop conditions;
+- sequence or reconcile overlapping writes before mutation;
+- commands and validation should support safe retry;
+- orchestrator/human owns coordination, merge order, and trust decisions;
+- worker authority stops at its lane unless explicitly extended;
+- canonical validation precedes readiness/reconciliation; and
+- reconcile through review, rebase, validation, and merge sequencing.
 
-- authoritative repo, provider, issue, PR, and documentation state controls over
-  agent context, memory, pasted summaries, and prior-thread reports
-- worker lanes need explicit ownership, scope, exclusions, and stop conditions
-- overlapping writes require sequencing or reconciliation before mutation
-- commands and validation should be rerunnable enough for safe retry
-- the orchestrator or human owns coordination, merge order, and trust-boundary
-  decisions
-- worker implementation stops at the assigned lane unless further authority is
-  explicitly granted
-- canonical validation is the health check before readiness or reconciliation
-- review, rebase, validation, and merge sequencing are the reconciliation path
-
-The worker count, lane layout, execution engine, and sequencing topology may
-change only while the approved semantics, authority boundaries, isolation,
-evidence identity, and validation contract remain intact. A topology change is
-not authority to reinterpret the task or weaken a guarantee.
-
-For comparative discovery and synthesis across multiple agents, use
-[`multi-agent-synthesis.md`](multi-agent-synthesis.md). Convergence and
-divergence can guide what deserves inspection, but source verification and
-human judgment still decide what becomes doctrine, planning, or implementation.
+Topology may change only while approved semantics, authority, isolation,
+evidence identity, and validation remain intact. For comparative discovery,
+apply [multi-agent-synthesis.md](multi-agent-synthesis.md); agreement or
+disagreement guides inspection, not doctrine, planning, or implementation
+without source verification and human judgment.
 
 ## Default To One Thread
 
-Prefer single-thread Codex work when the task has one coherent review surface.
-This is the default for most repository changes.
-
-Single-thread work is usually right when:
-
-- one person or agent can inspect the relevant sources and complete the change
-  without losing context
-- the change touches one repository, one branch, one validation path, and one
-  pull request
-- the work depends on a shared semantic decision that should be made once
-- the affected files are tightly coupled, such as one function, one command,
-  one schema contract, one generated artifact family, or one user-facing
-  wording surface
-- validation or review cost would not shrink meaningfully by splitting
-
-Do not split work merely because several agents are available. If the split
-would create coordination work larger than the task itself, keep the task in one
-thread and ship the smallest coherent change. For PR packaging guidance in
-solo-operator or low-coordination contexts, use
-[`repo-readiness.md`](repo-readiness.md#solo-operator-iteration-economics).
+Use one thread for one coherent review surface when one agent can retain the
+needed context, the work shares a semantic decision or tightly coupled files,
+or splitting would not reduce validation/review cost. Availability of agents is
+not a reason to split. Keep work together when coordination would exceed the
+task; apply [iteration economics](repo-readiness.md#solo-operator-iteration-economics)
+for PR packaging.
 
 ## Fan Out Deliberately
 
@@ -224,29 +199,18 @@ re-fetch current source state before acting.
 
 ## Recovery And Replay
 
-Recovery is contract-scoped. Apply the canonical fresh, replay, receipt, and
-checkpoint semantics in [`prompt-contracts.md`](prompt-contracts.md) when a
-material prompt contract exists. A checkpoint is reusable only when the
-semantic and operational contracts that created it, the authority available
-now, the recorded inputs, and the referenced artifact identities still apply.
-A stale checkpoint may explain prior work, but it cannot silently authorize new
-work or move a workflow across a boundary.
+For material prompt contracts, apply
+[prompt-contracts.md](prompt-contracts.md) for fresh selection, replay, receipts,
+and checkpoints. Reuse a checkpoint only if its creating semantic/operational
+contracts, current authority, recorded inputs, and exact artifacts still apply.
+Historical continuity grants no new work or transition authority.
 
-Distinguish the execution mode:
-
-- Fresh execution creates a new attempt under current authority, selects exact
-  compatible inputs once before hydration, and keeps them immutable for that
-  attempt.
-- Replay reproduces a previously authorized attempt from its recorded contract
-  and exact inputs. It must not read current mutable semantic sources,
-  rediscover scope, recompute input selection, widen the work, reinterpret
-  approval, silently upgrade dependencies, or acquire new authority.
-
-Replay reproduces contract identity and authorized inputs, not deterministic
-model output. If the recorded contract, pinned validation identity, exact
-prompt bytes, or other inputs cannot be reconstructed faithfully, stop rather
-than presenting a new execution as replay. A later attempt should state whether
-it is fresh execution, replay, or a contract-valid continuation.
+State whether the next attempt is fresh execution, exact-input replay, or a
+contract-valid continuation. Fresh execution selects current compatible inputs
+once under current authority; replay preserves recorded inputs and cannot
+rediscover scope, upgrade dependencies, widen work, reinterpret approval, or
+read mutable semantic sources. Replay guarantees input/contract identity, not
+model output. Stop if exact historical dependencies cannot be reconstructed.
 
 ## Lightweight DAG Planning Model
 

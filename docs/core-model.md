@@ -58,83 +58,52 @@ ordinary chat, brainstorming, or conceptual discussion procedural.
 
 ## Evidence Classification Invariant
 
-Before drawing a material conclusion, identify the source authoritative for
-that conclusion and classify each relied-on input by its relationship to that
-source. Use the evidence classes that fit the question rather than imposing a
-fixed taxonomy.
+Before a material conclusion, identify its authoritative source and classify
+relied-on inputs by their relationship to it; use the evidence classes the
+question needs, not a fixed taxonomy.
 
-Distinguish authoritative state from artifacts derived from it. Reports,
-dashboards, receipts, summaries, caches, and other derived artifacts may be
-evidence of their own production or preserved history, but they must be
-validated against the authoritative source before supporting a conclusion
-about the state they represent. A derived artifact must never become evidence
-for the authoritative state it summarizes.
-
-This is a semantic execution invariant, not a prompt-writing convention.
-Repository retrieval triggers, source ordering, verification gates, and
-recovery mechanics remain owned by
-[`source-first-retrieval.md`](source-first-retrieval.md).
+Derived reports, dashboards, receipts, summaries, and caches may evidence their
+own production or history. Verify them against the owner before concluding
+anything about the authoritative state they summarize. A derived artifact must
+never become evidence for the authoritative state it summarizes. This is an
+execution invariant; [source-first-retrieval.md](source-first-retrieval.md) owns repository
+triggers, ordering, verification, and recovery.
 
 ## Operator Observability
 
-During consequential work, surface meaningful operational state transitions
-when they materially change subsequent execution. The update should let the
-operator understand the state entered and why that state changes what may
-happen next.
+Surface operational transitions when they materially change human review,
+workflow authority, or subsequent execution. State the entered mode, contract,
+evidence boundary, validation/readiness state, or blocker and its consequence.
+Do not expose or request private reasoning or impose a fixed phase list or
+template.
 
-Relevant transitions can include establishing an operating mode, selecting a
-work classification, identifying governing contracts, setting an evidence
-boundary or authoritative source, selecting a validation strategy, completing
-validation, becoming ready to mutate repository state, or encountering a
-blocker. These are examples, not a required phase list or reporting taxonomy.
-
-Do not require every transition to be reported, prescribe exact wording or a
-logging style, narrate hidden deliberation, or expose or request private
-chain-of-thought. Operator observability reports execution state and its
-behavioral consequence; it does not report internal reasoning.
-
-Routine successful item operations are not operator-observability events.
-During bounded bulk or connector-heavy work, prefer aggregate milestones and a
-compact final result. Surface material state transitions promptly, including
-blockers, authority or scope mismatches, drift, privacy or retention issues,
-collision or overwrite risk, validation failures, and permission, approval,
-destructive, or other safety boundaries. Preserve complete item-level evidence
-outside the conversation. Honor an operator's mid-run request for quieter or
-more verbose progress when the active runtime supports it, and report
-client-forced output as a limitation rather than claiming it was suppressed.
+For bounded bulk or connector-heavy work, report aggregate milestones and
+retain complete item evidence outside conversation. Report material blockers,
+authority/scope mismatch, drift, privacy/retention issues, collisions,
+overwrite risk, validation failure, and permission/approval/destructive
+boundaries promptly. Honor supported mid-run presentation preferences; report
+client-forced output as a limitation. Routine item successes need no update.
 
 ### Successful completion projection
 
-A successful completion report orients the operator to the review surface.
-For an ordinary successful repository run, default to roughly 2–4 short
-sentences covering only the completed outcome, the reviewable artifact and its
-current status, canonical validation at a useful summary level, and the current
-stop boundary. Include one additional fact only when it materially changes
-what the operator should review, decide, or do next. This is a semantic
-projection, not an exact wording template or layout.
+For ordinary successful repository work, use roughly 2–4 short sentences:
+outcome, exact review surface and status, useful canonical-validation summary,
+and current stop boundary. Add facts only when they change operator review,
+decision, or action. Detailed evidence belongs in the PR, issue, and durable
+artifacts.
 
-The PR, issue, and durable evidence remain the detailed record. Do not routinely
-replay prompt transport or Airtable verification, hashes, byte counts, record
-IDs, receipts, source inventories, retrieval or preflight mechanics, temporary
-scratch or cleanup mechanics, command history, or raw test counts. Leave
-runtime/model evidence, adjacent issue dispositions, research findings, and
-unresolved claims there unless they materially affect operator review or
-action. Omit unchanged authority reminders, implementation mechanics already
-visible in the review artifact, and exhaustive lists of unchanged surfaces.
-This projection reduces operator-facing repetition only; it does not weaken
-evidence collection, verification, identity, retention, or retrievability.
+Omit routine transport verification, hashes, counts, receipts, source/preflight
+inventories, scratch/cleanup mechanics, command history, raw test counts,
+unchanged authority reminders, and details already in the artifact. Keep
+runtime/model evidence, adjacent dispositions, findings, and unresolved claims
+there unless material to operator action.
 
-Expand beyond the normal projection for a material exception, including failure
-or partial success, identity or integrity mismatch, a
-retry that materially affected execution, validation or review failure,
-capability or authentication limits, unexpected state, unresolved risk or
-blocker, a required human decision, or cleanup residue. Report the material
-exception and its consequence rather than the complete forensic history.
-
-This post-execution projection does not suppress progress updates or evidence
-that a specialized workflow requires at a material transition. A handoff may
-therefore carry more identity and verification detail than the later successful
-completion report.
+Expand for failure/partial success, identity or integrity mismatch, consequential
+retry, validation/review failure, capability/authentication limits, unexpected
+state, unresolved risk/blocker, required human decision, or cleanup residue.
+Report the exception and consequence, not the full forensic history. This
+projection does not weaken evidence collection or retrievability, required
+progress updates, or specialized handoff identity/verification requirements.
 
 ## Authority Follows The Question
 
@@ -164,16 +133,10 @@ owning workflow, then revalidate mutable facts.
 
 ## Protocol Invariants
 
-A reusable workflow protocol is defined by its reviewed semantic invariants,
-not by one implementation topology. The stable contract names the intended
-meaning, scope, authority boundaries, evidence identity, isolation guarantees,
-and validation expectations that must survive changes in tools, workers,
-prompts, branches, or orchestration shape.
-
-Topology and execution mechanics may evolve when those approved invariants are
-preserved. A successful run or convenient implementation is evidence about one
-execution; it does not silently establish a reusable invariant or authorize a
-semantic change.
+Reviewed semantic invariants define a protocol: meaning, scope, authority,
+evidence identity, isolation, and validation. Tools, workers, prompts, branches,
+and orchestration topology may change only while preserving them. Successful
+execution does not establish a reusable invariant or authorize semantic change.
 
 ## Roles
 
@@ -338,22 +301,14 @@ outside the current contract, the transition remains fail-closed.
 
 ## Protocol Phases
 
-Separate evidence production from decision production when a workflow includes
-both:
-
-- Evidence-production phases acquire, produce, review, integrate, or validate
-  material under the current operational contract.
-- Decision-production phases interpret the accepted evidence and produce
-  recommendations, approvals, dispositions, or other consequential choices.
-
-The boundary is semantic, not a required stage list, branch topology, or pull
-request count. Crossing it requires an explicit review and authority boundary,
-and completed evidence production does not imply approval of a downstream
-decision.
-
-When a workflow accepts, integrates, or synthesizes evidence, apply the
-[`evidence lifecycle`](evidence-lifecycle.md) before crossing into decision
-production.
+When a workflow includes both, separate evidence production (acquisition,
+production, review, integration, validation under the operational contract) from
+decision production (interpretation of accepted evidence, recommendation,
+approval, disposition). Crossing requires an explicit review and authority boundary;
+completed evidence does not approve downstream decisions. These are semantic
+roles, not required stages or Git topology. When accepting, integrating, or
+synthesizing evidence, apply [evidence-lifecycle.md](evidence-lifecycle.md) before
+crossing into decision production.
 
 ## Active Bounded-Task Continuity
 

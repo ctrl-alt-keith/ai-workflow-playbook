@@ -129,85 +129,41 @@ validity rules above still control after the review decision.
 
 ## What Codex Should Summarize
 
-Codex should summarize:
+Project the [Packet Format](#packet-format) into a concise decision index, not a
+line-by-line diff. State the requested decision, exact identity, objective,
+scope, invariants, exceptions, authority, validation, main risks, next action,
+and `ready to merge`, `needs decision`, or `blocked` recommendation.
 
-- the decision requested and exact reviewed identity
-- the objective
-- the actual scope
-- the invariants, exceptions, and authority boundary
-- the validation evidence
-- the main risks
-- the exact next permitted action
-- an explicit recommendation: `ready to merge`, `needs decision`, or `blocked`
-
-The goal is not to restate the diff line by line. The goal is to make human review targeted and efficient.
-
-When a decision depends on integrated or synthesized evidence, use
-[`evidence-lifecycle.md`](evidence-lifecycle.md) for the accepted-evidence,
-semantic-accounting, and reporting boundaries.
-
-If the repo does not have a formal validation path yet, say that directly and summarize the lightweight validation that was used.
-
-When relevant, say explicitly whether validation was mocked, contract-level, or exercised against real behavior, and treat that gap as a risk.
+Apply [evidence-lifecycle.md](evidence-lifecycle.md) when the decision depends on
+integrated/synthesized evidence. If formal validation is absent, say so and
+report the inspection used. Distinguish mocked, contract-level, and real
+behavior validation when the gap affects risk.
 
 ## Direct PR Inspection
 
-Linked review artifacts are authoritative; pasted summaries and completion
-reports are context.
-The source-first ordering rule in
-[`source-first-retrieval.md`](source-first-retrieval.md) applies before
-continuity or summary-based reasoning whenever a PR, issue, branch, commit, or
-repository trigger is present.
+Apply [source-first ordering](source-first-retrieval.md) before PR-dependent
+reasoning. When the human references or requests review, checking, assessment,
+approval, or comment on a connector-backed artifact, inspect it through the
+matching connector before feedback. For GitHub, use the GitHub connector;
+local checkout, `git diff`, and `gh` only supplement that inspection.
 
-When the human references, links, names, or asks to review, check, assess,
-approve, or comment on a GitHub PR or similar connector-backed review artifact,
-the reviewer must inspect the artifact through the matching connector before
-giving review feedback. For GitHub PRs, open the PR through the GitHub
-connector.
+“Open the PR” means read-only connector inspection, not a browser action or
+submitted review. “Review this PR” means inspect and respond in chat. Do not
+submit, approve, request changes, comment, label, merge, close, or otherwise
+mutate the PR without explicit human authorization for that action.
 
-Local checkouts, `git diff`, and `gh` commands may be used as supplemental
-evidence for PR review, but they must not replace connector inspection.
+Inspect available title/body, changed files, relevant diffs, comments and
+unresolved discussions, checks/CI, mergeability, and fit to the task/issue.
+Pasted summaries, completion reports, titles, paths, and excerpts are navigation,
+not substitutes for the live review source. Do not claim safe/ready to merge or
+approved without direct connector evidence.
 
-Treat "open the PR" as read-only connector inspection. It does not mean opening
-the PR in a browser, and it does not mean submitting a GitHub review.
-
-User-provided PR summaries, completion reports, pasted titles, local path
-snippets, and copied diff excerpts are useful navigation and context, but they
-are not the review source of truth when a PR link, name, or number is
-available. A PR review must be grounded in the actual PR surface from the
-connector. The reviewer must inspect, where available:
-
-- PR title and body
-- changed files
-- relevant diffs
-- comments and unresolved review discussion
-- CI and check status
-- mergeability
-- scope against the task, issue, or stated goal
-
-Return review feedback in chat by default. The reviewer must not mutate the PR:
-do not submit, approve, request changes, comment on, label, merge, close, or
-otherwise change the PR unless the human explicitly asks for that GitHub action.
-
-Treat "review this PR" as inspect the PR and provide feedback in chat. Do not
-post the review to GitHub unless the human explicitly asks to post the review
-to GitHub.
-
-Do not claim a PR is safe to merge, ready to merge, or approved without direct
-evidence from the PR itself through the connector.
-
-Do not perform summary-only PR reviews when a PR link, name, or number is
-available unless connector access fails or the human explicitly says not to use
-the connector.
-
-If connector access is unavailable, fails, is declined, or is explicitly
-forbidden by the human, say so clearly. Do not provide a merge or readiness
-recommendation from secondhand text. Provide only clearly caveated feedback
-from information already present, or ask for connector access to be restored.
-
-If the human corrects tool or connector usage in the thread, treat that
-correction as a hard workflow constraint for subsequent similar review
-requests.
+If connector access fails, is unavailable, declined, or explicitly forbidden,
+state the limitation. Give only caveated feedback from already-present
+information or request restored access; no merge/readiness recommendation from
+secondhand text. Summary-only review requires failed connector access or an
+explicit human instruction not to use it. Treat human corrections to tool or
+connector use as binding for subsequent similar reviews.
 
 ### Connector-sufficient review latch
 

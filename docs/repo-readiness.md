@@ -126,50 +126,20 @@ to restate inherited policy.
 
 ## Interaction Mode Preflight
 
-Before acting on any repository or software task, determine the interaction
-mode. Do this before editing files, creating branches, committing, opening pull
-requests, or running implementation-oriented workflows.
+Before acting on repository/software work—including editing, topology, commits,
+PRs, or implementation workflows—select the mode authorized by current human
+intent under [core roles](core-model.md#roles):
 
-This preflight applies the role framing from
-[`core-model.md`](core-model.md#roles): humans own intent, standards, and
-completion decisions; AI should match its execution behavior to the mode the
-human has actually delegated.
+| Mode | Eligible deliverable/actions |
+| --- | --- |
+| Implementation | Explicit repo changes, canonical validation, commit, push, and PR delivery from a dedicated repo-local worktree when required. |
+| Review/audit | Inspect and report findings, evidence, risks, and recommendations without repository mutation. |
+| Orchestration/prompt-authoring | Inspect needed context and produce a complete downstream prompt/handoff; implementation requires explicit authority. |
 
-Use one of these modes:
-
-- Implementation mode: directly make repo changes, validate them, commit them,
-  push the branch, and open or update a pull request from a dedicated
-  repo-local worktree when repo guidance calls for PR delivery.
-- Review/audit mode: inspect the requested repository, pull request, issue, or
-  file surface and report findings, evidence, risks, and recommendations
-  without mutating the repository.
-- Orchestration/prompt-authoring mode: inspect enough issue, repository, pull
-  request, and workflow context to decide the right course of action, then
-  produce a complete, self-contained prompt or handoff for another agent or
-  tool.
-
-Tool-role boundaries follow the selected mode:
-
-- Implementation agents implement explicit repository changes directly and
-  carry them through validation, commit, push, and PR delivery when repo
-  guidance calls for it.
-- Review or audit agents inspect and report findings, evidence, risks, and
-  recommendations without implementing changes.
-- Orchestration or prompt-authoring agents produce a complete handoff prompt or
-  task envelope unless the human explicitly asks them to implement the change.
-
-Examples:
-
-- Implementation mode: "Implement issue #42, run validation, commit it, and
-  open the PR" authorizes repo mutation and PR delivery.
-- Review/audit mode: "Review PR #42 for merge readiness" means inspect the PR
-  surface and report findings without changing the branch or PR.
-- Orchestration/prompt-authoring mode: "Write a handoff for another agent to
-  fix issue #42" means gather enough context to produce the complete prompt,
-  not to make the fix.
-- Ambiguous task handling: "Can we fix this?" stays in review/audit or
-  orchestration/prompt-authoring mode until the human explicitly asks for
-  implementation.
+In ctrl-alt-keith workflows, ambiguous repair language defaults to review/audit
+or orchestration/prompt-authoring. Explicitly delegated implementation (for
+example, “make the change” or “open the PR”) selects implementation mode;
+wording alone does not override surrounding review or prompt-authoring intent.
 
 ### Interaction-mode action eligibility latch
 
@@ -201,59 +171,28 @@ connector can supply the required review evidence. A material human change may
 select a new mode and action set; convergence, tool availability, a failed
 forbidden attempt, or broader conversational history cannot.
 
-Do not infer implementation mode from vague wording such as "fix this",
-"handle this", or "let's fix the bug" when the surrounding context suggests
-advisory review, audit, orchestration, or prompt generation.
+When design or review converges, resolve the next eligible action from current
+intent: continue design, capture a decision, implement, delegate, deliver a PR,
+or stop. Convergence alone grants no repository mutation authority.
 
-Re-evaluate the interaction mode when a review, audit, planning, architecture,
-or prompt-authoring discussion converges on a selected direction and the
-remaining work becomes implementation-oriented. Convergence on a direction does
-not by itself authorize repository mutation. Before continuing, briefly decide
-whether the next step is to continue design, capture the decision, implement
-directly, delegate implementation, open or update a pull request, or stop.
-Keep this checkpoint lightweight: use the current user intent, repository
-guidance, and visible completion state instead of adding a separate ceremony.
+For a repository prompt, deliver the complete execution delta: bounded action,
+repository, governing sources, task-specific constraints, result/stop boundary,
+and exact values or unresolved facts the receiver cannot safely recover. Route
+stable startup, workflow, validation, and delivery rules through current
+canonical owners; keep rationale/history in the issue, PR, or docs. Include a
+minimal startup route if the receiver lacks one, and omit copied recoverable
+material while preserving task-specific overrides and consequential identity,
+authority, safety, and acceptance details.
 
-For ctrl-alt-keith workflows, default ambiguous repository tasks to
-review/audit mode or orchestration/prompt-authoring mode unless the human
-explicitly asks for direct implementation. Implementation mode requires clear
-user intent, such as "make the change", "implement it", "open the PR",
-"commit this", or equivalent wording.
+Self-contained means executable from the prompt and resolvable sources without
+assembling earlier conversation. Unavailable required live sources remain
+blockers; copied context cannot establish current verification.
 
-In orchestration/prompt-authoring mode, do enough direct inspection to make the
-handoff usable without hidden assumptions. A complete repository prompt carries
-the execution delta: the bounded action, repository and governing source,
-task-specific constraints, required result and stop boundary, and exact values
-or unresolved facts the receiver cannot safely recover. Stable startup,
-workflow, validation, and delivery rules remain binding through current
-canonical sources; rationale and history stay in the issue, PR, or docs.
-
-Self-contained means the receiver can execute that action using the prompt and
-its resolvable sources, without assembling prior prompts or conversation.
-Include a minimal startup/source route when the receiving context does not
-already supply it. Before delivery, remove copied material recoverable through
-that route; retain task-specific overrides and any exact identity, authority,
-safety, or acceptance detail whose omission would change or obscure execution.
-Retain needed context when the receiver cannot recover it; an unavailable
-required live source remains a blocker, not a reason to treat copied context
-as current verification.
-
-Do not produce partial prompts, continuation fragments, diffs, partial edits,
-or "change X to Y" pseudo-prompts unless the human explicitly requested that
-form.
-
-When the requested artifact is a prompt, spec, plan, implementation brief,
-review brief, automation prompt, or agent instruction, provide the full
-drop-in version by default. This remains true when the human asks how to "add",
-"incorporate", "fold in", or otherwise update something in an existing
-artifact. Do not assume the human will manually stitch prior context,
-conversation history, or earlier snippets into the final artifact. Return a
-patch, diff, targeted edit, or terse "change X to Y" response only when the
-human explicitly asks for that form.
-
-Keep this policy in the shared playbook. Repo-local `AGENTS.md` files should
-reference or rely on it rather than duplicate it, except where a repository
-truly requires different behavior.
+For prompts, specs, plans, implementation/review briefs, automation prompts, or
+agent instructions—including updates—return a complete drop-in artifact.
+Fragments, patches, diffs, or “change X to Y” forms require an explicit request.
+Keep this policy in the Playbook; repo-local `AGENTS.md` should reference it
+unless a local difference is required.
 
 ### Discussion to tracked execution
 
@@ -623,78 +562,28 @@ repo-local state is insufficient.
 
 ## Command Form And Intent Visibility
 
-Use the structurally minimal command form that still expresses the intended
-operation clearly. Normal repository operations must be invoked as the command
-itself, rather than hidden inside an extra shell layer.
+Run ordinary operations directly from the target worktree: `git`, high-level
+`gh`, `make`, `python`, repo-local scripts, and owning tools. Prefer native argv
+execution; disable implicit shell/login-shell behavior where supported.
 
-Run commands from inside the target repository worktree by default. For
-ordinary repository operations, use direct `git ...`, `gh ...`, `make ...`,
-`python ...`, repo-local scripts, and tool-specific commands. Before choosing a
-wrapper shell, check whether the command has a direct form and use that direct
-form when it does. Do not wrap those commands in `zsh`, `bash`, `sh`, shell
-aliases, or equivalent wrapper shells only for convenience. In particular,
-`zsh -lc`, `bash -lc`, `sh -c`, or equivalent forms are not normal wrappers for
-ordinary repo commands.
+For Git, use `git` rather than alternate APIs or helpers. For GitHub, use
+high-level `gh` or an approved connector. A missing convenience command does
+not justify `gh api`, GraphQL, raw HTTP, or equivalent wrappers. Before any
+bounded lower-level read, apply
+[minimum-sufficient retrieval and explicit escalation](source-first-retrieval.md#minimum-sufficient-retrieval);
+otherwise omit a nonessential fact or report the capability gap. Narrower
+executor restrictions still control.
 
-For standard Git work, choose the `git` command directly instead of
-substituting alternate APIs, helper tools, wrapper scripts, or
-connector-specific operations. For ordinary GitHub workflow operations, choose
-high-level `gh` subcommands directly. Do not use `gh api` or `gh api graphql`
-merely because a high-level convenience command is unavailable, and do not
-bypass this rule with direct GitHub REST or GraphQL HTTP calls or equivalent
-wrappers. Use an approved available connector or tool when it supports the
-required hosted fact. If a materially necessary fact remains unavailable,
-apply the minimum-sufficient retrieval and explicit-escalation rule in
-[`source-first-retrieval.md`](source-first-retrieval.md#minimum-sufficient-retrieval)
-before considering a bounded lower-level read; otherwise omit the nonessential
-fact or report the capability gap.
+Before a shell wrapper, determine whether pipes, redirection, glob expansion,
+chaining, scoped environment assignment, builtins, conditionals, or other shell
+semantics are necessary. If not, use the direct command. If needed, keep the
+wrapped operation narrow and inspectable. Do not add `zsh`, `bash`, `sh`,
+login-shell, `-c`, or alias wrappers for convenience.
 
-Preserve that directness at the execution layer too. Prefer native argv-style
-execution, such as `["git", "status"]` or `["gh", "pr", "create"]`, when the
-environment supports it. If an execution tool defaults to a shell, login shell,
-or shell-like command string, explicitly disable that behavior for `git` and
-`gh` where supported, using settings such as `shell=false`, `login=false`,
-`use_shell=false`, or the platform's equivalent direct-exec option.
-
-This keeps operational intent visible in logs, prompts, review notes, and local
-approval surfaces. It also lets permission or approval systems reason about the
-specific operation being requested, instead of treating a simple repository
-action as a broad shell execution.
-
-Preserve the same directness for canonical tooling. When an authoritative
-module, CLI, reusable workflow, or Makefile target owns executable behavior,
-call it instead of building a wrapper, aggregation script, or orchestration
-layer that duplicates part of its logic. Helper artifacts are acceptable when
-they are orchestration-only or report-only: they may cache raw outputs, collate
-command results, or format summaries, but should not reinterpret core
-semantics independently.
-
-Before executing any shell-wrapped command, perform a command-form preflight:
-
-- determine whether the operation genuinely needs shell semantics, such as
-  pipes, redirects, glob expansion, command chaining, shell builtins, inline
-  environment assignment, compound shell conditionals, or other shell-only
-  composition
-- if shell semantics are not required, rewrite the command into direct argv
-  form before execution
-- if shell semantics are required, keep the wrapped command narrow enough that
-  the operational intent remains inspectable
-
-Examples:
-
-- incorrect: `zsh -lc 'git status'`
-- correct: `git status`
-- preferred native argv form where supported: `["git", "status"]`
-- incorrect: `bash -lc 'make check'`
-- correct: `make check`
-- incorrect: `sh -c 'gh pr view 145'`
-- correct: `gh pr view 145`
-- preferred native argv form where supported: `["gh", "pr", "view", "145"]`
-
-Avoid inflating simple commands into larger execution forms only for habit or
-convenience. The goal is not to forbid shells; it is to preserve clarity,
-reviewability, and policy precision around what work is actually being
-performed.
+Invoke canonical executable owners instead of duplicating their behavior in
+wrappers, parsers, validators, aggregators, or orchestration. Helpers may cache
+raw output, collate results, or format reports; they may not independently
+reinterpret core semantics.
 
 ## Branch Protection
 
