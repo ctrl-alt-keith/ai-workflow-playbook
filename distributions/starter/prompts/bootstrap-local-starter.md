@@ -69,104 +69,42 @@ path without weakening local authority.
 
 ## Destination Outcomes
 
-For a work-local playbook repository, the destination itself becomes the
-playbook. Create repository-level content directly in the destination. Do not
-create a top-level `.ai-workflow/` directory.
+Before writing to any repository, inspect contributor docs, READMEs, validation
+commands, package metadata, Makefile/task runner, CI, review guidance, and
+existing `AGENTS.md`. Establish the current validation, review, release, and
+team-process owners from files and command output. Respect team/workplace
+process; assume neither administrator rights nor solo-operator governance.
 
-Expected playbook-repository structure should resemble:
+| Destination | Output and boundary |
+| --- | --- |
+| Existing work-local playbook repo | Create/update lightweight repository-level content directly; local `docs/start-here.md` is canonical. No top-level `.ai-workflow/`. |
+| New work-local playbook repo | Create only when tooling, supplied repository details, and permissions allow; otherwise provide explicit creation instructions and stop. Use the same repository-level shape. |
+| Existing project repo | Create/update only project-local workflow scaffolds under `.ai-workflow/`. Recommended: `repo-notes.md`, `review-packet-template.md`, and optional `AGENTS.template.md`. |
+| Local-only folder | Resolve future-playbook versus project-scaffold intent before writing; ask if ambiguous. Use repository-level files for the former, `.ai-workflow/` for the latter, and report the path. |
 
-- `README.md`
-- `docs/start-here.md`
-- `docs/source-first-retrieval.md`
-- `docs/repo-readiness.md`
-- `docs/review-packet.md`
-- `prompts/upstream-refresh.md`
-- `upstream-review-baseline.md` after an initial baseline is established
-- `refresh-reports/YYYY-MM-DD-upstream-refresh.md` for each implemented refresh
-- `templates/AGENTS.template.md`
-- `templates/review-packet-template.md`
+For playbook repositories, use this lightweight shape, adapted to verified local
+context rather than wholesale upstream copying:
 
-Adjust that structure only when local context shows a better lightweight shape.
-Keep the content lightweight and adapted to the environment; do not wholesale
-copy upstream doctrine.
+- `README.md`: direct users/tools to local `docs/start-here.md`.
+- `docs/start-here.md`: identify the local canonical entrypoint.
+- `docs/source-first-retrieval.md`, `docs/repo-readiness.md`, and
+  `docs/review-packet.md`: locally adapted guidance.
+- `prompts/upstream-refresh.md`: periodic applicability review of
+  `https://github.com/ctrl-alt-keith/ai-workflow-playbook` as source material,
+  never blind synchronization.
+- `upstream-review-baseline.md`: only after a trustworthy completed review.
+- `refresh-reports/YYYY-MM-DD-upstream-refresh.md`: only for implemented selected
+  refresh recommendations.
+- `templates/AGENTS.template.md`: point to local `docs/start-here.md`.
+- `templates/review-packet-template.md`.
 
-For an existing project repository, create local workflow scaffolding under
-`.ai-workflow/`. This is the only destination type that should receive a
-top-level `.ai-workflow/` directory by default.
-
-For a local-only folder, determine whether the folder represents a future
-playbook repository or project-local workflow scaffolding before creating
-files. If that intent is ambiguous, stop and ask.
-
-Before writing files:
-
-1. For any repository destination, inspect the repository's existing
-   contributor docs, README files, validation commands, package metadata,
-   Makefile or task runner, CI config, review guidance, and any existing
-   `AGENTS.md`.
-2. For any repository destination, identify the repository's current source of
-   truth for validation, review, release, and team process.
-3. Use source-first verification: rely on inspected files and command output,
-   not memory, summaries, or assumptions.
-4. Respect existing workplace and team processes.
-5. Do not assume administrator rights.
-6. Do not assume solo-operator governance.
-
-For an existing playbook repository, create or update only lightweight
-repository-level content that points workplace AI tools to local
-`docs/start-here.md`. Retain a reference to `prompts/upstream-refresh.md` for
-periodic upstream review.
-
-For a new playbook repository, create the repository when tooling, user-provided
-repository details, and permissions allow. If repository creation is
-unavailable, provide explicit repository creation instructions and stop before
-making assumptions. Include local `docs/start-here.md` as the environment's
-canonical starting point and `prompts/upstream-refresh.md` for future upstream
-review.
-
-For an existing project repository, create or update only project-local
-workflow scaffold files under `.ai-workflow/`. Recommended files:
-
-- `.ai-workflow/repo-notes.md`
-- `.ai-workflow/review-packet-template.md`
-- `.ai-workflow/AGENTS.template.md` when useful
-
-For a local-only future playbook repository, create repository-level content
-directly in the selected folder. For a local-only project scaffold, create the
-selected scaffold files under `.ai-workflow/` and report the path.
-
-Work-local playbook repository content should include:
-
-- a `README.md` that tells users and tools to start with local
-  `docs/start-here.md`
-- a lightweight local `docs/start-here.md` that identifies this repository as
-  the environment's canonical playbook entrypoint
-- lightweight local docs for source-first retrieval, repo readiness, and review
-  packets, adapted to local context
-- `prompts/upstream-refresh.md`, describing upstream as source material and
-  future improvements to review from
-  `https://github.com/ctrl-alt-keith/ai-workflow-playbook`, not blindly sync
-- `upstream-review-baseline.md`, once a trustworthy baseline is established,
-  containing the canonical upstream repository, exact last reviewed upstream
-  commit, and review date
-- lightweight refresh reports under `refresh-reports/`, created only when
-  selected refresh recommendations are implemented
-- `templates/AGENTS.template.md`, pointing adopters to local
-  `docs/start-here.md`
-- `templates/review-packet-template.md`
-
-The baseline means "upstream reviewed through this commit," not "all upstream
-changes through this commit were adopted." Use a small repository file rather
-than a Git tag so local release history remains separate. Do not create or
-advance the baseline until the corresponding review is complete.
-
-For a genuinely new work-local playbook created from the current upstream
-starter, record the exact upstream commit inspected during bootstrap after the
-generated local content has been reviewed. For an existing repository whose
-starting point is uncertain, do not invent a baseline. Leave the baseline
-unestablished and use the first-refresh path in `prompts/upstream-refresh.md`.
-
-Use this lightweight file shape when recording the baseline:
+Adjust the shape only for a better lightweight fit to local context. The
+baseline records upstream review coverage, not adoption. Use a repository file,
+not a Git tag, and never create/advance it before the corresponding review
+completes. For a genuinely new playbook from the current starter, record the
+exact upstream commit inspected after reviewing generated local content. For
+an existing repo with uncertain origin, leave it unestablished and use the
+first-refresh path in `prompts/upstream-refresh.md`; never invent a baseline.
 
 ```markdown
 # Upstream Review Baseline
@@ -180,32 +118,17 @@ This baseline means upstream was reviewed for local applicability through the
 recorded commit. It does not mean every upstream change was adopted.
 ```
 
-Project repo notes should capture:
+Project notes capture inspected purpose/technologies, discoverable canonical
+setup/validation commands, documented review/contribution process, source-first
+reminders, unknowns, and links to the local playbook's `docs/start-here.md`,
+`docs/source-first-retrieval.md`, `docs/repo-readiness.md`, and
+`docs/review-packet.md`.
 
-- repository purpose and main technologies, based on inspected sources
-- canonical local setup and validation commands, if discoverable
-- current review or contribution process, if documented
-- source-first retrieval reminders for this repository
-- known unknowns where source evidence was not available
-- links to the local playbook's canonical docs:
-  - `[local-playbook]/docs/start-here.md`
-  - `[local-playbook]/docs/source-first-retrieval.md`
-  - `[local-playbook]/docs/repo-readiness.md`
-  - `[local-playbook]/docs/review-packet.md`
-
-The review packet template should help contributors report:
-
-- objective
-- scope and explicit non-scope
-- source evidence inspected
-- validation run and results
-- risks, unknowns, and follow-up decisions
-- recommendation for human review
-
-The optional `AGENTS.template.md` should be a draft template only. It may show
-how repo-local agent guidance could point to canonical playbook docs and local
-validation commands, but it must not be installed as root `AGENTS.md` unless the
-user explicitly requests that in a separate instruction.
+The review template covers objective, scope/non-scope, inspected evidence,
+validation/results, risks/unknowns/follow-up decisions, and human-review
+recommendation. Optional `AGENTS.template.md` is a draft showing canonical
+links and local commands; root installation requires a separate explicit user
+instruction.
 
 Hard boundaries:
 

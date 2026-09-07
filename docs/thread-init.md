@@ -38,17 +38,12 @@ Use this playbook as the canonical source of patterns, workflow rules, and
 decision defaults for this thread.
 
 Thread rules:
-- Do not pull context, conventions, or assumptions from unrelated projects,
-  repos, branches, scratchpads, experiments, or prior threads unless I
-  explicitly name them.
-- Treat any non-playbook context outside the stated project scope as out of
-  scope by default.
-- Prefer existing project patterns and applicable playbook patterns before
-  introducing a new process pattern.
-- If project reality differs from the playbook, adapt the playbook pattern to
-  fit the project. Do not copy blindly.
-- If the playbook is silent, make the smallest reasonable assumption and state
-  it.
+- Use only the stated project scope, applicable Playbook guidance, and external
+  context I explicitly name.
+- Prefer existing project and applicable Playbook patterns before new process.
+  Adapt to project reality rather than copying blindly.
+- Where the Playbook is silent, make the smallest reasonable assumption and
+  state it.
 
 Project description:
 - [Describe the project, repo, or work area]
@@ -96,8 +91,6 @@ Strict mode rules:
   covers the case.
 - Adapt playbook patterns to the current project and explain any necessary
   deviation.
-- If context is ambiguous, stop and ask one focused clarification question
-  before acting.
 - Keep recommendations and edits tightly scoped to the stated project and
   current goal.
 
@@ -127,9 +120,6 @@ Stop rules:
 - Pause before destructive, merge, release, tag, or externally visible actions
   unless explicitly authorized.
 
-Start by:
-- Name the playbook pattern(s) you are applying
-- State assumptions
-- State exclusions
-- Then execute
+Start by naming the applicable Playbook patterns, assumptions, and exclusions,
+then execute within the stated boundary.
 ```

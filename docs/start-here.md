@@ -2,14 +2,9 @@
 
 ## Purpose
 
-This page is the compact routing entry point for AI-assisted work whose
-evidence, authority, review, or completion boundaries materially affect the
-outcome. It identifies the general operating model first, then routes into the
-workflow and domain guidance the task actually needs.
-
-Ordinary chat, brainstorming, and conceptual discussion do not require this
-startup contract or live source retrieval unless the answer depends on current
-external state.
+Route work whose evidence, authority, review, or completion boundaries materially
+affect its outcome. Ordinary chat, brainstorming, and conceptual discussion need no
+startup or live retrieval unless the answer depends on current external state.
 
 ## Startup Contract
 
@@ -39,62 +34,33 @@ authority, or subsequent behavior.
 
 ### Global bootstrap persistence
 
-A provider-global instruction surface may route every repository into this
-startup contract, but it must not restart the contract before every response,
-reasoning step, or tool call. Its timing invariant is:
+Bootstrap before the first project action and when the task/repository
+materially changes. At that trigger, applying this contract is a hard
+precondition: do not respond, reason about the task, or invoke another tool
+first.
 
-> Before the first project action, and again only when the task/repository
-> materially changes.
+After successful bootstrap, reuse still-current repository operating mode and
+verified sources. A follow-up, tool call, or elapsed turn alone does not restart
+bootstrap. Apply [active bounded-task continuity](core-model.md#active-bounded-task-continuity)
+before treating a strongly unrelated instruction as a task change. Re-route
+when repository, interaction mode, workflow, authoritative-source requirements,
+execution locality, or authority boundary materially changes.
 
-After a successful bootstrap, reuse the still-current repository operating
-mode and verified sources across subsequent turns. A follow-up message, a new
-tool call, or the passage of another conversational turn is not by itself a
-material change. Before treating a strongly unrelated instruction as a
-material task change, apply the core model's
-[`active bounded-task continuity`](core-model.md#active-bounded-task-continuity)
-guard. Re-run routing when the target repository changes or when the task
-materially changes the interaction mode, workflow, authoritative-source
-requirements, execution locality, or authority boundary.
-
-When that first-action or material-change trigger applies, bootstrap remains a
-hard precondition: do not respond, reason about the task, or invoke another
-tool before applying it. Persistence narrows when the precondition reactivates;
-it does not weaken the precondition itself.
-
-The copy-ready global provider projections and the read-only local drift check
-are owned by the
-[`global-bootstrap` distribution](../distributions/global-bootstrap/README.md).
-Repo-local instruction files remain independently owned execution layers; do
-not copy the global router into every repository.
+The [global-bootstrap distribution](../distributions/global-bootstrap/README.md)
+owns copy-ready provider projections and the read-only drift check. Repo-local
+instruction files remain independent; do not copy the global router into them.
 
 ### Connector availability is runtime evidence
 
-Repository hydration and connector availability answer different questions.
-Hydration retrieves repository instructions and state to establish working
-context. Connector availability describes a current runtime capability.
-Completing hydration neither proves nor disproves that a connector or action is
-available, and it does not authorize assumptions about runtime connector state.
+Hydration establishes repository context, not connector capability. Before
+claiming a connector, integration, or action is unavailable, inspect current
+actions or attempt the relevant operation. Do not infer availability from memory
+or hydration.
 
-Treat connector availability as runtime evidence, not memory. Before stating
-that a connector is unavailable, an integration is not connected, an action
-cannot be performed because of connector availability, or any equivalent
-claim, do one of the following:
-
-1. Inspect the connector actions currently available.
-2. Attempt the relevant connector operation.
-
-Never explain inability to perform an operation by speculating about connector
-availability. A successful connector invocation in the current conversation is
-positive evidence that the connector remains available; successful use of a
-specific capability is positive evidence that the capability remains
-available. After one connector action succeeds in the current execution
-context, do not rediscover or re-probe that same action before using it again.
-Recheck only when the action later fails, the acting identity or connection
-changes, the next step requires a materially different capability, or the
-provider reports drift. Do not contradict still-current success evidence
-without one of those triggers. Prior use of a different action does not
-establish that a requested read or write capability exists, so inspect or
-attempt the relevant operation before reaching that conclusion.
+Reuse successful current-context capability evidence without rediscovery or
+re-probing. Recheck only after failure, identity/connection change, a materially
+different required capability, or provider-reported drift. Success of one action
+does not establish another action's availability.
 
 ## Canonical Ownership
 
@@ -178,59 +144,34 @@ scoped analysis, review, planning, advice, prompting, or mutation.
   delivered, fresh, and replayed material prompts
 - `docs/prompts.md` -> reusable prompt templates
 
-The Repository Read Order defines the ordered universe of potentially relevant
-startup documents for the baseline route, not a requirement to consume every
-listed document. Actual retrieval is governed by activation rules. A
-document's activation class determines how it enters the required set: the
-[Required Repository Startup Contract](#required-repository-startup-contract)
-defines the repository floor; the matching executor adapter is required for
-that executor; workflow-specific and conditional documents become required
-only when their activation rules apply; and advisory documents apply only to
-the specialized action they govern. Resolve those activations from
+This is the ordered universe of potential startup sources, not a full-read
+requirement. Before governed planning or action, read the required repository
+floor, matching executor adapter, and documents activated by
 [Task Routing](#task-routing),
-[Conditional Repository Guidance](#conditional-repository-guidance), and any
-narrower trigger in the owning document. Read each required or activated
-document in the listed order before the planning or action it governs.
-
-Additional documents remain outside this baseline and load only when
-conditional routing activates them. Do not load full maintenance,
-cross-repository, prompt-contract, or multi-agent doctrine into an ordinary
-single-repository task that does not touch those surfaces.
+[Conditional Repository Guidance](#conditional-repository-guidance), or a
+narrower owner trigger, in the order above. Advisory documents govern only
+their specialized actions. Do not load unactivated maintenance,
+cross-repository, prompt-contract, or multi-agent guidance.
 
 ### Repository Instruction Hierarchy
 
-Apply overlapping repository instructions in this order:
+Resolve overlapping instructions by authority, then specificity:
 
-1. The human's explicit task, plus tool, safety, environment, and access
-   constraints governing the run.
-2. The target repository's repo-local `AGENTS.md` and other repo-local policy
-   for repository-specific execution details.
-3. The matching executor adapter, such as `docs/tool-adapters/codex.md` for
-   Codex-specific behavior or `docs/tool-adapters/chatgpt.md` for
-   ChatGPT-specific behavior.
-4. Shared Playbook docs as reusable workflow defaults.
+1. Explicit human task and governing tool, safety, environment, and access
+   constraints.
+2. Target repo-local `AGENTS.md` and policy for repository execution details.
+3. Matching executor adapter.
+4. Shared Playbook defaults.
 
-Repo-local instructions are authoritative for allowed tools, Git usage,
-validation, file placement, release posture, compliance notes, and other local
-execution constraints. When repo-local policy intentionally disables, narrows,
-or replaces a shared default, follow the repo-local rule for that repository.
+Repo-local policy controls allowed tools, Git, validation, placement, release,
+compliance, and intentional local overrides. Apply the narrowest applicable
+instruction from the strongest source. Stop and report an unresolved conflict;
+do not edit `AGENTS.md` to resolve it unless explicitly authorized or that edit
+is the primary task.
 
-Before selecting a workflow, distinguish repository or workspace purpose from
-interaction mode. Purpose describes the workspace; interaction mode describes
-whether the current task is implementation, review/audit, or
-orchestration/prompt-authoring. Use both to select validation, review,
-inspection, Git, PR, or non-Git behavior.
-
-If instructions appear to conflict, use the narrowest applicable instruction
-from the strongest source. If the conflict cannot be resolved safely, stop and
-report it instead of silently choosing a side. Do not edit repo-local
-`AGENTS.md` merely to reconcile the conflict unless that edit is explicitly in
-scope.
-
-When repo-local policy significantly changes the normal repository workflow,
-explain the deviation briefly. Examples include skipping Git or PR delivery,
-using inspection-only validation, changing worktree or branch behavior, or
-treating the repository as a non-implementation workspace.
+Distinguish workspace purpose from interaction mode before choosing workflow.
+Briefly explain significant local deviations, such as non-Git delivery,
+inspection-only validation, or different worktree behavior.
 
 ### Required Repository Startup Contract
 

@@ -115,73 +115,52 @@ job can collect material, but a review step should decide what becomes durable.
 
 ## Source-Shape Hardening Lifecycle
 
-New source types should mature in the implementation repository before they
-become routine replay inputs. This applies broadly to ingestion, extraction,
-ETL, scraping, OCR, export/import, and normalization systems where each source
-format, site, document class, or data feed can introduce a distinct failure
-shape.
+Mature each source type in its implementation repository before routine replay.
+This applies to ingestion, extraction, ETL, scraping, OCR, export/import, and
+normalization, where source formats, sites, document classes, or feeds can
+introduce distinct failure shapes.
 
-Use explicit maturity states:
+Use these maturity states:
 
-- `experimental`: the source type is being explored through live checks,
-  throwaway captures, or early implementation probes. It should not be treated
-  as a stable replay input or a retainable content source.
-- `diagnostic`: the implementation can reproduce important source shapes, but
-  the output is still mainly useful for debugging, fixture design, and failure
-  classification.
-- `review-ready`: fixtures and diagnostics make the source type predictable
-  enough for reviewers to inspect outputs, cleanup needs, provenance, and known
-  limits without rediscovering the extraction behavior each time.
+- `experimental`: live exploration or early probes; not a stable replay input
+  or retainable content source.
+- `diagnostic`: important source shapes are reproducible; outputs support
+  debugging, fixture design, and failure classification.
+- `review-ready`: fixtures and diagnostics support predictable review of
+  outputs, cleanup, provenance, and known limits.
 - `promotion-capable`: replay economics, provenance, and retention boundaries
-  are understood well enough that replay can support a bounded retain or
-  no-retain decision.
+  support a bounded retain/no-retain decision.
 
-Implementation repositories should absorb noisy source-shape work. They own
-live source checks, sanitized fixtures, failure-shape corpora, replay-quality
-metadata, no-op safety fixtures, non-regression coverage, and observability or
-debugging loops. The goal is to make the source behavior explainable before a
-review repository has to spend human attention on it.
+The implementation repository owns live checks, sanitized fixtures,
+failure-shape corpora, replay-quality metadata, no-op safety fixtures,
+non-regression coverage, observability, and debugging. Replay/review repositories
+own milestone validation, retention review, promotion/no-promotion decisions,
+and durable provenance; do not make them the primary extraction-debugging
+surface.
 
-The bounded multi-phase hardening rule in
-[`repo-readiness.md`](repo-readiness.md#solo-operator-iteration-economics)
-applies here as one concrete case. For source-shape work, keep the phases
-together when they are one diagnostic-to-correction arc: detect the failure
-shape, preserve the metadata or fixture evidence, implement the bounded
-correction, and validate live and non-regression behavior. This keeps noisy
-iteration in the implementation repository until the source shape is
-review-ready.
+Apply [iteration economics](repo-readiness.md#solo-operator-iteration-economics).
+Keep detection, fixture/metadata evidence, bounded correction, and live and
+non-regression validation together when they share one source type, validation
+story, and rollback boundary; split otherwise. Describe phases in the PR.
+Exclude unrelated cleanup, new source families, crawler expansion, retention
+decisions, and broad redesign.
 
-Split the work when the phases no longer share the same source type,
-validation story, or rollback boundary. A cohesive hardening PR should describe
-its phases clearly and should not include unrelated cleanup, new source
-families, crawler expansion, retention decisions, or broad redesign work.
-
-Replay and review repositories should stay focused on milestone validation,
-retention review, promotion or no-promotion decisions, and durable provenance.
-They should not become the primary place where extraction heuristics, parser
-edge cases, OCR cleanup, or normalization noise are discovered and debugged
-again and again.
-
-Before broader replay, require a maturity threshold:
+Before broader replay, require:
 
 - no surprising replay failures for the known source shape
 - fixture fidelity established against real examples
-- source-shape diagnostics available for expected failure modes
-- bounded replay economics understood, including expected review effort
-- known limitations documented plainly
+- diagnostics for expected failure modes
+- bounded replay economics, including expected review effort
+- documented limitations and predictable cleanup and review boundaries
 
-Replay should be boring. A mature source type is predictable, explainable,
-auditable, bounded, and economically reviewable. "Just work" does not require
-perfect extraction; it requires predictable cleanup behavior and clear review
-boundaries so reviewers can decide what to retain, reject, or revisit.
+Predictable review, not perfect extraction, is the threshold. Use these
+classifications in replay artifacts and decision records:
 
-Use explicit review classifications in replay artifacts and decision records:
-
-- `diagnostic-only`: useful for implementation learning, not retention review
-- `review-ready`: suitable for bounded human review, with known cleanup limits
-- `promotion-capable`: suitable for retain/no-retain decisions with provenance
-- `unsafe-to-promote`: blocked by extraction risk, provenance gaps, policy
-  concerns, privacy hazards, or uneconomic review effort
+- `diagnostic-only`: implementation learning, not retention review
+- `review-ready`: bounded human review with known cleanup limits
+- `promotion-capable`: retain/no-retain decisions with provenance
+- `unsafe-to-promote`: blocked by extraction risk, provenance gaps, policy,
+  privacy, or uneconomic review effort
 
 ## Validation Role
 

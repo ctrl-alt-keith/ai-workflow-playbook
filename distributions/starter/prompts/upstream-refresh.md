@@ -185,11 +185,8 @@ This baseline means upstream was reviewed for local applicability through the
 recorded commit. It does not mean every upstream change was adopted.
 ```
 
-The baseline means **upstream reviewed through this commit**, not **all
-upstream changes through this commit were adopted**. It is a review boundary,
-not a synchronization cursor, release marker, adoption ledger, or approval.
-Keep it as a normal reviewable file rather than a Git tag so it does not blur
-local release history.
+The baseline records review coverage, not synchronization, release, adoption,
+or approval. Keep it as a reviewable repository file, not a Git tag.
 
 Advance the baseline only when the durable refresh report and selected
 implementation changes become part of the same repository change. The
@@ -255,11 +252,9 @@ diffs needed for candidate decisions. The examples use a fetched local
    git diff --name-status refs/remotes/origin/[local-default-branch]..refs/remotes/upstream/[upstream-default-branch]
    ```
 
-A direct local-versus-upstream diff alone is insufficient. It mixes intentional
-local adaptations accumulated over time with newly introduced upstream
-changes. Upstream evolution identifies what is new since the last review;
-local divergence preserves the context of local choices; the candidate delta
-shows the current content gap. Use all three before deciding what is relevant.
+Use all three comparisons before classifying candidates. A head-to-head diff
+alone does not distinguish new upstream changes from intentional local
+adaptations.
 
 Inspect relevant canonical upstream docs, especially:
 

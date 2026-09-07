@@ -20,18 +20,9 @@ Run the check when:
 
 ## Notes Cleanup and Alignment
 
-Use the notes cleanup lifecycle after promotion work has already landed in the
-playbook:
-
-1. notes
-2. audit
-3. remove or trim
-4. re-audit
-5. converge
-
-In this lifecycle, the playbook remains canonical and notes remain a staging
-layer. Use [`notes-cleanup-workflow.md`](notes-cleanup-workflow.md) for the
-cleanup pass, then rerun the audit step after changes to confirm convergence.
+After promotion lands, apply
+[notes-cleanup-workflow.md](notes-cleanup-workflow.md), including re-audit after
+cleanup changes. The Playbook remains canonical; notes remain staging.
 
 ## What To Look For
 
