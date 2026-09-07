@@ -13,7 +13,7 @@ replay what the orchestrator believed, what each lane reported, where evidence
 was verified, and why reconciliation happened in a particular order.
 
 Telemetry is not a governance system, persistence layer, memory store, workflow
-gate, or source of authority. It is local, append-only operational context.
+gate, or source of authority. It is append-only operational context.
 
 ## Boundary
 
@@ -29,8 +29,10 @@ Logs should remain noncanonical by default:
   preserve extra operational texture when it is useful, not every thought.
 - Bounded autonomy still applies. Logs may show why an agent stopped, but they
   do not grant permission to continue, merge, release, upload, or widen scope.
-- Logs are disposable. They may be kept for replay, deleted for cleanup, or
-  ingested later only after an explicit human decision.
+- Optional logs may be kept for replay, deleted for cleanup, or ingested later
+  only after an explicit human decision and under their owner's retention rules.
+  Logs required for later evidence, recovery, or replay are not disposable;
+  apply [storage classification](#local-shape) before relying on them.
 
 Keeping logs append-only helps preserve the run as observed instead of
 rewriting it into hindsight. If a later fact corrects an earlier report, append
@@ -38,24 +40,38 @@ a correction event rather than editing the previous event.
 
 ## Local Shape
 
-Use ordinary local files under the workspace log directory:
+Before capture, apply [workflow-state ownership](repo-readiness.md#repo-local-workflow-state)
+and [governed-artifact capture](evidence-lifecycle.md#governed-artifact-capture):
 
-```text
-[workspace-root]/logs/
-  codex/
-    [date]/
-      [run-id]/
-        events.jsonl
-        transcript.md
-```
+- Keep adequate provider/runtime logs with their existing owner. For additional
+  optional `events.jsonl` or `transcript.md`, use only a location and retention
+  rule explicitly assigned by the owning tool or local operational contract.
+  Do not create a workspace-level log directory or infer ownership from an
+  available path.
+- Use qualified attempt-local scratch only for disposable private mechanics
+  whose loss cannot impair recovery. It must not be the sole copy of required
+  evidence or replay inputs; promote and exact-verify those before cleanup.
+- Retained, dependency-bearing telemetry follows the evidence lifecycle's
+  admission, privacy, integrity, receipt, and recovery boundaries. Bounded
+  issue-owned evidence uses that issue's permitted durable destination.
+  Recurring report-only or cross-repository automation output uses its
+  predeclared [operational-record location](maintenance-automations.md#authority-and-evidence-classes),
+  not an issue created merely for storage. The owning workspace/storage
+  contract supplies concrete locators and retention; this page creates none.
+- If ownership, retention, or a permitted route is unavailable, omit optional
+  capture and report the gap. Required evidence fails closed under the evidence
+  lifecycle; do not substitute the workspace root or current directory.
 
-`events.jsonl` is for replay-friendly structured events. `transcript.md` is
-for compact human-readable orchestration notes, decisions, and reconciliation
-summaries. Neither file is canonical workflow state.
+`events.jsonl` carries replay-friendly structured events; `transcript.md`
+carries compact human-readable notes, decisions, and reconciliation summaries.
+Neither file is canonical workflow state. Preserve corrections by appending;
+freeze retained artifacts under new immutable identities rather than editing
+prior evidence.
 
-Do not create databases, ingestion daemons, telemetry agents, centralized
-orchestration frameworks, CI gates, auto-upload behavior, or cloud
-dependencies for this convention.
+Optional telemetry does not introduce databases, ingestion daemons, telemetry
+agents, centralized orchestration frameworks, CI gates, automatic uploads, or
+cloud dependencies. Any required durable capture uses its existing owner and
+authorized route; telemetry itself grants no retention or upload authority.
 
 ## Event Shape
 
@@ -118,10 +134,15 @@ useful. It is illustrative, not mandatory.
 
 ```text
 Optional local telemetry:
-- Write append-only operational telemetry for this run under
-  `[workspace-root]/logs/codex/[date]/[run-id]/`.
+- Apply `docs/orchestration-telemetry.md#local-shape` and its linked ownership
+  and evidence contracts before append-only capture. Keep adequate runtime logs with their
+  owner; otherwise use `[declared-tool-owned-run-location]` only when its owner
+  explicitly permits `events.jsonl` and `transcript.md` with a retention rule.
+- Omit optional capture and report an unavailable owner/route; required evidence
+  fails closed. Never fall back to workspace logs or the current directory.
 - Use `events.jsonl` for sparse JSONL events and `transcript.md` for compact
-  orchestration notes.
+  orchestration notes. Required replay/evidence belongs in its natural durable
+  owner, not solely in disposable attempt-local scratch.
 - Record lane lifecycle events, source-retrieval attempts, reported-vs-verified
   transitions, overlap or ownership-boundary discoveries, reconciliation
   decisions, validation results, stop conditions, and residual risks.
