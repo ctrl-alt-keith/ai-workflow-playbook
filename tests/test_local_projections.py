@@ -97,6 +97,24 @@ class LocalProjectionTests(unittest.TestCase):
         self.assertEqual(run.call_count, 1)
         self.assertIn("FAIL apply preflight", output.getvalue())
 
+    def test_plan_delegates_to_the_component_owned_claude_review_plan(self) -> None:
+        module = load_module()
+        arguments = SimpleNamespace(
+            mode="plan",
+            component=["claude-review"],
+            codex_file=None,
+            claude_file=None,
+            require_claude=False,
+        )
+        planned = module.CommandResult("claude-review", 0, "DRIFT claude-review: fixture\n")
+        with mock.patch.object(module, "parse_args", return_value=arguments), mock.patch.object(
+            module, "run", return_value=planned
+        ) as run:
+            self.assertEqual(module.main(), 0)
+
+        self.assertEqual(run.call_count, 1)
+        self.assertEqual(run.call_args.args[1][-1], "--plan-installed")
+
 
 if __name__ == "__main__":
     unittest.main()

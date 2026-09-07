@@ -267,6 +267,44 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
             self.assertIn("claude-review", detail)
             self.assertEqual(before, {path: path.read_bytes() for path in before})
 
+    def test_installed_projection_plan_is_read_only_for_current_and_drifted_launcher(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory).resolve()
+            selector, _ = self.create_installer_targets(root)
+            installed, _ = self.run_installer(root, selector, "activation.json", "1" * 40)
+            install_root = Path(installed["installation_directory"])
+            launcher = install_root / "claude-review"
+
+            arguments = SimpleNamespace(
+                check_installed=False,
+                plan_installed=True,
+                claude_bin=None,
+                activation_receipt=None,
+                expected_existing_rule_sha256=None,
+                forbidden_root=[],
+            )
+            current_output = io.StringIO()
+            with mock.patch.object(self.installer, "parse_arguments", return_value=arguments), mock.patch.object(
+                self.installer, "production_install_root", return_value=install_root
+            ), contextlib.redirect_stdout(current_output):
+                self.assertEqual(self.installer.main(), 0)
+            self.assertIn("PASS claude-review", current_output.getvalue())
+
+            launcher.chmod(0o700)
+            launcher.write_bytes(b"#!/usr/bin/env python3\nprint('drift')\n")
+            launcher.chmod(0o500)
+            before = launcher.read_bytes()
+            drifted_output = io.StringIO()
+            with mock.patch.object(self.installer, "parse_arguments", return_value=arguments), mock.patch.object(
+                self.installer, "production_install_root", return_value=install_root
+            ), contextlib.redirect_stdout(drifted_output):
+                self.assertEqual(self.installer.main(), 0)
+
+            self.assertIn("DRIFT claude-review", drifted_output.getvalue())
+            self.assertIn("launcher source and installed identities differ", drifted_output.getvalue())
+            self.assertIn("RECONCILE reinstall", drifted_output.getvalue())
+            self.assertEqual(before, launcher.read_bytes())
+
     def test_rule_template_binds_only_one_exact_absolute_launcher(self):
         template = CODEX_RULE_TEMPLATE.read_text(encoding="utf-8")
         rendered = template.replace("__CLAUDE_REVIEW_LAUNCHER__", "/operator/bin/claude-review")

@@ -97,9 +97,12 @@ def main() -> int:
             )
         )
     if "claude-review" in selected and args.mode != "apply":
+        claude_operation = (
+            "--plan-installed" if args.mode == "plan" else "--check-installed"
+        )
         results.append(
             run(
-                "claude-review", [sys.executable, str(CLAUDE_REVIEW), "--check-installed"]
+                "claude-review", [sys.executable, str(CLAUDE_REVIEW), claude_operation]
             )
         )
 

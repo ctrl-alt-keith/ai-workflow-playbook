@@ -77,8 +77,10 @@ make apply-local
 ```
 
 It composes component-owned contracts rather than treating provider homes as a
-general configuration store. See the [global-bootstrap distribution](distributions/global-bootstrap/README.md#unified-local-projection-workflow)
-for included components, the read-only boundary, and the explicit apply path.
+general configuration store. `check-local` reports status, `plan-local` shows
+component-owned recovery facts, and `apply-local` invokes only already-safe
+component apply paths. See the [global-bootstrap distribution](distributions/global-bootstrap/README.md#unified-local-projection-workflow)
+for included components and boundaries.
 
 ## Initial Map
 
