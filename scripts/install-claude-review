@@ -717,6 +717,12 @@ def validate_record_contract(
         if not diagnostics.is_absolute():
             raise ValueError("installed auth diagnostics path is not exact")
         secure_private_directory(diagnostics)
+        if any(
+            contained(diagnostics, Path(root))
+            or contained(Path(root), diagnostics)
+            for root in forbidden_roots
+        ):
+            raise ValueError("auth diagnostics overlaps a forbidden writable root")
     return contract
 
 
@@ -744,21 +750,28 @@ def prepare_installed_reconciliation() -> InstalledReconciliation:
     ).encode("utf-8")
     predecessor_launcher_sha256 = str(record["installed_launcher_sha256"])
     predecessor_rule_sha256 = str(record["active_rule_sha256"])
+    launcher_is_predecessor = digest(launcher_bytes) == predecessor_launcher_sha256
     launcher_state = (
-        "predecessor"
-        if digest(launcher_bytes) == predecessor_launcher_sha256
-        else "current" if launcher_bytes == current_launcher else "unknown"
+        "current"
+        if launcher_bytes == current_launcher
+        else "predecessor" if launcher_is_predecessor else "unknown"
     )
     rule_state = (
-        "predecessor"
+        "current"
+        if active_rule_bytes == current_rule
+        else "predecessor"
         if digest(active_rule_bytes) == predecessor_rule_sha256
-        else "current" if active_rule_bytes == current_rule else "unknown"
+        else "unknown"
     )
     if launcher_state == "unknown":
         raise ValueError("installed launcher is neither the exact predecessor nor current source")
     if rule_state == "unknown":
         raise ValueError("active rule is neither the exact predecessor nor current source")
-    if launcher_state == "current" and rule_state == "predecessor":
+    if (
+        launcher_state == "current"
+        and not launcher_is_predecessor
+        and rule_state == "predecessor"
+    ):
         raise ValueError("installed objects are not a recognized resumable partial state")
 
     old_roots = [Path(str(root)) for root in record["forbidden_roots"]]
@@ -803,6 +816,10 @@ def prepare_installed_reconciliation() -> InstalledReconciliation:
         "forbidden_roots": [str(root) for root in current_roots],
         "installation_directory": str(install_root),
     }
+    if record.get("auth_diagnostics_directory") is not None:
+        current_contract["auth_diagnostics_directory"] = record[
+            "auth_diagnostics_directory"
+        ]
     source_commit = git("rev-parse", "HEAD")
     source_remote = git("remote", "get-url", "origin")
     current_record = {
@@ -837,8 +854,13 @@ def prepare_installed_reconciliation() -> InstalledReconciliation:
             "source_remote": source_remote,
         },
     }
+    if record.get("auth_diagnostics_directory") is not None:
+        current_record["auth_diagnostics_directory"] = record[
+            "auth_diagnostics_directory"
+        ]
     if "qualified_at_epoch" in qualification:
         current_record["qualified_at_epoch"] = qualification["qualified_at_epoch"]
+    validate_record_contract(current_record, launcher=launcher, install_root=install_root)
     return InstalledReconciliation(
         install_root=install_root,
         launcher=launcher,

@@ -842,7 +842,11 @@ def qualify_claude_identity(
         if executable_file_identity(selector, effective_uid, forbidden_roots) != observed:
             raise ValueError("the Claude selector changed before qualification receipt creation")
         receipt = {
-            **manifest,
+            **{
+                key: value
+                for key, value in manifest.items()
+                if key != "reconciliation_provenance"
+            },
             "file_identity": observed,
             "version": version,
             "predecessor_receipt_sha256": current["receipt_sha256"],

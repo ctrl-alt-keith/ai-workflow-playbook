@@ -221,7 +221,11 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         return selector, targets
 
     def create_reconciliation_fixture(
-        self, root: Path, forbidden_roots: list[Path] | None = None
+        self,
+        root: Path,
+        forbidden_roots: list[Path] | None = None,
+        *,
+        change_rule: bool = True,
     ):
         selector, targets = self.create_installer_targets(root)
         installed, _ = self.run_installer(
@@ -240,7 +244,9 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         current_launcher = root / "current-claude-review"
         current_launcher.write_bytes(predecessor_launcher + b"# reconciled source\n")
         current_rule_template = root / "current-claude-review.rules"
-        current_rule_template.write_bytes(predecessor_template + b"# reconciled rule\n")
+        current_rule_template.write_bytes(
+            predecessor_template + (b"# reconciled rule\n" if change_rule else b"")
+        )
         return {
             "root": root,
             "selector": selector,
@@ -470,6 +476,143 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
                 rerun = self.installer.reconcile_installed_projection()
             self.assertEqual(rerun["result"], "existing_current")
 
+    def test_reconciliation_resumes_after_launcher_replacement_with_unchanged_rule(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(
+                Path(temporary_directory).resolve(), change_rule=False
+            )
+            predecessor_record = fixture["record"].read_bytes()
+            original_replace = self.installer.atomic_replace_exact
+
+            def fail_record(path, expected_bytes, replacement, mode, **kwargs):
+                if path == fixture["record"]:
+                    raise OSError("fixture record failure")
+                return original_replace(path, expected_bytes, replacement, mode, **kwargs)
+
+            with self.reconciliation_context(fixture), mock.patch.object(
+                self.installer, "atomic_replace_exact", side_effect=fail_record
+            ), self.assertRaisesRegex(OSError, "fixture record failure"):
+                self.installer.reconcile_installed_projection()
+
+            self.assertEqual(fixture["record"].read_bytes(), predecessor_record)
+            self.assertEqual(
+                fixture["launcher"].read_bytes(), fixture["current_launcher"].read_bytes()
+            )
+            self.assertEqual(
+                fixture["active_rule"].read_bytes(),
+                fixture["current_rule_template"].read_text(encoding="utf-8").replace(
+                    "__CLAUDE_REVIEW_LAUNCHER__", str(fixture["launcher"])
+                ).encode("utf-8"),
+            )
+
+            with self.reconciliation_context(fixture):
+                result = self.installer.reconcile_installed_projection()
+                current, current_bytes = self.installer.current_projection_record()
+
+            self.assertEqual(result["result"], "verified")
+            self.assertEqual(current_bytes, fixture["record"].read_bytes())
+            self.assertEqual(current["qualification_event"], "entry_contract_reconciliation")
+
+    def test_reconciliation_rejects_launcher_first_state_when_objects_both_changed(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            fixture["launcher"].chmod(0o700)
+            fixture["launcher"].write_bytes(fixture["current_launcher"].read_bytes())
+            fixture["launcher"].chmod(0o500)
+            before = {
+                path: path.read_bytes()
+                for path in (fixture["launcher"], fixture["record"], fixture["active_rule"])
+            }
+
+            with self.reconciliation_context(fixture), self.assertRaisesRegex(
+                ValueError, "not a recognized resumable partial state"
+            ):
+                self.installer.reconcile_installed_projection()
+
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+    def test_post_reconciliation_qualification_remains_a_current_projection(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            with self.reconciliation_context(fixture):
+                self.installer.reconcile_installed_projection()
+
+            installed_module = load_script(
+                "claude_review_post_reconciliation_qualification", fixture["launcher"]
+            )
+            predecessor_bytes = fixture["record"].read_bytes()
+            predecessor = json.loads(predecessor_bytes)
+            fixture["selector"].unlink()
+            fixture["selector"].symlink_to(fixture["targets"][1])
+            observed = installed_module.executable_file_identity(
+                fixture["selector"],
+                os.geteuid(),
+                [Path(root) for root in predecessor["forbidden_roots"]],
+            )
+
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(
+                    installed_module.qualify_claude_identity(
+                        os.geteuid(),
+                        expected_current_receipt_sha256=self.installer.digest(
+                            predecessor_bytes
+                        ),
+                        expected_observed_file_identity_sha256=installed_module.file_identity_digest(
+                            observed
+                        ),
+                    ),
+                    0,
+                )
+
+            qualified = json.loads(fixture["record"].read_text(encoding="utf-8"))
+            self.assertEqual(qualified["qualification_event"], "identity_transition")
+            self.assertNotIn("reconciliation_provenance", qualified)
+            with self.reconciliation_context(fixture):
+                current, current_bytes = self.installer.current_projection_record()
+                state, _ = self.installer.check_installed_projection()
+
+            self.assertEqual(current, qualified)
+            self.assertEqual(current_bytes, fixture["record"].read_bytes())
+            self.assertEqual(state, "PASS")
+
+    def test_reconciliation_preserves_auth_diagnostics_directory(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            diagnostics = fixture["root"] / "auth-diagnostics"
+            diagnostics.mkdir(mode=0o700)
+            predecessor = json.loads(fixture["record"].read_text(encoding="utf-8"))
+            predecessor["auth_diagnostics_directory"] = str(diagnostics)
+            predecessor["entry_contract"]["auth_diagnostics_directory"] = str(diagnostics)
+            predecessor["entry_contract_id"] = self.installer.entry_contract_identity(
+                predecessor["entry_contract"]
+            )
+            fixture["record"].chmod(0o600)
+            fixture["record"].write_bytes(self.installer.canonical(predecessor))
+            fixture["record"].chmod(0o400)
+
+            with self.reconciliation_context(fixture):
+                self.installer.reconcile_installed_projection()
+                current, _ = self.installer.current_projection_record()
+
+            self.assertEqual(current["auth_diagnostics_directory"], str(diagnostics))
+            self.assertEqual(
+                current["entry_contract"]["auth_diagnostics_directory"], str(diagnostics)
+            )
+
+    def test_invalid_successor_record_is_rejected_before_any_replacement(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
+            before = {
+                path: path.read_bytes()
+                for path in (fixture["launcher"], fixture["record"], fixture["active_rule"])
+            }
+            with self.reconciliation_context(fixture), mock.patch.object(
+                self.installer, "ROOT", Path("relative-source-root")
+            ), self.assertRaisesRegex(ValueError, "invalid source path"):
+                self.installer.reconcile_installed_projection()
+
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
     def test_managed_state_plan_is_concise_and_read_only(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
@@ -626,21 +769,31 @@ class ClaudeReviewIdentityAndGrammarTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary_directory:
             fixture = self.create_reconciliation_fixture(Path(temporary_directory).resolve())
             predecessor_record = fixture["record"].read_bytes()
-            original_replace = self.installer.atomic_replace_exact
+            original_identity = self.installer.exact_executable_file_identity
+            observations = 0
 
-            def race_record(path, expected_bytes, replacement, mode, **kwargs):
-                if path == fixture["record"]:
-                    fixture["selector"].unlink()
-                    fixture["selector"].symlink_to(fixture["targets"][1])
-                return original_replace(path, expected_bytes, replacement, mode, **kwargs)
+            def race_final_identity(selector, forbidden_roots=None):
+                nonlocal observations
+                observations += 1
+                observed = original_identity(selector, forbidden_roots)
+                if observations == 4:
+                    return {**observed, "selector_inode": observed["selector_inode"] + 1}
+                return observed
 
             with self.reconciliation_context(fixture), mock.patch.object(
-                self.installer, "atomic_replace_exact", side_effect=race_record
+                self.installer,
+                "exact_executable_file_identity",
+                side_effect=race_final_identity,
             ), self.assertRaisesRegex(ValueError, "selector changed during final record replacement"):
                 self.installer.reconcile_installed_projection()
 
             self.assertEqual(fixture["record"].read_bytes(), predecessor_record)
             self.assertEqual(fixture["launcher"].read_bytes(), fixture["current_launcher"].read_bytes())
+
+            with self.reconciliation_context(fixture):
+                result = self.installer.reconcile_installed_projection()
+
+            self.assertEqual(result["result"], "verified")
 
     def test_reconciliation_resumes_only_its_bounded_partial_order(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
