@@ -293,6 +293,5 @@ apply.
   workers or parallel PR lanes.
 - Use `docs/multi-agent-synthesis.md` before treating independent agent output
   as promotion, planning, or implementation evidence.
-- Open PRs ready for review by default when repo-local guidance calls for PR
-  delivery and validation is complete; use draft status when the human or
-  workflow explicitly requires an early review surface.
+- Select draft or ready status through
+  [PR Readiness](repo-readiness.md#pr-readiness).

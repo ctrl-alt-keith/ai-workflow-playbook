@@ -52,7 +52,7 @@ Define shared engineering expectations across repositories. This baseline forms 
   policy, or explicit human request.
 - Rerun canonical validation after any update or rebase.
 - Keep commits clean and focused.
-- PRs are ready for review by default.
+- Select PR status through [PR Readiness](repo-readiness.md#pr-readiness).
 
 ## Test Value
 
