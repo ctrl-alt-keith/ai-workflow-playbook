@@ -64,7 +64,9 @@ Classify findings before moving them into durable workflow doctrine:
 - playbook-ready: generalized, repeatable, source-verified guidance that can be
   stated without raw experiment detail
 
-Only promote playbook-ready findings into this repository. Keep raw experiment
+Only promote playbook-ready findings into this repository, selecting content
+under [Promotion Criteria](notes-repositories.md#promotion-criteria).
+Keep raw experiment
 logs, comparative model behavior, failed synthesis attempts, and evolving
 heuristics in an incubator or staging repository until the durable rule is
 clear.
