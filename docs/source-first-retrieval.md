@@ -192,7 +192,7 @@ make it usable, stop with the blocker. Hosted evidence does not satisfy required
 local execution.
 
 Use this bounded recovery sequence before falling back to hosted-only
-inspection:
+inspection, subject to any required-locality constraint above:
 
 1. Before using local Git or `gh` to contact GitHub, verify the active
    authentication state with `gh auth status`. The authentication check does
