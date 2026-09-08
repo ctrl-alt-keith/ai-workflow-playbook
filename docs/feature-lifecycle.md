@@ -76,7 +76,7 @@ valid only when explicitly requested or narrowly required.
 
 ### Contract tests
 
-Select contract coverage under
+Write or update contract coverage selected under
 [Test Value](engineering-baseline.md#test-value) and
 [Documentation Validation](engineering-baseline.md#documentation-validation).
 Define the consequential behavior that must hold before implementation.
