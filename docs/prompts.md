@@ -491,7 +491,9 @@ Governing issue/source: [current task and authority reference]
 
 State:
 - [source locations and exact predecessor/input identities needed for this action]
-- [required locality or unresolved dependency, if material]
+- [required existing locality and whether acquisition/substitution is permitted,
+  when correctness depends on a named checkout or supplied worktree]
+- [unresolved dependency, if material]
 
 [resolved thread-name section when applicable]
 [minimal startup route if not already supplied by the receiving context]
@@ -549,7 +551,9 @@ Governing issue/source: [current task and authority reference]
 
 State:
 - [authoritative source locations and exact predecessor/input identities]
-- [required locality, unavailable context, or unresolved dependency, if material]
+- [required existing locality and whether acquisition/substitution is permitted,
+  when correctness depends on a named checkout or supplied worktree]
+- [unavailable context or unresolved dependency, if material]
 
 [resolved thread-name section when applicable]
 [minimal startup route if not already supplied by the receiving context]
