@@ -95,8 +95,9 @@ Promote notes into the playbook when the guidance is:
 - stable enough that the core rule is unlikely to churn immediately
 - supported by concrete evidence from real use, review, repeated successful
   application, or merged repo work
-- scoped so the playbook receives the rule, pattern, or checklist rather than
-  project-specific residue
+- scoped under
+  [Agent-Read Documentation](engineering-baseline.md#agent-read-documentation)
+  for sections that direct agent execution
 
 If the content is still mostly retrospective detail, raw examples, or local
 context, keep refining it in notes instead of promoting it early. The promotion
