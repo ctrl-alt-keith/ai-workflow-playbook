@@ -183,9 +183,10 @@ hosted GitHub state.
 
 When a task requires a named existing checkout or supplied worktree, that
 locality is part of the execution contract. Inspection, freshness, or recovery
-authority does not permit cloning, replacement worktree or branch creation,
-checkout substitution, remote rewiring, or hosted substitution unless current
-human direction or explicit task posture permits acquisition/substitution.
+authority does not permit cloning, creating a replacement worktree or
+replacement branch, checkout substitution, remote rewiring, or hosted
+substitution unless current human direction, the explicit task, or repo-local
+policy separately authorizes acquisition/substitution.
 Preserve the required locality; if permitted non-destructive recovery cannot
 make it usable, stop with the blocker. Hosted evidence does not satisfy required
 local execution.
