@@ -54,8 +54,8 @@ and clear enough to guide action in the destination layer.
 
 When moving a pattern into the playbook:
 
-- keep only the reusable part
-- include enough context to apply it
+- select content under
+  [Promotion Criteria](notes-repositories.md#promotion-criteria)
 - remove project-specific detail
 - avoid adding tracking requirements unless they already exist
 - validate the docs change through the repo's normal check path

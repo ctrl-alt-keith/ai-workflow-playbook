@@ -76,9 +76,10 @@ valid only when explicitly requested or narrowly required.
 
 ### Contract tests
 
-Write or update the tests, checks, or examples that define what must be true. This anchors implementation to an explicit contract.
-
-Prefer semantic assertions over formatting-sensitive assertions when formatting is not the contract. For user-facing output, favor behavior-oriented assertions, stable substrings, or shared helpers.
+Write or update contract coverage selected under
+[Test Value](engineering-baseline.md#test-value) and
+[Documentation Validation](engineering-baseline.md#documentation-validation).
+Define the consequential behavior that must hold before implementation.
 
 ### Implementation
 
@@ -104,9 +105,12 @@ If GitHub shows `BLOCKED` or pending status at this stage, check the underlying 
 
 ### Capture
 
-Record any evidence-supported reusable lesson before the next delivery arc
-starts. If the lesson is promoted into the playbook, include a notes cleanup
-follow-up or state explicitly that no notes cleanup is needed.
+Record any evidence-supported reusable lesson in the owning issue, PR, notes, or
+evidence surface before the next delivery arc starts. Apply
+[Doctrine Promotion](#doctrine-promotion) for proposed Playbook changes and
+[Promotion Criteria](notes-repositories.md#promotion-criteria) for their content.
+If promotion lands, include a notes cleanup follow-up or state explicitly that
+no notes cleanup is needed.
 
 ## Stage Boundary Receipts
 

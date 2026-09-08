@@ -39,7 +39,8 @@ Look for:
 
 ## Review Questions
 
-Ask:
+Apply [Agent-Read Documentation](engineering-baseline.md#agent-read-documentation)
+to agent-read sections, then ask:
 
 1. Is this content reusable across multiple projects?
 2. Is it proven or necessary to explain the core model?
