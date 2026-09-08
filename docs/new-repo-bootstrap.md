@@ -48,9 +48,10 @@ the reusable playbook.
 
 GitHub needs a base branch before a PR can exist. For a brand-new repo, use a minimal initial `main` commit so the real bootstrap work can land through a normal PR.
 
-### Ready-For-Review By Default
+### PR Status
 
-If the bootstrap work is complete, the PR should be ready for review by default. Use draft only when the bootstrap is intentionally incomplete or early feedback is needed.
+Select draft or ready status through
+[PR Readiness](repo-readiness.md#pr-readiness).
 
 ### Relative Links From The Start
 

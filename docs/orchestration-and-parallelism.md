@@ -256,8 +256,8 @@ Use this sequence when lanes will be merged or reviewed together:
    calls for it or when the batch changed shared behavior.
 
 Open PRs as draft when they are ready for orchestrator inspection but not yet
-ready to merge. Mark them ready only when the implementation is complete,
-validation passes, and the remaining overlap or sequencing risk is low.
+ready to merge. Select ready status through
+[PR Readiness](repo-readiness.md#pr-readiness).
 
 ## When Not To Parallelize
 
