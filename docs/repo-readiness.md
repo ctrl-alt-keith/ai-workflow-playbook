@@ -288,10 +288,29 @@ Makefile style, for example `check: ## Run canonical local validation`.
 
 ## PR Readiness
 
+For material implementation delivered through a PR, use this order unless a
+narrower workflow requires an earlier independent-review boundary:
+
+1. Once the candidate is coherent and applicable local validation passes, open
+   a draft PR for human inspection and refinement.
+2. Keep that PR as the collaboration surface; once the candidate is materially
+   stable, freeze the exact head for any required governed independent review.
+3. Complete applicable review and finding disposition under
+   [Review Packet](review-packet.md#independent-review-findings-and-re-review),
+   then mark ready when the readiness conditions below hold.
+4. Present the exact reviewed head for the human promotion/merge decision.
+
+Draft here means the candidate remains open to iteration before independent
+review; it does not imply incomplete implementation or waive validation.
+Discussion is not a formal approval gate. This order does not expand review
+requirements or mandate drafts for trivial, non-PR, or otherwise inapplicable
+work.
+
 Open a pull request as ready for review when all of the following are true:
 
 - implementation is complete
 - validation passes
+- applicable review requirements and finding dispositions are satisfied
 - no known follow-up work is required before merge
 - overlap and coordination risk are low
 - issue lifecycle should not affect pull request readiness; using `Closes #<issue>` follows standard GitHub behavior and should not delay marking a pull request as ready
@@ -324,16 +343,17 @@ generated artifacts, public API or client behavior, or sequencing dependencies.
 
 Open a pull request as draft when any of the following are true:
 
+- the material candidate is in the iteration/review sequence above
 - work is incomplete
 - the change is part of a coordinated batch with sequencing risk
 - reconciliation with other pending work is likely
 - the branch is intentionally staged for later promotion
 
-Docs-only changes should default to ready for review when canonical validation
-passes and the diff is isolated.
+Other isolated changes, including non-material docs-only changes, default to
+ready for review when the readiness conditions hold.
 
-Implementation agents may open or update ready-for-review pull requests by
-default when repository guidance calls for PR delivery. Ready-for-review status
+Implementation agents may apply these draft and readiness rules when
+repository guidance calls for PR delivery. Ready-for-review status
 does not authorize merge. Do not merge pull requests or enable auto-merge
 unless the human explicitly instructs that action for the specific pull request
 or workflow step. Sequential workflows that depend on merges must pause for

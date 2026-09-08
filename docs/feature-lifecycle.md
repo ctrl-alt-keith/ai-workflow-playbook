@@ -250,7 +250,9 @@ provenance vocabulary:
 2. Prepare one bounded candidate artifact with an exact identity, scope,
    exclusions, proposed normative effect, and materiality classification. When
    implementation is authorized, this may be the exact implementation commit;
-   a separate design or proposal artifact is not required.
+   a separate design or proposal artifact is not required. For PR delivery,
+   apply [PR Readiness](repo-readiness.md#pr-readiness) before selecting the
+   exact head for independent review.
 3. For a material promotion, obtain governed independent review of that exact
    artifact. Record the selected reviewer identity and provider, and handle a
    named reviewer failure or proposed substitution under
@@ -388,14 +390,14 @@ For repo changes, "done" means all of the following are complete:
 - branch created or confirmed
 - commit created
 - branch pushed
-- ready-for-review PR opened against the intended base branch
+- PR opened against the intended base branch with status selected under
+  [PR Readiness](repo-readiness.md#pr-readiness)
 
 Opening a PR is the default for repo changes. Passing checks validates the
 change; opening the PR delivers it. Do not stop at "file created" or
 "checks passed."
-For completed work, the PR is ready for review by default. Draft PRs are only
-allowed when the human explicitly requests one or when the work is
-intentionally incomplete or early-feedback-only.
+A draft delivery completes only the current candidate-iteration boundary;
+applicable review, readiness, and human decision boundaries remain pending.
 
 Skip commit or PR only when the user explicitly says local only, do not commit,
 do not open a PR, or draft this but don't ship it.
