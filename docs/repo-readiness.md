@@ -292,7 +292,7 @@ For material implementation delivered through a PR, use this order unless a
 narrower workflow requires an earlier independent-review boundary:
 
 1. Once the candidate is coherent and applicable local validation passes, open
-   a draft PR for human/ChatGPT inspection and refinement.
+   a draft PR for human inspection and refinement.
 2. Keep that PR as the collaboration surface; once the candidate is materially
    stable, freeze the exact head for any required governed independent review.
 3. Complete applicable review and finding disposition under
