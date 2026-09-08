@@ -181,16 +181,14 @@ itself as a reason to abandon local inspection. A clean working tree or a
 cached remote-tracking ref does not prove that the checkout reflects current
 hosted GitHub state.
 
-When current authority or a repository handoff requires a named existing
-checkout or supplied worktree, that locality is part of the execution contract.
-Authority to inspect, refresh, or recover it does not authorize repository
-acquisition or locality substitution. Do not clone, create a replacement
-worktree or branch, substitute another checkout, reconfigure remotes, or treat
-hosted inspection as local execution unless current human direction or an
-explicit task posture permits acquisition/substitution. Preserve the required
-locality and use only the non-destructive recovery it permits; if it remains
-unusable, stop with the blocker. Hosted evidence may establish hosted claims,
-but it does not satisfy a required local-execution boundary.
+When a task requires a named existing checkout or supplied worktree, that
+locality is part of the execution contract. Inspection, freshness, or recovery
+authority does not permit cloning, replacement worktree or branch creation,
+checkout substitution, remote rewiring, or hosted substitution unless current
+human direction or explicit task posture permits acquisition/substitution.
+Preserve the required locality; if permitted non-destructive recovery cannot
+make it usable, stop with the blocker. Hosted evidence does not satisfy required
+local execution.
 
 Use this bounded recovery sequence before falling back to hosted-only
 inspection:
