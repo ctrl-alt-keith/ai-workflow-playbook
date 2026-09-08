@@ -322,6 +322,36 @@ class CodexPreflightTest(unittest.TestCase):
         self.assertNotIn("ssh-add -l", result.stdout)
         self.assertNotIn("GitHub SSH connectivity works", result.stdout)
 
+    def test_malformed_ssh_target_or_repository_url_fail_before_auth_checks(self) -> None:
+        cases = [
+            (
+                "ssh target omits git user",
+                {
+                    "CODEX_PREFLIGHT_GITHUB_SSH_TARGET": "ssh.github.example",
+                    "CODEX_PREFLIGHT_REPO_URL": "git@ssh.github.example:org/repo.git",
+                },
+            ),
+            (
+                "repository URL omits git user",
+                {
+                    "CODEX_PREFLIGHT_GITHUB_SSH_TARGET": "git@ssh.github.example",
+                    "CODEX_PREFLIGHT_REPO_URL": "ssh.github.example:org/repo.git",
+                },
+            ),
+        ]
+
+        for name, overrides in cases:
+            with self.subTest(name=name):
+                result = self.run_preflight(self.fake_success_commands(), overrides)
+
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(
+                    "FAIL GitHub SSH target and repository URL use the same host",
+                    result.stdout,
+                )
+                self.assertNotIn("ssh-add -l", result.stdout)
+                self.assertNotIn("GitHub SSH connectivity works", result.stdout)
+
     def test_managed_parent_codex_failure_is_not_part_of_preflight(self) -> None:
         commands = self.fake_success_commands()
         commands["codex"] = """
