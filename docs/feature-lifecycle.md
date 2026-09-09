@@ -454,13 +454,9 @@ of repository implementation, an issue, a pull request, review, or merge does
 not supply it. An explicitly selected and bounded repository issue may serve
 as the live record where the repository workflow assigns it that role.
 
-Use one tracked successor when one record can preserve a coherent outcome,
-owner, completion boundary, acceptance, sequencing, validation, risk, and
-timing without obscuring an independent decision or completion claim. Split
-successors when divergence in any of those factors would obscure an
-independent decision or completion claim. Do not create one ticket per finding
-or microstep when one bounded successor or a non-execution disposition
-preserves the necessary boundary.
+Keep work in the existing planning item while its bounded outcome and
+completion boundary remain the same. Create a new item only for a materially
+distinct outcome, owner, priority, or deferred follow-up.
 
 Immediately before starting a tracked successor, re-read its live disposition
 and current human authority. Unless both the live bounded record and current
