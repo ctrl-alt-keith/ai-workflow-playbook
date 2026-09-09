@@ -61,10 +61,6 @@ Reusable pattern:
 
 > This repository uses the shared playbook in `ai-workflow-playbook` as the canonical source for reusable workflow rules. `AGENTS.md` provides the repo-specific instructions (validation, commands, PR expectations). Repo-local rules take precedence only for repo-specific behavior.
 
-## Current Focus
-
-The first core module is delivery. Additional workflow families may be added later, but only if they meet the same discipline standards and stay aligned with the repository intent.
-
 ## Local Projections
 
 For the narrow set of workstation projections whose implementation is owned by
