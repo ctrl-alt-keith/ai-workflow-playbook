@@ -60,6 +60,32 @@ state easier to scan, for example `.worktrees/lane-a-fixtures` and
 `.worktrees/lane-b-provider-normalization`. Treat lane prefixes as a worked
 example, not a required naming taxonomy.
 
+## Optional Stacked Pull Requests
+
+Use stacked pull requests only for known same-repository dependency chains such
+as A → B → C when each layer remains a small, coherent review surface and the
+merge order is explicit before launch. The bottom pull request targets the
+normal trunk, usually `main`; each later pull request targets the branch below
+it. This is an optional pattern, not a default: keep independent lanes as
+ordinary parallel pull requests, and keep one coherent change in one pull
+request when splitting would add more review or reconciliation cost than it
+removes.
+
+Stack topology does not create execution, approval, promotion, merge, release,
+or downstream-continuation authority. It must not bypass semantic gates,
+deferred consolidation, human decision boundaries, required independent review,
+cross-repository separation, canonical validation, or sequential integration
+and reconciliation. Each layer remains subject to the applicable review and
+validation requirements.
+
+GitHub stack tooling is provider-specific optional machinery, not a Playbook
+invariant. GitHub documents stacks as same-repository pull-request chains and
+notes that the feature is in public preview; use its current
+[stacked-pull-request documentation](https://docs.github.com/en/pull-requests/reference/stacked-pull-requests)
+when provider behavior matters. Wait for actual project use before proposing
+stronger guidance, evaluating review clarity, waiting reduction, rebase or CI
+churn, reconciliation cost, and fit with Codex worker lanes.
+
 ## Worker Envelope
 
 Every worker lane needs a self-contained task envelope. Do not rely on hidden
