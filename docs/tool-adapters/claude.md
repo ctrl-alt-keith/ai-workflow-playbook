@@ -32,10 +32,10 @@ Map each concrete capability through the core
 Initiation remains separate: scheduled Cowork is unattended, Dispatch is a
 human assignment whose execution does not require the human to remain present,
 and Claude Code may be interactive or controller-launched. Controller-launched
-independent review additionally uses
-[`Governed read-only reviewer launch`](#governed-read-only-reviewer-launch)
-and the controller-side adapter for the invoking executor; each adapter governs
-its own run boundary.
+independent review additionally uses the
+[`Local read-only reviewer launch`](#local-read-only-reviewer-launch) and the
+controller-side adapter for the invoking executor; each adapter governs its own
+run boundary.
 
 ### Claude Chat-to-Cowork projection
 
@@ -176,238 +176,34 @@ Claude has no Codex-style writable-root sandbox. Apply the shared durable-state
 and scratch rules in
 [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
-### Governed read-only reviewer launch
+### Local read-only reviewer launch
 
-Claude Code treats the invocation working directory as its project root and
-may create project-local startup mechanics before any model tool call.
-`--add-dir` makes each declared source directory available. The governed
-launcher therefore treats the configured launch root as the logical source
-anchor, passes that root and every additional source root exactly through
-`--add-dir`, and runs the provider from fresh qualified attempt-local scratch.
-This contains provider bootstrap state without excluding any reviewed source.
-Read a representative object from every root before review. Do not infer
-candidate reachability from a prompt-package launch directory.
+Use the active Playbook checkout's repository-owned
+[`claude-review`](../../scripts/claude-review) source directly. There is no
+supported installed or published launcher. Give it an explicit absolute
+`--claude-bin`; it resolves an executable file and obtains its `--version`
+before invoking it.
 
-The CLI controls have different effects:
+The wrapper is a small, trusted local adapter around Claude Code. It accepts
+only model and effort choices, delivers the review prompt on standard input,
+and supplies the review controls itself: read-only `Read`, `Grep`, and
+`Glob` tools; non-interactive permission mode; no MCP configuration; no
+session persistence; and no slash commands. Invoke it from the checkout to be
+reviewed.
 
-- `--tools` restricts the built-in tool set; `--allowedTools` auto-approves
-  matching tools but does not restrict other tools.
-- `--permission-mode dontAsk` suppresses permission prompts but still permits
-  Claude's built-in read-only Bash classification; it is not an exact command
-  allowlist.
-- permission rules evaluate `deny`, then `ask`, then `allow`, first match, and
-  Bash string patterns are not a substitute for argv validation.
-- `--strict-mcp-config` restricts MCP configuration supplied for the launch;
-  use it with an empty declared MCP config when the review forbids connectors.
-- `PreToolUse` hooks can block a tool call before execution, while sandbox
-  filesystem controls can deny writes. A nested host sandbox can also make the
-  provider sandbox unavailable. Settings and hooks can merge from
-  higher-precedence managed sources, so neither control alone proves the
-  effective posture; never request or permit `dangerouslyDisableSandbox` as a
-  workaround.
+Run `--auth-preflight` before an expensive review. It uses a fixed stdin
+canary, no tools, an ordinary temporary directory, and the effective account's
+`HOME`, `USER`, and `LOGNAME`. A failed canary means Claude authentication needs
+operator attention; do not represent that outcome as a substantive review result.
+It disables Claude memory loading and uses an empty MCP configuration. This is
+the lightweight targeted-review path in
+[`external-ai-reviewer.md`](../external-ai-reviewer.md), not its governed
+reviewer launch contract.
 
-The repository [`claude-review`](../../scripts/claude-review) source composes
-these controls for governed review. Production auth and review run only through
-the exact machine-local installation rendered by
-[`install-claude-review`](../../scripts/install-claude-review). That installed
-launcher verifies its reviewed bytes, immutable schema-v3 entry contract,
-active Codex rule, singular flat current qualification receipt, and the exact
-absolute Claude selector plus resolved user-owned, non-writable executable
-file identity without starting unqualified bytes; it does not select `claude`
-from inherited `PATH`. Only after that non-executing identity matches the
-schema-v3 qualification receipt may it query the recorded version. It then
-re-observes the file identity. Before provider process creation it repeats that
-ordering and compares the current receipt, entry contract, canonical path,
-ownership, mode, executable status, device, inode, size, digest, and version.
-The residual operating-system race between the final recheck and process
-creation remains explicit; the launcher does not claim to eliminate it.
-A versioned JSON review config binds the
-source graph, launch root and exact additional directories, guard roots,
-candidate and exact `HEAD`, disjoint evidence directory, immutable
-preflight-receipt and final-output paths, exact stream and terminal-receipt
-paths for the single explicit provider attempt, observational
-command argv, observation intervals, and cancellation policy. Schema version 2
-rejects the former `max_attempts` and `attempt_artifacts` fields. Mutable
-live-state mechanics remain in private controller attempt-local scratch. The
-launcher accepts
-only model and supported effort selection after `--`; it owns the tool,
-permission, MCP, settings, hook, output, and persistence flags.
-
-Production execution derives `HOME` from the effective account's passwd entry,
-not inherited environment. The launcher has one explicit fixture-only seam for
-selecting an isolated effective home so integration tests can prove the exact
-runtime `HOME` recorded in the attempt receipt and prove that `.local`,
-`.cache`, and `.config` are not created there. The seam is ignored outside the
-explicit fixture execution path.
-
-A selector advance is capability drift, not a candidate finding. Ordinary auth
-and review fail closed before Claude receives substantive input and expose only
-the exact launcher's prompt-gated identity-qualification transition. The
-transition derives and re-observes the configured selector from the immutable
-entry contract, requires the expected current receipt and expected
-non-executing file-identity digest, and rejects a no-op. Only after the lock,
-predecessor, file, ownership, mode, digest, path, and forbidden-root checks pass
-does the prompted operation first query the new bytes for their version. It
-re-observes the file identity before writing one immutable predecessor-linked
-receipt and compare-and-swap replacing the singular current selection with an
-exact private, flushed temporary file. It cannot accept an arbitrary executable
-or selector. Ordinary drift diagnostics do not claim a version for unqualified
-bytes. Unchanged execution and identical-contract installer reruns never
-rewrite current selection. Historical receipts do not silently reauthorize
-rollback; returning to older bytes is a new transition. Qualification is
-evidence and capability gating only and grants no review, candidate, merge, or
-other task authority.
-
-The governed invocation uses Claude's provider-native `--restricted` mode,
-available in Claude Code 2.1.248 and later, to isolate settings and confine file
-tools. The controller enforces that version floor before provider launch and
-retains an explicit empty `--setting-sources` selection as independently
-observable argv evidence. The
-generated `PreToolUse` hook permits `Read`, `Grep`, and `Glob`, and permits `Bash`
-only when its command text exactly equals the shell rendering of one configured
-argv vector and the tool input does not request sandbox bypass. The controller
-requires an exact attempt-local hook-liveness record even when no effort was
-requested. The controller does not force-enable Claude's provider sandbox
-because bounded review
-under a nested host sandbox showed that it can make every granted Bash command
-unusable. Instead, the controller independently executes each configured
-command before review under a safe environment that disables system Git
-and user Git configuration, repository hooks and filesystem monitors, external
-diffs, optional Git locks, background auto-maintenance, pagers, Python bytecode
-writes, Claude instruction memory loading, and Claude auto memory, with the
-provider working directory and temporary state redirected to fresh
-attempt-local scratch through the qualified
-macOS or Linux route in
-[`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
-It accepts only the exact Git status, diff, log, and revision forms needed by
-the qualifying review, each with one explicit `git -C` declared root. Exact
-revision grammar prevents unresolved operands from falling through to Git's
-filesystem comparison behavior. Explicit or inferred `diff --no-index`, path
-operands, traversal, unadmitted pathspec magic, shell forms, configuration
-overrides, text conversion, and external diff fail before provider launch.
-
-Disabling background auto-maintenance removes the controller as a source of
-`objects/maintenance.lock` in the candidate repository. It does not remove
-another operator's Git, which does not share this environment. A lock created
-by that actor remains reviewer side-effect contamination and still fails
-closed, because the reviewer cannot establish the writing actor and
-[`external-ai-reviewer.md`](../external-ai-reviewer.md) admits only a
-controller-owned transient lock identified by exact path, actor, and lifetime.
-
-Linked-worktree modelling requires `git worktree list --porcelain -z`, which
-Git introduced in 2.36.0. The launcher probes that exact capability before
-taking its first snapshot and fails closed naming the requirement and the
-observed version, because the unsupported switch would otherwise surface from
-inside snapshot collection and be reported as a review contract failure that
-names neither Git nor the version.
-
-The first configured exact command is also an in-provider capability canary.
-The system prompt requires it before substantive analysis, and the controller
-accepts reviewer output only when the structured stream contains its successful
-tool result without a sandbox-bypass request. A missing, failed, or bypassed
-canary is reviewer infrastructure failure even if the provider returns a
-nominally successful result.
-
-Use `--output-format stream-json --verbose` initialization as effective runtime
-evidence. The first `system/init` record must report exactly `Bash`, `Glob`,
-`Grep`, and `Read`; no MCP servers, plugins, skills, slash commands, or
-capability-startup error; `dontAsk` permission mode; the requested model family;
-and the exact attempt-scratch runtime directory. Stop the process on a mismatch
-and reject any eventual output. A `fable` request admits only `fable`,
-`claude-fable-5`, and `claude-fable-5-1`; other, malformed, and unknown future
-identities fail qualification.
-
-Initialization does not report effective effort. For an explicit effort, the
-`PreToolUse` hook's current `effort.level` is the effective evidence. Receipts
-keep requested and observed effort separate; missing, invalid, or mismatched
-evidence fails closed, and a request alone never proves effective effort.
-
-The launcher still performs whole-source,
-Git-index, and Git-administration integrity checks because provider flags,
-hooks, command-canary evidence, and initialization metadata are defense in
-depth, not proof that no effect occurred. It snapshots candidate-worktree and
-shared Git administration separately, protects candidate HEAD, branch/ref logs,
-exact object revisions admitted by commands, semantic Git controls, and
-candidate-reachable objects, then classifies every raw administration change.
-An admitted `origin/main` comparison base remains moving after the candidate is
-selected only in `origin/main...HEAD` and `origin/main..HEAD`: its ref or reflog
-may advance without invalidating evidence about the frozen candidate, even when
-the new main overlaps it semantically. A standalone `origin/main` revision
-remains protected review input. The receipt records the exact changed path and
-before/after ref targets; current-main freshness and mergeability are evaluated
-after the attempt. Candidate HEAD, branch/ref logs, selected commit, and exact
-object revisions remain protected.
-The launcher explicitly models
-the primary worktree and every linked worktree, including their exact `HEAD`,
-`index`, `logs/HEAD`, `COMMIT_EDITMSG`, and `ORIG_HEAD` paths. Only a change to
-one of those exact paths, correlated with that worktree's HEAD and symbolic-ref
-transition, may be attributed to another worktree; every other path beneath a
-known worktree Git directory and every unknown common-root path remains
-blocking. Only another worktree's proven administration, the named moving
-comparison base, unprotected ref/reflog activity, or shared object-storage
-layout may be tolerated, and only while protected resolution
-and reachability exact-match the baseline and the changed identities contain no
-lock, symlink, mode, vanished, special-object, or other ambiguity. Git
-configuration, packed refs, replacement, alternate, shallow, graft, attribute,
-candidate-specific, and unknown shared changes remain blocking.
-
-The configured candidate commit is reverified immediately before the attempt
-baseline and again immediately before provider process creation. Each
-observation includes the symbolic-ref identity. A mismatch stops
-before the provider starts and is preserved as structured evidence; an observed
-commit cannot silently replace the configured identity.
-
-Git may write a commit object or an exact per-worktree administration file
-milliseconds before updating the unrelated HEAD/ref transition that attributes
-it. Live monitoring may defer only those exact ambiguous changes for one
-bounded stabilization interval, then reclassify from a fresh complete snapshot.
-Candidate, protected-ref, lock, unknown administration, mixed, and persistent
-unattached changes do not gain that exception, and terminal postflight remains
-fully fail-closed.
-
-Use that classification unchanged in preflight, live monitoring, emergency
-stopping, terminal postflight, and receipts. Receipts retain
-exact Git-directory-relative paths, owner scope, change type, before/after
-identities, proof, and blocking or tolerated disposition. Proven-unrelated raw
-change can coexist with a passing candidate-integrity result; it must not be
-reported as an aggregate `git-admin` delta or as no observed change. Only a
-blocking or ambiguous classification triggers the unauthorized-mutation stop,
-so independent linked-worktree commits and pushes require neither a clone nor
-serialization. Git-administration lock files remain in the decisive baseline
-and terminal snapshot. New, removed, replaced, or changed locks contaminate the
-attempt; an exact unchanged pre-existing lock is distinguished from
-reviewer-attributable delta.
-
-Anthropic documents `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` and
-`CLAUDE_CODE_DISABLE_CLAUDE_MDS=1` in its
-[environment-variable reference](https://code.claude.com/docs/en/env-vars).
-They suppress memory loading and writes; attempt-scratch runtime placement and
-whole-source no-delta checks remain required controls rather than assumptions
-about undocumented provider internals.
-
-Claude's structured `system/api_retry` event is an in-process provider retry
-inside the same controller attempt. A terminal result ends that attempt; the
-controller never starts a fresh automatic exact-input repeat. A later review is
-a new explicit invocation with its own contract and evidence. After the direct
-provider process exits, the controller keeps awaiting the same process group
-until it is terminal, then waits for both output collectors to reach
-end-of-stream before freezing the stream artifact. The controller records the
-exact process group as required by the shared
-[`live-process lifecycle`](../orchestration-and-parallelism.md#live-process-lifecycle).
-Mutable control state in controller scratch preserves request, decline,
-graceful authority, and separately authorized force authority even after the
-direct provider pid exits while another recorded group member remains live.
-Do not infer a portable SIGTERM result or exit-code mapping from Claude Code;
-record the observed local process outcome.
-
-Keep routine commands, provider retries, stream details, and successful
-per-step results in the governed stream and attempt evidence instead of
-duplicating them as operator narration. Authentication or execution-context
-mismatch, a failed capability canary, unauthorized mutation, source delta,
-terminal collection failure, or postflight failure remains an immediate
-material blocker. Treat product-rendered traces as runtime behavior unless
-current official evidence establishes control; do not claim provider or client
-trace suppression.
+The wrapper captures Claude output and status. A review succeeds only when
+Claude exits successfully with non-empty output. Diagnostics are bounded and
+redact obvious credentials; `--diagnostics-file` can retain them at a new
+absolute path. The project rule keeps local reviewer execution approval-gated.
 
 ## Worktrees And Subagents
 

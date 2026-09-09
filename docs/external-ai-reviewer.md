@@ -247,7 +247,7 @@ ambiguous changes qualify as unauthorized mutation for emergency stopping.
 An attempt is complete only after the exact reviewer process group is terminal,
 all output collectors reach end-of-stream, its output is captured, its terminal
 receipt is durable, and no-delta
-postflight passes. The Claude review controller authorizes exactly one provider
+postflight passes. A governed review controller authorizes exactly one provider
 attempt; any later review is a new explicit controller invocation with its own
 contract and evidence. Another adapter may own a bounded fresh exact-input
 repeat only when its current contract explicitly declares that responsibility,
