@@ -593,269 +593,66 @@ contract is in [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-st
 
 ### Qualified Direct Claude Code Path
 
-Direct Claude Code execution from Codex under `workspace-write` has a narrower
-qualified runtime contract in addition to the general child-process guidance:
+For local development and lifecycle controls, invoke the active Playbook
+checkout's `scripts/claude-review` directly. It is repository-owned
+executable truth: no supported workflow copies, installs, or reconciles it
+under `~/.local/bin` or another machine-local publication path.
 
-For local development and lifecycle controls, use the repository's
-[`claude-review`](../../scripts/claude-review) source rather than a hand-built
-environment assignment. It derives the effective operating-system account,
-normalizes `USER`, `LOGNAME`, and `HOME` for the Claude child, reads the review
-prompt from standard input rather than argv, and emits bounded diagnostics plus
-append-only attempt receipts. The command is the review controller even though
-its compatibility name remains `claude-review`: Codex
-[prefix rules](https://learn.chatgpt.com/docs/agent-configuration/rules) match
-arbitrary trailing arguments, so allowing the Claude executable directly would
-also allow unreviewed flags beyond an approved prefix. For substantive review,
-pass `--review-config`
-with the versioned governed-launch JSON and pass only model and supported effort
-selection after `--`. The controller owns the Claude tools, permission mode, MCP,
-settings, hook, output, and session-persistence flags; do not append competing
-review flags. Production auth and review use the byte-exact machine-local
-installation made by
-[`install-claude-review`](../../scripts/install-claude-review), not the writable
-repository path. Put `--review-config` immediately after that exact installed
-absolute path. Authentication preflight follows the same convention.
-The controller rejects either mode when combined with permission-hook or lifecycle
-control modes, so an allowed review prefix cannot authorize those controls.
+Pass an exact absolute, effective-user-owned Claude executable with
+`--claude-bin`. The controller observes its file identity before querying its
+version and repeats that observation immediately before provider execution; it
+does not resolve `claude` from inherited `PATH`. This protects the reviewer
+runtime without retaining an installation or qualification receipt.
 
-Before an expensive independent review, run the same launcher with
-`--auth-preflight`. It reuses the effective-user environment and executable
-resolution, sends only the fixed `CLAUDE_AUTH_OK` prompt on standard input,
-disables all Claude tools, passes `--no-session-persistence`, and runs from a
-fresh private attempt-local directory through the qualified macOS or Linux
-route. It also disables Claude instruction and auto-memory loading so a global
-or project bootstrap cannot intercept the fixed authentication canary. It may
-retain the selected model and effort, but it is not substantive
-review and does not read repository, candidate, or held-out content.
-For example:
+Before an expensive independent review, run the same repository script with
+`--auth-preflight`. It uses the effective-user environment, a fixed prompt on
+standard input, no Claude tools, disabled session persistence, and fresh
+qualified attempt-local scratch. It is authentication evidence for that process
+context only; do not start the review after a preflight failure.
 
 ```text
-/ABSOLUTE/INSTALLED/PATH/claude-review --auth-preflight -- --model opus --effort high
+/ABSOLUTE/PATH/TO/ai-workflow-playbook/scripts/claude-review \
+  --claude-bin /ABSOLUTE/PATH/TO/CLAUDE \
+  --auth-preflight -- --model opus --effort high
 ```
 
-The project rule at
-[`../../.codex/rules/claude-review.rules`](../../.codex/rules/claude-review.rules)
-keeps every writable repository-relative launcher form approval-gated. The
-portable machine-rule template is
-[`../../.codex/rule-templates/claude-review.rules`](../../.codex/rule-templates/claude-review.rules).
-Never copy that template unchanged into the user layer: its placeholder is not
-an executable identity, and a relative allow prefix can match writable bytes in
-more than one repository.
+For substantive review, pass `--review-config` with the versioned
+governed-launch JSON, then only model and supported effort selection after
+`--`. The controller owns Claude tools, permission mode, MCP, settings,
+hooks, output, and session-persistence flags; do not append competing review
+flags. The repository project rule keeps controller execution approval-gated,
+including lifecycle and permission-hook controls.
 
-The installer verifies a clean exact source commit and derives one immutable,
-content-addressed entry contract from the launcher bytes, installation and
-qualification schemas, Codex rule-template bytes, configured Claude selector,
-active-rule path, forbidden roots, and the exact installation directory. The
-installer publishes the stable command `~/.local/bin/claude-review` with one
-combined schema-v3 installation and current-qualification record at
-`~/.local/bin/.claude-review.json`. The content digest remains in that record
-and the entry contract, not in the command name. Qualification serializes on
-the stable executable and atomically replaces the combined record. It creates
-no other sidecar, `libexec`, state, cache, log, or historical receipt tree.
-The production installer derives that directory from the effective user's
-account home and exposes no relocation flag.
-The installer renders the user rule with the exact installed absolute path,
-refuses a different existing object, and requires the caller to name the
-expected digest before replacing an existing active rule. An identical-contract
-rerun securely validates and preserves the current receipt.
-Selector drift must be qualified before a managed update. Older installation
-schemas are not migrated automatically. Supply every candidate, evidence,
-workspace, and attempt-scratch root as a forbidden root.
-The initial-install activation receipt is explicit operation evidence and does
-not become durable launcher state. Production auth preflight reports its bounded record on
-standard error and does not accept a diagnostics-file destination. Governed
-review diagnostics remain inside the config's exact evidence directory. A
-diagnostics-path or config failure is reported on standard error without
-falling back to an unqualified file path.
-For example, using operator-selected absolute paths:
+Supply the review prompt through a process with writable standard input, write
+the exact frozen bytes once, close standard input to deliver EOF, and await that
+same process and process group. A runner that starts the launcher with standard
+input already closed is not a valid governed-review invocation.
 
-```sh
-./scripts/install-claude-review \
-  --claude-bin /ABSOLUTE/PATH/TO/QUALIFIED/CLAUDE \
-  --forbidden-root /ABSOLUTE/PATH/TO/WORKSPACE \
-  --forbidden-root /ABSOLUTE/PATH/TO/EVIDENCE \
-  --activation-receipt /ABSOLUTE/PRIVATE/PATH/activation-receipt.json \
-  --expected-existing-rule-sha256 EXPECTED_SHA256
-```
+The review config must cover every source root, bind the candidate and exact
+`HEAD`, bind the disjoint admitted evidence destination, enumerate exact
+observational command argv and immutable single-attempt artifact paths, and
+declare cancellation policy. Schema version 2 rejects automatic-retry fields.
+Do not treat a Codex timeout or missing output as evidence that Claude exited,
+and do not launch a replacement while the recorded process group may be live.
 
-The generated user rule allows only direct auth-preflight and governed-review
-prefixes for that installed path. The exact
-`--qualify-claude-identity` prefix is `prompt`, as are lifecycle and
-permission-hook controls; repository-relative, alternate-path, arbitrary
-Claude-selection, and shell-wrapped forms are not allowed. The installed
-command and rule are a one-time setup while their contract remains unchanged;
-a routine Claude update uses only the bounded qualification command emitted by
-the drift diagnostic, not another install, rule rewrite, or Codex restart. The
-installed launcher verifies its own bytes, immutable entry contract,
-active-rule hash, singular flat qualification receipt, and the
-selector's exact non-executing file identity before either allowed operation.
-Only matching already-qualified bytes may be queried for their recorded version,
-followed by a repeated file observation. It never resolves `claude` through
-inherited `PATH`.
+The controller performs command-effect preflight, validates effective provider
+initialization, requires the in-provider exact-command canary, snapshots guarded
+source bytes and Git state, and requires a positive no-delta postflight. It
+preserves one attempt receipt whether or not a verdict is produced. These
+runtime safeguards, plus restricted provider mode, redacted diagnostics,
+scratch isolation, and lifecycle controls, remain independent of the retired
+launcher-publication protocol.
 
-When the configured selector resolves to a legitimate new identity, ordinary
-auth and review fail before provider launch with
-`reviewer_identity_qualification_required`. The bounded diagnostic names the
-current receipt digest, observed canonical path and file digest, the exact
-non-executing observation and its digest, and the exact qualification command;
-it does not claim a version for unqualified bytes. That command accepts only the
-expected current receipt digest and expected observed file-identity digest; it
-derives the selector from the immutable entry manifest, recomputes the target,
-serializes the transition under the entry's exact lock, rejects no-op requests,
-then performs the first permitted version query. After another exact file
-observation it atomically compare-and-swap replaces the one current receipt
-through a flushed sidecar temporary file. The replacement records the prior
-receipt digest without retaining an accumulating local receipt history.
-It cannot select another executable or change the selector. After the operator
-approves and the transition succeeds, rerun the unchanged auth or review
-command through the unchanged rule. An upgrade, consecutive upgrade, or
-rollback each requires a new transition from the current receipt.
-
-Codex loads rules at startup. After a genuine entry-contract install or rule
-update, validate the rendered rule without launching Claude, then restart Codex
-before relying on it. A qualification-only transition does not edit the rule or
-launcher and does not require a restart:
-
-```sh
-codex execpolicy check --pretty \
-  --rules /ABSOLUTE/PATH/TO/ACTIVE/claude-review.rules \
-  -- /ABSOLUTE/INSTALLED/PATH/claude-review --auth-preflight
-
-codex execpolicy check --pretty \
-  --rules /ABSOLUTE/PATH/TO/ACTIVE/claude-review.rules \
-  -- /ABSOLUTE/INSTALLED/PATH/claude-review --terminate /tmp/live-state.json \
-  --termination-authority operator-approved
-
-codex execpolicy check --pretty \
-  --rules /ABSOLUTE/PATH/TO/ACTIVE/claude-review.rules \
-  -- /ABSOLUTE/INSTALLED/PATH/claude-review --qualify-claude-identity \
-  --expected-current-receipt-sha256 EXPECTED_RECEIPT_SHA256 \
-  --expected-observed-file-identity-sha256 EXPECTED_FILE_IDENTITY_SHA256
-```
-
-The first check must report `allow`; the lifecycle and qualification checks
-must report `prompt`. Do not use
-shell wrappers, redirections, or pipelines for this path: they change policy
-evaluation and bypass the launcher's owned prompt/output flow. Supply the review
-prompt directly on standard input through an execution channel that remains open
-until the controller writes the exact frozen prompt bytes and then explicitly
-closes standard input. A runner that starts the launcher with standard input
-already closed delivers an empty prompt and is not a valid governed-review
-invocation; the launcher must fail it before starting a reviewer. For a
-controller API, start the direct process with writable standard input, write the
-frozen bytes exactly once, close the stream to deliver EOF, and then await that
-same process and process group through the terminal boundary.
-
-`AUTH_PREFLIGHT_OK` means authentication worked for that process context only;
-it does not guarantee that a later review cannot expire. Do not start the
-review after a preflight failure.
-
-After successful auth preflight, invoke the governed review from the owning
-controller and keep awaiting that exact launcher until its live-state record is
-terminal. The review config must cover every source root, bind the candidate and
-exact `HEAD`, and bind the
-disjoint admitted evidence destination, enumerate exact observational command
-argv and immutable single-attempt artifact paths, and declare cancellation
-policy. Schema version 2 rejects the former automatic-retry fields. Do not use a Codex tool timeout
-or missing output as evidence that Claude exited, and do not launch a replacement
-while the recorded process group may still be live. If the interactive contract
-requires a disposition, use the launcher's request, decline, or authority-bound
-termination control against the exact live-state path; force escalation requires
-separate authorization.
-
-The configured launch root is the logical source-graph anchor, not Claude's
-process directory. The launcher passes it and every additional source root
-through exact `--add-dir` arguments, then runs Claude from fresh qualified
-attempt-local scratch on macOS or Linux so provider bootstrap writes cannot
-enter the candidate. Effective initialization must report that exact scratch
-directory before output can qualify.
-
-Controller-side command preflight is followed by an in-provider exact-command
-canary. The launcher rejects a missing or failed canary and any
-`dangerouslyDisableSandbox` request; do not bypass a nested-sandbox failure.
-After Claude's direct process exits, keep awaiting the recorded process group
-and complete both stream collectors before freezing output. A terminal provider
-failure ends this explicit controller attempt; a later review is a new,
-separately authorized invocation.
-
-The launcher performs representative access and command-effect preflight,
-validates Claude's effective initialization metadata, snapshots all guarded
-source bytes and the Git index, and requires a positive no-delta postflight.
-Provider-internal retry events remain part of the one controller attempt; the
-controller does not automatically launch a fresh exact-input repeat. Preserve
-the attempt receipt even when no
-candidate verdict is produced, and apply finding disposition only to successful
-substantive review output.
-
-The governed provider argv includes Claude's `--restricted` mode, available in
-Claude Code 2.1.248 and later, so provider-managed settings and filesystem
-confinement carry the controls they can express. The controller enforces that
-version floor before provider launch, keeps setting sources explicitly empty,
-and requires attempt-local evidence that its exact-command hook ran, even when
-no effort was requested. The controller
-still owns the exact argv and entry identity, standard-input EOF, stream
-drainage, process-group lifecycle, exact-command hook and canary, source
-no-delta checks, redaction, and receipts. Claude owns its structured session,
-message, tool, provider-retry, result, and usage events plus credential storage
-and refresh. The controller is the owner for privacy-safe live stream
-interpretation and publication; the provider stream is evidence, not a second
-authority boundary. Do not add
-`--permission-prompts none` until the selected Claude is at least 2.1.259 and
-that behavior has been separately qualified.
-
-The launcher preserves distinct documented failure classes when provider output
-supports them: `AUTH_OAUTH_TOKEN_EXPIRED_401`,
-`AUTH_SAVED_LOGIN_REFRESH_REJECTED`, `AUTH_OAUTH_TOKEN_REVOKED`, and
-`AUTH_INVALID_CREDENTIALS`. An auth-shaped but unsupported variant is
-`AUTH_UNKNOWN_FAIL_CLOSED`; do not invent a provider cause. All auth failures
-preserve candidate bytes and review state, retain only non-secret diagnostics,
-stop automated retries, do not mutate auth/session files, and never emit
-`REJECT`. `AUTH_OAUTH_TOKEN_EXPIRED_401` and
-`AUTH_SAVED_LOGIN_REFRESH_REJECTED` require interactive operator
-reauthentication before rerunning the unchanged preflight and review. The
-remaining documented classes require the matching supported operator diagnosis
-in the same environment; do not substitute another reviewer.
-
-Anthropic's [authentication documentation](https://code.claude.com/docs/en/authentication)
-describes `claude setup-token` as a separate long-lived automation credential
-option. This reviewer path neither provisions nor adopts it. Any
-future use requires separate credential-management authority, a supported
-secret store, rotation/revocation ownership, and redacted receipts.
-
-- Keep `USER` and `LOGNAME` consistent with the effective user for the Claude
-  child. On the qualification host, normalizing those variables restored
-  Claude authentication; the precise authentication mechanism was not
-  isolated and remains unverified.
-- Ensure the effective writable-root set includes `~/.claude/session-env` for
-  the session-environment path exercised by the qualification. Resolve `~`
-  from the effective user's home when Codex configuration requires an absolute
-  path.
-- When Claude will use its Bash tool, ensure the effective writable-root set
-  includes `/tmp` for Claude's temporary runtime state. On macOS, verify the
-  effective policy and path mapping rather than assuming the displayed
-  `/tmp` and `/private/tmp` forms represent different requirements.
+Keep `USER` and `LOGNAME` consistent with the effective user for the Claude
+child. Ensure Codex's effective writable roots include the Claude runtime paths
+required by the active review; prefer only the scoped roots required by the
+qualified path and do not broaden to danger-full-access or a blanket sandbox
+bypass.
 
 Codex supports additional roots for `workspace-write` through
 [`sandbox_workspace_write.writable_roots`](https://learn.chatgpt.com/docs/config-file/config-reference#sandbox_workspace_writewritable_roots).
-Prefer only the roots required by the qualified child path. Do not prescribe
-`danger-full-access`, global unsandboxing, or a blanket sandbox bypass when
-these scoped roots are sufficient. A workspace-local `TMPDIR` is not a
-qualified substitute for either Claude path above.
-
-The concrete qualification was workstation-specific evidence, not portable
-configuration doctrine. On the qualification host, Codex ran as a non-root
-user with that user's `HOME`, while `USER` was absent and `LOGNAME` named a
-different user. Normalizing both login-identity variables restored a minimal
-Claude prompt. Direct write probes isolated the session-environment write
-failure to the Codex writable-root boundary; after the tested writable paths
-were available and Codex was restarted, a Claude Bash probe completed with
-`hello`, and a later focused read-only review did not reproduce the observed
-authentication, session-environment, or Bash temporary-state failures. These
-results qualify only the tested Claude Code version, host, and invocation
-contexts under that Codex `workspace-write` environment. They do not establish
-a version-independent Claude Code runtime contract, that the tested writable
-roots are sufficient for every Claude workflow, or the same paths as
-requirements for other child CLIs.
+A workspace-local `TMPDIR` is not a qualified substitute for Claude runtime
+or attempt-scratch requirements.
 
 ## Autonomous Lane
 

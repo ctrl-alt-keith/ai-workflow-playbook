@@ -1,11 +1,9 @@
 # Repository-relative controller bytes are writable during development, so the
-# project layer never auto-allows them outside the sandbox. Production allow
-# rules are rendered in the user layer for one exact installed absolute path.
+# project layer requires explicit approval before reviewer execution.
 prefix_rule(
     pattern=[
         "./scripts/claude-review",
         [
-            "--qualify-claude-identity",
             "--permission-hook",
             "--auth-preflight",
             "--review-config",

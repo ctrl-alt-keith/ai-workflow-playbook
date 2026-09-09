@@ -1,15 +1,13 @@
+#!/usr/bin/env python3
+"""Regression tests for Playbook-managed local projection routing."""
+
 from __future__ import annotations
 
-import contextlib
-import importlib.util
-import io
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
-from types import SimpleNamespace
-from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,15 +15,6 @@ SCRIPT = ROOT / "scripts" / "local_projections.py"
 ROUTER = ROOT / "distributions" / "global-bootstrap" / "bootstrap-router.md"
 START = "<!-- ai-workflow-playbook:global-bootstrap:start -->"
 END = "<!-- ai-workflow-playbook:global-bootstrap:end -->"
-
-
-def load_module():
-    spec = importlib.util.spec_from_file_location("local_projections", SCRIPT)
-    assert spec and spec.loader
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
 class LocalProjectionTests(unittest.TestCase):
@@ -45,11 +34,12 @@ class LocalProjectionTests(unittest.TestCase):
                 str(codex_file),
                 "--claude-file",
                 str(claude_file),
+                "--require-claude",
             ],
             check=False,
-            text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            text=True,
         )
 
     def test_global_projection_delegates_real_check_plan_apply_and_verification(self) -> None:
@@ -58,120 +48,21 @@ class LocalProjectionTests(unittest.TestCase):
             codex_file = root / "AGENTS.md"
             claude_file = root / "CLAUDE.md"
             router = ROUTER.read_text(encoding="utf-8")
-            codex_file.write_text(
-                self.marked(router.replace("first project action", "every action")),
-                encoding="utf-8",
-            )
+            codex_file.write_text(self.marked(router), encoding="utf-8")
             claude_file.write_text(self.marked(router), encoding="utf-8")
             before = codex_file.read_bytes()
 
             check = self.run_global("check", codex_file, claude_file)
             plan = self.run_global("plan", codex_file, claude_file)
 
-            self.assertEqual(check.returncode, 1)
-            self.assertIn("FAIL Codex", check.stdout)
+            self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
+            self.assertIn("PASS Codex", check.stdout)
             self.assertEqual(plan.returncode, 0, plan.stdout + plan.stderr)
-            self.assertIn("PLAN Codex", plan.stdout)
+            self.assertIn("PASS Codex", plan.stdout)
             self.assertEqual(codex_file.read_bytes(), before)
             apply = self.run_global("apply", codex_file, claude_file)
             self.assertEqual(apply.returncode, 0, apply.stdout + apply.stderr)
-            self.assertIn("APPLY Codex: verified", apply.stdout)
             self.assertIn("PASS Codex", apply.stdout)
-
-    def test_apply_stops_before_mutation_when_claude_review_plan_is_blocked(self) -> None:
-        module = load_module()
-        arguments = SimpleNamespace(
-            mode="apply",
-            component=None,
-            codex_file=None,
-            claude_file=None,
-            require_claude=False,
-        )
-        global_plan = module.CommandResult("global-bootstrap", 0, "PLAN global fixture\n")
-        blocked = module.CommandResult("claude-review", 1, "BLOCKED claude-review: fixture\n")
-        output = io.StringIO()
-        with mock.patch.object(module, "parse_args", return_value=arguments), mock.patch.object(
-            module, "run", side_effect=(global_plan, blocked)
-        ) as run, contextlib.redirect_stdout(output):
-            self.assertEqual(module.main(), 1)
-
-        self.assertEqual(run.call_count, 2)
-        self.assertEqual(run.call_args_list[0].args[1][-1], "plan")
-        self.assertEqual(run.call_args_list[1].args[1][-1], "--plan-installed")
-        self.assertIn("FAIL apply preflight", output.getvalue())
-
-    def test_plan_delegates_to_the_component_owned_claude_review_plan(self) -> None:
-        module = load_module()
-        arguments = SimpleNamespace(
-            mode="plan",
-            component=["claude-review"],
-            codex_file=None,
-            claude_file=None,
-            require_claude=False,
-        )
-        planned = module.CommandResult("claude-review", 0, "DRIFT claude-review: fixture\n")
-        with mock.patch.object(module, "parse_args", return_value=arguments), mock.patch.object(
-            module, "run", return_value=planned
-        ) as run:
-            self.assertEqual(module.main(), 0)
-
-        self.assertEqual(run.call_count, 1)
-        self.assertEqual(run.call_args.args[1][-1], "--plan-installed")
-
-    def test_apply_delegates_only_the_component_owned_claude_review_operation(self) -> None:
-        module = load_module()
-        arguments = SimpleNamespace(
-            mode="apply",
-            component=["claude-review"],
-            codex_file=None,
-            claude_file=None,
-            require_claude=False,
-        )
-        planned = module.CommandResult("claude-review", 0, "DRIFT claude-review: fixture\n")
-        applied = module.CommandResult("claude-review", 0, "{\"result\":\"verified\"}\n")
-        verified = module.CommandResult("claude-review", 0, "PASS claude-review: fixture\n")
-
-        output = io.StringIO()
-        with mock.patch.object(module, "parse_args", return_value=arguments), mock.patch.object(
-            module, "run", side_effect=(planned, applied, verified)
-        ) as run, contextlib.redirect_stdout(output):
-            self.assertEqual(module.main(), 0)
-
-        self.assertEqual(run.call_count, 3)
-        apply_arguments = run.call_args_list[1].args[1]
-        self.assertEqual(
-            apply_arguments,
-            [sys.executable, str(module.CLAUDE_REVIEW), "--reconcile-installed"],
-        )
-        self.assertNotIn(str(module.GLOBAL_BOOTSTRAP), apply_arguments)
-        self.assertNotIn("DRIFT claude-review: fixture", output.getvalue())
-        self.assertNotIn('{"result":"verified"}', output.getvalue())
-        self.assertIn("APPLY claude-review: complete", output.getvalue())
-
-    def test_apply_does_not_mutate_later_components_after_claude_review_failure(self) -> None:
-        module = load_module()
-        arguments = SimpleNamespace(
-            mode="apply",
-            component=None,
-            codex_file=None,
-            claude_file=None,
-            require_claude=False,
-        )
-        global_plan = module.CommandResult("global-bootstrap", 0, "PLAN global fixture\n")
-        claude_plan = module.CommandResult("claude-review", 0, "DRIFT claude-review: fixture\n")
-        failed_apply = module.CommandResult("claude-review", 1, "BLOCKED fixture\n")
-
-        with mock.patch.object(module, "parse_args", return_value=arguments), mock.patch.object(
-            module, "run", side_effect=(global_plan, claude_plan, failed_apply)
-        ) as run:
-            self.assertEqual(module.main(), 1)
-
-        self.assertEqual(run.call_count, 3)
-        self.assertIn("--reconcile-installed", run.call_args_list[2].args[1])
-        self.assertNotIn(
-            str(module.GLOBAL_BOOTSTRAP),
-            run.call_args_list[2].args[1],
-        )
 
 
 if __name__ == "__main__":

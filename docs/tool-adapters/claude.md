@@ -207,20 +207,15 @@ The CLI controls have different effects:
   workaround.
 
 The repository [`claude-review`](../../scripts/claude-review) source composes
-these controls for governed review. Production auth and review run only through
-the exact machine-local installation rendered by
-[`install-claude-review`](../../scripts/install-claude-review). That installed
-launcher verifies its reviewed bytes, immutable schema-v3 entry contract,
-active Codex rule, singular flat current qualification receipt, and the exact
-absolute Claude selector plus resolved user-owned, non-writable executable
-file identity without starting unqualified bytes; it does not select `claude`
-from inherited `PATH`. Only after that non-executing identity matches the
-schema-v3 qualification receipt may it query the recorded version. It then
-re-observes the file identity. Before provider process creation it repeats that
-ordering and compares the current receipt, entry contract, canonical path,
-ownership, mode, executable status, device, inode, size, digest, and version.
+these controls for governed review. Invoke it directly from the active
+Playbook checkout; no supported path installs, copies, or reconciles a
+machine-local launcher. Each auth or review invocation supplies `--claude-bin`
+with one exact absolute Claude executable. The controller verifies that the
+effective user owns a non-writable executable, observes its file identity
+before querying its version, and re-observes that identity immediately before
+provider process creation. It does not resolve `claude` from inherited `PATH`.
 The residual operating-system race between the final recheck and process
-creation remains explicit; the launcher does not claim to eliminate it.
+creation remains explicit; the controller does not claim to eliminate it.
 A versioned JSON review config binds the
 source graph, launch root and exact additional directories, guard roots,
 candidate and exact `HEAD`, disjoint evidence directory, immutable
@@ -240,23 +235,12 @@ runtime `HOME` recorded in the attempt receipt and prove that `.local`,
 `.cache`, and `.config` are not created there. The seam is ignored outside the
 explicit fixture execution path.
 
-A selector advance is capability drift, not a candidate finding. Ordinary auth
-and review fail closed before Claude receives substantive input and expose only
-the exact launcher's prompt-gated identity-qualification transition. The
-transition derives and re-observes the configured selector from the immutable
-entry contract, requires the expected current receipt and expected
-non-executing file-identity digest, and rejects a no-op. Only after the lock,
-predecessor, file, ownership, mode, digest, path, and forbidden-root checks pass
-does the prompted operation first query the new bytes for their version. It
-re-observes the file identity before writing one immutable predecessor-linked
-receipt and compare-and-swap replacing the singular current selection with an
-exact private, flushed temporary file. It cannot accept an arbitrary executable
-or selector. Ordinary drift diagnostics do not claim a version for unqualified
-bytes. Unchanged execution and identical-contract installer reruns never
-rewrite current selection. Historical receipts do not silently reauthorize
-rollback; returning to older bytes is a new transition. Qualification is
-evidence and capability gating only and grants no review, candidate, merge, or
-other task authority.
+Claude executable selection is capability evidence, not candidate evidence or
+task authority. A caller must select an exact absolute executable for each
+attempt; the controller rejects an absent, unsafe, or changed selector before
+it sends substantive input to Claude. Invocation evidence records the observed
+path, ownership, mode, device, inode, digest, and version without creating a
+machine-local qualification or installation receipt.
 
 The governed invocation uses Claude's provider-native `--restricted` mode,
 available in Claude Code 2.1.248 and later, to isolate settings and confine file
