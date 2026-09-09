@@ -608,17 +608,22 @@ review, use the cheap authentication canary in that context:
   --auth-preflight -- --model opus --effort high
 ```
 
-For a review, run the command from the intended checkout and supply the prompt
-on standard input. The wrapper accepts only model and effort choices after
-`--`; it supplies the read-only Claude tools, no-session-persistence,
-no-connector, and non-interactive permission settings itself. It captures
-provider output, treats an empty or failed response as wrapper failure, and
-emits bounded redacted diagnostics. `--diagnostics-file` can retain those
-diagnostics at a new absolute path when needed.
+For a review, run the command from the intended checkout, pass its exact commit
+with `--candidate-commit`, and supply the review question on standard input.
+Immediately before invoking Claude, the wrapper verifies that the checkout
+resolves to that commit and adds the verified repository path and commit to the
+review context. A mismatch fails before review rather than selecting a new
+candidate.
 
-This wrapper implements only the lightweight targeted-review path in
-[`external-ai-reviewer.md`](../external-ai-reviewer.md); it does not satisfy the
-governed reviewer launch contract.
+The wrapper accepts only model and effort choices after `--`; it supplies the
+read-only Claude tools, no-session-persistence, no-connector, and
+non-interactive permission settings itself. It captures provider output, treats
+an empty or failed response as wrapper failure, and emits bounded redacted
+diagnostics. `--diagnostics-file` can retain those diagnostics at a new absolute
+path when needed. Together with the caller's review question and subsequent
+finding disposition, this is the Claude projection of the exact-candidate
+review contract in [`external-ai-reviewer.md`](../external-ai-reviewer.md).
+It grants no implementation, merge, release, or promotion authority.
 
 The repository project rule keeps this local reviewer execution approval-gated.
 Run the preflight before review and stop for operator attention if it fails;

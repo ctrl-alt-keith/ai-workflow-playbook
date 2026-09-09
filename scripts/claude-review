@@ -21,6 +21,7 @@ AUTH_PREFLIGHT_PROMPT = b"Reply exactly: CLAUDE_AUTH_OK\n"
 AUTH_PREFLIGHT_RESPONSE = "CLAUDE_AUTH_OK"
 MAX_DIAGNOSTIC_CHARS = 1_000
 ALLOWED_OPTIONS = {"--model", "--effort"}
+EXACT_COMMIT = re.compile(r"[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?")
 
 
 def redact(value: str) -> str:
@@ -189,6 +190,47 @@ def claude_arguments(options: list[str], *, preflight: bool) -> list[str]:
     ]
 
 
+def resolve_candidate(expected_commit: str, environment: dict[str, str]) -> tuple[str, str]:
+    """Resolve the current worktree and require its HEAD to match exactly."""
+    if not EXACT_COMMIT.fullmatch(expected_commit):
+        raise ValueError("--candidate-commit must be an exact commit object ID")
+    candidate = Path.cwd().resolve(strict=True)
+    results = []
+    for arguments in (("--show-toplevel",), ("--verify", "HEAD^{commit}")):
+        result = subprocess.run(
+            ["git", "-C", str(candidate), "rev-parse", *arguments],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            text=True,
+            env={**environment, "GIT_OPTIONAL_LOCKS": "0", "LC_ALL": "C"},
+        )
+        if result.returncode != 0 or not result.stdout.strip():
+            raise ValueError("current directory is not a readable Git worktree")
+        results.append(result.stdout.strip())
+    repository = str(Path(results[0]).resolve(strict=True))
+    observed_commit = results[1].lower()
+    expected_commit = expected_commit.lower()
+    if observed_commit != expected_commit:
+        raise ValueError(
+            f"candidate commit mismatch: expected {expected_commit}, observed {observed_commit}"
+        )
+    return repository, observed_commit
+
+
+def review_prompt(prompt: bytes, repository: str, commit: str) -> bytes:
+    context = (
+        "Verified review selection:\n"
+        f"- repository/worktree: {json.dumps(repository)}\n"
+        f"- HEAD commit at launch: {commit}\n"
+        "Use this commit as the candidate identity. The wrapper does not claim that "
+        "uncommitted worktree bytes were validated.\n\n"
+        "Review question:\n"
+    )
+    return context.encode("utf-8") + prompt
+
+
 def parse_arguments(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run a constrained Claude review; provide the review prompt on standard input."
@@ -196,6 +238,7 @@ def parse_arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--claude-bin")
     parser.add_argument("--auth-preflight", action="store_true")
     parser.add_argument("--diagnostics-file", type=Path)
+    parser.add_argument("--candidate-commit")
     parser.add_argument("claude_args", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
     if args.claude_args[:1] == ["--"]:
@@ -226,6 +269,10 @@ def main(argv: list[str] | None = None) -> int:
         prompt = AUTH_PREFLIGHT_PROMPT if preflight else sys.stdin.buffer.read()
         if not preflight and not prompt.strip():
             raise ValueError("review prompt must be supplied on standard input")
+        if preflight and args.candidate_commit is not None:
+            raise ValueError("--candidate-commit is only valid for review execution")
+        if not preflight and args.candidate_commit is None:
+            raise ValueError("--candidate-commit is required for review execution")
     except (OSError, ValueError) as error:
         diagnostics(
             {
@@ -241,12 +288,16 @@ def main(argv: list[str] | None = None) -> int:
     command = [executable, "-p", *claude_arguments(options, preflight=preflight)]
     temporary_directory: tempfile.TemporaryDirectory[str] | None = None
     cleanup_error: str | None = None
+    candidate: dict[str, str] | None = None
     try:
         if preflight:
             temporary_directory = tempfile.TemporaryDirectory(prefix="claude-review-preflight-")
             cwd = temporary_directory.name
         else:
-            cwd = os.getcwd()
+            repository, commit = resolve_candidate(args.candidate_commit, environment)
+            candidate = {"repository": repository, "commit": commit}
+            prompt = review_prompt(prompt, repository, commit)
+            cwd = repository
         result = subprocess.run(
             command,
             input=prompt,
@@ -256,7 +307,7 @@ def main(argv: list[str] | None = None) -> int:
             cwd=cwd,
             env=environment,
         )
-    except OSError as error:
+    except (OSError, ValueError) as error:
         diagnostics(
             {
                 "kind": "claude_review",
@@ -291,6 +342,8 @@ def main(argv: list[str] | None = None) -> int:
         "stdout_received": bool(stdout.strip()),
         "stderr": redact(stderr),
     }
+    if candidate is not None:
+        record["candidate"] = candidate
     if not successful:
         record["failure"] = (
             "Claude authentication needs operator attention"

@@ -76,195 +76,60 @@ revoked/invalid-credential classes separately; unknown auth-shaped output must
 fail closed without a conjectured provider cause. Neither kind of failure is
 candidate evidence or grounds to substitute another reviewer.
 
-### Review output preservation and discussion routing
+### Review output and finding disposition
 
-Apply the governed-artifact candidate and storage-admission contract in
-[`evidence-lifecycle.md`](evidence-lifecycle.md#governed-artifact-capture) to
-complete governed review output. A substantial governed review qualifies only
-when the shared floor holds: another thread, reviewer, disposition step, or
-human decision needs the exact output and reconstruction from a summary would
-weaken that dependency.
+Collect the reviewer's complete findings and verdict. When the review
+materially affects a decision, preserve its evidence boundary and disposition
+under
+[`review-packet.md#independent-review-findings-and-re-review`](review-packet.md#independent-review-findings-and-re-review).
+Apply governed-artifact capture only when the output independently meets the
+candidate floor in
+[`evidence-lifecycle.md#governed-artifact-capture`](evidence-lifecycle.md#governed-artifact-capture);
+the review mode alone does not require a separate artifact or elaborate
+receipt.
 
-When the candidate and storage contract pass, preserve the complete review at
-the durable destination selected by the owning storage contract, which for a
-governed review is the declared evidence destination bound by the launch
-contract. Keep pull-request, planning, and chat discussion to the concise
-verdict, material finding disposition, and an immutable pointer or identity for
-the complete artifact. Do not paste the complete review into an incidental
-discussion surface as the normal successful path. When qualified durable
-capture is unavailable, apply the
-[`mandatory governed-artifact capture failure boundary`](evidence-lifecycle.md#mandatory-governed-artifact-capture-failure-boundary)
-rather than using that surface as storage.
+Keep failed attempts, completed reviews, findings, dispositions, and human
+decisions distinct. Preservation records evidence only; it does not turn a
+failed attempt into a verdict or any review into approval, merge authority, or
+completion.
 
-Apply the same rule to failed and non-verdict attempts when their complete
-output or failure evidence has authorized downstream value and retention is
-permitted. Keep the attempt, complete output, terminal receipt, verdict,
-finding disposition, and human decision as distinct identities and states.
-Preservation records evidence only; it does not turn a failed attempt into a
-review verdict or any review into approval, merge authority, or completion.
+### Exact-candidate review contract
 
-### Governed reviewer launch and completion
+A governed review is a separate invocation of the selected reviewer against
+one exact candidate. Supply the repository or artifact identity, exact commit
+or immutable version, review question, relevant authoritative sources, and the
+read-only access needed to inspect them. The reviewer must report sources
+actually inspected, material capability gaps, findings with useful anchors,
+and an explicit verdict.
 
-A governed review begins with a controller-owned launch contract, not with a
-provider command assembled ad hoc. The contract must bind the exact prompt and
-configuration identities, candidate worktree and commit, complete source graph,
-logical launch root, additional readable directories, guarded roots, exact observational
-commands, evidence destination, attempt count and any explicit retry policy, and
-cancellation policy. Choose a
-logical launch root that commonly owns the source graph when practical; otherwise
-declare every additional directory explicitly. A narrow package-directory
-launch that cannot reach the candidate is a contract failure, not a partially
-qualified review. A provider may run from fresh attempt-local scratch to contain
-its own startup mechanics only when the launcher exposes every logical source
-root explicitly and verifies the effective runtime directory during initialization.
+Immediately before invoking a repository reviewer, verify that the selected
+checkout resolves to the configured exact candidate commit. Include the
+verified repository path and commit in the reviewer context. A mismatch stops
+before review; it does not select a new candidate. Check the reviewed head
+again before disposition or merge through the normal repository lifecycle.
+This check binds the selected `HEAD`; it does not claim that every live
+worktree byte equals committed content.
 
-Bind an exact immutable stream and terminal-receipt path for every explicitly
-authorized attempt and a distinct exact path for successful final reviewer output. Keep
-mutable live-process mechanics in private controller-owned
-attempt-local scratch and expose their exact locator while the controller is
-live; do not turn a replace-in-place state file into a durable artifact. Only
-the configured no-overwrite artifacts enter the governed evidence destination.
+Use the narrowest provider tool set that can read the required sources. Disable
+write tools, inherited connectors, session persistence, and unneeded startup
+configuration when the provider supports those controls. If required source
+access is unavailable, the reviewer reports the gap and limits its verdict
+instead of receiving broader authority.
 
-Before accepting substantive review, the controller must:
+Read-only review constrains the reviewer's capabilities; it does not require
+the repository, worktree registry, or shared Git administration to remain
+still. Do not add source no-delta monitoring, worktree or object attribution,
+live stabilization, process-controller state, or integrity receipts merely to
+prove that the reviewer was read-only. Concurrent repository activity is not a
+review failure when the configured candidate identity remains the one selected
+for review.
 
-- read a representative object from every declared source location;
-- execute every exact observational command with the review environment and
-  reject hidden wrappers, interpreters, shell operators, hooks, pagers, external
-  diffs, text-conversion drivers, and other command effects that exceed the
-  grant;
-- verify that the evidence destination is writable and disjoint from guarded
-  sources;
-- record the requested logical launch root, actual provider runtime directory,
-  additional directories, tools, commands, and permission posture; and
-- inspect provider initialization evidence and stop if the effective tools,
-  connectors, startup capabilities, or source reachability differ from the
-  contract.
-
-Treat each observational command as an exact argv grammar, not a generic
-executable plus token scan. Retain only the subcommand forms the review needs.
-For Git, require one exact `git -C` declared root, classify every token as an
-admitted option or exact revision/object expression, and reject unresolved
-tokens rather than allowing Git to reinterpret them as paths. Explicit and
-implicit `diff --no-index`, path traversal, outside absolute paths, mixed
-inside/outside operands, unadmitted pathspec magic, and missing path boundaries
-are contract failures before provider launch. If a retained Git form accepts
-paths, require its exact path boundary and resolve every operand inside one
-declared source root.
-
-Controller-side command preflight does not prove that the same command can run
-inside the provider process. Require a successful in-provider result from one
-exact granted command canary, reject any sandbox-bypass request, and fail closed
-when the canary is missing or fails. This qualifies the command transport; it
-does not replace controller-side execution of every configured command form.
-
-Treat provider permission flags as one control, not the whole read-only proof.
-Use the narrowest available tool set, command grammar, provider hooks, sandbox
-or filesystem restrictions, disabled connector surface, safe environment, and
-controller-side preflight together. Preserve the exact preflight result in an
-exclusive, no-overwrite receipt at the admitted evidence destination; do not
-create and delete a write probe in a durable artifact namespace. Preserve any
-material qualification gap even when the preflight receipt cannot be produced.
-
-Read-only completion requires a positive whole-source no-delta postflight. The
-baseline must accept deliberately dirty, staged, untracked, and ignored source
-state without cleaning or normalizing it, then detect content creation,
-modification, removal, mode or symlink changes, Git-index changes, and writes
-to the candidate-specific and shared Git administration directories—including
-lock-file creation, removal, replacement, mode, symlink, and content changes—and
-writes that escape the candidate into another guarded source. Treat the
-candidate worktree Git directory separately from the shared common Git
-directory. Model the primary worktree explicitly alongside every linked
-worktree, including each worktree's exact `HEAD`, `index`, `logs/HEAD`,
-`COMMIT_EDITMSG`, and `ORIG_HEAD` administration paths. A change to one of
-those paths is attributable to another worktree only when its observed HEAD
-transition and, when symbolic, exact branch-ref transition agree. Any other
-path beneath a known worktree Git directory, or any unknown common-root path,
-remains blocking. Positively protect the candidate index, HEAD and symbolic identity,
-selected commit, candidate branch ref and reflog, exact object revisions used by
-an admitted review command, command-semantic configuration and administration,
-and the resolution and reachable-object closure of those protected revisions.
-Treat `origin/main` as a moving comparison base only in the explicitly supported
-candidate comparisons `origin/main...HEAD` and `origin/main..HEAD`, rather than
-as part of the frozen candidate identity. After candidate selection, its ref or
-reflog may advance without invalidating evidence about that exact candidate,
-including when the new main overlaps it semantically. A standalone
-`origin/main` revision remains protected review input.
-Record the exact before and after ref targets and classify the change explicitly;
-freshness and mergeability against current main remain separate post-attempt
-questions. Candidate identity and exact object revisions remain protected.
-Apply equivalent index and administration coverage to another guarded source
-that is itself a repository. Repository status alone is insufficient. Reviewer
-output and receipts belong only in the declared, disjoint evidence destination
-after its retention and visibility rules admit those bytes.
-
-A changed common-Git object is not automatically candidate contamination, but
-it is never ignored. Tolerate it only when current linked-worktree and ref
-evidence identifies the change as other-worktree administration, a moving
-comparison base, an unrelated ref or reflog, or shared object-storage activity; every protected ref,
-revision, HEAD, and reachable object still resolves to the exact baseline
-identity; and the changed object has an ordinary file or directory identity
-with no lock, symlink, special-object, vanished-path, or mode ambiguity. Object
-additions, packing, and storage-layout changes use this same positive
-resolution-and-reachability proof. Candidate administration, protected refs or
-reflogs, replacement refs, alternates, shallow or graft state, attributes,
-configuration, packed-ref ambiguity, unknown shared administration, and any
-inconsistent observation remain blocking. This worktree-aware proof permits
-unrelated commits and pushes without requiring a clone or serialization while
-remaining fail-closed when attribution is ambiguous.
-
-Bind every attempt to the configured candidate commit again immediately before
-capturing its attempt baseline and immediately before creating the reviewer
-process. Apply both checks to each explicitly authorized attempt, and record the
-observed commit and symbolic-ref identity. Drift at either boundary stops before
-that attempt can start; it never becomes a new governed baseline.
-
-During live monitoring, an object-only shared-Git change or a change to one of
-the exact other-worktree administration paths can appear just before the
-HEAD/ref transition that proves its owner. Admit only a bounded stabilization
-interval for that provisional state. If the proof does not arrive, or any
-candidate, protected-ref, lock, unknown administration, or other change
-accompanies it, apply the blocking classification and emergency stop. Terminal
-postflight does not admit provisional attribution.
-
-Do not broadly exclude `.lock` paths from the decisive baseline-to-terminal
-comparison. An unchanged pre-existing lock may remain when its exact identity
-matches. A new, removed, or changed lock is reviewer side-effect contamination:
-produce no qualifying verdict, do not reset it automatically, and stop until it
-is corrected and dispositioned. Any live-monitor exception must identify one
-controller-owned transient lock by exact path, actor, and lifetime and must not
-apply to terminal postflight.
-
-Keep raw observation separate from candidate-integrity disposition. Preflight,
-live monitoring, emergency-stop decisions, terminal postflight,
-successor-attempt eligibility, and receipts must use the same classification semantics. Record
-each changed Git-administration object by normalized path relative to its owning
-Git directory, owner scope, change type, before and after identities,
-classification evidence, and blocking or tolerated disposition. A review may
-pass with proven-unrelated raw changes, but its receipt must retain those raw
-and tolerated paths rather than claim that no change occurred. Only blocking or
-ambiguous changes qualify as unauthorized mutation for emergency stopping.
-
-An attempt is complete only after the exact reviewer process group is terminal,
-all output collectors reach end-of-stream, its output is captured, its terminal
-receipt is durable, and no-delta
-postflight passes. A governed review controller authorizes exactly one provider
-attempt; any later review is a new explicit controller invocation with its own
-contract and evidence. Another adapter may own a bounded fresh exact-input
-repeat only when its current contract explicitly declares that responsibility,
-the prior attempt is fully terminal, and the terminal provider class is
-documented as eligible. Authentication, billing, access, capability, command,
-mutation, cancellation, and unknown failures are not automatically retryable.
-Provider-internal retry events remain evidence inside one attempt.
-
-Apply the shared live-process rules in
-[`orchestration-and-parallelism.md#live-process-lifecycle`](orchestration-and-parallelism.md#live-process-lifecycle).
-Silence, partial output, elapsed time, or a soft liveness threshold never proves
-termination and never authorizes a replacement attempt.
-
-Use [`review-packet.md#independent-review-findings-and-re-review`](review-packet.md#independent-review-findings-and-re-review)
-for finding disposition and the decision between no re-review, focused
-re-review, and a fresh artifact with full review. Do not duplicate those
-semantics in a provider adapter or reviewer prompt.
+Run the selected provider's bounded authentication preflight when its current
+adapter requires one. Treat nonzero, empty, authentication, access, or other
+provider failures explicitly and do not silently substitute another reviewer.
+After a successful result, disposition findings and any need for re-review
+under the review-packet contract. Reviewer output grants no implementation,
+promotion, merge, release, or other consequential authority.
 
 ## When To Use an External AI Reviewer
 
