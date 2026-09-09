@@ -49,10 +49,6 @@ Repo-local rules take precedence only for repo-specific behavior.
 ## Validation
 
 - Use `make check` as the canonical local validation entrypoint.
-- In a fresh implementation worktree, run `make code-first-setup` before the
-  first `make check` to establish the isolated Recovery semantic tooling.
-  This is an explicit startup step; `make check` remains non-mutating and
-  fails closed if the tooling is unavailable.
 - Run `make check` before opening or updating a PR.
 - `make check` runs Markdown lint and scanner unit tests.
 - Treat direct validation tool calls as implementation details of the Makefile
@@ -87,46 +83,3 @@ Repo-local rules take precedence only for repo-specific behavior.
   duplicating them here. Use `docs/core-model.md`,
   `docs/feature-lifecycle.md`, `docs/alignment-checkpoints.md`, and
   `docs/review-packet.md` as reference material for deeper workflow details.
-
-### CAK-233 legacy preview retirement
-
-CAK-238 retires CAK-233's experimental AI, Operator/SRE and Support preview
-pipeline, its preview-only provenance rebinding, and its mock transition
-rehearsal. They have no operational reader or distinct continuing failure
-boundary. The shared semantic source, parser, validator, diff, source binding,
-provenance helper and focused Recovery checks remain only because the Recovery
-contract below actively depends on them.
-
-### Recovery generated-section ownership
-
-The narrower CAK-235 ownership model supersedes the pilot's prose-canonical and
-no-generated-doc-adoption restrictions **only for the Recovery body** at
-`docs/source-first-retrieval.md#recovery`. Its sole authored normative body is
-`action.retrieval-recovery/does`, owned by `pb.retrieval-recovery`, in
-`experiments/code-first-playbook/semantics/source-retrieval.yaml`. The semantic
-`source.retrieval` identity still names the surrounding document owner; the
-section-specific author/reader mapping lives in `recovery/contract.json`.
-All surrounding retrieval, precedence, verification, failure, authority and
-executor rules retain their existing owners.
-
-Only the marked Recovery body is generated; the rest of its reader document
-remains hand-maintained. Authors edit the semantic action and explicitly run
-`make code-first-recovery-render`. `make check` detects stale or hand-edited
-Recovery output and provenance without repairing them. Review meaningful
-changes through the shared semantic diff and generated prose diff; the focused
-outgoing-envelope guard does not replace incoming-edge corpus review.
-
-The existing semantic modules (including `semantics/startup.yaml`),
-`provenance/sources.json`, restricted parser/model/validator, diff,
-provenance helpers, Recovery section renderer/contract, focused tests,
-requirements and Make/CI integration may support this one operational section
-at their existing locations. This permanent, section-specific placement
-permission avoids duplicating the compiler; it permits no other generated
-section, new semantic-language construct, persona adoption, runtime controller
-or cross-repository dependency.
-
-The retired previews' expiry and historical evidence do not revoke Recovery
-ownership or stop its necessary generation and validation. This carve-out does
-not widen generated ownership beyond Recovery. Implementation and validation
-do not grant doctrine promotion or merge authority; those decisions apply to
-the exact reviewed transition.
