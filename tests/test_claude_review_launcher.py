@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import pwd
 import subprocess
+import stat
 import tempfile
 import unittest
 
@@ -44,7 +45,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             stderr=subprocess.PIPE,
             check=False,
         )
-        self.assertEqual(completed.returncode, 78)
+        self.assertEqual(completed.returncode, 70)
         self.assertIn(b"absolute path", completed.stderr)
 
     def test_auth_preflight_uses_fixed_prompt_and_returns_only_success_marker(self):
@@ -57,6 +58,32 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             completed = self.run_launcher(executable, "--auth-preflight")
         self.assertEqual(completed.returncode, 0, completed.stderr.decode())
         self.assertEqual(completed.stdout, b"CLAUDE_AUTH_OK\n")
+
+    def test_preflight_isolated_from_connectors_and_memory(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            arguments_file = root / "arguments"
+            environment_file = root / "environment"
+            executable = self.make_fake_claude(
+                root,
+                f"printf '%s\\n' \"$@\" > {arguments_file}\nprintf '%s\\n' \"$CLAUDE_CODE_DISABLE_AUTO_MEMORY\" \"$CLAUDE_CODE_DISABLE_CLAUDE_MDS\" > {environment_file}\nprintf 'CLAUDE_AUTH_OK\\n'\n",
+            )
+            completed = self.run_launcher(executable, "--auth-preflight")
+            observed_arguments = arguments_file.read_text(encoding="utf-8").splitlines()
+            observed_environment = environment_file.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+        self.assertIn("--strict-mcp-config", observed_arguments)
+        self.assertIn('{"mcpServers":{}}', observed_arguments)
+        self.assertIn("--setting-sources", observed_arguments)
+        self.assertEqual(observed_environment, ["1", "1"])
+
+    def test_non_auth_preflight_failure_is_not_reported_as_reauthentication(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_claude(Path(temporary_directory), "printf 'unexpected output\\n'\n")
+            completed = self.run_launcher(executable, "--auth-preflight")
+        self.assertEqual(completed.returncode, 70)
+        self.assertIn(b"expected canary response", completed.stderr)
+        self.assertNotIn(b"authentication needs operator attention", completed.stderr)
 
     def test_review_delivers_prompt_on_stdin_and_owns_restricted_arguments(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -115,7 +142,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             root = Path(temporary_directory)
             executable = self.make_fake_claude(
                 root,
-                "printf 'OAuth token=super-secret-value Authorization: Bearer another-secret\\n' >&2\nexit 1\n",
+                "printf 'OAuth token=super-secret-value Authorization: Bearer another-secret sk-ant-bare-secret\\n' >&2\nexit 1\n",
             )
             diagnostics_file = root / "diagnostics.json"
             completed = self.run_launcher(
@@ -125,11 +152,14 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 str(diagnostics_file),
             )
             record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
+            diagnostics_mode = stat.S_IMODE(diagnostics_file.stat().st_mode)
         self.assertEqual(completed.returncode, 78)
         self.assertEqual(record["failure"], "Claude authentication needs operator attention")
         self.assertIn("[REDACTED]", record["stderr"])
         self.assertNotIn("super-secret-value", record["stderr"])
         self.assertNotIn("another-secret", record["stderr"])
+        self.assertNotIn("sk-ant-bare-secret", record["stderr"])
+        self.assertEqual(diagnostics_mode, 0o600)
 
 
 if __name__ == "__main__":

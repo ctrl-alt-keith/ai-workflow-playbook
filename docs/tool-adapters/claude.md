@@ -195,6 +195,10 @@ Run `--auth-preflight` before an expensive review. It uses a fixed stdin
 canary, no tools, an ordinary temporary directory, and the effective account's
 `HOME`, `USER`, and `LOGNAME`. A failed canary means Claude authentication needs
 operator attention; do not represent that outcome as a substantive review result.
+It disables Claude memory loading and uses an empty MCP configuration. This is
+the lightweight targeted-review path in
+[`external-ai-reviewer.md`](../external-ai-reviewer.md), not its governed
+reviewer launch contract.
 
 The wrapper captures Claude output and status. A review succeeds only when
 Claude exits successfully with non-empty output. Diagnostics are bounded and

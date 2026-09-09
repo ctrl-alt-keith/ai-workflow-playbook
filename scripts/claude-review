@@ -36,6 +36,7 @@ def redact(value: str) -> str:
         r"\1=[REDACTED]",
         value,
     )
+    value = re.sub(r"\b(?:sk|gho|ghp)[_-][A-Za-z0-9_=-]+", "[REDACTED]", value)
     return value
 
 
@@ -70,7 +71,15 @@ def claude_environment() -> dict[str, str]:
     """Use one coherent effective-account context for every Claude child."""
     account = pwd.getpwuid(os.geteuid())
     environment = os.environ.copy()
-    environment.update({"HOME": account.pw_dir, "USER": account.pw_name, "LOGNAME": account.pw_name})
+    environment.update(
+        {
+            "HOME": account.pw_dir,
+            "USER": account.pw_name,
+            "LOGNAME": account.pw_name,
+            "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
+            "CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1",
+        }
+    )
     return environment
 
 
@@ -116,7 +125,12 @@ def diagnostics(record: dict[str, Any], destination: Path | None) -> None:
     print(f"claude-review diagnostics: {encoded}", file=sys.stderr)
     if destination is None:
         return
-    destination.write_text(encoded + "\n", encoding="utf-8")
+    try:
+        descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            stream.write(encoded + "\n")
+    except OSError as error:
+        print(f"claude-review diagnostics file could not be written: {redact(str(error))}", file=sys.stderr)
 
 
 def failure_is_auth_shaped(stdout: str, stderr: str) -> bool:
@@ -126,7 +140,17 @@ def failure_is_auth_shaped(stdout: str, stderr: str) -> bool:
 
 def claude_arguments(options: list[str], *, preflight: bool) -> list[str]:
     if preflight:
-        return [*options, "--tools", "", "--no-session-persistence"]
+        return [
+            *options,
+            "--tools",
+            "",
+            "--strict-mcp-config",
+            "--mcp-config",
+            '{"mcpServers":{}}',
+            "--setting-sources",
+            "",
+            "--no-session-persistence",
+        ]
     return [
         *options,
         "--tools",
@@ -172,7 +196,7 @@ def main(argv: list[str] | None = None) -> int:
             },
             None,
         )
-        return AUTH_FAILURE_EXIT if preflight else REVIEWER_FAILURE_EXIT
+        return REVIEWER_FAILURE_EXIT
     try:
         environment = claude_environment()
         executable, version = resolve_claude(args.claude_bin, environment)
@@ -190,7 +214,7 @@ def main(argv: list[str] | None = None) -> int:
             },
             args.diagnostics_file,
         )
-        return AUTH_FAILURE_EXIT if preflight else REVIEWER_FAILURE_EXIT
+        return REVIEWER_FAILURE_EXIT
 
     command = [executable, "-p", *claude_arguments(options, preflight=preflight)]
     temporary_directory: tempfile.TemporaryDirectory[str] | None = None
@@ -220,7 +244,7 @@ def main(argv: list[str] | None = None) -> int:
             },
             args.diagnostics_file,
         )
-        return AUTH_FAILURE_EXIT if preflight else REVIEWER_FAILURE_EXIT
+        return REVIEWER_FAILURE_EXIT
     finally:
         if temporary_directory is not None:
             temporary_directory.cleanup()
@@ -231,7 +255,7 @@ def main(argv: list[str] | None = None) -> int:
         successful = result.returncode == 0 and stdout.strip() == AUTH_PREFLIGHT_RESPONSE
     else:
         successful = result.returncode == 0 and bool(stdout.strip())
-    auth_failure = failure_is_auth_shaped(stdout, stderr)
+    auth_failure = preflight and failure_is_auth_shaped(stdout, stderr)
     record = {
         "kind": "claude_review",
         "attempt_kind": "auth_preflight" if preflight else "review",
@@ -244,14 +268,16 @@ def main(argv: list[str] | None = None) -> int:
     if not successful:
         record["failure"] = (
             "Claude authentication needs operator attention"
-            if auth_failure or preflight
+            if auth_failure
+            else "Claude preflight did not return the expected canary response"
+            if preflight
             else "Claude did not return substantive review output"
         )
         if stdout:
             record["stdout"] = redact(stdout)
     diagnostics(record, args.diagnostics_file)
     if not successful:
-        return AUTH_FAILURE_EXIT if preflight else REVIEWER_FAILURE_EXIT
+        return AUTH_FAILURE_EXIT if auth_failure else REVIEWER_FAILURE_EXIT
     sys.stdout.write(f"{AUTH_PREFLIGHT_RESPONSE}\n" if preflight else stdout)
     return 0
 

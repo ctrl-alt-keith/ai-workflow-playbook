@@ -616,6 +616,10 @@ provider output, treats an empty or failed response as wrapper failure, and
 emits bounded redacted diagnostics. `--diagnostics-file` can retain those
 diagnostics at a new absolute path when needed.
 
+This wrapper implements only the lightweight targeted-review path in
+[`external-ai-reviewer.md`](../external-ai-reviewer.md); it does not satisfy the
+governed reviewer launch contract.
+
 The repository project rule keeps this local reviewer execution approval-gated.
 Run the preflight before review and stop for operator attention if it fails;
 do not treat a Claude failure as an ACCEPT or REJECT result.
