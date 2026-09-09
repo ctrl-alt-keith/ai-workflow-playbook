@@ -321,7 +321,8 @@ material, isolated snippets, and incomplete fragments remain lightweight.
 
 Keep prompt delivery small and deterministic. Resolve these decisions in order:
 
-1. Classify the produced artifact.
+1. Classify the produced artifact and freeze its rendered canonical text when
+   complete.
 2. Resolve the human operator or viewer and execution recipient independently.
 3. Resolve the execution/handoff boundary under the existing
    [material-attempt and conversational-steering boundary](prompt-contracts.md#material-attempts-and-conversational-steering).
@@ -339,14 +340,15 @@ human recipient.
 
 - no prompt: no delivery action;
 - conceptual fragment: lightweight conversational presentation;
-- ordinary in-run steering to an already-active machine attempt: conversational
-  inline delivery, using the canonical two-block presentation when complete;
-  no new durable handoff;
+- ordinary in-run steering to an already-active machine attempt that passes the
+  inline policy below: conversational inline delivery, using the canonical
+  two-block presentation when complete; no new durable handoff;
 - complete prompt for a human recipient: the canonical inline two-block
   presentation;
 - qualifying small canonical-text prompt for a ChatGPT, Claude, or Codex
-  machine recipient crossing an execution or handoff boundary with a permitted
-  Airtable route: the Airtable record handoff below;
+  machine recipient crossing an execution or handoff boundary, or rejected by
+  the inline policy, with a permitted Airtable route: the Airtable record
+  handoff below;
   or
 - missing, unresolved, or mismatched required recipient, boundary, route,
   destination, or identity for a genuine handoff: a clear blocked result with
@@ -357,6 +359,15 @@ to override the resolved recipient and route. A file provider is not a fallback
 for a qualifying small canonical-text handoff. A separately authorized workflow
 may select file-backed delivery only when its payload actually requires
 arbitrary bytes or provider file identity, revision, or checksum behavior.
+
+Before selecting inline transport for a complete machine-directed prompt,
+mechanically measure the frozen rendered UTF-8 payload. The canonical
+`inline_prompt_transport_byte_limit = 4096`; inline requires fewer bytes and a
+structurally safe representation. A known narrower constraint controls. At or
+above the limit, or below it when structure cannot be preserved safely, use the
+permitted Airtable route before command-line, argument, quoting, wrapper,
+truncation, or operator-copy failure; block if that route cannot preserve the
+handoff.
 
 ### Recipient-routing qualification cases
 
@@ -398,7 +409,13 @@ single-record request and response limits. The permitted Airtable route owns
 that runtime limit check. Payloads that do not qualify remain outside this
 normal text route; they do not trigger a fallback from it.
 
-After the decision model selects a genuine handoff, use one new Airtable record
+Inspect and use a suitable Airtable semantic connector before probing,
+authenticating, configuring, or invoking CLI, manual, or raw-API fallback.
+Fallback is eligible only after connector absence, unsupported capability, or
+failure, and must verify its account and connection identity for the intended
+base before access.
+
+After the decision model selects the Airtable route, use one new Airtable record
 per producer attempt with these required fields:
 
 - `Handoff Key`
@@ -407,11 +424,14 @@ per producer attempt with these required fields:
 - `SHA-256`
 - `Producer`
 
-Freeze `Payload` as UTF-8 without a BOM, with LF line endings and an explicitly
-declared final-newline state. `Payload Bytes` is the length of those exact bytes
-and `SHA-256` is their lowercase whole-payload digest. Create the record once
-and never update it. A correction creates a new key and record; its external
-envelope names the predecessor when applicable.
+Freeze `Payload` once as UTF-8 without a BOM, with LF line endings and an
+explicit final-newline state, and mechanically derive byte length and SHA-256
+from that exact rendered value. Before emitting an envelope, retrieve the exact
+returned record and independently recompute identity from its `Payload`; stored
+metadata cannot prove itself. Require agreement among the frozen payload,
+returned payload, canonical-text properties, stored metadata, and envelope.
+Mismatch blocks delivery; correction creates a new record and key with
+predecessor lineage and never edits the failed record.
 
 After creation, hand over an external envelope containing the exact base ID,
 table ID, returned record ID, expected handoff key, text format and final-
