@@ -317,17 +317,19 @@ Open a pull request as ready for review when all of the following are true:
 - planning-ticket status should not delay a completed implementation PR unless
   it reflects real sequencing, overlap, or completion risk
 
-Before opening or updating a pull request, fetch current `origin/main` and
-verify whether the branch is mergeable against current `main`. Update or rebase
-only for conflicts, overlapping upstream changes, repo policy, or explicit
-human request. Keep any conflict resolution within the original task scope,
-avoid unrelated cleanup, rerun the canonical validation entrypoint after the
-update, then push.
+Before opening or updating a pull request, fetch its current intended base
+branch (normally `origin/main`) and verify mergeability against that base.
+Update or rebase only for conflicts, overlapping upstream changes, repo policy,
+or explicit human request. Keep any conflict resolution within the original task
+scope, avoid unrelated cleanup, rerun the canonical validation entrypoint after
+the update, then push.
 
 In coordinated pull request batches, later pull requests can become behind
 `main` after earlier pull requests merge even when there are no file conflicts.
 When strict branch protection requires branches to be current, repeat this loop
-for each queued pull request after its dependency is merged:
+for each queued pull request after its dependency is merged. For a stack layer,
+its intended base is the preceding stack branch until that branch merges; then
+the normal `origin/main` loop applies:
 
 - fetch current `origin/main`
 - rebase the next branch onto updated `origin/main`

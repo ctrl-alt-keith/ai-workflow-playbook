@@ -85,11 +85,12 @@ Define the consequential behavior that must hold before implementation.
 
 Build only what is needed to satisfy the contract. Keep feedback loops short and avoid mixing extra polish into the first pass.
 
-For same-repo runs, fetch current `origin/main` at task start and anchor
-implementation to that fetched baseline. Check mergeability against current
-`main` before opening or updating the PR. Update or rebase only when there is a
-conflict, overlapping upstream change, repo policy requirement, or explicit
-human request, then rerun the repository's canonical validation entrypoint.
+For same-repo runs, fetch the current intended base branch at task start
+(normally `origin/main`) and anchor implementation to that fetched baseline.
+Check mergeability against that base before opening or updating the PR. Update
+or rebase only when there is a conflict, overlapping upstream change, repo
+policy requirement, or explicit human request, then rerun the repository's
+canonical validation entrypoint.
 A clean local branch at the end means the run stayed coherent against its
 anchored base; it does not by itself prove that a remote PR is still mergeable
 after `main` moves.
