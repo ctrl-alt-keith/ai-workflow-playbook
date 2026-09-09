@@ -24,6 +24,9 @@ Repo-local rules take precedence only for repo-specific behavior.
 
 - Put core reusable guidance in `docs/`.
 - Put tool-specific guidance in `docs/tool-adapters/`.
+- Before editing agent-read content, apply
+  [Agent-Read Documentation](docs/engineering-baseline.md#agent-read-documentation)
+  to the complete affected rule across its current surfaces.
 - Do not add project-specific logic or implementation examples.
 
 ## Local Execution
