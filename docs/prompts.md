@@ -363,13 +363,11 @@ arbitrary bytes or provider file identity, revision, or checksum behavior.
 Before selecting inline transport for a complete machine-directed prompt,
 mechanically measure the frozen rendered UTF-8 payload. The canonical
 `inline_prompt_transport_byte_limit = 4096`; inline requires fewer bytes and a
-structurally safe representation. This is conservative Playbook policy, not a
-provider guarantee, chosen with headroom below
-[Microsoft's documented 8,191-character command-prompt limit](https://learn.microsoft.com/en-us/troubleshoot/windows-client/shell-experience/command-line-string-limitation)
-(checked 2026-09-09); a known narrower constraint controls. At or above the
-limit, or below it when structure cannot be preserved safely, use the permitted
-Airtable route before command-line, argument, quoting, wrapper, truncation, or
-operator-copy failure; block if that route cannot preserve the handoff.
+structurally safe representation. A known narrower constraint controls. At or
+above the limit, or below it when structure cannot be preserved safely, use the
+permitted Airtable route before command-line, argument, quoting, wrapper,
+truncation, or operator-copy failure; block if that route cannot preserve the
+handoff.
 
 ### Recipient-routing qualification cases
 
