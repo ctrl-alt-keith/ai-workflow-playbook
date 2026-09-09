@@ -324,13 +324,13 @@ explicit human request. Keep any conflict resolution within the original task
 scope, avoid unrelated cleanup, rerun the canonical validation entrypoint after
 the update, then push.
 
+After a parent stack pull request merges, retarget its child to the branch the
+parent merged into and rebase only the child's commits onto that base.
+
 In coordinated pull request batches, later pull requests can become behind
 their base after earlier pull requests merge even when there are no file
 conflicts. When strict branch protection requires branches to be current,
 repeat this loop for each queued pull request after its dependency is merged:
-
-After a parent stack pull request merges, its child's intended base becomes the
-parent's integrated target/base; then apply this loop.
 
 - fetch the current base branch
 - rebase the next branch onto it
