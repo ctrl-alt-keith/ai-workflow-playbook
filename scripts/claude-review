@@ -137,10 +137,27 @@ def failure_is_auth_shaped(stdout: str, stderr: str) -> bool:
     combined = f"{stdout}\n{stderr}".lower()
     return bool(
         re.search(
-            r"\b(?:failed to authenticate|oauth (?:access )?token|invalid authentication credentials|unauthorized)\b",
+            r"\b(?:"
+            r"failed to authenticate|"
+            r"authentication[_ ](?:error|failed)|"
+            r"oauth (?:access )?token|"
+            r"invalid (?:x-)?api[ _-]?key|"
+            r"invalid authentication credentials|"
+            r"please run /login|"
+            r"401[ :_-]+unauthorized|"
+            r"unauthorized"
+            r")\b",
             combined,
         )
     )
+
+
+def cleanup_temporary_directory(directory: tempfile.TemporaryDirectory[str]) -> str | None:
+    try:
+        directory.cleanup()
+    except OSError as error:
+        return redact(str(error))
+    return None
 
 
 def claude_arguments(options: list[str], *, preflight: bool) -> list[str]:
@@ -223,11 +240,10 @@ def main(argv: list[str] | None = None) -> int:
 
     command = [executable, "-p", *claude_arguments(options, preflight=preflight)]
     temporary_directory: tempfile.TemporaryDirectory[str] | None = None
+    cleanup_error: str | None = None
     try:
         if preflight:
-            temporary_directory = tempfile.TemporaryDirectory(
-                prefix="claude-review-preflight-", ignore_cleanup_errors=True
-            )
+            temporary_directory = tempfile.TemporaryDirectory(prefix="claude-review-preflight-")
             cwd = temporary_directory.name
         else:
             cwd = os.getcwd()
@@ -254,7 +270,7 @@ def main(argv: list[str] | None = None) -> int:
         return REVIEWER_FAILURE_EXIT
     finally:
         if temporary_directory is not None:
-            temporary_directory.cleanup()
+            cleanup_error = cleanup_temporary_directory(temporary_directory)
 
     stdout = result.stdout.decode("utf-8", errors="replace")
     stderr = result.stderr.decode("utf-8", errors="replace")
@@ -262,6 +278,9 @@ def main(argv: list[str] | None = None) -> int:
         successful = result.returncode == 0 and stdout.strip() == AUTH_PREFLIGHT_RESPONSE
     else:
         successful = result.returncode == 0 and bool(stdout.strip())
+    if cleanup_error is not None:
+        successful = False
+        stderr = "\n".join(filter(None, (stderr, f"temporary-directory cleanup failed: {cleanup_error}")))
     auth_failure = preflight and failure_is_auth_shaped(stdout, stderr)
     record = {
         "kind": "claude_review",
@@ -276,6 +295,8 @@ def main(argv: list[str] | None = None) -> int:
         record["failure"] = (
             "Claude authentication needs operator attention"
             if auth_failure
+            else "Claude preflight temporary-directory cleanup failed"
+            if cleanup_error is not None
             else "Claude preflight did not return the expected canary response"
             if preflight
             else "Claude did not return substantive review output"

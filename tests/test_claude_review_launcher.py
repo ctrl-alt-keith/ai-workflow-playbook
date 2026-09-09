@@ -1,4 +1,6 @@
 import json
+import importlib.machinery
+import importlib.util
 import os
 from pathlib import Path
 import pwd
@@ -11,6 +13,15 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER = ROOT / "scripts" / "claude-review"
 CODEX_RULE = ROOT / ".codex" / "rules" / "claude-review.rules"
+
+
+def load_launcher(name: str):
+    loader = importlib.machinery.SourceFileLoader(name, str(LAUNCHER))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
 
 
 class ClaudeReviewLauncherTests(unittest.TestCase):
@@ -86,6 +97,25 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 70)
         self.assertIn(b"expected canary response", completed.stderr)
         self.assertNotIn(b"authentication needs operator attention", completed.stderr)
+
+    def test_authentication_error_response_is_reported_as_reauthentication(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_claude(
+                Path(temporary_directory),
+                "printf '{\"error\":{\"type\":\"authentication_error\",\"message\":\"invalid x-api-key\"}}\\n' >&2\nexit 1\n",
+            )
+            completed = self.run_launcher(executable, "--auth-preflight")
+        self.assertEqual(completed.returncode, 78)
+        self.assertIn(b"authentication needs operator attention", completed.stderr)
+
+    def test_temporary_directory_cleanup_failure_is_bounded(self):
+        launcher = load_launcher("claude_review_cleanup_fixture")
+
+        class FailingDirectory:
+            def cleanup(self):
+                raise OSError("fixture cleanup failure")
+
+        self.assertEqual(launcher.cleanup_temporary_directory(FailingDirectory()), "fixture cleanup failure")
 
     def test_review_delivers_prompt_on_stdin_and_owns_restricted_arguments(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
