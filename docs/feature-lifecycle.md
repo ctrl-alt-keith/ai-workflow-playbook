@@ -368,9 +368,6 @@ identity is the commit actually present on the base branch after the repository'
 allowed merge method runs. Retrieve the latter after merge instead of assuming
 that it is a merge commit or that it equals the reviewed head.
 
-Start same-repo arcs from freshly fetched `origin/main`. Do not reuse an old
-feature branch unless intentionally continuing that PR.
-
 ### Repo Change Completion
 
 After the interaction mode preflight in
@@ -515,7 +512,7 @@ worktree handling.
 
 Do not split a coherent change merely because it crosses a lifecycle phase
 label. After the current pull request merges, any later independently
-authorized change starts from freshly fetched `origin/main` on its own branch.
+authorized change starts on its own branch.
 Complete required post-release capture before starting the next major arc.
 
 When overlapping PRs touch the same shared surface, merge behavior, workflow, or other source-of-truth changes before formatting, restructuring, or cleanup. Let cleanup absorb the settled state last.

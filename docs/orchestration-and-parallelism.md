@@ -257,13 +257,8 @@ Use this sequence when lanes will be merged or reviewed together:
 2. Confirm or revise the merge order.
 3. Merge or update the first lane only after explicit merge authorization when
    the workflow requires human approval.
-4. Fetch current `main` before each later lane.
-5. Update, rebase, or recreate later branches only as needed for conflicts,
-   branch protection, repo policy, or explicit human request.
-6. Rerun the repository's canonical validation entrypoint after each
-   reconciliation update.
-7. Re-check readiness before continuing to the next lane.
-8. Run final validation on the integrated result when the repository workflow
+4. Apply [PR Readiness](repo-readiness.md#pr-readiness) to each later lane.
+5. Run final validation on the integrated result when the repository workflow
    calls for it or when the batch changed shared behavior.
 
 Open PRs as draft when they are ready for orchestrator inspection but not yet
