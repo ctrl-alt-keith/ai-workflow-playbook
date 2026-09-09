@@ -250,11 +250,10 @@ the owning task or narrower reviewer contract; prompt retrieval alone does not
 make execution read-only or grant substantive authority.
 
 When Claude produces the handoff, create one new five-field Airtable record,
-retrieve the exact returned record, and apply the shared producer read-back
-verification before emitting the envelope. Never update a frozen record;
-corrections create a new record and carry predecessor lineage externally.
-Concrete provider, account, destination, retention, and visibility values remain
-outside this adapter.
+capture the returned record ID and creation time, and emit the shared external
+envelope. Never update a frozen record; corrections create a new record and
+carry predecessor lineage externally. Concrete provider, account, destination,
+retention, and visibility values remain outside this adapter.
 
 ## Claude Model, Thinking, And Thread Routing
 

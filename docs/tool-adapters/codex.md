@@ -317,10 +317,10 @@ For a material prompt:
 
 Apply the shared
 [`Airtable canonical-text handoff`](../prompts.md#airtable-canonical-text-handoff)
-when Codex receives a qualifying small canonical-text prompt. Apply its
-connector-first ordering and fallback identity check, retrieve the envelope's
-exact record, and apply the shared verification and fail-closed rules without
-choosing another renderer.
+when Codex receives a qualifying small canonical-text prompt. Retrieve the
+envelope's exact record through a currently permitted connector route and apply
+the shared verification and fail-closed rules without choosing another route or
+renderer.
 
 When the prompt is an exact issue-owned material prompt, also apply the
 [`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile).

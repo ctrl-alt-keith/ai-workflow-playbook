@@ -178,9 +178,9 @@ another renderer.
 
 Resolve the permitted base, table, and required field IDs through current
 Airtable actions. When ChatGPT is the producer, create one record with the five
-shared fields, retrieve the exact returned record, and apply the shared producer
-read-back verification before emitting the envelope. Never update the record
-after handoff.
+shared fields and capture the returned record ID and creation time. Use the
+frozen payload length and digest in both the record and the external envelope;
+never update the record after handoff.
 
 When ChatGPT is the consumer, call the table record-list action with the exact
 `recordIds` constraint from the envelope. Require exactly one returned record,
