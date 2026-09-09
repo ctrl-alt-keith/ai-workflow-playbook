@@ -79,7 +79,9 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
 
     def test_non_auth_preflight_failure_is_not_reported_as_reauthentication(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
-            executable = self.make_fake_claude(Path(temporary_directory), "printf 'unexpected output\\n'\n")
+            executable = self.make_fake_claude(
+                Path(temporary_directory), "printf 'unexpected port 401 output\\n'\n"
+            )
             completed = self.run_launcher(executable, "--auth-preflight")
         self.assertEqual(completed.returncode, 70)
         self.assertIn(b"expected canary response", completed.stderr)

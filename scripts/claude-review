@@ -135,7 +135,12 @@ def diagnostics(record: dict[str, Any], destination: Path | None) -> None:
 
 def failure_is_auth_shaped(stdout: str, stderr: str) -> bool:
     combined = f"{stdout}\n{stderr}".lower()
-    return any(marker in combined for marker in ("authentication", "oauth", "unauthorized", "401"))
+    return bool(
+        re.search(
+            r"\b(?:failed to authenticate|oauth (?:access )?token|invalid authentication credentials|unauthorized)\b",
+            combined,
+        )
+    )
 
 
 def claude_arguments(options: list[str], *, preflight: bool) -> list[str]:
@@ -220,7 +225,9 @@ def main(argv: list[str] | None = None) -> int:
     temporary_directory: tempfile.TemporaryDirectory[str] | None = None
     try:
         if preflight:
-            temporary_directory = tempfile.TemporaryDirectory(prefix="claude-review-preflight-")
+            temporary_directory = tempfile.TemporaryDirectory(
+                prefix="claude-review-preflight-", ignore_cleanup_errors=True
+            )
             cwd = temporary_directory.name
         else:
             cwd = os.getcwd()
