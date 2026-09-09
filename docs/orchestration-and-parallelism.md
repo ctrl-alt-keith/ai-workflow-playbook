@@ -68,8 +68,9 @@ order is explicit: the bottom pull request targets `main`, and each later layer
 may target the preceding stack branch. Keep independent work as ordinary
 parallel pull requests and one coherent change in one pull request.
 
-Existing gates continue through their canonical owners. Provider-specific stack
-mechanics are not Playbook doctrine.
+For stacked-PR base, freshness, and mergeability, follow
+[PR Readiness](repo-readiness.md#pr-readiness). Existing gates continue through
+their canonical owners. Provider-specific stack mechanics are not Playbook doctrine.
 
 ## Worker Envelope
 
