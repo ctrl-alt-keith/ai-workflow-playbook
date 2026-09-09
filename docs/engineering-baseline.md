@@ -218,19 +218,13 @@ does matter, prefer the order that reduces conflict and review risk:
 - safety/mutation changes after dependent semantics are clear
 - deferred consolidation after upstream PRs have merged
 
-Start deferred consolidation lanes only after the upstream PRs are merged,
-current `main` has been fetched, and the human explicitly confirms
-continuation. These lanes should reconcile vocabulary, docs, contracts,
-examples, or shared semantics from current `main` rather than chasing moving
-branches.
-
-This gating avoids semantic churn, avoidable rebases, and accidental behavior
-changes during parallel implementation.
+Start deferred consolidation lanes only after upstream PRs merge and the human
+explicitly confirms continuation. Apply
+[PR Readiness](repo-readiness.md#pr-readiness) before reconciliation.
 
 If two PRs overlap unexpectedly, pause and re-establish the order before merging:
 
-- rebase or update branches in the intended order
-- rerun canonical validation after each update
+- apply [PR Readiness](repo-readiness.md#pr-readiness) to affected PRs
 - inspect the PR surfaces directly
 - do not merge based only on local cleanliness
 

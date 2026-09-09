@@ -191,9 +191,9 @@ After workers report, the orchestrator should:
 - inspect worker diffs, PRs, and validation evidence directly
 - preserve or revise the merge order before changing branch state
 - decide which lanes can proceed, wait, or need reconciliation
-- update or rebase branches sequentially when earlier merges affect later lanes
+- apply [PR Readiness](repo-readiness.md#pr-readiness) to lanes needing
+  reconciliation
 - resolve conflicts with semantic judgment, not mechanical cleanliness alone
-- rerun canonical validation after each reconciliation update
 - keep implementation records separate from staging or promotion notes
 
 When a batch needs later replay, the orchestrator may keep append-only local
