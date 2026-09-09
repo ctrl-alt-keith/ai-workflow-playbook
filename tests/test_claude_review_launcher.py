@@ -1,5 +1,7 @@
 import json
+import os
 from pathlib import Path
+import pwd
 import subprocess
 import tempfile
 import unittest
@@ -79,6 +81,20 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertIn("--tools", observed_arguments)
         self.assertIn("Read,Grep,Glob", observed_arguments)
         self.assertIn("--no-session-persistence", observed_arguments)
+
+    def test_review_uses_the_effective_account_login_context(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            context_file = root / "context"
+            executable = self.make_fake_claude(
+                root,
+                f"printf '%s\\n' \"$USER\" \"$LOGNAME\" \"$HOME\" > {context_file}\nprintf 'review\\n'\n",
+            )
+            completed = self.run_launcher(executable, prompt=b"Review\n")
+            observed = context_file.read_text(encoding="utf-8").splitlines()
+        account = pwd.getpwuid(os.geteuid())
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+        self.assertEqual(observed, [account.pw_name, account.pw_name, account.pw_dir])
 
     def test_rejects_options_that_compete_with_wrapper_controls(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

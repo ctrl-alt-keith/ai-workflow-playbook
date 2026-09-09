@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import pwd
 import re
 import subprocess
 import sys
@@ -65,7 +66,15 @@ def parse_claude_options(arguments: list[str]) -> list[str]:
     return selected
 
 
-def resolve_claude(path_value: str | None) -> tuple[str, str]:
+def claude_environment() -> dict[str, str]:
+    """Use one coherent effective-account context for every Claude child."""
+    account = pwd.getpwuid(os.geteuid())
+    environment = os.environ.copy()
+    environment.update({"HOME": account.pw_dir, "USER": account.pw_name, "LOGNAME": account.pw_name})
+    return environment
+
+
+def resolve_claude(path_value: str | None, environment: dict[str, str]) -> tuple[str, str]:
     if path_value is None:
         raise ValueError("--claude-bin is required")
     requested = Path(path_value)
@@ -83,6 +92,7 @@ def resolve_claude(path_value: str | None) -> tuple[str, str]:
             check=False,
             text=True,
             timeout=5,
+            env=environment,
         )
     except (OSError, subprocess.TimeoutExpired) as error:
         raise ValueError(f"could not obtain Claude version: {error}") from error
@@ -164,7 +174,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         return AUTH_FAILURE_EXIT if preflight else REVIEWER_FAILURE_EXIT
     try:
-        executable, version = resolve_claude(args.claude_bin)
+        environment = claude_environment()
+        executable, version = resolve_claude(args.claude_bin, environment)
         options = parse_claude_options(args.claude_args)
         prompt = AUTH_PREFLIGHT_PROMPT if preflight else sys.stdin.buffer.read()
         if not preflight and not prompt.strip():
@@ -196,6 +207,7 @@ def main(argv: list[str] | None = None) -> int:
             stderr=subprocess.PIPE,
             check=False,
             cwd=cwd,
+            env=environment,
         )
     except OSError as error:
         diagnostics(

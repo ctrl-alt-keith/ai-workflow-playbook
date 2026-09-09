@@ -598,8 +598,9 @@ supported workflow installs, copies, or reconciles a machine-local launcher.
 
 Pass the absolute Claude executable with `--claude-bin`; the wrapper resolves
 it, verifies that it is executable, and records its `--version` result. It does
-not use inherited `PATH` to select Claude. Before an expensive review, use the
-cheap authentication canary in the same environment:
+not use inherited `PATH` to select Claude. It normalizes `HOME`, `USER`, and
+`LOGNAME` from the effective account before starting Claude. Before an expensive
+review, use the cheap authentication canary in that context:
 
 ```text
 /ABSOLUTE/PATH/TO/ai-workflow-playbook/scripts/claude-review \

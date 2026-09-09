@@ -192,9 +192,9 @@ session persistence; and no slash commands. Invoke it from the checkout to be
 reviewed.
 
 Run `--auth-preflight` before an expensive review. It uses a fixed stdin
-canary, no tools, and an ordinary temporary directory. A failed canary means
-Claude authentication needs operator attention; do not represent that outcome
-as a substantive review result.
+canary, no tools, an ordinary temporary directory, and the effective account's
+`HOME`, `USER`, and `LOGNAME`. A failed canary means Claude authentication needs
+operator attention; do not represent that outcome as a substantive review result.
 
 The wrapper captures Claude output and status. A review succeeds only when
 Claude exits successfully with non-empty output. Diagnostics are bounded and
