@@ -166,10 +166,9 @@ download-link, or attempt-local retrieval steps.
 
 For a human execution recipient, use the existing
 [two-block inline presentation](#prompt-presentation). If Airtable capability for a
-machine recipient is unknown, inspect or attempt the semantic connector action
-before resolving the route or probing any fallback prerequisite. Material prompts
-also apply the durable profile below; routine prompts do not inherit it from
-transport.
+machine recipient is unknown, inspect or attempt it before resolving the route.
+Material prompts also apply the durable profile below; routine prompts do not
+inherit it from transport.
 
 Route failure and terminal blocking remain owned by the canonical decision
 model. ChatGPT must preserve the owning failure reason rather than choose
@@ -178,13 +177,10 @@ another renderer.
 ### Airtable Connector Projection
 
 Resolve the permitted base, table, and required field IDs through current
-Airtable connector actions before inspecting any lower-priority route. When
-ChatGPT is the producer, mechanically derive the canonical-text properties,
-length, and digest from the one frozen payload, create one record with the five
-shared fields, then retrieve the exact returned record ID and independently
-recompute identity from its returned `Payload`. Emit the external envelope only
-after the frozen bytes, returned payload, stored metadata, and prospective
-envelope agree. Never update the record after handoff.
+Airtable actions. When ChatGPT is the producer, create one record with the five
+shared fields, retrieve the exact returned record, and apply the shared producer
+read-back verification before emitting the envelope. Never update the record
+after handoff.
 
 When ChatGPT is the consumer, call the table record-list action with the exact
 `recordIds` constraint from the envelope. Require exactly one returned record,

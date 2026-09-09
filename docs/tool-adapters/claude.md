@@ -236,11 +236,7 @@ Apply the shared
 and the
 [`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
 when Claude receives an exact issue-owned prompt through a currently permitted
-Airtable route. Inspect and use the semantic connector action before probing or
-configuring any CLI, manual, or raw-API fallback; fallback becomes eligible only
-after connector absence, unsupported capability, or failure and requires an
-account/connection identity verified for the intended base. Use the external
-envelope's exact base, table, and record IDs;
+Airtable route. Use the external envelope's exact base, table, and record IDs;
 retrieve with the connector's exact `recordIds` constraint and require exactly
 one result. Do not use fuzzy search or key lookup as the retrieval route.
 
@@ -253,13 +249,12 @@ After acceptance, choose tools, permission mode, and session persistence from
 the owning task or narrower reviewer contract; prompt retrieval alone does not
 make execution read-only or grant substantive authority.
 
-When Claude produces the handoff, mechanically derive identity from the frozen
-payload, create one new five-field Airtable record, retrieve the exact returned
-record, and independently recompute identity from its returned `Payload` before
-emitting the shared external envelope. Never update a frozen record; corrections
-create a new record and carry predecessor lineage externally. Concrete provider,
-account, destination, retention, and visibility values remain outside this
-adapter.
+When Claude produces the handoff, create one new five-field Airtable record,
+retrieve the exact returned record, and apply the shared producer read-back
+verification before emitting the envelope. Never update a frozen record;
+corrections create a new record and carry predecessor lineage externally.
+Concrete provider, account, destination, retention, and visibility values remain
+outside this adapter.
 
 ## Claude Model, Thinking, And Thread Routing
 

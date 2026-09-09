@@ -321,20 +321,17 @@ material, isolated snippets, and incomplete fragments remain lightweight.
 
 Keep prompt delivery small and deterministic. Resolve these decisions in order:
 
-1. Classify the produced artifact, freeze its rendered canonical text when
-   complete, and mechanically measure its UTF-8 byte length and inline
-   representation safety.
+1. Classify the produced artifact and freeze its rendered canonical text when
+   complete.
 2. Resolve the human operator or viewer and execution recipient independently.
 3. Resolve the execution/handoff boundary under the existing
    [material-attempt and conversational-steering boundary](prompt-contracts.md#material-attempts-and-conversational-steering).
 4. Qualify and select the applicable transport, then its presentation.
 
-A concrete machine recipient alone does not create a durable handoff. Use the
-linked boundary to distinguish ordinary in-run steering from fresh execution or
-revised-contract handoffs, independently of visible thread reuse. A complete
-machine-directed payload that the inline policy below rejects is no longer
-ordinary inline steering: its exact transport creates a handoff boundary without
-creating authority or a new recipient execution attempt.
+A concrete machine recipient alone does not create a durable handoff or require
+transport qualification. Use the linked boundary to distinguish ordinary in-run
+steering from fresh execution or revised-contract handoffs, independently of
+visible thread reuse.
 
 Wording such as `show me`, `give me`, or `prompt me` does not override a clearly
 named machine recipient, including when the human manually launches its
@@ -343,14 +340,15 @@ human recipient.
 
 - no prompt: no delivery action;
 - conceptual fragment: lightweight conversational presentation;
-- ordinary in-run steering to an already-active machine attempt whose complete
-  payload is safely inline: conversational inline delivery, using the canonical
+- ordinary in-run steering to an already-active machine attempt that passes the
+  inline policy below: conversational inline delivery, using the canonical
   two-block presentation when complete; no new durable handoff;
 - complete prompt for a human recipient: the canonical inline two-block
   presentation;
 - qualifying small canonical-text prompt for a ChatGPT, Claude, or Codex
-  machine recipient crossing an execution or handoff boundary with a permitted
-  Airtable route: the Airtable record handoff below;
+  machine recipient crossing an execution or handoff boundary, or rejected by
+  the inline policy, with a permitted Airtable route: the Airtable record
+  handoff below;
   or
 - missing, unresolved, or mismatched required recipient, boundary, route,
   destination, or identity for a genuine handoff: a clear blocked result with
@@ -362,49 +360,36 @@ for a qualifying small canonical-text handoff. A separately authorized workflow
 may select file-backed delivery only when its payload actually requires
 arbitrary bytes or provider file identity, revision, or checksum behavior.
 
-### Inline prompt transport policy
-
-Apply this policy to a complete machine-directed prompt that would otherwise
-cross an inline path, including operator copy into the named machine recipient.
-The Playbook-owned `inline_prompt_transport_byte_limit` is `4096`: a rendered
-payload is size-eligible for inline delivery only when its mechanically measured
-UTF-8 length is strictly less than that value. This is conservative local policy,
-not a provider guarantee. It leaves approximately half the documented headroom
-under the 8,191-character Windows Command Prompt limit described by
-[Microsoft](https://learn.microsoft.com/en-us/troubleshoot/windows-client/shell-experience/command-line-string-limitation),
-checked 2026-09-09. A known narrower recipient or platform limit controls.
-
-Route an otherwise qualifying payload to the Airtable canonical-text handoff at
-or above the limit, before command-line, argument, quoting, wrapper, truncation,
-or operator-copy failure. Route below the limit when multiline structure or
-another known transport constraint cannot preserve the canonical representation
-safely. Terminal dimensions and model judgment do not establish safety. If the
-required Airtable route is unavailable, unsupported, or mismatched, block rather
-than retrying the payload through inline command construction. This transport
-decision changes neither the resolved recipient nor the authority boundary.
+Before selecting inline transport for a complete machine-directed prompt,
+mechanically measure the frozen rendered UTF-8 payload. The canonical
+`inline_prompt_transport_byte_limit = 4096`; inline requires fewer bytes and a
+structurally safe representation. This is conservative Playbook policy, not a
+provider guarantee, chosen with headroom below
+[Microsoft's documented 8,191-character command-prompt limit](https://learn.microsoft.com/en-us/troubleshoot/windows-client/shell-experience/command-line-string-limitation)
+(checked 2026-09-09); a known narrower constraint controls. At or above the
+limit, or below it when structure cannot be preserved safely, use the permitted
+Airtable route before command-line, argument, quoting, wrapper, truncation, or
+operator-copy failure; block if that route cannot preserve the handoff.
 
 ### Recipient-routing qualification cases
 
 These cases exercise the decision model above. Tests validate their routing
 relationships rather than the surrounding prose.
 
-| Case | Produced artifact | Operator/viewer | Execution recipient | Downstream execution surface | Execution/handoff boundary | Rendered UTF-8 bytes | Inline representation | Route capability | Selected delivery |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `human-personal-use` | `complete` | `human` | `human` | `human` | `not-applicable` | `not-applicable` | `not-applicable` | `not-required` | `inline-two-block` |
-| `cak-228-prompt-me-codex` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `4095` | `safe` | `permitted` | `airtable-thin-handoff` |
-| `claude-executes` | `complete` | `human` | `claude` | `claude` | `fresh-execution` | `4095` | `safe` | `permitted` | `airtable-thin-handoff` |
-| `chatgpt-executes` | `complete` | `human` | `chatgpt` | `chatgpt` | `fresh-execution` | `4095` | `safe` | `permitted` | `airtable-thin-handoff` |
-| `cak-242-codex-correction` | `complete` | `human` | `codex` | `codex` | `in-run-steering` | `4095` | `safe` | `permitted` | `inline-two-block` |
-| `cak-241-codex-correction` | `complete` | `human` | `codex` | `codex` | `in-run-steering` | `4095` | `safe` | `permitted` | `inline-two-block` |
-| `claude-steering` | `complete` | `human` | `claude` | `claude` | `in-run-steering` | `4095` | `safe` | `unavailable` | `inline-two-block` |
-| `chatgpt-steering` | `complete` | `human` | `chatgpt` | `chatgpt` | `in-run-steering` | `4095` | `safe` | `not-inspected` | `inline-two-block` |
-| `oversized-codex-steering` | `complete` | `human` | `codex` | `codex` | `transport-handoff` | `4096` | `safe` | `permitted` | `airtable-thin-handoff` |
-| `fragile-codex-steering` | `complete` | `human` | `codex` | `codex` | `transport-handoff` | `2048` | `fragile` | `permitted` | `airtable-thin-handoff` |
-| `oversized-route-unavailable` | `complete` | `human` | `codex` | `codex` | `transport-handoff` | `4096` | `safe` | `unavailable` | `blocked` |
-| `reused-thread-revised-contract` | `complete` | `human` | `codex` | `codex` | `revised-contract-review` | `4095` | `safe` | `permitted` | `airtable-thin-handoff` |
-| `machine-route-unavailable` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `4095` | `safe` | `unavailable` | `blocked` |
-| `machine-identity-unresolved` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `4095` | `safe` | `identity-unresolved-after-inspection` | `blocked` |
-| `conceptual-fragment` | `fragment` | `human` | `none` | `none` | `not-applicable` | `not-applicable` | `not-applicable` | `not-applicable` | `lightweight` |
+| Case | Produced artifact | Operator/viewer | Execution recipient | Downstream execution surface | Execution/handoff boundary | Route capability | Selected delivery |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `human-personal-use` | `complete` | `human` | `human` | `human` | `not-applicable` | `not-required` | `inline-two-block` |
+| `cak-228-prompt-me-codex` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `permitted` | `airtable-thin-handoff` |
+| `claude-executes` | `complete` | `human` | `claude` | `claude` | `fresh-execution` | `permitted` | `airtable-thin-handoff` |
+| `chatgpt-executes` | `complete` | `human` | `chatgpt` | `chatgpt` | `fresh-execution` | `permitted` | `airtable-thin-handoff` |
+| `cak-242-codex-correction` | `complete` | `human` | `codex` | `codex` | `in-run-steering` | `permitted` | `inline-two-block` |
+| `cak-241-codex-correction` | `complete` | `human` | `codex` | `codex` | `in-run-steering` | `permitted` | `inline-two-block` |
+| `claude-steering` | `complete` | `human` | `claude` | `claude` | `in-run-steering` | `unavailable` | `inline-two-block` |
+| `chatgpt-steering` | `complete` | `human` | `chatgpt` | `chatgpt` | `in-run-steering` | `not-inspected` | `inline-two-block` |
+| `reused-thread-revised-contract` | `complete` | `human` | `codex` | `codex` | `revised-contract-review` | `permitted` | `airtable-thin-handoff` |
+| `machine-route-unavailable` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `unavailable` | `blocked` |
+| `machine-identity-unresolved` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `identity-unresolved-after-inspection` | `blocked` |
+| `conceptual-fragment` | `fragment` | `human` | `none` | `none` | `not-applicable` | `not-applicable` | `lightweight` |
 
 `cak-228-prompt-me-codex` represents “Prompt me to have Codex do X,” including
 manual thread creation: the human is the viewer or launcher, while Codex
@@ -426,14 +411,11 @@ single-record request and response limits. The permitted Airtable route owns
 that runtime limit check. Payloads that do not qualify remain outside this
 normal text route; they do not trigger a fallback from it.
 
-Inspect and use a suitable current Airtable semantic connector action before
-inspecting, authenticating, configuring, or invoking a CLI, manual path, or raw
-API fallback. Do not preflight a lower-priority route while the connector action
-is available and supports the required capability. Fallback becomes eligible
-only after that action is absent, unsupported, or actually fails. Before fallback
-accesses the intended base, independently verify that fallback's account and
-connection identity are appropriate; successful authentication alone does not
-establish equivalence with the connector.
+Inspect and use a suitable Airtable semantic connector before probing,
+authenticating, configuring, or invoking CLI, manual, or raw-API fallback.
+Fallback is eligible only after connector absence, unsupported capability, or
+failure, and must verify its account and connection identity for the intended
+base before access.
 
 After the decision model selects a genuine handoff, use one new Airtable record
 per producer attempt with these required fields:
@@ -444,21 +426,14 @@ per producer attempt with these required fields:
 - `SHA-256`
 - `Producer`
 
-Freeze `Payload` exactly once as UTF-8 without a BOM, with LF line endings and
-an explicitly declared final-newline state. Mechanically derive that newline
-state, `Payload Bytes`, and the lowercase whole-payload `SHA-256` from the same
-frozen byte sequence; presentation blocks, message framing, shell input, and
-implicitly newline-terminated intermediates are not identity inputs. Create the
-record once and never update it.
-
-Before emitting an external envelope, retrieve the exact returned record ID
-through the selected connector, require exactly one five-field record, and
-independently re-encode its returned `Payload`. Recompute final-newline state,
-byte length, and SHA-256 from that value rather than trusting stored metadata,
-then require exact agreement among the frozen bytes, returned payload, declared
-canonical-text properties, stored fields, and prospective envelope. Any
-mismatch blocks the envelope. A correction creates a new key and record and
-names the failed record as predecessor; it never edits the frozen record.
+Freeze `Payload` once as UTF-8 without a BOM, with LF line endings and an
+explicit final-newline state, and mechanically derive byte length and SHA-256
+from that exact rendered value. Before emitting an envelope, retrieve the exact
+returned record and independently recompute identity from its `Payload`; stored
+metadata cannot prove itself. Require agreement among the frozen payload,
+returned payload, canonical-text properties, stored metadata, and envelope.
+Mismatch blocks delivery; correction creates a new record and key with
+predecessor lineage and never edits the failed record.
 
 After creation, hand over an external envelope containing the exact base ID,
 table ID, returned record ID, expected handoff key, text format and final-
@@ -478,22 +453,6 @@ diagnostic only.
 This protocol relies on append-only behavior rather than Airtable-enforced key
 uniqueness or record immutability. It creates no extra lifecycle states,
 approval gate, fallback ladder, or storage abstraction.
-
-### Airtable qualification cases
-
-These cases expose the producer verification and transport-ordering seams for
-regression coverage without making incident history part of the shared rule.
-
-| Case | Connector result | Fallback prerequisite timing | Fallback account identity | Frozen final newline | Frozen bytes | Returned final newline | Returned bytes | Stored bytes | Result |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `connector-verified-payload` | `supported` | `not-inspected` | `not-inspected` | `absent` | `5770` | `absent` | `5770` | `5770` | `emit-envelope` |
-| `codex-connector-supported-fallback-probed-first` | `supported` | `before-connector` | `unknown` | `absent` | `5770` | `absent` | `5770` | `5770` | `blocked-invalid-order` |
-| `codex-connector-absent-fallback-verified` | `absent` | `after-connector` | `verified-for-base` | `absent` | `5770` | `absent` | `5770` | `5770` | `fallback-eligible` |
-| `codex-connector-unsupported-fallback-verified` | `unsupported` | `after-connector` | `verified-for-base` | `absent` | `5770` | `absent` | `5770` | `5770` | `fallback-eligible` |
-| `codex-connector-failed-fallback-verified` | `failed` | `after-connector` | `verified-for-base` | `absent` | `5770` | `absent` | `5770` | `5770` | `fallback-eligible` |
-| `codex-connector-failed-fallback-identity-mismatch` | `failed` | `after-connector` | `mismatched` | `absent` | `5770` | `absent` | `5770` | `5770` | `blocked` |
-| `terminal-newline-mismatch` | `supported` | `not-inspected` | `not-inspected` | `present` | `5771` | `absent` | `5770` | `5771` | `blocked` |
-| `stored-metadata-mismatch` | `supported` | `not-inspected` | `not-inspected` | `absent` | `5770` | `absent` | `5770` | `5771` | `blocked` |
 
 ## Cross-Executor Prompt Presentation
 

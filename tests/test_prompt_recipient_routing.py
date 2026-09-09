@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 import unittest
 
@@ -15,46 +14,21 @@ EXPECTED_COLUMNS = (
     "Execution recipient",
     "Downstream execution surface",
     "Execution/handoff boundary",
-    "Rendered UTF-8 bytes",
-    "Inline representation",
     "Route capability",
     "Selected delivery",
-)
-AIRTABLE_SECTION_HEADING = "### Airtable qualification cases"
-AIRTABLE_COLUMNS = (
-    "Case",
-    "Connector result",
-    "Fallback prerequisite timing",
-    "Fallback account identity",
-    "Frozen final newline",
-    "Frozen bytes",
-    "Returned final newline",
-    "Returned bytes",
-    "Stored bytes",
-    "Result",
 )
 
 
 def parse_qualification_cases() -> dict[str, dict[str, str]]:
-    return parse_cases(SECTION_HEADING, EXPECTED_COLUMNS)
-
-
-def parse_airtable_cases() -> dict[str, dict[str, str]]:
-    return parse_cases(AIRTABLE_SECTION_HEADING, AIRTABLE_COLUMNS)
-
-
-def parse_cases(
-    section_heading: str, expected_columns: tuple[str, ...]
-) -> dict[str, dict[str, str]]:
     lines = PROMPTS.read_text(encoding="utf-8").splitlines()
-    section_start = lines.index(section_heading)
+    section_start = lines.index(SECTION_HEADING)
     table_start = next(
         index
         for index in range(section_start + 1, len(lines))
         if lines[index].startswith("| Case |")
     )
     header = tuple(cell.strip() for cell in lines[table_start].strip("|").split("|"))
-    if header != expected_columns:
+    if header != EXPECTED_COLUMNS:
         raise AssertionError(f"unexpected qualification columns: {header}")
 
     cases: dict[str, dict[str, str]] = {}
@@ -62,7 +36,7 @@ def parse_cases(
         if not line.startswith("|"):
             break
         values = [cell.strip().strip("`") for cell in line.strip("|").split("|")]
-        row = dict(zip(expected_columns, values, strict=True))
+        row = dict(zip(EXPECTED_COLUMNS, values, strict=True))
         case_id = row.pop("Case")
         if case_id in cases:
             raise AssertionError(f"duplicate qualification case: {case_id}")
@@ -74,7 +48,6 @@ class PromptRecipientRoutingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.cases = parse_qualification_cases()
-        cls.airtable_cases = parse_airtable_cases()
 
     def test_prompt_me_manual_launch_keeps_codex_recipient(self) -> None:
         prompted = self.cases["cak-228-prompt-me-codex"]
@@ -112,27 +85,6 @@ class PromptRecipientRoutingTests(unittest.TestCase):
             {row["Selected delivery"] for row in steering}, {"inline-two-block"}
         )
 
-    def test_inline_transport_limit_and_structural_override_route_before_failure(
-        self,
-    ) -> None:
-        small = self.cases["cak-242-codex-correction"]
-        oversized = self.cases["oversized-codex-steering"]
-        fragile = self.cases["fragile-codex-steering"]
-        unavailable = self.cases["oversized-route-unavailable"]
-
-        self.assertEqual(int(small["Rendered UTF-8 bytes"]), 4095)
-        self.assertEqual(small["Inline representation"], "safe")
-        self.assertEqual(small["Selected delivery"], "inline-two-block")
-
-        self.assertEqual(int(oversized["Rendered UTF-8 bytes"]), 4096)
-        self.assertEqual(oversized["Execution/handoff boundary"], "transport-handoff")
-        self.assertEqual(oversized["Selected delivery"], "airtable-thin-handoff")
-
-        self.assertLess(int(fragile["Rendered UTF-8 bytes"]), 4096)
-        self.assertEqual(fragile["Inline representation"], "fragile")
-        self.assertEqual(fragile["Selected delivery"], "airtable-thin-handoff")
-        self.assertEqual(unavailable["Selected delivery"], "blocked")
-
     def test_permitted_complete_machine_handoffs_use_airtable(self) -> None:
         qualifying = [
             row
@@ -165,52 +117,6 @@ class PromptRecipientRoutingTests(unittest.TestCase):
             {row["Selected delivery"] for row in failures},
             {"blocked"},
         )
-
-    def test_airtable_connector_precedes_fallback_capability_checks(self) -> None:
-        connector = self.airtable_cases["connector-verified-payload"]
-        invalid_order = self.airtable_cases[
-            "codex-connector-supported-fallback-probed-first"
-        ]
-        identity_mismatch = self.airtable_cases[
-            "codex-connector-failed-fallback-identity-mismatch"
-        ]
-
-        self.assertEqual(connector["Fallback prerequisite timing"], "not-inspected")
-        self.assertEqual(connector["Result"], "emit-envelope")
-        self.assertEqual(invalid_order["Fallback prerequisite timing"], "before-connector")
-        self.assertEqual(invalid_order["Result"], "blocked-invalid-order")
-        for result in ("absent", "unsupported", "failed"):
-            with self.subTest(connector_result=result):
-                fallback = self.airtable_cases[
-                    f"codex-connector-{result}-fallback-verified"
-                ]
-                self.assertEqual(fallback["Connector result"], result)
-                self.assertEqual(
-                    fallback["Fallback prerequisite timing"], "after-connector"
-                )
-                self.assertEqual(
-                    fallback["Fallback account identity"], "verified-for-base"
-                )
-                self.assertEqual(fallback["Result"], "fallback-eligible")
-        self.assertEqual(identity_mismatch["Result"], "blocked")
-
-    def test_final_newline_readback_mismatch_blocks_envelope(self) -> None:
-        mismatch = self.airtable_cases["terminal-newline-mismatch"]
-        self.assertEqual(mismatch["Frozen final newline"], "present")
-        self.assertEqual(mismatch["Returned final newline"], "absent")
-        self.assertEqual(int(mismatch["Frozen bytes"]), 5771)
-        self.assertEqual(int(mismatch["Returned bytes"]), 5770)
-        self.assertEqual(mismatch["Result"], "blocked")
-
-        for payload_size in (5770, 13012):
-            with self.subTest(payload_size=payload_size):
-                returned_payload = b"x" * payload_size
-                frozen_payload = returned_payload + b"\n"
-                self.assertEqual(len(frozen_payload), len(returned_payload) + 1)
-                self.assertNotEqual(
-                    hashlib.sha256(frozen_payload).digest(),
-                    hashlib.sha256(returned_payload).digest(),
-                )
 
     def test_human_recipient_and_fragment_keep_lightweight_routes(self) -> None:
         human = self.cases["human-personal-use"]

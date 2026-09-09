@@ -361,20 +361,12 @@ fail-closed boundaries.
 
 ### Material attempts and conversational steering
 
-The unit of durable governed prompt transport is one material executor attempt.
-Keep one frozen effective prompt artifact for that attempt. Ordinary in-run
-steering and follow-up whose complete payload is safely inline remain
-conversational; another human message alone does not create another Airtable
-record. The executor's own run or conversation record is sufficient forensic
-evidence for that steering unless another actor must independently reconstruct
-the changed executable contract.
-
-When the shared delivery model mechanically rejects a complete machine-directed
-steering payload as unsafe inline, the required exact transport is a handoff
-boundary rather than ordinary steering. Its Airtable record remains a transport
-artifact unless this profile's admission test independently makes it the one
-governed artifact for a material attempt. Transport necessity does not create a
-new recipient execution attempt, revise an immutable attempt, or grant authority.
+The unit of durable prompt transport is one material executor attempt. Keep
+one frozen effective prompt artifact for that attempt. Ordinary in-run
+steering and follow-up remain conversational; another human message alone
+does not create another Airtable record. The executor's own run or conversation
+record is sufficient forensic evidence for that steering unless another actor
+must independently reconstruct the changed executable contract.
 
 When later direction materially changes the executable contract and the revised
 contract must cross an execution, recovery, review, replay, restart, or handoff
@@ -438,11 +430,10 @@ do not embed account-specific IDs. This profile adds no second prompt object,
 delivery route, or verification procedure.
 
 For an admitted material prompt, the producer retrieves the newly returned
-exact record ID, recomputes canonical-text properties, byte length, and SHA-256
-from the returned `Payload`, and applies the shared checks against both the
-frozen payload and stored metadata before claiming retention or emitting the
-envelope. The consumer independently repeats those checks before accepting the
-handoff.
+exact record ID and applies the shared field, canonical-text, byte-length, and
+SHA-256 checks against the frozen payload before claiming retention or emitting
+the envelope. The consumer independently repeats those checks before accepting
+the handoff.
 
 Keep the semantic prompt contract, rendered prompt, Airtable record, external
 envelope, producing receipt, delivery evidence, and attempt receipt as separate

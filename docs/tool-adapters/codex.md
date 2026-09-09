@@ -313,22 +313,14 @@ For a material prompt:
 - require the execution or adoption layer to re-read live durable authority
   and verify the acting identity immediately before action.
 
-### Airtable Prompt Operations
+### Airtable Prompt Retrieval
 
 Apply the shared
 [`Airtable canonical-text handoff`](../prompts.md#airtable-canonical-text-handoff)
-when Codex receives or produces a qualifying small canonical-text prompt.
-Inspect and use the suitable Airtable semantic connector action before probing,
-authenticating, configuring, or invoking a CLI, manual, or raw-API route. Only
-after the connector action is absent, unsupported, or fails may Codex inspect a
-fallback prerequisite; it then verifies that route's account and connection
-identity for the intended base before access.
-
-For retrieval, use the envelope's exact record ID and apply the shared
-verification and fail-closed rules without choosing another renderer. For
-production, mechanically derive identity from the frozen payload, create the
-record once, retrieve the exact returned record through the connector, and
-recompute identity from its returned `Payload` before emitting an envelope.
+when Codex receives a qualifying small canonical-text prompt. Apply its
+connector-first ordering and fallback identity check, retrieve the envelope's
+exact record, and apply the shared verification and fail-closed rules without
+choosing another renderer.
 
 When the prompt is an exact issue-owned material prompt, also apply the
 [`issue-owned durable rendered-prompt handoff profile`](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile).
