@@ -189,16 +189,18 @@ only model and effort choices, delivers the review prompt on standard input,
 and supplies the review controls itself: read-only `Read`, `Grep`, and
 `Glob` tools; non-interactive permission mode; no MCP configuration; no
 session persistence; and no slash commands. Invoke it from the checkout to be
-reviewed.
+reviewed and pass that checkout's exact commit with `--candidate-commit`. The
+wrapper verifies `HEAD` immediately before review and includes the repository
+path and selected commit in Claude's context.
 
 Run `--auth-preflight` before an expensive review. It uses a fixed stdin
 canary, no tools, an ordinary temporary directory, and the effective account's
 `HOME`, `USER`, and `LOGNAME`. A failed canary means Claude authentication needs
 operator attention; do not represent that outcome as a substantive review result.
 It disables Claude memory loading and uses an empty MCP configuration. This is
-the lightweight targeted-review path in
-[`external-ai-reviewer.md`](../external-ai-reviewer.md), not its governed
-reviewer launch contract.
+the Claude projection of the exact-candidate review contract in
+[`external-ai-reviewer.md`](../external-ai-reviewer.md); finding disposition
+and human transition authority remain outside the wrapper.
 
 The wrapper captures Claude output and status. A review succeeds only when
 Claude exits successfully with non-empty output. Diagnostics are bounded and

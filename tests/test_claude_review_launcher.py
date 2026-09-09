@@ -36,13 +36,33 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         executable.chmod(0o700)
         return executable
 
-    def run_launcher(self, executable: Path, *arguments: str, prompt: bytes = b"") -> subprocess.CompletedProcess[bytes]:
+    def current_commit(self) -> str:
         return subprocess.run(
-            [str(LAUNCHER), "--claude-bin", str(executable), *arguments],
+            ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout.strip()
+
+    def run_launcher(
+        self,
+        executable: Path,
+        *arguments: str,
+        prompt: bytes = b"",
+        candidate_commit: str | None = "current",
+    ) -> subprocess.CompletedProcess[bytes]:
+        command = [str(LAUNCHER), "--claude-bin", str(executable)]
+        if "--auth-preflight" not in arguments and candidate_commit is not None:
+            commit = self.current_commit() if candidate_commit == "current" else candidate_commit
+            command.extend(("--candidate-commit", commit))
+        command.extend(arguments)
+        return subprocess.run(
+            command,
             input=prompt,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=False,
+            cwd=ROOT,
         )
 
     def test_project_rule_keeps_claude_review_approval_gated(self):
@@ -135,11 +155,44 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             )
             observed_arguments = arguments_file.read_text(encoding="utf-8").splitlines()
         self.assertEqual(completed.returncode, 0, completed.stderr.decode())
-        self.assertEqual(completed.stdout, b"Review the candidate.\n")
+        self.assertIn(b"Verified review selection:", completed.stdout)
+        self.assertIn(str(ROOT).encode(), completed.stdout)
+        self.assertIn(self.current_commit().encode(), completed.stdout)
+        self.assertIn(b"uncommitted worktree bytes were validated", completed.stdout)
+        self.assertTrue(completed.stdout.endswith(b"Review question:\nReview the candidate.\n"))
         self.assertEqual(observed_arguments[:3], ["-p", "--model", "opus"])
         self.assertIn("--tools", observed_arguments)
         self.assertIn("Read,Grep,Glob", observed_arguments)
         self.assertIn("--no-session-persistence", observed_arguments)
+
+    def test_review_requires_candidate_commit(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_claude(Path(temporary_directory), "printf 'review\n'\n")
+            completed = self.run_launcher(
+                executable,
+                prompt=b"Review\n",
+                candidate_commit=None,
+            )
+        self.assertEqual(completed.returncode, 70)
+        self.assertIn(b"candidate-commit is required", completed.stderr)
+
+    def test_candidate_commit_mismatch_fails_before_review_invocation(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            invoked = root / "invoked"
+            executable = self.make_fake_claude(
+                root,
+                f"touch {invoked}\nprintf 'review\n'\n",
+            )
+            completed = self.run_launcher(
+                executable,
+                prompt=b"Review\n",
+                candidate_commit="0" * 40,
+            )
+            review_invoked = invoked.exists()
+        self.assertEqual(completed.returncode, 70)
+        self.assertIn(b"candidate commit mismatch", completed.stderr)
+        self.assertFalse(review_invoked)
 
     def test_review_uses_the_effective_account_login_context(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
