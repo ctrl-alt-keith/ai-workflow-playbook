@@ -45,15 +45,9 @@ Define shared engineering expectations across repositories. This baseline forms 
 
 ## Git and PR Expectations
 
-- Fetch the current intended base branch at task start (normally `origin/main`)
-  and anchor implementation to that fetched baseline.
-- Before opening or updating a PR, verify current mergeability against its
-  intended base branch.
-- Update or rebase only for conflicts, overlapping upstream changes, repo
-  policy, or explicit human request.
-- Rerun canonical validation after any update or rebase.
+- Follow [PR Readiness](repo-readiness.md#pr-readiness) for pull-request
+  mechanics.
 - Keep commits clean and focused.
-- Select PR status through [PR Readiness](repo-readiness.md#pr-readiness).
 
 ## Test Value
 

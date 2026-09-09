@@ -68,9 +68,8 @@ order is explicit: the bottom pull request targets `main`, and each later layer
 may target the preceding stack branch. Keep independent work as ordinary
 parallel pull requests and one coherent change in one pull request.
 
-Existing authority, review, validation, gating, and reconciliation rules apply
-through their canonical owners. GitHub-specific stack mechanics are provider
-behavior, not Playbook doctrine.
+Existing gates continue through their canonical owners. Provider-specific stack
+mechanics are not Playbook doctrine.
 
 ## Worker Envelope
 

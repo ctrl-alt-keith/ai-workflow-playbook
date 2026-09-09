@@ -67,9 +67,8 @@ Repo-local rules take precedence only for repo-specific behavior.
 
 ## Pull Requests
 
-- Target `main` by default. In an eligible stack, the bottom layer targets
-  `main` and later layers may target the preceding stack branch; follow
-  `docs/orchestration-and-parallelism.md`.
+- Target `main` by default. An eligible stack layer may target the preceding
+  branch; follow `docs/orchestration-and-parallelism.md`.
 - Include a clear summary and rationale.
 - Include validation notes.
 - Add `Closes #[issue number]` when applicable.
