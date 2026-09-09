@@ -45,14 +45,9 @@ Define shared engineering expectations across repositories. This baseline forms 
 
 ## Git and PR Expectations
 
-- Fetch current `origin/main` at task start and anchor implementation to that
-  fetched baseline.
-- Before opening or updating a PR, verify current mergeability against `main`.
-- Update or rebase only for conflicts, overlapping upstream changes, repo
-  policy, or explicit human request.
-- Rerun canonical validation after any update or rebase.
+- Follow [PR Readiness](repo-readiness.md#pr-readiness) for pull-request
+  mechanics.
 - Keep commits clean and focused.
-- Select PR status through [PR Readiness](repo-readiness.md#pr-readiness).
 
 ## Test Value
 
@@ -223,19 +218,13 @@ does matter, prefer the order that reduces conflict and review risk:
 - safety/mutation changes after dependent semantics are clear
 - deferred consolidation after upstream PRs have merged
 
-Start deferred consolidation lanes only after the upstream PRs are merged,
-current `main` has been fetched, and the human explicitly confirms
-continuation. These lanes should reconcile vocabulary, docs, contracts,
-examples, or shared semantics from current `main` rather than chasing moving
-branches.
-
-This gating avoids semantic churn, avoidable rebases, and accidental behavior
-changes during parallel implementation.
+Start deferred consolidation lanes only after upstream PRs merge and the human
+explicitly confirms continuation. Apply
+[PR Readiness](repo-readiness.md#pr-readiness) before reconciliation.
 
 If two PRs overlap unexpectedly, pause and re-establish the order before merging:
 
-- rebase or update branches in the intended order
-- rerun canonical validation after each update
+- apply [PR Readiness](repo-readiness.md#pr-readiness) to affected PRs
 - inspect the PR surfaces directly
 - do not merge based only on local cleanliness
 

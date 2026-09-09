@@ -60,6 +60,18 @@ state easier to scan, for example `.worktrees/lane-a-fixtures` and
 `.worktrees/lane-b-provider-normalization`. Treat lane prefixes as a worked
 example, not a required naming taxonomy.
 
+## Optional Stacked Pull Requests
+
+Stacked pull requests are optional. Use them only for known same-repository
+dependency chains when each layer remains independently reviewable and merge
+order is explicit: the bottom pull request targets `main`, and each later layer
+may target the preceding stack branch. Keep independent work as ordinary
+parallel pull requests and one coherent change in one pull request.
+
+For stacked-PR base, freshness, and mergeability, follow
+[PR Readiness](repo-readiness.md#pr-readiness). Existing gates continue through
+their canonical owners. Provider-specific stack mechanics are not Playbook doctrine.
+
 ## Worker Envelope
 
 Every worker lane needs a self-contained task envelope. Do not rely on hidden
@@ -180,9 +192,9 @@ After workers report, the orchestrator should:
 - inspect worker diffs, PRs, and validation evidence directly
 - preserve or revise the merge order before changing branch state
 - decide which lanes can proceed, wait, or need reconciliation
-- update or rebase branches sequentially when earlier merges affect later lanes
+- apply [PR Readiness](repo-readiness.md#pr-readiness) to lanes needing
+  reconciliation
 - resolve conflicts with semantic judgment, not mechanical cleanliness alone
-- rerun canonical validation after each reconciliation update
 - keep implementation records separate from staging or promotion notes
 
 When a batch needs later replay, the orchestrator may keep append-only local
@@ -246,13 +258,8 @@ Use this sequence when lanes will be merged or reviewed together:
 2. Confirm or revise the merge order.
 3. Merge or update the first lane only after explicit merge authorization when
    the workflow requires human approval.
-4. Fetch current `main` before each later lane.
-5. Update, rebase, or recreate later branches only as needed for conflicts,
-   branch protection, repo policy, or explicit human request.
-6. Rerun the repository's canonical validation entrypoint after each
-   reconciliation update.
-7. Re-check readiness before continuing to the next lane.
-8. Run final validation on the integrated result when the repository workflow
+4. Apply [PR Readiness](repo-readiness.md#pr-readiness) to each later lane.
+5. Run final validation on the integrated result when the repository workflow
    calls for it or when the batch changed shared behavior.
 
 Open PRs as draft when they are ready for orchestrator inspection but not yet

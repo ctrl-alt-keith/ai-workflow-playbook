@@ -85,14 +85,8 @@ Define the consequential behavior that must hold before implementation.
 
 Build only what is needed to satisfy the contract. Keep feedback loops short and avoid mixing extra polish into the first pass.
 
-For same-repo runs, fetch current `origin/main` at task start and anchor
-implementation to that fetched baseline. Check mergeability against current
-`main` before opening or updating the PR. Update or rebase only when there is a
-conflict, overlapping upstream change, repo policy requirement, or explicit
-human request, then rerun the repository's canonical validation entrypoint.
-A clean local branch at the end means the run stayed coherent against its
-anchored base; it does not by itself prove that a remote PR is still mergeable
-after `main` moves.
+For same-repo pull-request mechanics, follow
+[PR Readiness](repo-readiness.md#pr-readiness).
 
 ### Hardening
 
@@ -374,9 +368,6 @@ identity is the commit actually present on the base branch after the repository'
 allowed merge method runs. Retrieve the latter after merge instead of assuming
 that it is a merge commit or that it equals the reviewed head.
 
-Start same-repo arcs from freshly fetched `origin/main`. Do not reuse an old
-feature branch unless intentionally continuing that PR.
-
 ### Repo Change Completion
 
 After the interaction mode preflight in
@@ -521,7 +512,7 @@ worktree handling.
 
 Do not split a coherent change merely because it crosses a lifecycle phase
 label. After the current pull request merges, any later independently
-authorized change starts from freshly fetched `origin/main` on its own branch.
+authorized change starts on its own branch.
 Complete required post-release capture before starting the next major arc.
 
 When overlapping PRs touch the same shared surface, merge behavior, workflow, or other source-of-truth changes before formatting, restructuring, or cleanup. Let cleanup absorb the settled state last.
