@@ -591,24 +591,15 @@ need review later. Use attempt-local scratch only for short-lived private
 process mechanics whose loss cannot impair recovery; the shared lifecycle
 contract is in [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
-### Qualified Direct Claude Code Path
+### Local Claude Code Review
 
-For local development and lifecycle controls, invoke the active Playbook
-checkout's `scripts/claude-review` directly. It is repository-owned
-executable truth: no supported workflow copies, installs, or reconciles it
-under `~/.local/bin` or another machine-local publication path.
+Invoke the active Playbook checkout's `scripts/claude-review` directly. No
+supported workflow installs, copies, or reconciles a machine-local launcher.
 
-Pass an exact absolute, effective-user-owned Claude executable with
-`--claude-bin`. The controller observes its file identity before querying its
-version and repeats that observation immediately before provider execution; it
-does not resolve `claude` from inherited `PATH`. This protects the reviewer
-runtime without retaining an installation or qualification receipt.
-
-Before an expensive independent review, run the same repository script with
-`--auth-preflight`. It uses the effective-user environment, a fixed prompt on
-standard input, no Claude tools, disabled session persistence, and fresh
-qualified attempt-local scratch. It is authentication evidence for that process
-context only; do not start the review after a preflight failure.
+Pass the absolute Claude executable with `--claude-bin`; the wrapper resolves
+it, verifies that it is executable, and records its `--version` result. It does
+not use inherited `PATH` to select Claude. Before an expensive review, use the
+cheap authentication canary in the same environment:
 
 ```text
 /ABSOLUTE/PATH/TO/ai-workflow-playbook/scripts/claude-review \
@@ -616,43 +607,17 @@ context only; do not start the review after a preflight failure.
   --auth-preflight -- --model opus --effort high
 ```
 
-For substantive review, pass `--review-config` with the versioned
-governed-launch JSON, then only model and supported effort selection after
-`--`. The controller owns Claude tools, permission mode, MCP, settings,
-hooks, output, and session-persistence flags; do not append competing review
-flags. The repository project rule keeps controller execution approval-gated,
-including lifecycle and permission-hook controls.
+For a review, run the command from the intended checkout and supply the prompt
+on standard input. The wrapper accepts only model and effort choices after
+`--`; it supplies the read-only Claude tools, no-session-persistence,
+no-connector, and non-interactive permission settings itself. It captures
+provider output, treats an empty or failed response as wrapper failure, and
+emits bounded redacted diagnostics. `--diagnostics-file` can retain those
+diagnostics at a new absolute path when needed.
 
-Supply the review prompt through a process with writable standard input, write
-the exact frozen bytes once, close standard input to deliver EOF, and await that
-same process and process group. A runner that starts the launcher with standard
-input already closed is not a valid governed-review invocation.
-
-The review config must cover every source root, bind the candidate and exact
-`HEAD`, bind the disjoint admitted evidence destination, enumerate exact
-observational command argv and immutable single-attempt artifact paths, and
-declare cancellation policy. Schema version 2 rejects automatic-retry fields.
-Do not treat a Codex timeout or missing output as evidence that Claude exited,
-and do not launch a replacement while the recorded process group may be live.
-
-The controller performs command-effect preflight, validates effective provider
-initialization, requires the in-provider exact-command canary, snapshots guarded
-source bytes and Git state, and requires a positive no-delta postflight. It
-preserves one attempt receipt whether or not a verdict is produced. These
-runtime safeguards, plus restricted provider mode, redacted diagnostics,
-scratch isolation, and lifecycle controls, remain independent of the retired
-launcher-publication protocol.
-
-Keep `USER` and `LOGNAME` consistent with the effective user for the Claude
-child. Ensure Codex's effective writable roots include the Claude runtime paths
-required by the active review; prefer only the scoped roots required by the
-qualified path and do not broaden to danger-full-access or a blanket sandbox
-bypass.
-
-Codex supports additional roots for `workspace-write` through
-[`sandbox_workspace_write.writable_roots`](https://learn.chatgpt.com/docs/config-file/config-reference#sandbox_workspace_writewritable_roots).
-A workspace-local `TMPDIR` is not a qualified substitute for Claude runtime
-or attempt-scratch requirements.
+The repository project rule keeps this local reviewer execution approval-gated.
+Run the preflight before review and stop for operator attention if it fails;
+do not treat a Claude failure as an ACCEPT or REJECT result.
 
 ## Autonomous Lane
 
