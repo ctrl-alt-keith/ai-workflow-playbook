@@ -415,7 +415,7 @@ Fallback is eligible only after connector absence, unsupported capability, or
 failure, and must verify its account and connection identity for the intended
 base before access.
 
-After the decision model selects a genuine handoff, use one new Airtable record
+After the decision model selects the Airtable route, use one new Airtable record
 per producer attempt with these required fields:
 
 - `Handoff Key`
