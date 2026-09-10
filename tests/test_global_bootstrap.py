@@ -15,6 +15,7 @@ PROJECTIONS = ROOT / "distributions" / "global-bootstrap"
 ROUTER = PROJECTIONS / "bootstrap-router.md"
 START_MARKER = "<!-- ai-workflow-playbook:global-bootstrap:start -->"
 END_MARKER = "<!-- ai-workflow-playbook:global-bootstrap:end -->"
+TRANSITION_LATCH_HEADING = "## Execution-Surface Transition Eligibility"
 
 
 def load_script_module():
@@ -133,6 +134,31 @@ class GlobalBootstrapTests(unittest.TestCase):
             self.assertIn("FAIL Codex: managed body differs", result.stdout)
             self.assertEqual(codex_file.read_bytes(), before)
             self.assertEqual(result.stderr, "")
+
+    def test_missing_transition_latch_is_repaired_by_projection_workflow(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            codex_file = root / "AGENTS.md"
+            claude_file = root / "CLAUDE.md"
+            router = ROUTER.read_text(encoding="utf-8")
+            latch_start = router.index(TRANSITION_LATCH_HEADING)
+            without_latch = router[:latch_start].rstrip("\n") + "\n"
+            codex_file.write_text(self.marked(without_latch), encoding="utf-8")
+            claude_file.write_text(self.marked(router), encoding="utf-8")
+
+            before = self.run_check(codex_file, claude_file)
+            applied = self.run_check(codex_file, claude_file, mode="apply")
+            after = self.run_check(codex_file, claude_file)
+
+            self.assertEqual(before.returncode, 1)
+            self.assertIn("FAIL Codex: managed body differs", before.stdout)
+            self.assertEqual(applied.returncode, 0, applied.stdout + applied.stderr)
+            self.assertIn("APPLY Codex: verified", applied.stdout)
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+            self.assertIn(
+                TRANSITION_LATCH_HEADING,
+                codex_file.read_text(encoding="utf-8"),
+            )
 
     def test_validator_rejects_missing_or_duplicate_markers(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

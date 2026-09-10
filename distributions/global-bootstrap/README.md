@@ -26,6 +26,13 @@ The router projects the core model's active bounded-task continuity guard
 before its material-change bootstrap trigger without copying that guard's
 behavior or cases into the distribution.
 
+After bootstrap, the router also projects the core model's execution-surface
+transition-consent boundary as a pre-qualification latch. It removes an
+unconsented transition action before generic task-shape, capability, locality,
+or preferred-fit ranking can select it, while leaving the boundary's semantics
+with the core model and matching adapter. This is an instruction-precedence
+hook, not a second transition policy or a provider-specific routing copy.
+
 The final hard precondition in that body is scoped by the first-action or
 material-change trigger. It permits the retrieval needed to obtain and apply
 `start-here.md`, but blocks all response, task reasoning, and unrelated tool
@@ -160,6 +167,12 @@ surfaces as local files. That is a capability gap, not equivalent to the local
 byte check: record the surface, observed owner or unresolved provenance,
 canonical router commit, and verification time in the owning rollout issue so
 later drift checks have an explicit baseline.
+
+For ChatGPT, a post-install behavioral check must exercise the transition
+qualification cases owned by the current ChatGPT adapter. The local byte check
+can prove that a file-backed projection contains the reviewed latch; it cannot
+prove that a hosted ChatGPT runtime applied it before its own action-ranking
+heuristics.
 
 ## Local Reconciliation
 
