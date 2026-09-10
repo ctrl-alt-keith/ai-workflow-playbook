@@ -86,6 +86,11 @@ does not establish another action's availability.
 
 ## Task Routing
 
+When diagnosing a workflow failure or deciding which layer should own a
+workflow change, use the compact [change-routing map](change-routing.md) to
+identify the semantic seam, canonical owner, implementation surface, and nearby
+wrong layer to avoid.
+
 Use only the routes activated by the task:
 
 - **Repository or software work:** continue with
