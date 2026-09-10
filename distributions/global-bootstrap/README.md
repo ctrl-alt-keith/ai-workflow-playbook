@@ -44,6 +44,12 @@ Run:
 make check-local-bootstrap
 ```
 
+By default, this component checks the Codex local file and checks the Claude
+local file when it exists. Use `--require-claude` or `--provider claude` to
+make Claude required. These selectors govern only this distribution's
+file-backed reconciliation behavior; adapter guidance owns provider runtime and
+installation interpretation.
+
 For every selected local file, the check extracts the managed body and compares
 the normalized body with [`bootstrap-router.md`](bootstrap-router.md). It does
 not create, edit, or replace local files. Missing required files, missing or
@@ -105,22 +111,9 @@ live instruction surfaces remains a separate local action: review the plan,
 explicitly apply the marked-block substitution, and run the read-only check.
 Do not edit repo-local instruction files merely to install this router.
 
-## Unified Local Projection Workflow
+## Repository-Level Local Projections
 
-Use the top-level commands to inspect every currently qualified
-Playbook-managed local projection:
-
-```text
-make check-local
-make plan-local
-make apply-local
-```
-
-`check-local` reports current, drifted, skipped, or blocked state. `plan-local`
-is read-only and prints the exact next action; no output needs to be parsed or
-copied. If apply is interrupted, rerun the same command. Finish with
-`make check-local`.
-
-The aggregate updates only Playbook-owned local projections and blocks
-unrecognized or unsafe state. It does not install or validate hosted provider
-surfaces; follow the matching adapter for those boundaries.
+This component participates in the repository-level
+[Local Projections workflow](../../README.md#local-projections). That workflow
+owns aggregate operator guidance; this distribution owns only its payload and
+component-specific reconciliation contract.
