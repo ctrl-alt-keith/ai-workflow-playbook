@@ -2,10 +2,11 @@
 
 ## Purpose
 
-This is a consumable, non-authoritative distribution under
-[`distributions/`](../README.md). It provides the one copy-ready router for
-project startup without copying shared doctrine into repository-local
-instructions. Canonical startup timing and continuity remain in
+This derived delivery artifact under [`distributions/`](../README.md) is
+canonical for its published copy-ready router payload, not the underlying
+Playbook doctrine. It provides the one router for project startup without
+copying shared doctrine into repository-local instructions. Canonical startup
+timing and continuity remain in
 [`docs/start-here.md`](../../docs/start-here.md#global-bootstrap-persistence)
 and [`docs/core-model.md`](../../docs/core-model.md).
 

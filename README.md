@@ -63,9 +63,9 @@ Reusable pattern:
 
 ## Local Projections
 
-[`distributions/`](distributions/README.md) contains consumable,
-non-authoritative derivatives of Playbook guidance. It is not a second home for
-canonical doctrine or provider runtime behavior.
+[`distributions/`](distributions/README.md) contains derived delivery artifacts
+that are canonical for their published payloads, not Playbook doctrine or
+provider runtime behavior.
 
 For the narrow set of workstation projections whose implementation is owned by
 this Playbook, use the discoverable operator loop:
