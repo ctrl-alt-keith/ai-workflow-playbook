@@ -326,7 +326,9 @@ Keep prompt delivery small and deterministic. Resolve these decisions in order:
 2. Resolve the human operator or viewer and execution recipient independently.
 3. Resolve the execution/handoff boundary under the existing
    [material-attempt and conversational-steering boundary](prompt-contracts.md#material-attempts-and-conversational-steering).
-4. Qualify and select the applicable transport, then its presentation.
+4. Qualify and select the applicable transport. For Airtable, satisfy the
+   [envelope eligibility prerequisite](#airtable-canonical-text-handoff)
+   before selecting presentation or constructing an envelope.
 
 A concrete machine recipient alone does not create a durable handoff or require
 transport qualification. Use the linked boundary to distinguish ordinary in-run
@@ -424,16 +426,27 @@ per producer attempt with these required fields:
 - `SHA-256`
 - `Producer`
 
-Freeze `Payload` once as UTF-8 without a BOM, with LF line endings and an
-explicit final-newline state, and mechanically derive byte length and SHA-256
-from that exact rendered value. Before emitting an envelope, retrieve the exact
-returned record and independently recompute identity from its `Payload`; stored
-metadata cannot prove itself. Require agreement among the frozen payload,
-returned payload, canonical-text properties, stored metadata, and envelope.
-Mismatch blocks delivery; correction creates a new record and key with
-predecessor lineage and never edits the failed record.
+Once Airtable transport is selected, envelope construction and emission are
+ineligible until this attempt completes the following sequence:
 
-After creation, hand over an external envelope containing the exact base ID,
+1. Freeze `Payload` once as UTF-8 without a BOM, with LF line endings and final
+   newline absent. Mechanically derive its byte length and SHA-256, and create
+   one record from that value and identity. Keep the pre-write identity as the
+   immutable comparison target, not evidence of successful storage.
+2. Retrieve exactly the returned record ID and require exactly one result with
+   the expected key and field set. Record creation does not satisfy readback;
+   readback alone does not satisfy verification.
+3. Independently recompute byte length, SHA-256, and canonical-text properties
+   from the returned `Payload` itself. Require exact agreement with the frozen
+   payload and stored metadata; stored metadata cannot prove itself.
+4. Only after agreement, construct and emit the envelope from that verified
+   returned-record identity. Verification qualifies only that exact attempt.
+
+Mismatch leaves envelope construction and emission ineligible. Correction
+creates a new record and key with predecessor lineage, repeats verification,
+and never edits the failed record or redefines its frozen comparison target.
+
+After successful verification, hand over an external envelope containing the exact base ID,
 table ID, returned record ID, expected handoff key, text format and final-
 newline rule, expected byte length, expected SHA-256, producer executor and
 attempt identity, and predecessor identity when applicable. Airtable's shared
