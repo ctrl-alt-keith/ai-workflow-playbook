@@ -22,13 +22,11 @@ from memory.
 After successful bootstrap, before qualifying an action that would instantiate
 or transition to another execution surface, apply the current
 `docs/core-model.md` interactive-to-execution transition-consent boundary and
-the matching tool adapter. Explicit operator request for that surface, or
-explicit acceptance of an offered transition, is a hard eligibility
-prerequisite.
+the matching tool adapter when it defines a narrower projection. Explicit
+operator request for that surface, or explicit acceptance of an offered
+transition, is a hard eligibility prerequisite.
 
 When consent is absent, remove the transition action from the eligible action
 set before task-shape, capability, locality, or preferred-fit ranking. Use a
 sufficient capability on the current surface, or offer the required surface
-and remain on the current surface. Task authority, repository or file work,
-mutation, browser use, coding, complexity, capability fit, and the availability
-of a transition action never supply transition consent.
+and remain on the current surface.
