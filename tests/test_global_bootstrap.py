@@ -140,9 +140,12 @@ class GlobalBootstrapTests(unittest.TestCase):
             codex_file = root / "AGENTS.md"
             claude_file = root / "CLAUDE.md"
             router = ROUTER.read_text(encoding="utf-8")
-            without_latch, separator, _ = router.rpartition("\n## ")
-            self.assertEqual(separator, "\n## ")
-            without_latch = without_latch.rstrip("\n") + "\n"
+            latch_heading = "\n## Execution-Surface Transition Eligibility\n"
+            self.assertEqual(router.count(latch_heading), 1)
+            latch_start = router.index(latch_heading)
+            next_heading = router.find("\n## ", latch_start + len(latch_heading))
+            latch_end = len(router) if next_heading == -1 else next_heading
+            without_latch = router[:latch_start] + router[latch_end:]
             codex_file.write_text(self.marked(without_latch), encoding="utf-8")
             claude_file.write_text(self.marked(router), encoding="utf-8")
 
