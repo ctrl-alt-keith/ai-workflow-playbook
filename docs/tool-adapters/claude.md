@@ -252,8 +252,10 @@ the owning task or narrower reviewer contract; prompt retrieval alone does not
 make execution read-only or grant substantive authority.
 
 When Claude produces the handoff, create one new five-field Airtable record,
-capture the returned record ID and creation time, and emit the shared external
-envelope. Never update a frozen record; corrections create a new record and
+capture the returned record ID and creation time, then retrieve that exact ID
+using `recordIds` and complete the shared verification before constructing or
+emitting the envelope from that attempt's verified returned-record identity.
+Never update a frozen record; corrections create a new record and
 carry predecessor lineage externally. Concrete provider, account, destination,
 retention, and visibility values remain outside this adapter.
 

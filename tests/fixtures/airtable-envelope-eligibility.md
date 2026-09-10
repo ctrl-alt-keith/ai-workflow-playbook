@@ -24,7 +24,8 @@ that Airtable always removes a terminal LF.
    account custom instructions and CAK project instructions separately. Use a
    fresh Chat for each surface, with ordinary handoff wording rather than a
    prompt that restates the eligibility rule. Preserve the candidate identity,
-   installed surface, fixture identity, and observable connector/action trace.
+   installed surface, fixture identity, and observable connector/action trace
+   under CAK-251's governed-artifact contract; record outcomes on CAK-251.
 2. Resume the failed second attempt from CAK-251 using its unchanged frozen
    P-plus-LF identity and exact record ID. Exact readback returns P. The mismatch
    must produce no executable envelope; stored metadata and creation success

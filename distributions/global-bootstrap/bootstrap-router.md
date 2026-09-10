@@ -30,5 +30,6 @@ offered transition; without it, the transition action is ineligible.
 When Airtable handoff transport is selected, before selecting presentation or
 constructing an external envelope, apply the `docs/prompts.md`
 Airtable canonical-text handoff contract. Envelope construction and emission
-remain ineligible until exact-record readback verification succeeds for that
-producer attempt; record creation alone does not qualify them.
+remain ineligible until exact-record readback and independent identity
+verification succeed for that producer attempt; record creation alone does not
+qualify them.

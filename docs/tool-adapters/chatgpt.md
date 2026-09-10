@@ -181,10 +181,9 @@ Resolve the permitted base, table, and required field IDs through current
 Airtable actions. When ChatGPT is the producer, create one record with the five
 shared fields from the frozen payload and capture the returned record ID and
 creation time. Retrieve that exact ID through the table record-list action's
-`recordIds` constraint and complete the shared readback verification. Only that
-attempt's verified returned-record identity supplies the external envelope;
-pre-write values and successful creation cannot qualify envelope construction
-or emission. Apply the shared append-only correction boundary on failure.
+`recordIds` constraint and complete the shared verification before populating
+the envelope from that attempt's verified returned-record identity. Apply the
+shared append-only correction boundary on failure.
 
 When ChatGPT is the consumer, call the table record-list action with the exact
 `recordIds` constraint from the envelope. Require exactly one returned record,
