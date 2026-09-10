@@ -86,6 +86,10 @@ does not establish another action's availability.
 
 ## Task Routing
 
+For a workflow symptom or intended fix, the compact
+[change-routing map](change-routing.md) connects canonical doctrine to the
+implementation surface and nearby wrong layers to avoid.
+
 Use only the routes activated by the task:
 
 - **Repository or software work:** continue with
