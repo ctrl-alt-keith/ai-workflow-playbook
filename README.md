@@ -63,8 +63,12 @@ Reusable pattern:
 
 ## Local Projections
 
-For the narrow set of workstation projections whose implementation is owned by
-this Playbook, use the discoverable operator loop:
+[`distributions/`](distributions/README.md) contains derived delivery artifacts
+that are canonical for their published payloads, not Playbook doctrine or
+provider runtime behavior.
+
+For the repository-level operator workflow across every currently qualified
+Playbook-managed local projection, use:
 
 ```text
 make check-local
@@ -72,13 +76,12 @@ make plan-local
 make apply-local
 ```
 
-Run these targets in order when reconciling local projections: start with
-`check-local`, inspect the read-only `plan-local` output, and run
-`apply-local` only when you intend to perform the proposed updates. The apply
-step performs eligible updates without requiring copied arguments; rerun
-`check-local` afterward to verify the resulting state. See the
-[global-bootstrap distribution](distributions/global-bootstrap/README.md#unified-local-projection-workflow)
-for included components and boundaries.
+Run these targets in order: start with `check-local`, inspect the read-only
+`plan-local` output, and run `apply-local` only when you intend to perform the
+proposed updates. The aggregate delegates payload-specific reconciliation
+behavior to each component; rerun `check-local` afterward to verify the result.
+See the [global-bootstrap distribution](distributions/global-bootstrap/README.md)
+for that component's payload and reconciliation contract.
 
 ## Initial Map
 
