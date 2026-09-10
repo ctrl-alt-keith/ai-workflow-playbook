@@ -161,7 +161,8 @@ For a qualifying small canonical-text prompt whose resolved machine recipient
 is eligible under the shared model and has a permitted Airtable route, use the
 shared
 [`Airtable canonical-text handoff`](../prompts.md#airtable-canonical-text-handoff)
-and emit its compact external envelope. Do not add file preview,
+before selecting presentation or constructing its compact external envelope.
+Do not add file preview,
 download-link, or attempt-local retrieval steps.
 
 For a human execution recipient, use the existing
@@ -178,9 +179,12 @@ another renderer.
 
 Resolve the permitted base, table, and required field IDs through current
 Airtable actions. When ChatGPT is the producer, create one record with the five
-shared fields and capture the returned record ID and creation time. Use the
-frozen payload length and digest in both the record and the external envelope;
-never update the record after handoff.
+shared fields from the frozen payload and capture the returned record ID and
+creation time. Retrieve that exact ID through the table record-list action's
+`recordIds` constraint and complete the shared readback verification. Only that
+attempt's verified returned-record identity supplies the external envelope;
+pre-write values and successful creation cannot qualify envelope construction
+or emission. Apply the shared append-only correction boundary on failure.
 
 When ChatGPT is the consumer, call the table record-list action with the exact
 `recordIds` constraint from the envelope. Require exactly one returned record,

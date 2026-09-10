@@ -135,12 +135,19 @@ class GlobalBootstrapTests(unittest.TestCase):
             self.assertEqual(result.stderr, "")
 
     def test_missing_transition_latch_is_repaired_by_projection_workflow(self) -> None:
+        self.assert_latch_projection("Execution-Surface Transition Eligibility")
+
+    def test_missing_airtable_latch_is_repaired_by_projection_workflow(self) -> None:
+        # This exercises installed-router reconciliation, not hosted Chat execution.
+        self.assert_latch_projection("Airtable Envelope Eligibility")
+
+    def assert_latch_projection(self, heading: str) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             codex_file = root / "AGENTS.md"
             claude_file = root / "CLAUDE.md"
             router = ROUTER.read_text(encoding="utf-8")
-            latch_heading = "\n## Execution-Surface Transition Eligibility\n"
+            latch_heading = f"\n## {heading}\n"
             self.assertEqual(router.count(latch_heading), 1)
             latch_start = router.index(latch_heading)
             next_heading = router.find("\n## ", latch_start + len(latch_heading))
@@ -158,6 +165,7 @@ class GlobalBootstrapTests(unittest.TestCase):
             self.assertEqual(applied.returncode, 0, applied.stdout + applied.stderr)
             self.assertIn("APPLY Codex: verified", applied.stdout)
             self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+            self.assertEqual(codex_file.read_text(encoding="utf-8"), self.marked(router))
 
     def test_validator_rejects_missing_or_duplicate_markers(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

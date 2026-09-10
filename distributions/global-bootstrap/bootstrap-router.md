@@ -24,3 +24,11 @@ interactive-to-execution transition-consent boundary and any narrower matching
 adapter before qualifying a transition to another execution surface. Require
 an explicit operator request for that surface or explicit acceptance of an
 offered transition; without it, the transition action is ineligible.
+
+## Airtable Envelope Eligibility
+
+When Airtable handoff transport is selected, before selecting presentation or
+constructing an external envelope, apply the `docs/prompts.md`
+Airtable canonical-text handoff contract. Envelope construction and emission
+remain ineligible until exact-record readback verification succeeds for that
+producer attempt; record creation alone does not qualify them.
