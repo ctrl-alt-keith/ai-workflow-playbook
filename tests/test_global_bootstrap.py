@@ -134,6 +134,31 @@ class GlobalBootstrapTests(unittest.TestCase):
             self.assertEqual(codex_file.read_bytes(), before)
             self.assertEqual(result.stderr, "")
 
+    def test_missing_transition_latch_is_repaired_by_projection_workflow(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            codex_file = root / "AGENTS.md"
+            claude_file = root / "CLAUDE.md"
+            router = ROUTER.read_text(encoding="utf-8")
+            latch_heading = "\n## Execution-Surface Transition Eligibility\n"
+            self.assertEqual(router.count(latch_heading), 1)
+            latch_start = router.index(latch_heading)
+            next_heading = router.find("\n## ", latch_start + len(latch_heading))
+            latch_end = len(router) if next_heading == -1 else next_heading
+            without_latch = router[:latch_start] + router[latch_end:]
+            codex_file.write_text(self.marked(without_latch), encoding="utf-8")
+            claude_file.write_text(self.marked(router), encoding="utf-8")
+
+            before = self.run_check(codex_file, claude_file)
+            applied = self.run_check(codex_file, claude_file, mode="apply")
+            after = self.run_check(codex_file, claude_file)
+
+            self.assertEqual(before.returncode, 1)
+            self.assertIn("FAIL Codex: managed body differs", before.stdout)
+            self.assertEqual(applied.returncode, 0, applied.stdout + applied.stderr)
+            self.assertIn("APPLY Codex: verified", applied.stdout)
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
     def test_validator_rejects_missing_or_duplicate_markers(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

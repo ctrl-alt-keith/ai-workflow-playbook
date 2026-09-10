@@ -26,6 +26,10 @@ The router projects the core model's active bounded-task continuity guard
 before its material-change bootstrap trigger without copying that guard's
 behavior or cases into the distribution.
 
+After bootstrap, the router projects the transition-consent eligibility
+boundary owned by [`docs/core-model.md`](../../docs/core-model.md), with any
+narrower projection remaining in the matching adapter.
+
 The final hard precondition in that body is scoped by the first-action or
 material-change trigger. It permits the retrieval needed to obtain and apply
 `start-here.md`, but blocks all response, task reasoning, and unrelated tool
