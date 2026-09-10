@@ -47,8 +47,9 @@ when repository, interaction mode, workflow, authoritative-source requirements,
 execution locality, or authority boundary materially changes.
 
 The [global-bootstrap distribution](../distributions/global-bootstrap/README.md)
-owns copy-ready provider projections and the read-only drift check. Repo-local
-instruction files remain independent; do not copy the global router into them.
+provides one copy-ready, non-authoritative router and its read-only local drift
+check. Repo-local instruction files remain independent; do not copy the global
+router into them.
 
 ### Connector availability is runtime evidence
 
