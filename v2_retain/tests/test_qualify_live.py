@@ -5,10 +5,11 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from v2_retain.model import Blocked
-from v2_retain.qualify_live import _counted, main
+from v2_retain.qualify_live import _counted, _head, main
 
 
 class FakeAdapter:
@@ -39,9 +40,18 @@ class Request:
 
 
 class QualifyLiveTests(unittest.TestCase):
+    def test_reviewed_head_requires_clean_worktree(self):
+        root = SimpleNamespace(stdout=str(Path.cwd()) + "\n")
+        dirty = SimpleNamespace(stdout=" M v2_retain/qualify_live.py\n")
+        with patch("v2_retain.qualify_live.subprocess.run", side_effect=[root, dirty]) as command:
+            with self.assertRaises(Blocked):
+                _head()
+        self.assertEqual(command.call_count, 2)
+
     def test_explicit_mode_requires_resolved_environment_token_before_network(self):
         output = StringIO()
         with patch("v2_retain.qualify_live._head", return_value="a" * 40), \
+             patch("v2_retain.qualify_live._versions"), \
              patch("v2_retain.qualify_live._identity_client") as client, \
              patch.dict(os.environ, {"DROPBOX_ACCESS_TOKEN": "op://unresolved"}), redirect_stdout(output):
             status = main(["--mode", "execute", "--folder", "/cak-301-v2-qual-20260912-01",
@@ -70,6 +80,7 @@ class QualifyLiveTests(unittest.TestCase):
     def test_raw_provider_exception_payload_is_not_printed(self):
         output = StringIO()
         with patch("v2_retain.qualify_live._head", return_value="a" * 40), \
+             patch("v2_retain.qualify_live._versions"), \
              patch("v2_retain.qualify_live._identity_client", side_effect=RuntimeError("secret-sentinel")), \
              patch.dict(os.environ, {"DROPBOX_ACCESS_TOKEN": "secret-sentinel"}), redirect_stdout(output):
             status = main(["--mode", "preflight", "--folder", "/cak-301-v2-qual-20260912-01",

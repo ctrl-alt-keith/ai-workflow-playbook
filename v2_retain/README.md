@@ -176,6 +176,9 @@ Only Keith runs this command on his Mac after reviewing the draft PR's exact
 head. These commands are examples with `REVIEWED_HEAD` replaced by the exact
 40-character head from the PR receipt. The folder name must be a fresh single
 child of the app's implicit root; it is created only during `--mode execute`.
+The command requires the checkout to be at its worktree root with no tracked or
+untracked changes before any credentialed request; ignored qualification state
+cannot substitute for a clean source tree.
 The read-only command checks that the credential is accepted, retrieves the
 acting account and root/home namespace IDs, lists the implicit app root, and
 checks that the selected folder is absent. It performs no write:

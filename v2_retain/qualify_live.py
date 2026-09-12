@@ -34,6 +34,13 @@ LABEL = "op://Private/CAK v2 Dropbox Qualification/access_token"
 
 
 def _head():
+    root = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
+    if Path(root.stdout.strip()).resolve() != Path.cwd().resolve():
+        raise Blocked("qualification must run from the worktree root")
+    status = subprocess.run(["git", "status", "--porcelain", "--untracked-files=all"],
+                            capture_output=True, text=True, check=True)
+    if status.stdout:
+        raise Blocked("qualification requires a clean reviewed worktree")
     result = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True)
     head = result.stdout.strip()
     if not re.fullmatch(r"[0-9a-f]{40}", head):
@@ -326,6 +333,11 @@ def _execute(facts, folder, token, head, state_root):
             raise Blocked("in-flight interruption point unavailable")
         worker.terminate()
         worker.join(10)
+        if worker.is_alive():
+            worker.kill()
+            worker.join(10)
+        if worker.is_alive():
+            raise Blocked("interrupted child could not be stopped")
         reader_writer = DropboxWriter(crash_writer.config, crash_op.target, access_token=token)
         try:
             crash_reconcile = reconcile(store, crash_op.op_id, reader_writer.reader())

@@ -37,6 +37,9 @@ class FixtureServer(ThreadingHTTPServer):
         self.target_lookup_error = False
         self.download_versions = {}
         self.download_path_override = None
+        self.download_id_override = None
+        self.target_rev_override = None
+        self.change_target_rev_after_download = False
 
     @property
     def origin(self):
@@ -82,7 +85,10 @@ class Handler(BaseHTTPRequestHandler):
                     return self.respond(409, {"error_summary": "path/not_file/", "error": {".tag": "path", "path": {".tag": "not_file"}}})
                 if self.server.target_as_folder:
                     return self.respond(200, {".tag": "folder", "name": path.rsplit("/", 1)[-1], "id": "id:folder", "path_lower": path, "path_display": path})
-                return self.respond(200, metadata(path, self.server.objects[path]))
+                meta = metadata(path, self.server.objects[path])
+                if self.server.target_rev_override:
+                    meta["rev"] = self.server.target_rev_override
+                return self.respond(200, meta)
             return self.respond(409, {"error_summary": "path/not_found/", "error": {".tag": "path", "path": {".tag": "not_found"}}})
         if self.path.endswith("files/upload"):
             status = self.server.upload_status
@@ -109,8 +115,12 @@ class Handler(BaseHTTPRequestHandler):
             if rev in self.server.download_versions:
                 data = self.server.download_versions[rev]
             meta = metadata(self.server.download_path_override or path, data)
+            if self.server.download_id_override:
+                meta["id"] = self.server.download_id_override
             if rev in self.server.download_versions:
                 meta["rev"] = rev
+            if self.server.change_target_rev_after_download:
+                self.server.target_rev_override = "fedcba9876543210"
             return self.respond(200, data[:-1] if self.server.download_truncate else data, {"dropbox-api-result": json.dumps(meta)})
         return self.respond(400, {})
 
@@ -224,6 +234,9 @@ class DropboxTests(unittest.TestCase):
         self.server.download_path_override = "/pilot/elsewhere"
         self.assertEqual(reader.observe(op).error, "returned identity/containment mismatch")
         self.server.download_path_override = None
+        self.server.download_id_override = "id:wrong"
+        self.assertEqual(reader.observe(op).error, "returned identity/containment mismatch")
+        self.server.download_id_override = None
         self.server.target_lookup_error = True
         self.assertEqual(reader.observe(op).error, "metadata unavailable")
         self.server.target_lookup_error = False
@@ -235,6 +248,11 @@ class DropboxTests(unittest.TestCase):
         self.assertEqual(len(observed.objects), 2)
         self.assertEqual([o.revision for o in observed.objects], ["abcdef0123456789", "0123456789abcdef"])
         self.assertTrue(observed.complete)
+        self.server.download_versions.clear()
+        self.server.change_target_rev_after_download = True
+        drift = reader.observe(op)
+        self.assertFalse(drift.complete)
+        self.assertEqual(drift.error, "version drift")
 
     def test_explicit_live_profile_uses_resolved_token_and_implicit_app_root_on_loopback(self):
         original, _ = self.prepare_local(name="seedliveprofile")
