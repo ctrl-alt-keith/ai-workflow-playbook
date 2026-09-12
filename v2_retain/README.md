@@ -10,6 +10,23 @@ for its reviewed runtime semantics at pre-rebase head
 This package is not an operational
 installation, general provider qualification, release, or Product promotion.
 
+## Synthetic conditional-merge experiment
+
+`merge_envelope.py` is a local-only CAK-301 dogfood model for one
+`squash-merge PR X into main` retry decision. It has no GitHub integration,
+storage, provider call, approval-creation path, or automatic replay. Its only
+output is an explainable local eligibility decision. A retry is eligible only
+after `known-no-effect`, unchanged exact PR/head/context and action, fresh
+named conditions, and current authority scoped to that action/candidate.
+
+An observed candidate or context divergence irreversibly invalidates the
+envelope epoch. Returning later to the old SHA does not revive it: a new
+qualification and new authority would be needed for a new envelope. An unknown
+effect holds for reconciliation; an uncorrelated apparent output is not causal
+success. The model exercises I1--I5 as source/condition inputs, authority,
+uncertain-effect holding, exact applicability, and explicit route/claim
+identity; it adds no sixth invariant and makes no remote guarantee.
+
 ## Contract and ownership
 
 One synchronous operation retains exact supplied bytes at one reserved target.
