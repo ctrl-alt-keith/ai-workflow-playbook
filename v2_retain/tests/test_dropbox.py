@@ -1,6 +1,8 @@
 from dataclasses import replace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+from pathlib import Path
+import tempfile
 import threading
 import time
 import unittest
@@ -8,10 +10,12 @@ from unittest.mock import patch
 
 import requests
 import dropbox
+from requests.adapters import HTTPAdapter
 
-from v2_retain.dropbox_adapter import Config, DropboxWriter
+from v2_retain.dropbox_adapter import BoundedHTTPAdapter, Config, DropboxWriter, strict_create
 from v2_retain.model import Blocked, digest
 from v2_retain.operation import run
+from v2_retain.qualify_live import _counted
 from v2_retain.reconcile import reconcile
 import test_operation as local_tests
 
@@ -29,6 +33,10 @@ class FixtureServer(ThreadingHTTPServer):
         self.download_truncate = False
         self.account = ACCOUNT
         self.parent = "id:parent"
+        self.target_as_folder = False
+        self.target_lookup_error = False
+        self.download_versions = {}
+        self.download_path_override = None
 
     @property
     def origin(self):
@@ -63,11 +71,17 @@ class Handler(BaseHTTPRequestHandler):
         self.server.requests.append((self.path, dict(self.headers), body))
         if self.path.endswith("users/get_current_account"):
             return self.respond(200, {"account_id": self.server.account, "name": {"given_name": "Test", "surname": "User", "familiar_name": "Test", "display_name": "Test User", "abbreviated_name": "TU"}, "email": "fixture@example.invalid", "email_verified": True, "disabled": False, "locale": "en", "referral_link": "https://example.invalid", "is_paired": False, "account_type": {".tag": "basic"}, "root_info": {".tag": "user", "root_namespace_id": "123", "home_namespace_id": "123"}})
+        if self.path.endswith("files/list_folder"):
+            return self.respond(200, {"entries": [], "cursor": "fixture-cursor", "has_more": False})
         if self.path.endswith("files/get_metadata"):
             path = json.loads(body)["path"]
             if path == "/pilot":
                 return self.respond(200, {".tag": "folder", "name": "pilot", "id": self.server.parent, "path_lower": "/pilot", "path_display": "/pilot"})
             if path in self.server.objects:
+                if self.server.target_lookup_error:
+                    return self.respond(409, {"error_summary": "path/not_file/", "error": {".tag": "path", "path": {".tag": "not_file"}}})
+                if self.server.target_as_folder:
+                    return self.respond(200, {".tag": "folder", "name": path.rsplit("/", 1)[-1], "id": "id:folder", "path_lower": path, "path_display": path})
                 return self.respond(200, metadata(path, self.server.objects[path]))
             return self.respond(409, {"error_summary": "path/not_found/", "error": {".tag": "path", "path": {".tag": "not_found"}}})
         if self.path.endswith("files/upload"):
@@ -91,7 +105,13 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.endswith("files/download"):
             self.server.download_argument = json.loads(self.headers["Dropbox-API-Arg"])
             path, data = next(iter(self.server.objects.items()))
-            return self.respond(200, data[:-1] if self.server.download_truncate else data, {"dropbox-api-result": json.dumps(metadata(path, data))})
+            rev = self.server.download_argument["path"].removeprefix("rev:")
+            if rev in self.server.download_versions:
+                data = self.server.download_versions[rev]
+            meta = metadata(self.server.download_path_override or path, data)
+            if rev in self.server.download_versions:
+                meta["rev"] = rev
+            return self.respond(200, data[:-1] if self.server.download_truncate else data, {"dropbox-api-result": json.dumps(meta)})
         return self.respond(400, {})
 
 
@@ -193,9 +213,69 @@ class DropboxTests(unittest.TestCase):
         writer.submit(op, b"hello\n")
         for data in (b"hello\n", b"different"):
             with self.assertRaises(dropbox.exceptions.ApiError):
-                writer.submit(op, data)
+                strict_create(writer._client, op.target.path, data)
         self.assertEqual(self.server.objects[op.target.path], b"hello\n")
         self.assertEqual(writer.qualification.collision_response_ref, "unqualified")
+
+    def test_reader_mismatch_unavailable_folder_and_multiple_versions(self):
+        op, writer = self.prepare()
+        writer.submit(op, b"hello\n")
+        reader = writer.reader()
+        self.server.download_path_override = "/pilot/elsewhere"
+        self.assertEqual(reader.observe(op).error, "returned identity/containment mismatch")
+        self.server.download_path_override = None
+        self.server.target_lookup_error = True
+        self.assertEqual(reader.observe(op).error, "metadata unavailable")
+        self.server.target_lookup_error = False
+        self.server.target_as_folder = True
+        self.assertEqual(reader.observe(op).error, "target is not a file")
+        self.server.target_as_folder = False
+        self.server.download_versions["abcdef0123456789"] = b"older bytes"
+        observed = reader.observe(op, (("id:fixture-file", "abcdef0123456789"),))
+        self.assertEqual(len(observed.objects), 2)
+        self.assertEqual([o.revision for o in observed.objects], ["abcdef0123456789", "0123456789abcdef"])
+        self.assertTrue(observed.complete)
+
+    def test_explicit_live_profile_uses_resolved_token_and_implicit_app_root_on_loopback(self):
+        original, _ = self.prepare_local(name="seedliveprofile")
+        target = replace(original.target, account=ACCOUNT, namespace="123", parent="id:parent", path="/pilot/liveprofile")
+        config = Config(target.account, target.namespace, target.parent, "/pilot", "executor",
+                        "symbolic-op-reference", profile="live-qualification", root_namespace="123",
+                        home_namespace="123", head="a" * 40)
+        with self.assertRaises(Blocked):
+            DropboxWriter(config, target)
+        with self.assertRaises(Blocked):
+            DropboxWriter(config, target, access_token="op://unresolved")
+        with self.assertRaises(Blocked):
+            DropboxWriter(replace(config, profile="local"), target, access_token="ambient-token")
+
+        def fixture_send(adapter, request, **kwargs):
+            self.assertEqual(request.url.split(":", 1)[0], "https")
+            self.assertIn(request.url.split("/", 3)[2], {"api.dropboxapi.com", "content.dropboxapi.com"})
+            request.url = self.server.origin + "/" + request.url.split("/", 3)[3]
+            return HTTPAdapter.send(adapter, request, **kwargs)
+
+        with patch.dict("os.environ", {"DROPBOX_ACCESS_TOKEN": "resolved-fixture-token"}), \
+             patch.object(BoundedHTTPAdapter, "send", fixture_send):
+            writer = DropboxWriter(config, target, access_token="resolved-fixture-token")
+            self.addCleanup(writer.close)
+            counter_dir = tempfile.TemporaryDirectory()
+            self.addCleanup(counter_dir.cleanup)
+            count_path = Path(counter_dir.name) / "requests.jsonl"
+            count_path.touch()
+            _counted(writer, count_path)
+            live_op = replace(original, op_id="liveprofile-op", grant_ref="grant:liveprofile-op",
+                              target=target, route_hash=writer.qualification.fingerprint)
+            self.store.prepare(live_op, b"hello\n", "operator")
+            self.admin.grant(live_op.op_id, "explicit fixture-only live profile test")
+            result = run(self.store, live_op.op_id, writer, "executor")
+            self.assertEqual(result["status"], "retained_verified")
+            upload = [r for r in self.server.requests if r[0].endswith("files/upload")]
+            self.assertEqual(len(upload), 1)
+            self.assertEqual(len(count_path.read_text().splitlines()), 1)
+            self.assertNotIn("Dropbox-API-Path-Root", upload[0][1])
+            self.assertTrue(any(r[0].endswith("files/list_folder") for r in self.server.requests))
+            self.assertEqual(result["claim_ceiling"], "bounded-live-qualification-only")
 
     def test_unacknowledged_matching_bytes_never_become_causal_evidence(self):
         op, writer = self.prepare()

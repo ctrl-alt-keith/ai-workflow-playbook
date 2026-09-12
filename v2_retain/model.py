@@ -133,6 +133,15 @@ class Qualification:
     collision_request_ref: str = "unqualified"
     collision_response_ref: str = "unqualified"
     invalidation: str = "build/config/account/namespace/parent/identity/readback/retry drift"
+    actor_account: str = ""
+    root_namespace: str = ""
+    home_namespace: str = ""
+    app_root: str = ""
+    parent_id: str = ""
+    parent_path: str = ""
+    credential_label: str = ""
+    sdk_version: str = ""
+    head: str = ""
 
     @property
     def fingerprint(self):
@@ -146,3 +155,19 @@ class Qualification:
                 or self.fingerprint != op.route_hash
                 or self.target_scope != op.target):
             raise Blocked("route unqualified or configuration drift")
+
+    def require_active(self, op):
+        if self.environment == "local":
+            return self.require_local(op)
+        if (self.environment != "live-qualification" or self.ceiling != "bounded-live-qualification-only"
+                or self.retries != 0 or self.create != "strict-create-no-autorename"
+                or self.admission != "local-synchronous-call"
+                or not all((self.build, self.config_hash, self.evidence_ref, self.checked_at,
+                            self.actor_account, self.root_namespace, self.home_namespace,
+                            self.app_root, self.parent_id, self.parent_path,
+                            self.credential_label, self.sdk_version, self.head))
+                or self.app_root != "implicit-app-folder-root"
+                or self.fingerprint != op.route_hash or self.target_scope != op.target
+                or self.actor_account != op.target.account or self.parent_id != op.target.parent
+                or self.parent_path != op.target.path.rsplit("/", 1)[0]):
+            raise Blocked("live qualification route or scope not bound")

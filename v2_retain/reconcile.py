@@ -49,6 +49,7 @@ def known_objects(c, op_id):
 def project(store, c, op_id, *, fresh=False, gap=""):
     op, _ = store.load(c, op_id)
     dispatched = c.execute("SELECT * FROM dispatch WHERE op_id=?", (op_id,)).fetchone()
+    admission = json.loads(dispatched["evidence"]) if dispatched else {}
     rows = c.execute("SELECT id,at,evidence FROM observation WHERE op_id=? ORDER BY id", (op_id,)).fetchall()
     records = [json.loads(row["evidence"]) for row in rows]
     latest = records[-1] if records else {}
@@ -61,8 +62,8 @@ def project(store, c, op_id, *, fresh=False, gap=""):
             "observation": dict(rows[-1]) if rows else None,
             "decision": store.decisions(c, op, time.time()),
             "fresh_observation": fresh, "reporting_gap": gap,
-            "admission_boundary": "local-synchronous-call",
-            "claim_ceiling": "local-test-only",
+            "admission_boundary": admission.get("boundary", "not-admitted"),
+            "claim_ceiling": admission.get("ceiling", "not-admitted"),
             "next_action": "review" if verified else "inspect/disposition" if conflict else "reconcile/disposition" if dispatched else "run under current grant"}
 
 

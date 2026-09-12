@@ -19,10 +19,13 @@ Repo-local rules take precedence only for repo-specific behavior.
 
 - This repo contains reusable AI workflow and playbook guidance.
 - The default bootstrap and accepted guidance remain v1. CAK-301 explicitly
-  permits experimental v2 increments 0–2 in `v2_retain/` and its focused tests,
-  governed by `v2_retain/README.md`, on the dedicated development branch.
-  This exception does not promote provisional architecture or authorize live
-  provider qualification, default cutover, merge, release, or issue closure.
+  permits experimental v2 increments 0–2 and increment-3 live-profile
+  preparation in `v2_retain/` and its focused tests, governed by
+  `v2_retain/README.md`, on the dedicated development branch. The live
+  qualification command is reserved for Keith's separately executed Mac
+  session. This exception does not authorize this development lane to consume
+  the credential, contact Dropbox, cut over defaults, merge, release, or close
+  the issue.
 
 ## File Placement
 
@@ -59,8 +62,9 @@ Repo-local rules take precedence only for repo-specific behavior.
 - Use `make check` as the canonical local validation entrypoint.
 - Run `make check` before opening or updating a PR.
 - Run `make v2-setup` once in a fresh worktree. `make check` runs Markdown
-  lint, existing unit tests, and experimental v2 local/fake acceptance tests.
-  Live provider qualification is excluded and remains separately authorized.
+  lint, existing unit tests, and experimental v2 local/loopback acceptance
+  tests. Live provider qualification is excluded from validation and is only
+  eligible in Keith's explicit Mac session.
 - Treat direct validation tool calls as implementation details of the Makefile
   target.
 - `make authoritative-source-check` runs advisory authoritative-source scanning;

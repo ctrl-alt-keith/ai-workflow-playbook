@@ -1,6 +1,6 @@
 # Experimental exact-artifact retention
 
-This is the opt-in CAK-301 increments 0–2 development surface. Start with the
+This is the opt-in CAK-301 increments 0–2 and increment-3 preparation surface. Start with the
 repository's [current bootstrap](../docs/start-here.md), then this contract.
 The default bootstrap, v1 doctrine, and `main` remain unchanged. This package
 is a provisional implementation candidate, not an operational installation,
@@ -89,8 +89,9 @@ Setup is explicit and installs the pinned SDK/HTTP dependency set into `.venv`.
 runs actual operation/store tests, child process crash tests, and SDK requests
 against a loopback HTTP fixture. `.v2-test-state/` is repository-owned synthetic
 test state. No test contacts Dropbox, provisions credentials, creates a provider
-folder, or qualifies a live route. No live qualification target is provided in
-this increment. CI uses the same canonical path and one runtime.
+folder, or qualifies a live route. CI uses the same canonical path and one
+runtime. The separate live qualification command below is never part of
+`make check` or the default CLI.
 
 The CLI accepts an exact operation JSON document with the fields in
 [`Operation`](model.py). The local route fingerprint comes from
@@ -147,21 +148,87 @@ expired token, redirect, and timeout cases. A preflight or SDK error never
 becomes automatic retry permission, and exception payloads are not retained as
 receipts because they may contain sensitive provider data.
 
-This development build uses only a synthetic token and disables the socket
-transport unless an explicit loopback fixture is selected. Real credential
-provisioning and transport enablement require the next separately authorized
-increment; there is no switch that silently enables provider writes now.
-The adapter request/readback implementation is present, but its operational
-route is unqualified. Local fixture success is not a Dropbox guarantee.
+The default profile uses only a synthetic token and disables the socket
+transport unless an explicit loopback fixture is selected. The separate
+`live-qualification` profile requires a resolved `DROPBOX_ACCESS_TOKEN` in the
+process environment and an explicit caller-supplied token matching that value.
+It uses no ambient proxy, netrc, `.env`, keychain, refresh token, or 1Password
+SDK path. The application never invokes `op`; Keith's local `op run` process
+injects the credential. The adapter request/readback implementation remains
+unqualified for operational use until the bounded live session succeeds and
+its evidence is reviewed. Local fixture success is not a Dropbox guarantee.
 
 `Qualification` records build/config identity, target scope, evidence, checked
 date, create/retry intent, admission boundary, collision request/response
-references, invalidation triggers, and claim ceiling. Defaults explicitly mark
-collision evidence unqualified. There is no free-standing qualification Boolean
-or route registry. Material configuration/dependency changes invalidate use.
-Live qualification must test exact identical- and distinct-content collision
-requests and responses on the selected SDK route; the old E3
-ALREADY_EXISTS/INVALID_ARGUMENT narrative is not its classifier or evidence.
+references, invalidation triggers, and claim ceiling. The live profile also
+binds the actor account, account root/home namespace IDs, implicit App Folder
+root, verified folder ID/path, credential-reference label, SDK version, and
+exact head. Defaults explicitly mark collision evidence unqualified. There is
+no free-standing qualification Boolean or route registry. Material
+configuration/dependency changes invalidate use. Live qualification tests
+identical- and distinct-content collision requests and responses on the
+selected SDK route; the old E3 ALREADY_EXISTS/INVALID_ARGUMENT narrative is
+not its classifier or evidence.
+
+## Keith's local live qualification boundary
+
+Only Keith runs this command on his Mac after reviewing the draft PR's exact
+head. These commands are examples with `REVIEWED_HEAD` replaced by the exact
+40-character head from the PR receipt. The folder name must be a fresh single
+child of the app's implicit root; it is created only during `--mode execute`.
+The read-only command checks that the credential is accepted, retrieves the
+acting account and root/home namespace IDs, lists the implicit app root, and
+checks that the selected folder is absent. It performs no write:
+
+```console
+DROPBOX_ACCESS_TOKEN='op://Private/CAK v2 Dropbox Qualification/access_token' op run -- .venv/bin/python -m v2_retain.qualify_live --mode preflight --folder /cak-301-v2-qual-20260912-01 --expected-head REVIEWED_HEAD
+```
+
+After checking the non-secret account and namespace facts and confirming in
+the Dropbox app configuration that this token belongs to an **App Folder**
+app, Keith may run the same command with `--mode execute`. Before the folder
+write, it repeats the read-only preflight and requires Keith to type the exact
+observed account ID, home/root namespace IDs, and `APP FOLDER`. A missing,
+changed, ambiguous, or mismatched fact blocks before upload. The command
+creates one fresh folder with `autorename=false`, reads back its exact ID/path,
+and then runs the fixed qualification cases:
+
+```console
+DROPBOX_ACCESS_TOKEN='op://Private/CAK v2 Dropbox Qualification/access_token' op run -- .venv/bin/python -m v2_retain.qualify_live --mode execute --folder /cak-301-v2-qual-20260912-01 --expected-head REVIEWED_HEAD
+```
+
+The harness fixes six unique file destinations, at most eight planned upload
+attempts, a hard reservation cap of eight unique paths and 12 upload requests,
+and objects far below 1 MiB. It retains every created object and has no
+destructive cleanup. Cases cover text and binary create/readback, distinct and
+identical content collisions on one existing target, equal content at a
+different authorized target, two local processes contending for one operation,
+deliberate acknowledgement suppression, and a child killed after receiving
+the provider response but before local acknowledgement. That interruption
+does not prove behavior for an on-wire kill. Any exception, uncertain response,
+or identity drift stops the one-shot run; it never retries an ambiguous write.
+
+`.v2-live-qualification/<folder-name>/` is private repository-owned
+qualification working state. It retains the installation/store, non-secret
+preflight and request events, and on success `qualification.json` with exact
+head, SDK version, actor/account, account root/home IDs, folder ID/path,
+credential-reference label, date, strict-create/retry/admission configuration,
+claim ceiling, invalidation triggers, case outcomes, and request count. No
+resolved credential or raw SDK exception is stored or printed. A partially
+completed folder/state blocks rerun; Keith reviews the retained evidence and
+remote objects rather than starting automatic cleanup or replay.
+
+Dropbox's [team-files guide](https://developers.dropbox.com/dbx-team-files-guide)
+says App Folder calls are rooted implicitly in that app's folder. The
+[SDK metadata route](https://dropbox-sdk-python.readthedocs.io/en/latest/api/dropbox.html)
+does not return root-folder metadata. Thus the SDK reads can verify the
+account root/home IDs, readable implicit root, and exact child folder ID/path,
+but cannot independently return a numeric App Folder root ID or prove the
+credential's app access type. Keith's out-of-band App Folder confirmation is
+part of the qualification evidence. A Full Dropbox token pointed at a fresh
+same-named folder would not be distinguishable by these reads alone; that
+residual identity limitation must stay visible in review and prevents a
+stronger machine-verified App Folder claim.
 
 Official references checked 2026-09-12:
 
@@ -181,12 +248,14 @@ host physical durability, or authority through remote commitment.
 
 ## Planning and review context
 
-Inputs are the provisional CAK-301 implementation plan 01
+Inputs include the CAK-301 implementation plan 01
 (`id:FHKdoRfTdTUAAAAAAAAL3g`, revision `0165b4d831d7fbb000000037baf16c3`)
-and architecture synthesis 01 (`id:FHKdoRfTdTUAAAAAAAAL3A`, revision
-`0165b4d219e49cd000000037baf16c3`). They were retrieved for planning; their
-historical experiments were not rerun or treated as current provider proof.
-Keith explicitly authorized increments 0–2 and the narrow repo-scope exception.
+and Keith's accepted synthesis 02 (`id:FHKdoRfTdTUAAAAAAAAL3w`, revision
+`0165b4de7738dae000000037baf16c3`, SHA-256
+`77f6b487a74836b8514f3ee1892d1f3924a6b461a158d2ee87dcd99930a01914`).
+Their historical experiments were not rerun or treated as current provider
+proof. Keith explicitly authorized increments 0–2 and this bounded increment-3
+preparation; only his later local invocation may contact the real provider.
 
 Accepted independent-review findings are reconciled as follows:
 
@@ -204,14 +273,15 @@ remotely before v2 code edits. Treat this as a non-moving archive; it does not
 claim a newly installed server-side tag-protection rule. Git history remains
 intact and the repository was not archived.
 
-This work stays one cohesive branch/worktree/PR. Controller inspection and
-acceptance remain here. No mechanical worker was launched because the code and
-fault tests share evolving admission/recovery semantics; handoff and acceptance
-cost was not justified. T14 observations include source hydration cost, fixture
-repairs, and controller review work. No telemetry infrastructure, savings, or
-delegation-economics claim is added.
+Independent implementation review 01 accepted exact head
+`9147aaeb44e692bf0d9c192e67f3b56fbbcb7218` for the Phase-A gate. Its
+medium M1 finding identified missing reader-path fixture coverage; the current
+branch adds mismatch, unavailable metadata, folder target, and multi-version
+readback tests. That earlier verdict does not apply automatically to a changed
+head; focused re-review is required before Keith's local run.
 
-Stop at a locally validated draft PR. Next is the human join with synthesis 02
-and review, followed only by a separately authorized increment 3 if selected.
-No promotion, bootstrap cutover, ready status, merge, auto-merge, release, or
-CAK-301 closure is authorized by this candidate or its validation.
+This remains one cohesive branch/worktree/draft PR. No live Dropbox request is
+part of repository validation or this preparation lane. The local session and
+its resulting evidence require Keith's command, followed by separate review.
+No bootstrap cutover, merge, auto-merge, release, or CAK-301 closure is
+authorized by this candidate or its validation.

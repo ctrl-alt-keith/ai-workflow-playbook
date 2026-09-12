@@ -9,3 +9,4 @@ __pycache__/
 *.pyc
 .venv/
 .v2-test-state/
+.v2-live-qualification/

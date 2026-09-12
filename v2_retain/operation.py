@@ -15,7 +15,7 @@ def run(store, op_id, writer, actor, *, clock=time.time):
         if c.execute("SELECT 1 FROM dispatch WHERE op_id=?", (op_id,)).fetchone():
             attempt = store.attempt(c, op_id, "run")
             return observe_and_record(store, c, op, data, reader, attempt)
-    writer.qualification.require_local(op)
+    writer.qualification.require_active(op)
     writer.check_binding(op, actor)
     try:
         preflight = reader.observe(op)
@@ -30,7 +30,7 @@ def run(store, op_id, writer, actor, *, clock=time.time):
             raise Blocked("prior conflict requires disposition")
         if c.execute("SELECT count(*) FROM observation WHERE op_id=?", (op_id,)).fetchone()[0] > MAX_OBSERVATIONS - 3:
             raise Blocked("insufficient observation capacity before admission")
-        writer.qualification.require_local(op)
+        writer.qualification.require_active(op)
         writer.check_binding(op, actor)
         if preflight.objects:
             evidence = inspect(op, data, preflight)
@@ -44,12 +44,13 @@ def run(store, op_id, writer, actor, *, clock=time.time):
         store.admit(c, op, attempt, clock(), {"grant": op.grant_ref, "grant_revision": "original",
                     "expires_at": op.expires_at, "actor": actor,
                     "route": writer.qualification.fingerprint,
-                    "preflight_scope": preflight.scope, "boundary": "local-synchronous-call"})
+                    "preflight_scope": preflight.scope, "boundary": writer.qualification.admission,
+                    "ceiling": writer.qualification.ceiling})
         # No transferable permit, queue, retry, or callback between this final
         # check and the single synchronous call. Any refusal leaves the latch.
         try:
             store.check_files()
-            writer.qualification.require_local(op)
+            writer.qualification.require_active(op)
             writer.check_binding(op, actor)
             store.grant_valid(c, op, actor, clock())
         except Blocked:
