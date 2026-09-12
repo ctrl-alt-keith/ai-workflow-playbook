@@ -100,6 +100,9 @@ Use only the routes activated by the task:
   [`product-status.md`](product-status.md); use records under
   [`product-promotion-decisions/`](product-promotion-decisions/) for the
   distinct human governance events that established those states.
+- **Work explicitly targeting the accepted v2 architecture:** use
+  [`v2-architecture-foundation.md`](v2-architecture-foundation.md). This route
+  does not change the current v1/default bootstrap.
 - **Evidence acceptance, integration, synthesis, or reporting:** use
   [`evidence-lifecycle.md`](evidence-lifecycle.md).
 - **Material prompt review, recovery, or replay:** use
