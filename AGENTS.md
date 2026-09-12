@@ -18,7 +18,13 @@ Repo-local rules take precedence only for repo-specific behavior.
 ## Repo Scope
 
 - This repo contains reusable AI workflow and playbook guidance.
-- It does not contain implementation code or project-specific automation.
+- The default bootstrap remains v1. The accepted v2 semantic foundation is
+  `docs/v2-architecture-foundation.md`; CAK-301's opt-in retention implementation
+  and focused tests live in `v2_retain/`, governed by `v2_retain/README.md`.
+  A bounded Mac-local run on the separately reviewed pre-rebase head is
+  evidenced there, with uncertain outcomes held. This exception does not
+  authorize this development lane to consume the credential, contact Dropbox,
+  cut over defaults, merge, release, or close the issue.
 
 ## File Placement
 
@@ -27,7 +33,8 @@ Repo-local rules take precedence only for repo-specific behavior.
 - Before editing agent-read content, apply
   [Agent-Read Documentation](docs/engineering-baseline.md#agent-read-documentation)
   to the complete affected rule across its current surfaces.
-- Do not add project-specific logic or implementation examples.
+- Keep experimental v2 code and its contract together in `v2_retain/`; otherwise
+  do not add project-specific logic or implementation examples.
 
 ## Local Execution
 
@@ -53,7 +60,10 @@ Repo-local rules take precedence only for repo-specific behavior.
 
 - Use `make check` as the canonical local validation entrypoint.
 - Run `make check` before opening or updating a PR.
-- `make check` runs Markdown lint and scanner unit tests.
+- Run `make v2-setup` once in a fresh worktree. `make check` runs Markdown
+  lint, existing unit tests, and experimental v2 local/loopback acceptance
+  tests. Live provider qualification is excluded from validation and requires
+  a separately authorized Mac-local session.
 - Treat direct validation tool calls as implementation details of the Makefile
   target.
 - `make authoritative-source-check` runs advisory authoritative-source scanning;
