@@ -1,6 +1,6 @@
 # Accepted v2 Architecture Foundation
 
-> Status: accepted initial v2 architecture under Keith's 2026-09-12 decision
+> Status: accepted initial v2 architecture under the authorized human decision recorded on 2026-09-12
 >
 > Provenance: [CAK-301 architecture promotion decision](doctrine-promotion-decisions/cak-301-v2-architecture-foundation-001.md)
 >

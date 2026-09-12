@@ -32,6 +32,8 @@ DEFAULT_OFFICIAL_SUFFIXES = (
     "firebase.google.com",
     "developers.openai.com",
     "claude.com",
+    "developers.dropbox.com",
+    "dropbox-sdk-python.readthedocs.io",
     "developer.atlassian.com",
     "docs.atlassian.com",
     "support.atlassian.com",

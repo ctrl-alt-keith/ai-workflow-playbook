@@ -61,6 +61,9 @@ because they are common adoption targets:
 - Google: `cloud.google.com`, `developers.google.com`, and
   `firebase.google.com`.
 - OpenAI: `developers.openai.com`, its developer and API documentation portal.
+- Dropbox: `developers.dropbox.com` and the exact
+  `dropbox-sdk-python.readthedocs.io` host for its official Python SDK API
+  reference.
 - Atlassian: `developer.atlassian.com`, `docs.atlassian.com`, and
   `support.atlassian.com`.
 
@@ -69,6 +72,12 @@ These defaults do not imply that `google.com`, `openai.com`, `atlassian.com`,
 mixed, or community domains are authoritative. Caller repositories can still
 add more narrow `official_domains` when their public API surface depends on
 another provider-controlled documentation domain.
+
+This classification is for public API documentation only. A Dropbox shared
+artifact can own the stored artifact or evidence it identifies, but it does not
+become authoritative for repository, provider, or other facts merely because it
+is stored on Dropbox; `www.dropbox.com` shared links remain outside the default
+allowlist.
 
 Same-organization GitHub repository links are intentionally treated as project
 references for this playbook's repositories. They are useful for local project
