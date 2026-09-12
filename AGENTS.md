@@ -20,11 +20,11 @@ Repo-local rules take precedence only for repo-specific behavior.
 - This repo contains reusable AI workflow and playbook guidance.
 - The default bootstrap remains v1. The accepted v2 semantic foundation is
   `docs/v2-architecture-foundation.md`; CAK-301's opt-in retention implementation
-  and focused tests remain in `v2_retain/`, governed by `v2_retain/README.md`,
-  on the dedicated development branch. Its bounded Mac-local qualification is
-  evidenced separately. This exception does not authorize this development
-  lane to consume the credential, contact Dropbox, cut over defaults, merge,
-  release, or close the issue.
+  and focused tests live in `v2_retain/`, governed by `v2_retain/README.md`.
+  A bounded Mac-local run on the separately reviewed pre-rebase head is
+  evidenced there, with uncertain outcomes held. This exception does not
+  authorize this development lane to consume the credential, contact Dropbox,
+  cut over defaults, merge, release, or close the issue.
 
 ## File Placement
 

@@ -5,7 +5,9 @@ repository's [current bootstrap](../docs/start-here.md), the
 [accepted v2 architecture foundation](../docs/v2-architecture-foundation.md),
 then this contract. The default bootstrap remains v1. A bounded Mac-local
 Dropbox route has [accepted qualification evidence](https://www.dropbox.com/scl/fi/avq1lwwuakgtlnpnr25ll)
-for its reviewed runtime semantics. This package is not an operational
+for its reviewed runtime semantics at pre-rebase head
+`e6cebe4f6ee1891b56697a71b4846608a9034f66`, with two outcomes still held.
+This package is not an operational
 installation, general provider qualification, release, or Product promotion.
 
 ## Contract and ownership
