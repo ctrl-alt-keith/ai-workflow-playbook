@@ -1,1 +1,1 @@
-"""Opt-in CAK-301 experiment. No live route is qualified or enabled."""
+"""Opt-in CAK-301 retention package; live use remains separately governed."""

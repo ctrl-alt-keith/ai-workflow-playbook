@@ -1,10 +1,12 @@
 # Experimental exact-artifact retention
 
-This is the opt-in CAK-301 increments 0–2 and increment-3 preparation surface. Start with the
-repository's [current bootstrap](../docs/start-here.md), then this contract.
-The default bootstrap, v1 doctrine, and `main` remain unchanged. This package
-is a provisional implementation candidate, not an operational installation,
-qualified Dropbox route, release, or architecture promotion.
+This is the opt-in CAK-301 exact-retention implementation. Start with the
+repository's [current bootstrap](../docs/start-here.md), the
+[accepted v2 architecture foundation](../docs/v2-architecture-foundation.md),
+then this contract. The default bootstrap remains v1. A bounded Mac-local
+Dropbox route has [accepted qualification evidence](https://www.dropbox.com/scl/fi/avq1lwwuakgtlnpnr25ll)
+for its reviewed runtime semantics. This package is not an operational
+installation, general provider qualification, release, or Product promotion.
 
 ## Contract and ownership
 
@@ -154,9 +156,10 @@ transport unless an explicit loopback fixture is selected. The separate
 process environment and an explicit caller-supplied token matching that value.
 It uses no ambient proxy, netrc, `.env`, keychain, refresh token, or 1Password
 SDK path. The application never invokes `op`; Keith's local `op run` process
-injects the credential. The adapter request/readback implementation remains
-unqualified for operational use until the bounded live session succeeds and
-its evidence is reviewed. Local fixture success is not a Dropbox guarantee.
+injects the credential. The selected Mac-local request/readback route has one
+accepted bounded live qualification; broader operational use still requires
+its own applicable authority and host/profile evidence. Local fixture success
+is not a Dropbox guarantee.
 
 `Qualification` records build/config identity, target scope, evidence, checked
 date, create/retry intent, admission boundary, collision request/response
@@ -170,12 +173,19 @@ identical- and distinct-content collision requests and responses on the
 selected SDK route; the old E3 ALREADY_EXISTS/INVALID_ARGUMENT narrative is
 not its classifier or evidence.
 
-## Keith's local live qualification boundary
+## Mac-local live qualification boundary
 
-Only Keith runs this command on his Mac after reviewing the draft PR's exact
-head. These commands are examples with `REVIEWED_HEAD` replaced by the exact
-40-character head from the PR receipt. The folder name must be a fresh single
-child of the app's implicit root; it is created only during `--mode execute`.
+Keith completed the bounded `cak-301-v2-qual-20260912-01` run on the pre-rebase
+reviewed head; its [post-run review](https://www.dropbox.com/scl/fi/avq1lwwuakgtlnpnr25ll)
+accepted six retained files, two typed same-target conflicts, and two uncertain
+outcomes correctly held. Reboot/power-loss durability and broader provider
+guarantees remain unqualified. Its folder, objects, and local evidence are
+retained; do not rerun or clean them up during repository reconciliation.
+
+The commands below describe the interface for a separately authorized future
+session on a fresh folder, with `REVIEWED_HEAD` replaced by that session's exact
+40-character reviewed head and `FRESH_FOLDER` by a fresh single child of the
+app's implicit root. The folder is created only during `--mode execute`.
 The command requires the checkout to be at its worktree root with no tracked or
 untracked changes before any credentialed request; ignored qualification state
 cannot substitute for a clean source tree.
@@ -184,7 +194,7 @@ acting account and root/home namespace IDs, lists the implicit app root, and
 checks that the selected folder is absent. It performs no write:
 
 ```console
-DROPBOX_ACCESS_TOKEN='op://Private/CAK v2 Dropbox Qualification/access_token' op run -- .venv/bin/python -m v2_retain.qualify_live --mode preflight --folder /cak-301-v2-qual-20260912-01 --expected-head REVIEWED_HEAD
+DROPBOX_ACCESS_TOKEN='op://Private/CAK v2 Dropbox Qualification/access_token' op run -- .venv/bin/python -m v2_retain.qualify_live --mode preflight --folder /FRESH_FOLDER --expected-head REVIEWED_HEAD
 ```
 
 After checking the non-secret account and namespace facts and confirming in
@@ -197,7 +207,7 @@ creates one fresh folder with `autorename=false`, reads back its exact ID/path,
 and then runs the fixed qualification cases:
 
 ```console
-DROPBOX_ACCESS_TOKEN='op://Private/CAK v2 Dropbox Qualification/access_token' op run -- .venv/bin/python -m v2_retain.qualify_live --mode execute --folder /cak-301-v2-qual-20260912-01 --expected-head REVIEWED_HEAD
+DROPBOX_ACCESS_TOKEN='op://Private/CAK v2 Dropbox Qualification/access_token' op run -- .venv/bin/python -m v2_retain.qualify_live --mode execute --folder /FRESH_FOLDER --expected-head REVIEWED_HEAD
 ```
 
 The harness fixes six unique file destinations, at most eight planned upload
@@ -251,22 +261,23 @@ host physical durability, or authority through remote commitment.
 
 ## Planning and review context
 
-Inputs include the CAK-301 implementation plan 01
+The [accepted v2 architecture foundation](../docs/v2-architecture-foundation.md)
+controls the current semantic obligations. Inputs also include the CAK-301 implementation plan 01
 (`id:FHKdoRfTdTUAAAAAAAAL3g`, revision `0165b4d831d7fbb000000037baf16c3`)
 and Keith's accepted synthesis 02 (`id:FHKdoRfTdTUAAAAAAAAL3w`, revision
 `0165b4de7738dae000000037baf16c3`, SHA-256
 `77f6b487a74836b8514f3ee1892d1f3924a6b461a158d2ee87dcd99930a01914`).
 Their historical experiments were not rerun or treated as current provider
-proof. Keith explicitly authorized increments 0–2 and this bounded increment-3
-preparation; only his later local invocation may contact the real provider.
+proof. Keith explicitly authorized increments 0–2 and the bounded live run;
+this repository reconciliation authorizes no new provider contact.
 
 Accepted independent-review findings are reconciled as follows:
 
 | Finding | Implementation assumption and boundary |
 | --- | --- |
-| R1 | Five obligations are a useful provisional partition, not proven irreducible. The package follows the operation, not five services. |
+| R1 | The five accepted bounded obligations are a useful current partition, not proven irreducible or permanently minimal. The package follows the operation, not five services. |
 | R2 | Candidate/property/owner/contract applicability is required. Permanent C0/C1 tests exercise actual stored decisions. Historical coverage remains unqualified. |
-| R3 | Historical collision-specific evidence is insufficient. No legacy error narrative drives behavior; exact SDK collision qualification remains future work. |
+| R3 | Historical E3 collision-specific evidence remains insufficient. The later bounded direct-SDK run observed two typed same-target conflicts without changing the original object. |
 
 V1 is preserved at annotated tag
 `archive/v1-before-cak-301-v2-2026-09-12`, tag object
@@ -278,13 +289,14 @@ intact and the repository was not archived.
 
 Independent implementation review 01 accepted exact head
 `9147aaeb44e692bf0d9c192e67f3b56fbbcb7218` for the Phase-A gate. Its
-medium M1 finding identified missing reader-path fixture coverage; the current
-branch adds mismatch, unavailable metadata, folder target, and multi-version
-readback tests. That earlier verdict does not apply automatically to a changed
-head; focused re-review is required before Keith's local run.
+medium M1 finding identified missing reader-path fixture coverage; later
+tests added mismatch, unavailable metadata, folder target, and multi-version
+readback cases. Focused review accepted the pre-rebase head
+`e6cebe4f6ee1891b56697a71b4846608a9034f66` before Keith's live run.
+The rebased head requires its own focused review of architecture fidelity and
+the old qualification's applicability.
 
-This remains one cohesive branch/worktree/draft PR. No live Dropbox request is
-part of repository validation or this preparation lane. The local session and
-its resulting evidence require Keith's command, followed by separate review.
+This remains one cohesive branch/worktree/PR. Live Dropbox requests are outside
+repository validation; the completed bounded run is evidenced separately.
 No bootstrap cutover, merge, auto-merge, release, or CAK-301 closure is
-authorized by this candidate or its validation.
+authorized by this implementation, its validation, or provider qualification.
