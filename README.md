@@ -90,6 +90,11 @@ for that component's payload and reconciliation contract.
 - [`docs/architecture-foundation-candidate.md`](docs/architecture-foundation-candidate.md):
   non-authoritative candidate under adversarial review; not current Playbook
   doctrine
+- [`docs/v2-architecture-foundation.md`](docs/v2-architecture-foundation.md):
+  accepted initial v2 semantic foundation under the CAK-301 human decision;
+  separate from the candidate foundation and current v1/default bootstrap
+- [`docs/doctrine-promotion-decisions/cak-301-v2-architecture-foundation-001.md`](docs/doctrine-promotion-decisions/cak-301-v2-architecture-foundation-001.md):
+  exact candidate, governed review, and human promotion provenance
 - [`docs/constitutional-vocabulary-guide.md`](docs/constitutional-vocabulary-guide.md):
   implementation guidance for distinguishing Product authority, human
   governance authority, repository implementation, and runtime execution
