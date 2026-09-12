@@ -90,30 +90,33 @@ class Envelope:
 class Eligibility:
     decision: Decision
     observation: str
+    envelope: Envelope
 
 
 def retry_eligibility(envelope, observed_candidate, action, conditions, authority):
     """Return an explainable local retry decision; it never performs a merge."""
     envelope = envelope.observe_candidate(observed_candidate)
+    def result(decision, observation):
+        return Eligibility(decision, observation, envelope)
     if envelope.attempt is AttemptState.OUTCOME_UNKNOWN:
-        return Eligibility(Decision.HOLD_OUTCOME_UNKNOWN, "a prior submission may have reached GitHub")
+        return result(Decision.HOLD_OUTCOME_UNKNOWN, "a prior submission may have reached GitHub")
     if envelope.attempt is AttemptState.EFFECTED:
-        return Eligibility(Decision.STOP_EFFECTED, "the logical action is already effected")
+        return result(Decision.STOP_EFFECTED, "the logical action is already effected")
     if envelope.attempt is not AttemptState.KNOWN_NO_EFFECT:
-        return Eligibility(Decision.STOP_ATTEMPT_NOT_PROVEN_NO_EFFECT, "retry needs proven known-no-effect")
+        return result(Decision.STOP_ATTEMPT_NOT_PROVEN_NO_EFFECT, "retry needs proven known-no-effect")
     if envelope.epoch_invalidated:
-        return Eligibility(Decision.STOP_EPOCH_INVALIDATED, "candidate epoch was previously divergent")
+        return result(Decision.STOP_EPOCH_INVALIDATED, "candidate epoch was previously divergent")
     if action != envelope.action:
-        return Eligibility(Decision.STOP_ACTION_MISMATCH, "method, destination, or route claim changed")
+        return result(Decision.STOP_ACTION_MISMATCH, "method, destination, or route claim changed")
     kind, name = conditions.problem()
     if kind == "stale":
-        return Eligibility(Decision.STOP_CONDITIONS_STALE, name)
+        return result(Decision.STOP_CONDITIONS_STALE, name)
     if kind == "failed":
-        return Eligibility(Decision.STOP_CONDITIONS_FAILED, name)
+        return result(Decision.STOP_CONDITIONS_FAILED, name)
     if authority is None:
-        return Eligibility(Decision.STOP_AUTHORITY_MISSING, "conditions and capability do not create authority")
+        return result(Decision.STOP_AUTHORITY_MISSING, "conditions and capability do not create authority")
     if not authority.current:
-        return Eligibility(Decision.STOP_AUTHORITY_NOT_CURRENT, "authority was revoked or expired")
+        return result(Decision.STOP_AUTHORITY_NOT_CURRENT, "authority was revoked or expired")
     if authority.candidate != envelope.candidate or authority.action != envelope.action:
-        return Eligibility(Decision.STOP_AUTHORITY_SCOPE_MISMATCH, "authority is not scoped to this action and candidate")
-    return Eligibility(Decision.RETRY_ELIGIBLE, "known-no-effect with fresh conditions and current scoped authority")
+        return result(Decision.STOP_AUTHORITY_SCOPE_MISMATCH, "authority is not scoped to this action and candidate")
+    return result(Decision.RETRY_ELIGIBLE, "known-no-effect with fresh conditions and current scoped authority")

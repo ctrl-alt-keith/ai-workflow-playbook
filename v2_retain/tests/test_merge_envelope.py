@@ -37,8 +37,6 @@ class MergeEnvelopeTests(unittest.TestCase):
              Decision.STOP_ATTEMPT_NOT_PROVEN_NO_EFFECT, "proven known-no-effect"),
             ("head change invalidates", {"observed": changed}, Decision.STOP_EPOCH_INVALIDATED,
              "previously divergent"),
-            ("head return cannot resurrect", {"envelope": self.envelope.observe_candidate(changed), "observed": returned},
-             Decision.STOP_EPOCH_INVALIDATED, "previously divergent"),
             ("stale checks stop", {"conditions": Conditions(checks="stale")}, Decision.STOP_CONDITIONS_STALE, "checks"),
             ("failed readiness stops", {"conditions": Conditions(readiness="failed")}, Decision.STOP_CONDITIONS_FAILED, "readiness"),
             ("failed mergeability stops", {"conditions": Conditions(mergeability="failed")}, Decision.STOP_CONDITIONS_FAILED, "mergeability"),
@@ -69,6 +67,12 @@ class MergeEnvelopeTests(unittest.TestCase):
                 result = self.decide(**arguments)
                 self.assertEqual(result.decision, decision)
                 self.assertIn(observation, result.observation)
+
+        divergence = self.decide(observed=changed)
+        self.assertTrue(divergence.envelope.epoch_invalidated)
+        result = self.decide(envelope=divergence.envelope, observed=returned)
+        self.assertEqual(result.decision, Decision.STOP_EPOCH_INVALIDATED)
+        self.assertIn("previously divergent", result.observation)
 
     def test_renewed_authority_cannot_reuse_invalidated_envelope(self):
         changed = Candidate(456, "changed-head", 8)
