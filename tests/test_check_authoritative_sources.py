@@ -122,6 +122,30 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
 
         self.assertEqual(findings, [])
 
+    def test_dropbox_developer_and_official_sdk_docs_are_allowed_by_default(self) -> None:
+        urls = [
+            "https://developers.dropbox.com/dbx-file-access-guide",
+            "https://dropbox-sdk-python.readthedocs.io/en/latest/api/dropbox.html",
+        ]
+
+        for url in urls:
+            with self.subTest(url=url):
+                findings = scanner.scan_text(
+                    "docs/example.md",
+                    f"Dropbox API source: {url}",
+                )
+
+                self.assertEqual(findings, [])
+
+    def test_dropbox_shared_artifact_does_not_become_api_authority(self) -> None:
+        findings = scanner.scan_text(
+            "docs/example.md",
+            "Dropbox API behavior source: https://www.dropbox.com/scl/fi/example/summary",
+        )
+
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]["domain"], "dropbox.com")
+
     def test_broad_openai_domain_still_warns(self) -> None:
         findings = scanner.scan_text(
             "docs/example.md",
