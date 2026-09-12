@@ -157,8 +157,8 @@ transport unless an explicit loopback fixture is selected. The separate
 `live-qualification` profile requires a resolved `DROPBOX_ACCESS_TOKEN` in the
 process environment and an explicit caller-supplied token matching that value.
 It uses no ambient proxy, netrc, `.env`, keychain, refresh token, or 1Password
-SDK path. The application never invokes `op`; Keith's local `op run` process
-injects the credential. The selected Mac-local request/readback route has one
+SDK path. The application never invokes `op`; the operator's local `op run`
+process injects the credential. The selected Mac-local request/readback route has one
 accepted bounded live qualification; broader operational use still requires
 its own applicable authority and host/profile evidence. Local fixture success
 is not a Dropbox guarantee.
@@ -201,8 +201,8 @@ DROPBOX_ACCESS_TOKEN='op://Private/CAK v2 Dropbox Qualification/access_token' op
 
 After checking the non-secret account and namespace facts and confirming in
 the Dropbox app configuration that this token belongs to an **App Folder**
-app, Keith may run the same command with `--mode execute`. Before the folder
-write, it repeats the read-only preflight and requires Keith to type the exact
+app, the operator may run the same command with `--mode execute`. Before the folder
+write, it repeats the read-only preflight and requires the operator to type the exact
 observed account ID, home/root namespace IDs, and `APP FOLDER`. A missing,
 changed, ambiguous, or mismatched fact blocks before upload. The command
 creates one fresh folder with `autorename=false`, reads back its exact ID/path,
@@ -230,7 +230,7 @@ head, SDK version, actor/account, account root/home IDs, folder ID/path,
 credential-reference label, date, strict-create/retry/admission configuration,
 claim ceiling, invalidation triggers, case outcomes, and request count. No
 resolved credential or raw SDK exception is stored or printed. A partially
-completed folder/state blocks rerun; Keith reviews the retained evidence and
+completed folder/state blocks rerun; the operator reviews the retained evidence and
 remote objects rather than starting automatic cleanup or replay.
 
 Dropbox's [team-files guide](https://developers.dropbox.com/dbx-team-files-guide)
@@ -239,7 +239,7 @@ says App Folder calls are rooted implicitly in that app's folder. The
 does not return root-folder metadata. Thus the SDK reads can verify the
 account root/home IDs, readable implicit root, and exact child folder ID/path,
 but cannot independently return a numeric App Folder root ID or prove the
-credential's app access type. Keith's out-of-band App Folder confirmation is
+credential's app access type. The authorized human's out-of-band App Folder confirmation is
 part of the qualification evidence. A Full Dropbox token pointed at a fresh
 same-named folder would not be distinguishable by these reads alone; that
 residual identity limitation must stay visible in review and prevents a
@@ -266,11 +266,11 @@ host physical durability, or authority through remote commitment.
 The [accepted v2 architecture foundation](../docs/v2-architecture-foundation.md)
 controls the current semantic obligations. Inputs also include the CAK-301 implementation plan 01
 (`id:FHKdoRfTdTUAAAAAAAAL3g`, revision `0165b4d831d7fbb000000037baf16c3`)
-and Keith's accepted synthesis 02 (`id:FHKdoRfTdTUAAAAAAAAL3w`, revision
+and the human-accepted synthesis 02 (`id:FHKdoRfTdTUAAAAAAAAL3w`, revision
 `0165b4de7738dae000000037baf16c3`, SHA-256
 `77f6b487a74836b8514f3ee1892d1f3924a6b461a158d2ee87dcd99930a01914`).
 Their historical experiments were not rerun or treated as current provider
-proof. Keith explicitly authorized increments 0–2 and the bounded live run;
+proof. The authorized human explicitly authorized increments 0–2 and the bounded live run;
 this repository reconciliation authorizes no new provider contact.
 
 Accepted independent-review findings are reconciled as follows:
@@ -294,7 +294,7 @@ Independent implementation review 01 accepted exact head
 medium M1 finding identified missing reader-path fixture coverage; later
 tests added mismatch, unavailable metadata, folder target, and multi-version
 readback cases. Focused review accepted the pre-rebase head
-`e6cebe4f6ee1891b56697a71b4846608a9034f66` before Keith's live run.
+`e6cebe4f6ee1891b56697a71b4846608a9034f66` before the completed live run.
 The rebased head requires its own focused review of architecture fidelity and
 the old qualification's applicability.
 
