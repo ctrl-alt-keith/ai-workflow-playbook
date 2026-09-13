@@ -52,6 +52,15 @@ Parallel work is a good fit when:
   lanes
 - the orchestrator or human can reconcile outputs sequentially
 
+Use concern-oriented lanes only when they add independent failure coverage:
+fixing one concern can plausibly regress another coupled invariant without a
+strong local signal. Select a lane for the invariant or concern it protects,
+not to fill a role taxonomy, meet a lane count, or maximize throughput. When
+one coherent worker can protect the relevant invariants more cheaply, keep the
+work in one thread. Once a lane is bounded, choose its model and reasoning
+configuration through [`model-routing.md`](model-routing.md); lane selection
+precedes configuration selection.
+
 For same-repository Codex fan-out, use repo-local `.worktrees/` and keep each
 worker on its own branch. One issue, one branch, one worktree, and one PR per
 worker is the preferred shape when issues already describe the work cleanly.
@@ -251,6 +260,12 @@ artifact or a machine-consumed contract.
 ## Reconciliation And Merge Sequence
 
 Parallel execution ends at lane readiness. Integration is a sequential workflow.
+
+Reconciliation is not concatenating worker summaries. Test the candidate
+outcome against every independently protected invariant, then resolve any
+contradiction, regression, or gap before promotion, execution, or integration.
+Worker agreement is useful evidence but does not replace that check; direct
+source inspection and canonical validation remain controlling.
 
 Use this sequence when lanes will be merged or reviewed together:
 

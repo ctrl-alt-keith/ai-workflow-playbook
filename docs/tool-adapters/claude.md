@@ -270,10 +270,10 @@ retention, and visibility values remain outside this adapter.
 
 ## Claude Model, Thinking, And Thread Routing
 
-Choose the lowest-cost Claude Code model/configuration expected to preserve the
-confidence required by the bounded task. Do not infer a mapping from OpenAI
-model names or tiers. Current Claude Code documentation, checked 2026-09-04,
-establishes the executor-native `haiku`, `sonnet`, `opus`, and `fable` aliases:
+Apply the shared [model and reasoning routing](../model-routing.md) doctrine.
+Do not infer a mapping from OpenAI model names or tiers. Current Claude Code
+documentation, checked 2026-09-04, establishes the executor-native `haiku`,
+`sonnet`, `opus`, and `fable` aliases:
 Haiku for simple fast tasks, Sonnet for daily coding, Opus for complex reasoning,
 and Fable for the hardest and longest-running tasks.
 Anthropic's current platform model guidance independently positions Haiku 4.5
@@ -295,11 +295,7 @@ qualification requirements.
 | Substantive adversarial code review; protocol/design review; architecture review; authority or security-boundary review | `opus` | Use the model's documented default; do not assume `xhigh` applies to every Opus runtime | a new trust boundary, unresolved architecture/security implication, conflicting authority, or a finding that changes qualification disposition appears | after substantive convergence, delegate only the remaining mechanical claim; do not relabel it as substantive review |
 | Especially hard long-running investigation, outage/root-cause work, or architecture decision that exceeds a normal Opus review | `fable`, where available | Adaptive thinking is always on; use the documented default `high`, and reserve `xhigh`/`max` for a bounded demonstrated need | a safety fallback, unavailable Fable runtime, or remaining decision risk defeats the qualification requirement; stop, seek an explicit human decision, or use another independently qualified mechanism | keep Fable out of routine review and delegate only bounded deterministic follow-up |
 
-The table is a conservative routing hypothesis, not a quality-parity claim. A
-large evidence package does not automatically require Opus, and a small
-authority-boundary change may. Do not downgrade when error consequences are
-high, ambiguity is material, independent verification is weak, work is hard to
-reverse, or failure could silently corrupt authority or evidence.
+The table is a conservative routing hypothesis, not a quality-parity claim.
 
 ### Thinking And Effort
 
@@ -322,11 +318,7 @@ Apply the shared `FRESH THREAD`, `SAME THREAD`, and `CHILD TASK` vocabulary in
 [`prompts.md`](../prompts.md#thread-routing-and-configuration-continuity). For
 a FRESH THREAD, choose this matrix's task-appropriate model and supported
 thinking/effort setting. For a SAME THREAD, preserve the existing parent model
-and thinking/effort configuration by default: a cheaper setting being sufficient
-for the current sub-phase does not itself justify changing the running task.
-For a CHILD TASK, select the lowest-cost sufficient Claude configuration for the
-bounded child and preserve its inputs, configuration, execution identity,
-durable result, and authority boundary where the workflow requires it.
+and thinking/effort configuration by default.
 
 ### Visible Thread Names
 
@@ -352,24 +344,6 @@ server-side fallback. If effective identity is unavailable, record that
 limitation rather than treating the request as proof. Requalify, escalate, or
 stop only when the effective result violates a required capability or exact-model
 reviewer qualification; a runtime event is not automatically fatal.
-
-If a lower-capability SAME THREAD reaches unresolved ambiguity, an architecture
-or authority decision, conflicting authoritative evidence, repeated residual
-correctness findings, an unexplained invariant, a new trust boundary, or a
-decision-relevant uncertainty, prefer a bounded stronger child or explicit
-fresh-thread transition over mutating the parent silently. If a stronger parent
-reaches deterministic follow-up, delegate the bounded check to Haiku or another
-qualified mechanism where worthwhile instead of downgrading the parent solely
-for cost.
-
-Reviewer independence is separate from model, thinking/effort, and thread
-routing. A qualified separate Claude invocation can supply the selected external
-review only when it meets the reviewer contract. A child spawned by the party
-under review is not externally independent, regardless of its model, vendor,
-effort, or isolated context; an internally spawned Codex review remains Codex
-review. Mechanical external verification and Codex mechanical fallback must be
-labeled as their actual mechanism and never retroactively stand in for
-substantive external review.
 
 ### Prompt Operator Metadata
 
