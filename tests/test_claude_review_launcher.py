@@ -673,19 +673,19 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertTrue(record["failure"].startswith("Claude exited 3 without substantive output\n"))
         self.assertIn("temporary-directory cleanup failed: fixture cleanup failure", record["failure"])
 
-    def test_record_values_are_bounded_and_redacted(self):
+    def test_requested_selector_is_bounded_at_ingress_and_retained_exactly(self):
+        """Option values are validated when accepted; the envelope then records the exact accepted value, never a mutated one."""
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
             executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
             diagnostics_file = root / "diagnostics.json"
-            redacted = self.run_launcher(
+            accepted = self.run_launcher(
                 executable, "--auth-preflight", "--diagnostics-file", str(diagnostics_file), "--", "--model", "token=super-secret-value"
             )
             stored = diagnostics_file.read_text(encoding="utf-8")
             too_long = self.run_launcher(executable, "--auth-preflight", "--", "--model", "m" * 200)
-        self.assertEqual(redacted.returncode, 0, redacted.stderr.decode())
-        self.assertNotIn("super-secret-value", stored)
-        self.assertIn("[REDACTED]", json.loads(stored)["configured_envelope"]["requested"]["model"])
+        self.assertEqual(accepted.returncode, 0, accepted.stderr.decode())
+        self.assertEqual(json.loads(stored)["configured_envelope"]["requested"]["model"], "token=super-secret-value")
         self.assertEqual(too_long.returncode, 70)
         self.assertIn(b"exceeds 128 characters", too_long.stderr)
 

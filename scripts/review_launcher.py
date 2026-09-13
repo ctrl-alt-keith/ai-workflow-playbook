@@ -5,7 +5,8 @@ provider-neutral contract: explicit absolute executable resolution, the
 effective-account login context, model/effort-only pass-through, the exact
 candidate-commit binding, stdin prompt delivery, the auth-preflight canary,
 output capture where an empty or failed response is wrapper failure, and the
-bounded redacted diagnostics record that carries the configured envelope.
+diagnostics record that carries the configured envelope: wrapper-owned
+structured evidence exact, retained provider text bounded and redacted.
 """
 
 from __future__ import annotations
@@ -83,17 +84,22 @@ SECRET_PREFIX = re.compile(r"\b(?:sk|gho|ghp)[_-][A-Za-z0-9_=-]+")
 
 
 def redact(value: str) -> str:
-    """Bound a retained string and remove obvious credential-bearing constructs from it.
+    """Bound retained untrusted text and remove obvious credential-bearing constructs from it.
 
-    Retained text is a bounded excerpt. A recognized construct — a key whose
-    last `_`/`-` joined component is a credential word (or an
-    ``authorization`` header), followed by ``:``/``=`` — is redacted from the
-    separator to the end of that line, so the value's extent (quoting, schemes
-    such as ``Basic``, embedded spaces) never has to be guessed; known secret
-    prefixes are removed wherever they appear. This is not comprehensive secret
-    detection: only these structures are recognized, and the bias is to
-    over-redact the remainder of a line rather than retain a credential tail.
-    The transformation is idempotent.
+    Sanitization follows evidence ownership and is applied where untrusted
+    text enters the record — provider stdout/stderr excerpts, failure causes,
+    version and OS-error strings — never to wrapper-owned structured evidence
+    (configured envelope, requested and effective selection, candidate
+    identity, exit codes, states), which is validated at its own ingress and
+    retained exactly. Retained text is a bounded excerpt. A recognized
+    construct — a key whose last `_`/`-` joined component is a credential word
+    (or an ``authorization`` header), followed by ``:``/``=`` — is redacted
+    from the separator to the end of that line, so the value's extent
+    (quoting, schemes such as ``Basic``, embedded spaces) never has to be
+    guessed; known secret prefixes are removed wherever they appear. This is
+    not comprehensive secret detection: only these structures are recognized,
+    and the bias is to over-redact the remainder of a line rather than retain
+    a credential tail. The transformation is idempotent.
     """
     value = value[:MAX_DIAGNOSTIC_CHARS]
     value = CREDENTIAL_CONSTRUCT.sub(r"\1=[REDACTED]", value)
@@ -178,17 +184,6 @@ def validate_diagnostics_destination(destination: Path | None) -> None:
         raise ValueError("--diagnostics-file must be a new absolute path")
     if not destination.parent.is_dir():
         raise ValueError("--diagnostics-file parent must exist")
-
-
-def bounded(value: Any) -> Any:
-    """Apply the diagnostic bound and credential redaction to every string in a record."""
-    if isinstance(value, str):
-        return redact(value)
-    if isinstance(value, dict):
-        return {key: bounded(item) for key, item in value.items()}
-    if isinstance(value, list):
-        return [bounded(item) for item in value]
-    return value
 
 
 def compose(causes: list[str]) -> str:
@@ -336,11 +331,13 @@ def finish(
     pre-launch failure); the first entry stays primary. A failed write of the
     requested diagnostics file is appended as a further cause and fails an
     otherwise successful attempt. Every cause passes through ``redact`` before
-    it can enter the record, so composition never reintroduces raw text; the
-    record as a whole is bounded once, and the corrected record goes to stderr.
+    it can enter the record, so composition never reintroduces raw text. The
+    record's other fields are taken as constructed: structured evidence exact,
+    provider text already sanitized where it was retained. The corrected
+    record goes to stderr.
     """
     causes = [redact(cause) for cause in causes]
-    record = bounded({**record, "status": "failed" if causes else "ok", **({"failure": compose(causes)} if causes else {})})
+    record = {**record, "status": "failed" if causes else "ok", **({"failure": compose(causes)} if causes else {})}
     if destination is not None:
         write_cause, state = write_record(record, destination)
         record["diagnostics_file"] = state
@@ -503,11 +500,13 @@ def run_attempt(
     auth_failure = bool(causes) and bool(provider.auth_failure.search(provider.diagnostic(stdout, stderr).lower()))
     if auth_failure:
         causes.insert(0, f"{provider.label} authentication needs operator attention")
-    evidence.update({f"{provider.name}_exit_code": result.returncode, provider.output_field: received, "stderr": stderr})
+    # Provider text is untrusted and is sanitized here, where it is retained; the structured
+    # evidence beside it (envelope, exit code, effective selection) stays exact.
+    evidence.update({f"{provider.name}_exit_code": result.returncode, provider.output_field: received, "stderr": redact(stderr)})
     if effective:
         evidence["effective"] = effective
     if causes and stdout:
-        evidence["stdout"] = stdout
+        evidence["stdout"] = redact(stdout)
     return Attempt(causes, auth_failure, evidence, output)
 
 

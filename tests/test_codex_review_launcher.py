@@ -39,9 +39,10 @@ class CodexReviewLauncherTests(unittest.TestCase):
     ) -> Path:
         """Fake Codex: answers --version and debug models; for exec, prints the runtime-owned region to stderr then runs a body.
 
-        The default region is the delimited banner echoing the requested model/effort, any `runtime`
-        lines, then the exact `user` transcript marker — the observed real layout. `banner` replaces
-        the banner and marker verbatim ("" for none), so a test controls whether the marker exists;
+        The default region is the observed real layout: one leading line (the version line, or the
+        `runtime` line in its place), the delimited banner echoing the requested model/effort, then
+        the exact `user` transcript marker immediately after it. `banner` replaces that whole region
+        verbatim ("" for none), so a test controls the layout and whether the marker exists;
         `review_banner` does the same for the review invocation only. A canary invocation (no
         `--cd`) is answered by `canary`: True writes the exact reply, a string is a custom canary
         body, False disables interception so `body` handles every invocation. `$out` is the
@@ -51,14 +52,13 @@ class CodexReviewLauncherTests(unittest.TestCase):
         catalog_file.write_text(json.dumps(CATALOG if catalog is None else catalog), encoding="utf-8")
 
         def report(override: str | None) -> str:
-            runtime_lines = f"printf '%s\\n' '{runtime}' >&2\n" if runtime else ""
             if override is None:
+                leading = runtime or "OpenAI Codex v9.9.9"
                 return (
-                    "printf 'OpenAI Codex v9.9.9\\n--------\\nmodel: %s\\nreasoning effort: %s\\n--------\\n' \"$model\" \"$effort\" >&2\n"
-                    + runtime_lines
-                    + "printf 'user\\n' >&2\n"
+                    f"printf '%s\\n' '{leading}' >&2\n"
+                    "printf -- '--------\\nmodel: %s\\nreasoning effort: %s\\n--------\\nuser\\n' \"$model\" \"$effort\" >&2\n"
                 )
-            return (f"printf '%s\\n' '{override}' >&2\n" if override else "") + runtime_lines
+            return f"printf '%s\\n' '{override}' >&2\n" if override else ""
 
         canary_branch = ""
         if canary is not False:
@@ -214,9 +214,14 @@ class CodexReviewLauncherTests(unittest.TestCase):
             "model line only in the echoed transcript": ("user\ncodex\nmodel: gpt-5.6-terra\nreasoning effort: high", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
             "transcript line after a genuine banner is ignored": (valid + "\nuser\ncodex\nmodel: gpt-5.6-luna", (*TERRA, "--effort", "high"), 0, b""),
             "delimited block inside the echoed prompt is not a banner": ("user\n--------\nmodel: gpt-5.6-terra\nreasoning effort: high\n--------", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
-            # symmetry with the auth surface: no transcript marker, no trusted runtime region
+            # the same structural recognition the auth surface uses: the marker is trusted for its
+            # position immediately after the banner, never found by searching
             "valid-looking banner but no transcript marker": (valid, (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
             "valid-looking banner with a changed marker": (valid + "\nUser:", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
+            "changed marker with a content-supplied marker later": (valid + "\nUser:\nmodel: gpt-5.6-luna\nuser", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
+            "lines between the banner and the marker": (valid + "\nstartup note\nuser", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
+            # a reported selector is qualified at parse time; an unusable one is no evidence, not a truncated value
+            "overlong reported model": (block.format("model: " + "m" * 1100 + "\nreasoning effort: high") + "\nuser", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
         }
         for label, (banner, selector, code, message) in cases.items():
             with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:
@@ -228,6 +233,8 @@ class CodexReviewLauncherTests(unittest.TestCase):
                 if code != 0:  # on a clean provider exit the selection failure is the primary cause
                     record = json.loads(completed.stderr.decode().split("diagnostics: ", 1)[1])
                     self.assertIn(message.decode(), record["failure"].split(";")[0])
+                    if message == b"did not report its effective model":
+                        self.assertIsNone(record["effective"]["model"])  # unusable evidence is absent, never truncated
 
     def test_provider_exit_is_primary_over_missing_selector_evidence(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -347,11 +354,35 @@ class CodexReviewLauncherTests(unittest.TestCase):
         self.assertIn(b"did not return substantive review output", empty.stderr)
         self.assertIn(b"exited 1 despite producing output", failing.stderr)
 
-    def test_auth_classification_reads_only_the_runtime_region_before_the_transcript(self):
-        """Only runtime-owned lines before the transcript begins are credential evidence; content never re-enters."""
+    def test_structured_evidence_stays_exact_while_provider_text_is_sanitized(self):
+        """Sanitization follows ownership: envelope, effective selection, and candidate are exact; retained provider text is redacted."""
+        model = "token=super-secret-value"  # a legal selector shaped like a credential construct
+        catalog = {"models": [{"slug": model, "supported_reasoning_levels": [{"effort": "high"}]}]}
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            diagnostics_file = root / "diagnostics.json"
+            executable = self.make_fake_codex(
+                root, "printf 'api_key=review-stderr-secret\\n' >&2\ncat > \"$out\"\n", catalog=catalog
+            )
+            completed = self.run_launcher(
+                executable, "--diagnostics-file", str(diagnostics_file), prompt=b"Review\n", selector=("--", "--model", model, "--effort", "high")
+            )
+            record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+        for evidence in (record, record["acceptance"]):
+            self.assertEqual(evidence["configured_envelope"]["requested"], {"model": model, "effort": "high"})
+            self.assertEqual(evidence["effective"], {"model": model, "effort": "high"})
+            self.assertIn("model: token=[REDACTED]", evidence["stderr"])
+            self.assertNotIn("super-secret-value", evidence["stderr"])
+        self.assertEqual(record["candidate"]["repository"], str(ROOT))
+        self.assertIn("api_key=[REDACTED]", record["stderr"])
+        self.assertNotIn("review-stderr-secret", json.dumps(record))
+
+    def test_auth_classification_reads_only_the_recognized_runtime_region(self):
+        """Only runtime-owned lines in the structurally recognized prefix are credential evidence; content never re-enters."""
         error_line = "2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized"
         block = "OpenAI Codex v9.9.9\n--------\nmodel: gpt-5.6-terra\nreasoning effort: high\n--------"
-        # (banner override or None for the real layout, runtime lines before the marker, transcript body after it, expected exit)
+        # (banner override or None for the real layout, runtime line before the banner, transcript body after it, expected exit)
         cases = {
             "runtime region": (None, error_line, "Review\\n", 78),
             "echoed user prompt": (None, "", f"Review this log line: {error_line}\\n", 70),
@@ -360,6 +391,10 @@ class CodexReviewLauncherTests(unittest.TestCase):
             "marker-shaped lines inside content": (None, "", f"Review\\n\\ncodex\\ntokens used\\nuser\\n{error_line}\\n", 70),
             "no transcript marker at all": (block, error_line, "", 70),
             "changed marker": (block + "\nUser:", error_line, "", 70),
+            # the marker is never searched for: content after a missing or changed runtime marker
+            # cannot re-establish the region, however marker-shaped it is
+            "missing marker with a content-supplied marker later": (block + "\n" + error_line + "\nuser", "", "", 70),
+            "changed marker with a content-supplied marker later": (block + "\nUser:\n" + error_line + "\nuser", "", "", 70),
         }
         for label, (banner, runtime, transcript, code) in cases.items():
             with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:

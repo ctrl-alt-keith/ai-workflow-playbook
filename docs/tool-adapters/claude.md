@@ -230,10 +230,10 @@ failures coincide, the record's `failure` lists the
 primary cause first — provider exit, then unacceptable output, then
 effective-selection evidence, then scratch cleanup, then the diagnostics
 write — with an established authentication failure taking precedence and
-keeping its exit code; secondary causes are preserved after it. Every string
-in the record is bounded and credential-redacted, including quoted JSON-style
-credential fields (see the retention and redaction contract below). The
-diagnostics record carries `configured_envelope` under
+keeping its exit code; secondary causes are preserved after it. Retained
+provider text and failure causes are bounded and credential-redacted;
+wrapper-owned structured evidence is exact (see the retention and redaction
+contract below). The diagnostics record carries `configured_envelope` under
 the
 [exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract)
 in three states: a failure before the wrapper has constructed its intended
@@ -243,21 +243,30 @@ failures retain it as a declaration only; once a provider attempt runs,
 runtime evidence is paired only with that attempt's exact configured
 envelope.
 
-Retention and redaction contract: wrapper-owned fields (configured envelope,
-requested and effective selection, exit code, status, failure causes,
-artifact state, candidate identity) are retained in full through their known
-structure. Provider stdout and stderr are untrusted diagnostic material kept
-only as a bounded excerpt — they carry the banner, transcript, and any
-runtime errors an operator needs to read the record. Every retained string
-is bounded and passed through one transformation: a recognized
-credential-bearing construct — a key whose last `_`/`-` joined component is a
-credential word, or an `authorization` header, followed by `:` or `=` — is
-redacted from the separator to the end of that line, and known secret
-prefixes are removed wherever they appear. Failure causes are one per line
-so a construct in one cause cannot erase the next. This recognizes obvious
-structures and biases toward over-redacting the rest of a line; it is not
-comprehensive secret detection, and no claim is made that arbitrary provider
-prose is credential-free.
+Retention and redaction contract: sanitization follows evidence ownership.
+Wrapper-owned structured evidence (configured envelope, requested selection,
+exit code, status, artifact state, candidate identity) is validated where it
+enters — option values are bounded when accepted, the candidate commit is
+exact-format checked — and then retained exactly; nothing rewrites it
+afterwards, so the record always carries the value the wrapper requested or
+resolved, even one that resembles a credential construct. Provider-derived
+values promoted into structured evidence (the effective model and effort)
+are first structurally qualified — read only from the recognized runtime
+layout — and validated at parse time, then retained exactly; a reported
+value longer than any accepted selector is unusable evidence and fails the
+attempt rather than being truncated into a different selector. Provider
+stdout and stderr are untrusted diagnostic material kept only as a bounded
+excerpt — they carry the banner, transcript, and any runtime errors an
+operator needs to read the record — and, together with failure causes,
+version text, and OS error text, pass through one transformation where they
+are retained: a recognized credential-bearing construct — a key whose last
+`_`/`-` joined component is a credential word, or an `authorization` header,
+followed by `:` or `=` — is redacted from the separator to the end of that
+line, and known secret prefixes are removed wherever they appear. Failure
+causes are one per line so a construct in one cause cannot erase the next.
+This recognizes obvious structures and biases toward over-redacting the rest
+of a line; it is not comprehensive secret detection, and no claim is made
+that arbitrary provider prose is credential-free.
 The project rule keeps local reviewer execution approval-gated.
 
 ### Local Codex reviewer launch
@@ -288,14 +297,16 @@ these Codex deltas differ:
   envelope in the record. Every attempt's evidence is paired with the exact
   envelope that produced it. Finally, after the review itself, the wrapper
   reads the effective model and reasoning effort again from the leading
-  delimited banner block in the runtime-owned region of Codex's stderr — the
-  lines before the first exact `user` line, trusted only when that marker is
-  present, the same boundary the authentication path requires — records them
-  as `effective`, and fails the attempt when they differ from the request or
-  are not reported. Prompt and model text can never supply the banner, and a
-  missing or changed marker means no effective evidence at all. The canary
-  does not stand in for that verification; exact-model requirements do not
-  fall back.
+  delimited banner block of Codex's stderr, records them as `effective`, and
+  fails the attempt when they differ from the request or are not reported.
+  The banner is read only through the one structural recognition of the
+  runtime-owned prefix that the authentication path also uses (below): the
+  exact `user` transcript line must be the line immediately after the
+  banner. The marker is trusted for its position, never found by searching,
+  so prompt and model text can never supply the banner or the marker, and a
+  missing, moved, or changed marker means no effective evidence at all. The
+  canary does not stand in for that verification; exact-model requirements
+  do not fall back.
 - The review controls are Codex's native ones (`--sandbox read-only`,
   `approval_policy="never"`, `--ignore-user-config`, `--ephemeral`, no history
   or web search, app connectors disabled through `features.apps` and
@@ -315,16 +326,19 @@ these Codex deltas differ:
   not observed, so network reach stays unestablished and the reviewer still
   reports the access it saw.
 - Authentication failure is classified only from runtime error lines in the
-  runtime-owned region of Codex's stderr before the transcript begins (the
-  first exact `user` line), and only when that marker is present to bound the
-  region; without it no line is eligible. The echoed prompt, command output,
-  and model text can never enter that region, so an error-shaped line they
-  contain is inert. The bias is toward under-classification: an auth error
-  Codex reports after the prompt echo, or under a changed layout, is generic
-  wrapper failure (exit 70) with the bounded diagnostics still in the record.
-  The banner delimiters and the `user` marker are observed layout, not a
-  documented Codex contract; a layout change makes both evidence paths shrink
-  to nothing until the wrapper is updated.
+  runtime-owned prefix of Codex's stderr, and only when that prefix is
+  recognized structurally: at most one leading line, the banner delimited by
+  `--------` lines, and the exact `user` transcript line immediately after
+  it. Eligible lines are the runtime lines of that prefix outside the banner
+  — under the observed layout at most one. A `user` line anywhere else
+  establishes nothing, so the echoed prompt, command output, and model text
+  can never enter the region however marker- or error-shaped they are. The
+  bias is toward under-classification: an auth error Codex reports after the
+  prompt echo, or under a changed layout, is generic wrapper failure (exit
+  70) with the bounded diagnostics still in the record. The banner
+  delimiters and the `user` marker are observed layout, not a documented
+  Codex contract; a layout change makes both evidence paths shrink to
+  nothing until the wrapper is updated.
 - Invoke it as `./scripts/codex-review` from the active Playbook checkout.
   Codex prefix rules match argv literally, so that checkout-relative form is
   the one the project rule gates. An absolute-path invocation from another

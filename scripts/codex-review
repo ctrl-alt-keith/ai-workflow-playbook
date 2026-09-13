@@ -12,25 +12,27 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from review_launcher import Launch, Provider, main, redact  # noqa: E402
+from review_launcher import MAX_OPTION_VALUE_CHARS, Launch, Provider, main, redact  # noqa: E402
 
 
 LAST_MESSAGE_FILE = "last-message.txt"
-# Codex's formatted stderr opens with a runtime-owned region (banner and any
-# startup diagnostics) and then, from the first `user` line, a transcript that
-# echoes the prompt, command output, and the model's own text (observed
-# structure, codex-cli 0.154.0). Only runtime error lines (observed shape:
-# `<timestamp> ERROR <target>: <message>`) in that leading region are eligible
-# for auth-failure classification, and only when the `user` marker is present
-# to bound it; otherwise nothing is eligible, so a format change
-# under-classifies rather than misclassifies.
+# Codex's formatted stderr opens with a runtime-owned prefix and then a
+# transcript that echoes the prompt, command output, and the model's own text
+# (observed structure, codex-cli 0.154.0). The prefix is recognized only
+# structurally, in runtime_layout(): at most one leading line, a banner
+# delimited by `--------` lines, and the exact `user` line immediately after
+# it opening the transcript. A `user` line anywhere else proves nothing —
+# transcript content can contain one — so an unrecognized prefix yields no
+# runtime evidence at all, and a format change under-classifies rather than
+# misclassifies. Only runtime error lines (observed shape:
+# `<timestamp> ERROR <target>: <message>`) in the recognized prefix, outside
+# the banner, are eligible for auth-failure classification.
 DIAGNOSTIC_LINE = re.compile(r"^\S+\s+ERROR\s")
 TRANSCRIPT_START = "user"
-# Codex reports the effective configuration in a leading stderr banner
-# delimited by `--------` lines (observed shape, codex-cli 0.154.0); it is the
-# only runtime evidence of the selector actually served. Only that block is
-# read, only when the same `user` marker that bounds the auth region is
-# present, because the transcript that follows echoes the model's own text.
+# The banner is the only runtime evidence of the selector actually served. A
+# reported selector is promoted to exact structured evidence, so it is
+# qualified at parse time: a value longer than any selector the wrapper
+# accepts is unusable evidence, never a truncated one.
 BANNER_DELIMITER = "--------"
 BANNER_MODEL = re.compile(r"^model:\s*(\S+)\s*$", re.MULTILINE)
 BANNER_EFFORT = re.compile(r"^reasoning effort:\s*(\S+)\s*$", re.MULTILINE)
@@ -168,32 +170,42 @@ def command(envelope: dict[str, Any], launch: Launch) -> list[str]:
     return arguments
 
 
-def banner_block(stderr: str) -> str:
-    """Return the text between the first two delimiter lines of the runtime-owned region, or empty.
+def runtime_layout(stderr: str) -> tuple[str, list[str]] | None:
+    """Recognize the runtime-owned prefix of Codex's stderr structurally, or nothing.
 
-    The region exists only when the exact transcript marker is present; with
-    no marker the layout is not the one this wrapper knows and no banner is
-    trusted, so a format change under-classifies (no effective evidence)
-    rather than accepting a block of uncertain ownership. Only lines before
-    the first `user` line are considered, so prompt or model text can never
-    supply the banner.
+    Returns ``(banner text, runtime lines before the banner)`` only when the
+    known layout is present exactly: the opening delimiter on line 0 or 1, a
+    closing delimiter, and the exact transcript marker as the very next line.
+    The marker is trusted for its position, not its value: it is not searched
+    for, so a marker-shaped line inside the echoed prompt, command output, or
+    model text can never establish the boundary, and a moved, changed, or
+    missing marker leaves no recognized layout. Both evidence surfaces (the
+    banner and the auth-eligible runtime lines) exist only through this one
+    recognition.
     """
     lines = stderr.splitlines()
-    if TRANSCRIPT_START not in lines:
-        return ""
-    lines = lines[: lines.index(TRANSCRIPT_START)]
-    delimiters = [index for index, line in enumerate(lines) if line.strip() == BANNER_DELIMITER]
-    if len(delimiters) < 2 or delimiters[0] > 1:
-        return ""
-    return "\n".join(lines[delimiters[0] + 1 : delimiters[1]])
+    opening = next((index for index in range(min(2, len(lines))) if lines[index].strip() == BANNER_DELIMITER), None)
+    if opening is None:
+        return None
+    closing = next((index for index in range(opening + 1, len(lines)) if lines[index].strip() == BANNER_DELIMITER), None)
+    if closing is None or lines[closing + 1 : closing + 2] != [TRANSCRIPT_START]:
+        return None
+    return "\n".join(lines[opening + 1 : closing]), lines[:opening]
+
+
+def reported(pattern: re.Pattern[str], banner: str) -> str | None:
+    """A selector value the banner reports, or None when absent or not a usable selector."""
+    match = pattern.search(banner)
+    if match is None or len(match.group(1)) > MAX_OPTION_VALUE_CHARS:
+        return None
+    return match.group(1)
 
 
 def effective(selection: dict[str, str], stdout: str, stderr: str) -> tuple[dict[str, Any], str | None]:
-    """Require the banner to report the requested selector; exact-model requirements do not fall back."""
-    banner = banner_block(stderr)
-    model = BANNER_MODEL.search(banner)
-    effort = BANNER_EFFORT.search(banner)
-    observed: dict[str, Any] = {"model": model.group(1) if model else None, "effort": effort.group(1) if effort else None}
+    """Require the recognized banner to report the requested selector; exact-model requirements do not fall back."""
+    layout = runtime_layout(stderr)
+    banner = layout[0] if layout is not None else ""
+    observed: dict[str, Any] = {"model": reported(BANNER_MODEL, banner), "effort": reported(BANNER_EFFORT, banner)}
     if observed["model"] is None:
         return observed, "the Codex runtime did not report its effective model"
     if observed["model"] != selection["model"]:
@@ -207,17 +219,11 @@ def effective(selection: dict[str, str], stdout: str, stderr: str) -> tuple[dict
 
 
 def diagnostic(stdout: str, stderr: str) -> str:
-    """Runtime error lines from the region before the transcript begins.
-
-    The region exists only when the exact transcript marker is present; with
-    no marker the layout is not the one this wrapper knows, and no line is
-    eligible — a format change under-classifies (generic failure) rather than
-    letting prompt or model text become credential evidence.
-    """
-    lines = stderr.splitlines()
-    if TRANSCRIPT_START not in lines:
+    """Runtime error lines from the recognized runtime-owned prefix, outside the banner; empty when no layout is recognized."""
+    layout = runtime_layout(stderr)
+    if layout is None:
         return ""
-    return "\n".join(line for line in lines[: lines.index(TRANSCRIPT_START)] if DIAGNOSTIC_LINE.match(line))
+    return "\n".join(line for line in layout[1] if DIAGNOSTIC_LINE.match(line))
 
 
 def output(result: subprocess.CompletedProcess[bytes], launch: Launch) -> str:
