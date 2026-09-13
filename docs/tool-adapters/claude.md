@@ -240,9 +240,12 @@ these Codex deltas differ:
   not fall back.
 - The review controls are Codex's native ones (`--sandbox read-only`,
   `approval_policy="never"`, `--ignore-user-config`, `--ephemeral`, no history
-  or web search, and app connectors disabled through `features.apps` and
-  `apps._default.enabled`, which `--ignore-user-config` does not cover); the
-  review output is the final message.
+  or web search, app connectors disabled through `features.apps` and
+  `apps._default.enabled`, which `--ignore-user-config` does not cover, and
+  the candidate's `AGENTS.md` not loaded as reviewer instructions through
+  `project_doc_max_bytes=0`); the review output is the final message. Operator
+  instruction files under `CODEX_HOME` are outside the wrapper's controls and
+  still reach the reviewer.
 - Candidate isolation: Codex loads a checkout's project-scoped `.codex/`
   layers (config, hooks, rules) only for a trusted project, and trust is
   recorded in the user config that `--ignore-user-config` leaves unloaded, so

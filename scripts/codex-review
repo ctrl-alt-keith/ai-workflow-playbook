@@ -111,6 +111,7 @@ def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[s
         "history_persistence": "none",
         "web_search": "disabled",
         "apps": "disabled",
+        "project_agents_md": "not loaded",
         "git_repo_check": not preflight,
         "network_access": {
             "granted": None,
@@ -141,6 +142,11 @@ def codex_arguments(envelope: dict[str, Any]) -> list[str]:
     if envelope["apps"] == "disabled":
         # Account-level app connectors are not user config; --ignore-user-config leaves them exposed.
         arguments.extend(("--disable", "apps", "--config", "apps._default.enabled=false"))
+    if envelope["project_agents_md"] == "not loaded":
+        # The candidate's AGENTS.md would otherwise be loaded as reviewer
+        # instructions; the review brief on stdin is the instruction. Operator
+        # instruction files under CODEX_HOME are not controlled here.
+        arguments.extend(("--config", "project_doc_max_bytes=0"))
     arguments.extend(("--config", f'history.persistence="{envelope["history_persistence"]}"'))
     if not envelope["git_repo_check"]:
         arguments.append("--skip-git-repo-check")
