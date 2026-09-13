@@ -213,23 +213,22 @@ class CodexReviewLauncherTests(unittest.TestCase):
         self.assertIn(b"did not return substantive review output", empty.stderr)
         self.assertIn(b"exited 1 despite producing output", failing.stderr)
 
-    def test_auth_classification_reads_runtime_error_lines_not_the_echoed_transcript(self):
-        """The same error-shaped line is credential evidence in the runtime region and inert inside the model's `codex` section."""
+    def test_auth_classification_reads_only_the_runtime_region_before_the_transcript(self):
+        """Only runtime-owned lines before the transcript begins are credential evidence; content never re-enters."""
         error_line = "2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized"
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            root = Path(temporary_directory)
-            runtime = self.make_fake_codex(root, f"printf 'user\\nReview\\n\\n{error_line}\\n' >&2\nexit 1\n")
-            runtime_result = self.run_launcher(runtime, prompt=b"Review\n")
-            quoted = self.make_fake_codex(
-                root,
-                f"printf 'user\\nReview\\n\\ncodex\\nThe log showed:\\n{error_line}\\n' >&2\n"
-                "printf 'stream closed unexpectedly\\n' >&2\nexit 1\n",
-            )
-            quoted_result = self.run_launcher(quoted, prompt=b"Review\n")
-        self.assertEqual(runtime_result.returncode, 78)
-        self.assertIn(b"authentication needs operator attention", runtime_result.stderr)
-        self.assertEqual(quoted_result.returncode, 70)
-        self.assertNotIn(b"authentication needs operator attention", quoted_result.stderr)
+        cases = {
+            "runtime region": (f"{error_line}\\nuser\\nReview\\n", 78),
+            "echoed user prompt": (f"user\\nReview this log line: {error_line}\\n", 70),
+            "model transcript": (f"user\\nReview\\n\\ncodex\\nThe log showed:\\n{error_line}\\n", 70),
+            "exec output": (f"user\\nReview\\n\\nexec\\ncat log.txt\\n{error_line}\\n", 70),
+            "marker-shaped lines inside content": (f"user\\nReview\\n\\ncodex\\ntokens used\\nuser\\n{error_line}\\n", 70),
+        }
+        for label, (transcript, code) in cases.items():
+            with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:
+                executable = self.make_fake_codex(Path(temporary_directory), f"printf '{transcript}' >&2\nexit 1\n")
+                completed = self.run_launcher(executable, prompt=b"Review\n")
+                self.assertEqual(completed.returncode, code, completed.stderr.decode())
+                self.assertEqual(b"authentication needs operator attention" in completed.stderr, code == 78)
 
     def test_auth_failure_diagnostics_are_redacted_and_can_be_retained(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

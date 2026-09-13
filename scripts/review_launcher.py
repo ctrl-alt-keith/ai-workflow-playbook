@@ -97,7 +97,8 @@ def parse_options(provider: Provider, arguments: list[str]) -> dict[str, str]:
         option, separator, inline_value = argument.partition("=")
         if option not in ALLOWED_OPTIONS:
             raise ValueError(f"unsupported {provider.label} option: {argument}")
-        if option in selected:
+        name = option.removeprefix("--")
+        if name in selected:
             raise ValueError(f"{option} may be provided only once")
         if separator:
             value = inline_value
@@ -110,7 +111,7 @@ def parse_options(provider: Provider, arguments: list[str]) -> dict[str, str]:
             raise ValueError(f"{option} requires a non-option value")
         if len(value) > MAX_OPTION_VALUE_CHARS:
             raise ValueError(f"{option} value exceeds {MAX_OPTION_VALUE_CHARS} characters")
-        selected[option.removeprefix("--")] = value
+        selected[name] = value
         index += 1
     if provider.require_model and "model" not in selected:
         raise ValueError(f"--model is required: pass the exact {provider.label} selector after --")
@@ -199,16 +200,20 @@ def finish(
 
     The primary failure stays primary; a failed write of the requested
     diagnostics file is appended as an additional cause and fails an otherwise
-    successful attempt. The corrected record goes to stderr only.
+    successful attempt. Every cause passes through ``redact`` before it can
+    enter the record, so composition never reintroduces raw text; the record
+    as a whole is bounded once, and the corrected record goes to stderr only.
     """
-    causes = [failure] if failure else []
-    record = bounded({**record, "status": "failed" if causes else "ok", **({"failure": failure} if failure else {})})
+    causes = [redact(failure)] if failure else []
+    record = bounded({**record, "status": "failed" if causes else "ok", **({"failure": causes[0]} if causes else {})})
     if destination is not None:
         write_error = write_record(record, destination)
         if write_error is not None:
             causes.append(f"requested diagnostics file could not be written: {write_error}")
             record["status"] = "failed"
-            record["failure"] = "; ".join(causes)
+            # Already-sanitized causes share the one bound so neither can crowd the other out.
+            share = MAX_DIAGNOSTIC_CHARS // len(causes)
+            record["failure"] = redact("; ".join(cause[:share] for cause in causes))
     print(f"{provider.name}-review diagnostics: {json.dumps(record, sort_keys=True)}", file=sys.stderr)
     if causes:
         return AUTH_FAILURE_EXIT if auth_failure else REVIEWER_FAILURE_EXIT

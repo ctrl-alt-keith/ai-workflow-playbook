@@ -256,10 +256,13 @@ these Codex deltas differ:
   Operator-managed configuration and read-only sandbox network semantics are
   not observed, so network reach stays unestablished and the reviewer still
   reports the access it saw.
-- Authentication failure is classified only from Codex's runtime error lines
-  on stderr outside the transcript's `codex` (model text) and `exec` (command
-  output) sections; an error-shaped line the reviewer quotes is inert, and an
-  unrecognized transcript layout under-classifies to generic wrapper failure.
+- Authentication failure is classified only from runtime error lines in the
+  runtime-owned region of Codex's stderr before the transcript begins (the
+  first `user` line); the echoed prompt, command output, and model text can
+  never re-enter that region, so an error-shaped line they contain is inert.
+  The bias is toward under-classification: an auth error Codex reports after
+  the prompt echo, or under a changed layout, is generic wrapper failure (exit
+  70) with the raw diagnostics still in the record.
 - Invoke it as `./scripts/codex-review` from the active Playbook checkout.
   Codex prefix rules match argv literally, so that checkout-relative form is
   the one the project rule gates. An absolute-path invocation from another

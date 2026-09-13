@@ -366,6 +366,43 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(record["status"], "failed")
         self.assertIn("diagnostics file could not be written", record["failure"])
 
+    def test_compound_failure_record_stays_bounded_and_redacted(self):
+        """A raw primary cause must not be recomposed into the record after sanitization when the write fails."""
+        long_value = " ".join(["padding"] * 400)  # > MAX_DIAGNOSTIC_CHARS once echoed back
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            destination_dir = root / "evidence"
+            destination_dir.mkdir(mode=0o500)
+            executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
+            try:
+                completed = self.run_launcher(
+                    executable,
+                    "--auth-preflight",
+                    "--diagnostics-file",
+                    str(destination_dir / "diagnostics.json"),
+                    "--",
+                    f"--tools=token=super-secret-value {long_value}",
+                )
+            finally:
+                destination_dir.chmod(0o700)
+        record = json.loads(completed.stderr.decode().split("diagnostics: ", 1)[1])
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(record["status"], "failed")
+        self.assertTrue(record["failure"].startswith("unsupported Claude option: --tools=token=[REDACTED]"))
+        self.assertIn("diagnostics file could not be written", record["failure"])
+        self.assertNotIn("super-secret-value", completed.stderr.decode())
+        self.assertLessEqual(len(record["failure"]), 1000)
+
+    def test_repeated_model_or_effort_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_claude(Path(temporary_directory), "printf 'CLAUDE_AUTH_OK\\n'\n")
+            model = self.run_launcher(executable, "--auth-preflight", "--", "--model", "opus", "--model", "sonnet")
+            effort = self.run_launcher(executable, "--auth-preflight", "--", "--effort=high", "--effort", "low")
+        self.assertEqual(model.returncode, 70)
+        self.assertIn(b"--model may be provided only once", model.stderr)
+        self.assertEqual(effort.returncode, 70)
+        self.assertIn(b"--effort may be provided only once", effort.stderr)
+
     def test_record_values_are_bounded_and_redacted(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

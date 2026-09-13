@@ -16,14 +16,15 @@ from review_launcher import Launch, Provider, main, redact  # noqa: E402
 
 
 LAST_MESSAGE_FILE = "last-message.txt"
-# Codex's formatted stderr transcript echoes the model's own text under a
-# `codex` section and command output under `exec` sections (observed section
-# markers, codex-cli 0.154.0). Only runtime error lines (observed shape:
-# `<timestamp> ERROR <target>: <message>`) outside those sections are eligible
-# for auth-failure classification.
+# Codex's formatted stderr opens with a runtime-owned region (banner and any
+# startup diagnostics) and then, from the first `user` line, a transcript that
+# echoes the prompt, command output, and the model's own text (observed
+# structure, codex-cli 0.154.0). Only runtime error lines (observed shape:
+# `<timestamp> ERROR <target>: <message>`) in that leading region are eligible
+# for auth-failure classification; nothing after the transcript begins can
+# re-enter it, so a format change under-classifies rather than misclassifies.
 DIAGNOSTIC_LINE = re.compile(r"^\S+\s+ERROR\s")
-SECTION_MARKERS = {"user", "codex", "exec", "tokens used"}
-CONTENT_SECTIONS = {"codex", "exec"}
+TRANSCRIPT_START = "user"
 # Codex reports the effective configuration in a leading stderr banner
 # delimited by `--------` lines (observed shape, codex-cli 0.154.0); it is the
 # only runtime evidence of the selector actually served. Only that block is
@@ -193,14 +194,12 @@ def effective(selection: dict[str, str], stdout: str, stderr: str) -> tuple[dict
 
 
 def diagnostic(stdout: str, stderr: str) -> str:
-    """Runtime error lines outside the transcript's model and command-output sections."""
-    section = None
+    """Runtime error lines from the region before the transcript begins; one-way, never re-entered."""
     lines = []
     for line in stderr.splitlines():
-        if line in SECTION_MARKERS:
-            section = line
-            continue
-        if section not in CONTENT_SECTIONS and DIAGNOSTIC_LINE.match(line):
+        if line == TRANSCRIPT_START:
+            break
+        if DIAGNOSTIC_LINE.match(line):
             lines.append(line)
     return "\n".join(lines)
 
