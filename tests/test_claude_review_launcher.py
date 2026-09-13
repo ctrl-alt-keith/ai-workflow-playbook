@@ -65,33 +65,6 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             cwd=ROOT,
         )
 
-    def observed_claude_arguments(self, arguments: list[str]) -> dict[str, object]:
-        """Map each Claude flag to its value, or True when it takes none."""
-        observed: dict[str, object] = {}
-        index = 0
-        while index < len(arguments):
-            flag = arguments[index]
-            value = arguments[index + 1] if index + 1 < len(arguments) else None
-            if value is not None and not value.startswith("-"):
-                observed[flag] = value
-                index += 2
-            else:
-                observed[flag] = True
-                index += 1
-        return observed
-
-    def assert_envelope_matches_arguments(self, envelope: dict, arguments: list[str]) -> None:
-        observed = self.observed_claude_arguments(arguments)
-        for name, requested in envelope["requested"].items():
-            self.assertEqual(observed.get(f"--{name}"), requested)
-        self.assertEqual(observed["--tools"], ",".join(envelope["tools"]))
-        self.assertEqual(observed.get("--permission-mode"), envelope["permission_mode"])
-        self.assertEqual("--strict-mcp-config" in observed, envelope["strict_mcp_config"])
-        self.assertEqual(json.loads(observed["--mcp-config"]), envelope["mcp_config"])
-        self.assertEqual(observed["--setting-sources"], ",".join(envelope["setting_sources"]))
-        self.assertEqual("--no-session-persistence" in observed, not envelope["session_persistence"])
-        self.assertEqual("--disable-slash-commands" in observed, envelope["slash_commands"] is False)
-
     def run_with_recorded_arguments(self, *arguments: str, prompt: bytes = b"", output: str):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
@@ -210,6 +183,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertIn("--no-session-persistence", observed_arguments)
 
     def test_record_declares_the_envelope_actually_passed(self):
+        launcher = load_launcher("claude_review_envelope_fixture")
         cases = {
             "review with requested model and effort": (
                 ("--", "--model", "opus", "--effort=high"),
@@ -224,7 +198,8 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 record, observed_arguments = self.run_with_recorded_arguments(
                     *arguments, prompt=prompt, output=output
                 )
-                self.assert_envelope_matches_arguments(record["configured_envelope"], observed_arguments)
+                rendered = ["-p", *launcher.claude_arguments(record["configured_envelope"])]
+                self.assertEqual(observed_arguments, rendered)
 
     def test_review_requires_candidate_commit(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
