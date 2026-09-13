@@ -215,9 +215,11 @@ write failed, identity matched, unlinked), `residue` (created, write failed,
 identity matched, unlink failed — incomplete, untrusted bytes), `unknown`
 (identity could not be bound or the path stopped naming this attempt's file;
 nothing was removed). Cleanup is identity-guarded — the file's `fstat`
-identity is compared with `lstat` of the path before unlink — and the
-`lstat`→`unlink` window is not closed; the wrapper claims neither race-free
-cleanup nor knowledge of the whole path namespace. Any state other than
+identity is compared with `lstat` of the path, and every check and the unlink
+happen while the wrapper still holds the file open so its inode cannot be
+recycled underneath them — but the `lstat`→`unlink` window itself is not
+closed; the wrapper claims neither race-free cleanup nor knowledge of the
+whole path namespace. Any state other than
 `written` fails the attempt when a diagnostics file was requested, and an
 `unknown` or `residue` destination is never valid evidence. When several
 failures coincide, the record's `failure` lists the

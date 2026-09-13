@@ -417,88 +417,68 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             self.assertNotIn(secret.encode(), completed.stderr)
         self.assertIn("[REDACTED]", json.loads(stored)["stderr"])
 
-    def test_late_diagnostics_write_failure_leaves_no_partial_file(self):
-        launcher = load_launcher(LAUNCHER, "claude_review_late_write_fixture")
+    def run_preflight_with_diagnostics_patches(self, patches: dict, swap_path: bool = False, fail_write: bool = False) -> tuple[int, dict, str, Path, str | None]:
+        """Drive a preflight in-process with os-level patches around the diagnostics write.
+
+        With ``swap_path`` the destination is replaced by another actor during the write while the
+        wrapper still holds its own file open; ``fail_write`` then makes the write fail afterwards.
+        Returns exit code, stderr record, stdout, destination, and the destination's final text (None if absent).
+        """
+        launcher = load_launcher(LAUNCHER, "claude_review_diagnostics_fixture")
         shared = sys.modules["review_launcher"]
-        real_fdopen = shared.os.fdopen
+        real_write = shared.write_bytes
+        state: dict = {}
 
-        class FailingStream:
-            def __init__(self, descriptor):
-                self.stream = real_fdopen(descriptor, "w", encoding="utf-8")
-
-            def __enter__(self):
-                return self
-
-            def write(self, text):
+        def write(descriptor, data):
+            real_write(descriptor, data)
+            if swap_path:
+                state["destination"].unlink()
+                state["destination"].write_text("replacement by another actor\n", encoding="utf-8")
+            if fail_write:
                 raise OSError("fixture: device full after create")
-
-            def __exit__(self, *exc):
-                self.stream.close()
-                return False
 
         stdout, stderr = io.StringIO(), io.StringIO()
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
             executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
-            destination = root / "diagnostics.json"
-            with mock.patch.object(shared.os, "fdopen", lambda descriptor, *a, **k: FailingStream(descriptor)):
+            destination = state["destination"] = root / "diagnostics.json"
+            from contextlib import ExitStack
+            with ExitStack() as stack:
+                stack.enter_context(mock.patch.object(shared, "write_bytes", write))
+                for name, replacement in patches.items():
+                    stack.enter_context(mock.patch.object(shared.os, name, replacement))
                 with redirect_stdout(stdout), redirect_stderr(stderr):
                     code = launcher.main(
                         launcher.PROVIDER, ["--claude-bin", str(executable), "--auth-preflight", "--diagnostics-file", str(destination)]
                     )
-            leftover = destination.exists()
+            after = destination.read_text(encoding="utf-8") if destination.exists() else None
         record = json.loads(stderr.getvalue().split("diagnostics: ", 1)[1])
+        return code, record, stdout.getvalue(), destination, after
+
+    def test_late_diagnostics_write_failure_leaves_no_partial_file(self):
+        code, record, stdout, _, after = self.run_preflight_with_diagnostics_patches({}, fail_write=True)
         self.assertEqual(code, 70)
-        self.assertFalse(leftover)
-        self.assertEqual(stdout.getvalue(), "")
+        self.assertIsNone(after)
+        self.assertEqual(stdout, "")
         self.assertEqual(record["status"], "failed")
         self.assertEqual(record["diagnostics_file"], "removed")
         self.assertIn("device full after create", record["failure"])
 
     def test_late_write_failure_with_failed_removal_reports_untrusted_residue(self):
         """When the created file can be neither completed nor removed, the record says so and never calls it evidence."""
-        launcher = load_launcher(LAUNCHER, "claude_review_residue_fixture")
-        shared = sys.modules["review_launcher"]
-        real_fdopen = shared.os.fdopen
-
-        class FailingStream:
-            def __init__(self, descriptor):
-                self.stream = real_fdopen(descriptor, "w", encoding="utf-8")
-
-            def __enter__(self):
-                return self
-
-            def write(self, text):
-                raise OSError("fixture: device full after create")
-
-            def __exit__(self, *exc):
-                self.stream.close()
-                return False
 
         def refuse_unlink(path):
             raise OSError("fixture: unlink refused token=unlink-secret-value " + "x" * 1500)
 
-        stdout, stderr = io.StringIO(), io.StringIO()
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            root = Path(temporary_directory)
-            executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
-            destination = root / "diagnostics.json"
-            with mock.patch.object(shared.os, "fdopen", lambda descriptor, *a, **k: FailingStream(descriptor)):
-                with mock.patch.object(shared.os, "unlink", refuse_unlink):
-                    with redirect_stdout(stdout), redirect_stderr(stderr):
-                        code = launcher.main(
-                            launcher.PROVIDER, ["--claude-bin", str(executable), "--auth-preflight", "--diagnostics-file", str(destination)]
-                        )
-            leftover = destination.exists()
-        record = json.loads(stderr.getvalue().split("diagnostics: ", 1)[1])
+        code, record, _, _, after = self.run_preflight_with_diagnostics_patches({"unlink": refuse_unlink}, fail_write=True)
         self.assertEqual(code, 70)
-        self.assertTrue(leftover)
+        self.assertIsNotNone(after)
         self.assertEqual(record["status"], "failed")
         self.assertEqual(record["diagnostics_file"], "residue")
         self.assertTrue(record["failure"].startswith("requested diagnostics file could not be written: fixture: device full"))
         self.assertIn("could not be removed", record["failure"])
         self.assertIn("incomplete, untrusted bytes", record["failure"])
-        self.assertNotIn("unlink-secret-value", stderr.getvalue())
+        self.assertNotIn("unlink-secret-value", json.dumps(record))
         self.assertLessEqual(len(record["failure"]), 1000)
 
     def test_destination_appearing_after_validation_is_not_created_and_left_alone(self):
@@ -517,84 +497,20 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
 
     def test_replaced_destination_is_never_unlinked_and_reported_unknown(self):
         """If the path stops naming this attempt's file before cleanup, nothing is removed and the state is unknown."""
-        launcher = load_launcher(LAUNCHER, "claude_review_replacement_fixture")
-        shared = sys.modules["review_launcher"]
-        real_fdopen = shared.os.fdopen
-
-        class ReplacingStream:
-            def __init__(self, descriptor, destination):
-                self.stream = real_fdopen(descriptor, "w", encoding="utf-8")
-                self.destination = destination
-
-            def __enter__(self):
-                return self
-
-            def write(self, text):
-                self.destination.unlink()
-                self.destination.write_text("replacement by another actor\n", encoding="utf-8")
-                raise OSError("fixture: write failed after replacement")
-
-            def __exit__(self, *exc):
-                self.stream.close()
-                return False
-
-        stdout, stderr = io.StringIO(), io.StringIO()
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            root = Path(temporary_directory)
-            executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
-            destination = root / "diagnostics.json"
-            with mock.patch.object(shared.os, "fdopen", lambda descriptor, *a, **k: ReplacingStream(descriptor, destination)):
-                with redirect_stdout(stdout), redirect_stderr(stderr):
-                    code = launcher.main(
-                        launcher.PROVIDER, ["--claude-bin", str(executable), "--auth-preflight", "--diagnostics-file", str(destination)]
-                    )
-            after = destination.read_text(encoding="utf-8")
-        record = json.loads(stderr.getvalue().split("diagnostics: ", 1)[1])
+        code, record, _, _, after = self.run_preflight_with_diagnostics_patches({}, swap_path=True, fail_write=True)
         self.assertEqual(code, 70)
         self.assertEqual(record["diagnostics_file"], "unknown")
         self.assertIn("now names a different file; nothing was removed", record["failure"])
         self.assertEqual(after, "replacement by another actor\n")
 
     def test_completed_write_whose_path_was_replaced_is_not_reported_written(self):
-        launcher = load_launcher(LAUNCHER, "claude_review_post_write_fixture")
-        shared = sys.modules["review_launcher"]
-        real_fdopen = shared.os.fdopen
-
-        class SwapOnCloseStream:
-            def __init__(self, descriptor, destination):
-                self.stream = real_fdopen(descriptor, "w", encoding="utf-8")
-                self.destination = destination
-
-            def __enter__(self):
-                return self
-
-            def write(self, text):
-                self.stream.write(text)
-
-            def __exit__(self, *exc):
-                self.stream.close()
-                self.destination.unlink()
-                self.destination.write_text("replacement after completion\n", encoding="utf-8")
-                return False
-
-        stdout, stderr = io.StringIO(), io.StringIO()
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            root = Path(temporary_directory)
-            executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
-            destination = root / "diagnostics.json"
-            with mock.patch.object(shared.os, "fdopen", lambda descriptor, *a, **k: SwapOnCloseStream(descriptor, destination)):
-                with redirect_stdout(stdout), redirect_stderr(stderr):
-                    code = launcher.main(
-                        launcher.PROVIDER, ["--claude-bin", str(executable), "--auth-preflight", "--diagnostics-file", str(destination)]
-                    )
-            after = destination.read_text(encoding="utf-8")
-        record = json.loads(stderr.getvalue().split("diagnostics: ", 1)[1])
+        code, record, stdout, _, after = self.run_preflight_with_diagnostics_patches({}, swap_path=True)
         self.assertEqual(code, 70)
-        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(stdout, "")
         self.assertEqual(record["status"], "failed")
         self.assertEqual(record["diagnostics_file"], "unknown")
         self.assertIn("could not be verified after writing", record["failure"])
-        self.assertEqual(after, "replacement after completion\n")
+        self.assertEqual(after, "replacement by another actor\n")
 
     def test_missing_effective_account_entry_is_bounded_wrapper_failure(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

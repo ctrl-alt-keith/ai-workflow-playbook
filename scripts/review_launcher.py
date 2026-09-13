@@ -191,7 +191,11 @@ def compose(causes: list[str]) -> str:
 
 
 def names_identity(destination: Path, identity: tuple[int, int]) -> bool | None:
-    """Whether the pathname still names this attempt's file; None when that cannot be established."""
+    """Whether the pathname still names this attempt's file; None when that cannot be established.
+
+    Meaningful only while the descriptor that produced ``identity`` is still
+    open: a released inode number can be reused by another file.
+    """
     try:
         current = os.lstat(destination)
     except OSError:
@@ -199,52 +203,62 @@ def names_identity(destination: Path, identity: tuple[int, int]) -> bool | None:
     return (current.st_dev, current.st_ino) == identity
 
 
+def write_bytes(descriptor: int, data: bytes) -> None:
+    """Write all of ``data`` to the open descriptor and flush it to storage."""
+    while data:
+        data = data[os.write(descriptor, data) :]
+    os.fsync(descriptor)
+
+
 def write_record(record: dict[str, Any], destination: Path) -> tuple[str | None, str]:
     """Create the requested diagnostics file exclusively and report this attempt's artifact state.
 
     Returns ``(cause, state)``. ``cause`` is None only for ``written``. States
     describe the artifact this attempt created, not the namespace: ``written``
-    (created, completed, and the pathname still named it at final check),
+    (created, completed, and the pathname still named it at the final check),
     ``not_created`` (exclusive create failed; no claim about the pathname),
     ``removed`` (created, write failed, identity matched, unlinked),
     ``residue`` (created, write failed, identity matched, unlink failed — the
     bytes are incomplete and untrusted), ``unknown`` (identity could not be
     bound, or the pathname stopped naming this attempt's file — nothing was
-    removed). Identity is bound with ``fstat`` after creation and checked with
-    ``lstat`` before unlink; the ``lstat``→``unlink`` window is not closed.
+    removed). Identity is bound with ``fstat`` and every check and the guarded
+    unlink happen while the descriptor is still open, so the inode cannot be
+    recycled underneath them; the ``lstat``→``unlink`` window itself is not
+    closed.
     """
     try:
         descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     except OSError as error:
         return f"requested diagnostics file could not be created: {redact(str(error))}", "not_created"
     try:
-        created = os.fstat(descriptor)
-        identity = (created.st_dev, created.st_ino)
-    except OSError as error:
-        os.close(descriptor)
-        return f"requested diagnostics file identity could not be established: {redact(str(error))}; nothing was removed", "unknown"
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
-            stream.write(json.dumps(record, sort_keys=True) + "\n")
-    except OSError as error:
-        cause = f"requested diagnostics file could not be written: {redact(str(error))}"
-        matches = names_identity(destination, identity)
-        if matches is None:
-            return f"{cause}; the path no longer names the file this attempt created, or could not be inspected; nothing was removed", "unknown"
-        if not matches:
-            return f"{cause}; the path now names a different file; nothing was removed", "unknown"
         try:
-            os.unlink(destination)
-        except OSError as removal:
-            return (
-                f"{cause}; the incomplete file could not be removed and may contain incomplete, "
-                f"untrusted bytes ({redact(str(removal))})",
-                "residue",
-            )
-        return f"{cause}; the incomplete file was removed", "removed"
-    if names_identity(destination, identity) is not True:
-        return "requested diagnostics file could not be verified after writing: the path no longer names the file this attempt created; nothing was removed", "unknown"
-    return None, "written"
+            created = os.fstat(descriptor)
+        except OSError as error:
+            return f"requested diagnostics file identity could not be established: {redact(str(error))}; nothing was removed", "unknown"
+        identity = (created.st_dev, created.st_ino)
+        try:
+            write_bytes(descriptor, (json.dumps(record, sort_keys=True) + "\n").encode("utf-8"))
+        except OSError as error:
+            cause = f"requested diagnostics file could not be written: {redact(str(error))}"
+            matches = names_identity(destination, identity)
+            if matches is None:
+                return f"{cause}; the path no longer names the file this attempt created, or could not be inspected; nothing was removed", "unknown"
+            if not matches:
+                return f"{cause}; the path now names a different file; nothing was removed", "unknown"
+            try:
+                os.unlink(destination)
+            except OSError as removal:
+                return (
+                    f"{cause}; the incomplete file could not be removed and may contain incomplete, "
+                    f"untrusted bytes ({redact(str(removal))})",
+                    "residue",
+                )
+            return f"{cause}; the incomplete file was removed", "removed"
+        if names_identity(destination, identity) is not True:
+            return "requested diagnostics file could not be verified after writing: the path no longer names the file this attempt created; nothing was removed", "unknown"
+        return None, "written"
+    finally:
+        os.close(descriptor)
 
 
 def classify(
