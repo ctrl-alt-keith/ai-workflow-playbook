@@ -369,21 +369,25 @@ When an operator prepares a Claude prompt, use one complete metadata block:
 ```text
 Operator metadata (do not include in prompt)
 Thread routing: <FRESH THREAD | SAME THREAD | CHILD TASK>
-Recommended model: <FRESH THREAD/CHILD TASK: haiku | sonnet | opus | fable; SAME THREAD: Preserve requested thread model and observe effective runtime model>
-Recommended thinking/effort: <FRESH THREAD/CHILD TASK: supported executor setting; SAME THREAD: Preserve requested thread setting and observe effective runtime setting>
+Recommended model: <FRESH THREAD/CHILD TASK: haiku | sonnet | opus | fable; SAME THREAD: Preserve requested thread model and observe effective runtime model; UNVERIFIED FROM AUTHORING SURFACE: resolve with the operator at launch>
+Recommended thinking/effort: <FRESH THREAD/CHILD TASK: supported executor setting; SAME THREAD: Preserve requested thread setting and observe effective runtime setting; UNVERIFIED FROM AUTHORING SURFACE: resolve with the operator at launch>
 
 Reason:
 <one concise task-specific selection or continuity justification>
 ```
 
 This metadata is operator guidance, not task authority. Do not recommend a
-model, effort, or child configuration that the current Claude surface cannot
-support. Interpret FRESH/SAME routing before prompt delivery: do not tell the
+model, effort, or child configuration that current evidence shows the Claude
+surface cannot support. Interpret FRESH/SAME routing before prompt delivery: do not tell the
 downstream Claude task to change or preserve parent configuration when that
 surface does not expose the control. The executable task body must be complete
 without metadata and may authorize child dispatch only where that Claude
 surface supports it. Keep task-required requested/effective runtime evidence in
 the executable body when it is a validation or qualification requirement.
+When the authoring surface has not verified a required control or capability,
+record `UNVERIFIED FROM AUTHORING SURFACE` in the affected metadata field and
+resolve it with the operator at launch; do not present that unknown as
+unavailable.
 
 ## Reasoning And Model Configuration
 
