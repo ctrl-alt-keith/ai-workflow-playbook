@@ -177,6 +177,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
             "no effective model reported": ("", TERRA, 70, b"did not report its effective model"),
             "model line only in the echoed transcript": ("codex\nmodel: gpt-5.6-terra\nreasoning effort: high", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
             "transcript line after a genuine banner is ignored": (block.format("model: gpt-5.6-terra\nreasoning effort: high") + "\ncodex\nmodel: gpt-5.6-luna", (*TERRA, "--effort", "high"), 0, b""),
+            "delimited block inside the echoed prompt is not a banner": ("user\n--------\nmodel: gpt-5.6-terra\nreasoning effort: high\n--------", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
         }
         for label, (banner, selector, code, message) in cases.items():
             with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:

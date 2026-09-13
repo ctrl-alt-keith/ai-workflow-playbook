@@ -208,8 +208,9 @@ The wrapper captures Claude output and status. A review succeeds only when
 Claude exits successfully with non-empty output. Diagnostics are bounded and
 redact obvious credentials; `--diagnostics-file` can retain them at a new
 absolute path, and a requested file that cannot be written fails the attempt
-and its record even when the provider succeeded. Every string in the record
-is bounded and credential-redacted. The diagnostics record declares the configured envelope of the
+and its record even when the provider succeeded, leaving no partial file
+behind. Every string in the record is bounded and credential-redacted,
+including quoted JSON-style credential fields. The diagnostics record declares the configured envelope of the
 branch actually taken, preflight or review, under the
 [exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract).
 The project rule keeps local reviewer execution approval-gated.
@@ -234,8 +235,9 @@ these Codex deltas differ:
   against `codex-cli 0.154.0`, takes no `--ignore-user-config`, and falls
   back to the bundled catalog when unauthenticated). After the run, the
   wrapper reads the effective model and reasoning effort from the leading
-  delimited banner block on Codex's stderr — never from the transcript that
-  follows it — records them as `effective`, and fails the attempt when they
+  delimited banner block in the runtime-owned region of Codex's stderr,
+  before the transcript's first `user` line — prompt and model text can never
+  supply it — records them as `effective`, and fails the attempt when they
   differ from the request or are not reported; exact-model requirements do
   not fall back.
 - The review controls are Codex's native ones (`--sandbox read-only`,

@@ -74,13 +74,14 @@ class Provider:
 def redact(value: str) -> str:
     """Keep operational diagnostics without retaining obvious credentials."""
     value = value[:MAX_DIAGNOSTIC_CHARS]
+    # Names may be quoted (JSON/TOML) and values may be quoted strings.
     value = re.sub(
-        r"(?i)\bauthorization\b\s*[:=]\s*(?:bearer\s+)?[^\s,;]+",
+        r"(?i)\bauthorization\b[\"']?\s*[:=]\s*[\"']?(?:bearer\s+)?[^\s,;\"']+",
         "authorization=[REDACTED]",
         value,
     )
     value = re.sub(
-        r"(?i)\b(token|secret|api[_-]?key|credential|cookie)\b\s*[:=]\s*[^\s,;]+",
+        r"(?i)\b(token|secret|api[_-]?key|credential|cookie)\b[\"']?\s*[:=]\s*[\"']?[^\s,;\"']+",
         r"\1=[REDACTED]",
         value,
     )
@@ -177,12 +178,23 @@ def bounded(value: Any) -> Any:
 
 
 def write_record(record: dict[str, Any], destination: Path) -> str | None:
-    """Create the requested diagnostics file exclusively; return the bounded error when it cannot be written."""
+    """Create the requested diagnostics file exclusively; return the bounded error when it cannot be written.
+
+    A file this call created but could not finish writing is removed again, so
+    a failed write never leaves a partial or pre-failure record at the path.
+    """
     try:
         descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except OSError as error:
+        return redact(str(error))
+    try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
             stream.write(json.dumps(record, sort_keys=True) + "\n")
     except OSError as error:
+        try:
+            os.unlink(destination)
+        except OSError:
+            pass
         return redact(str(error))
     return None
 

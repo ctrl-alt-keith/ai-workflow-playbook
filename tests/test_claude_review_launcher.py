@@ -403,6 +403,60 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(effort.returncode, 70)
         self.assertIn(b"--effort may be provided only once", effort.stderr)
 
+    def test_quoted_credential_forms_are_redacted(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_claude(
+                root,
+                "printf '%s\\n' '{\"token\":\"quoted-secret-value\",\"Authorization\":\"Bearer quoted-bearer-secret\",\"api_key\": \"spaced-secret\"}' >&2\n"
+                "printf 'CLAUDE_AUTH_OK\\n'\n",
+            )
+            diagnostics_file = root / "diagnostics.json"
+            completed = self.run_launcher(executable, "--auth-preflight", "--diagnostics-file", str(diagnostics_file))
+            stored = diagnostics_file.read_text(encoding="utf-8")
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+        for secret in ("quoted-secret-value", "quoted-bearer-secret", "spaced-secret"):
+            self.assertNotIn(secret, stored)
+            self.assertNotIn(secret.encode(), completed.stderr)
+        self.assertIn("[REDACTED]", json.loads(stored)["stderr"])
+
+    def test_late_diagnostics_write_failure_leaves_no_partial_file(self):
+        launcher = load_launcher(LAUNCHER, "claude_review_late_write_fixture")
+        shared = sys.modules["review_launcher"]
+        real_fdopen = shared.os.fdopen
+
+        class FailingStream:
+            def __init__(self, descriptor):
+                self.stream = real_fdopen(descriptor, "w", encoding="utf-8")
+
+            def __enter__(self):
+                return self
+
+            def write(self, text):
+                raise OSError("fixture: device full after create")
+
+            def __exit__(self, *exc):
+                self.stream.close()
+                return False
+
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
+            destination = root / "diagnostics.json"
+            with mock.patch.object(shared.os, "fdopen", lambda descriptor, *a, **k: FailingStream(descriptor)):
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    code = launcher.main(
+                        launcher.PROVIDER, ["--claude-bin", str(executable), "--auth-preflight", "--diagnostics-file", str(destination)]
+                    )
+            leftover = destination.exists()
+        record = json.loads(stderr.getvalue().split("diagnostics: ", 1)[1])
+        self.assertEqual(code, 70)
+        self.assertFalse(leftover)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(record["status"], "failed")
+        self.assertIn("device full after create", record["failure"])
+
     def test_record_values_are_bounded_and_redacted(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

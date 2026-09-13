@@ -167,8 +167,14 @@ def command(envelope: dict[str, Any], launch: Launch) -> list[str]:
 
 
 def banner_block(stderr: str) -> str:
-    """Return the text between the first two delimiter lines, or empty when no such block leads stderr."""
+    """Return the text between the first two delimiter lines of the runtime-owned region, or empty.
+
+    Only lines before the transcript's first `user` line are considered, so
+    prompt or model text can never supply the banner.
+    """
     lines = stderr.splitlines()
+    if TRANSCRIPT_START in lines:
+        lines = lines[: lines.index(TRANSCRIPT_START)]
     delimiters = [index for index, line in enumerate(lines) if line.strip() == BANNER_DELIMITER]
     if len(delimiters) < 2 or delimiters[0] > 1:
         return ""
