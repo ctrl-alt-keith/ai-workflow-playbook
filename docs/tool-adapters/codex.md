@@ -226,8 +226,8 @@ executable prompt with this plain-text operator metadata:
 
 ```text
 Thread routing: <FRESH THREAD | SAME THREAD | CHILD TASK>
-Recommended model: <FRESH THREAD/CHILD TASK: GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol | GPT-6 Astra (provisional; exact Codex selector must be accepted at launch); SAME THREAD: Preserve requested thread model and observe effective runtime model>
-Recommended reasoning level: <FRESH THREAD/CHILD TASK: Light | Medium | High; SAME THREAD: Preserve requested thread setting and observe effective runtime setting>
+Recommended model: <FRESH THREAD/CHILD TASK: GPT-5.6 Luna | GPT-5.6 Terra | GPT-5.6 Sol | GPT-6 Astra (provisional; exact Codex selector must be accepted at launch); SAME THREAD: Preserve requested thread model and observe effective runtime model; UNVERIFIED FROM AUTHORING SURFACE: resolve with the operator at launch>
+Recommended reasoning level: <FRESH THREAD/CHILD TASK: Light | Medium | High; SAME THREAD: Preserve requested thread setting and observe effective runtime setting; UNVERIFIED FROM AUTHORING SURFACE: resolve with the operator at launch>
 
 Reason:
 <one concise task-specific explanation>
@@ -245,6 +245,10 @@ reasoning level when it lacks that control. The executable task body remains
 complete without metadata and includes child-dispatch instructions only when
 the active Codex surface can perform that bounded delegation. Runtime-model
 facts may remain in the task body when the task must record or validate them.
+When the authoring surface has not verified a required control or capability,
+record `UNVERIFIED FROM AUTHORING SURFACE` in the affected metadata field and
+resolve it with the operator at launch; do not present that unknown as
+unavailable.
 Choose the model and effort from the bounded task being handed off, using the
 routing matrix above. Light, Medium, and High are practical recommendation
 categories when the execution surface does not provide more specific
