@@ -45,6 +45,17 @@ limited to the model's named local bounded action. This exercises I1--I5 as a
 small experiment; it is not a universal handoff format, evidence graph,
 manifest registry, or agent-memory layer.
 
+## Synthetic review-binding experiment
+
+`review_binding.py` is a third local-only CAK-301 dogfood model. It tests one
+review-path seam: a passing evaluation becomes usable local review evidence
+only when the named acceptance owner binds that exact evaluation to the same
+candidate, property, and contract. A pass, green check, matching result, or
+worker/reviewer assertion alone holds. A replacement route profile must also
+be currently qualified for the bounded review use; historical route evidence
+does not transfer. Its sole positive result is deliberately evidence-only and
+does not grant execution authority, publication, or any effect.
+
 ## Contract and ownership
 
 One synchronous operation retains exact supplied bytes at one reserved target.
