@@ -20,6 +20,10 @@ contract and does not inherit the reviewed party's execution context or
 authority. This rule does not make child work generally invalid; it only limits
 what can satisfy the external-review prerequisite.
 
+Provider or model diversity may be deliberately selected when correlated
+reasoning risk is materially worth challenging. It adds epistemic signal; it
+does not make a review independent or become a universal prerequisite.
+
 ## Review Modes
 
 ### Lightweight targeted review
