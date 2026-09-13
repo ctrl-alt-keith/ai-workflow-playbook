@@ -240,7 +240,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         record = json.loads(completed.stderr.decode().split("diagnostics: ", 1)[1])
         self.assertEqual(completed.returncode, 78)
         self.assertEqual(record["status"], "failed")
-        self.assertTrue(record["failure"].startswith("Claude authentication needs operator attention; "))
+        self.assertTrue(record["failure"].startswith("Claude authentication needs operator attention\n"))
         self.assertIn("requested diagnostics file could not be", record["failure"])
 
     def test_scratch_cleanup_failure_fails_an_otherwise_successful_attempt(self):
@@ -421,12 +421,16 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             self.assertNotIn(secret.encode(), completed.stderr)
         self.assertIn("[REDACTED]", json.loads(stored)["stderr"])
 
-    def run_preflight_with_diagnostics_patches(self, patches: dict, swap_path: bool = False, fail_write: bool = False) -> tuple[int, dict, str, Path, str | None]:
-        """Drive a preflight in-process with os-level patches around the diagnostics write.
+    def run_preflight_with_diagnostics_patches(
+        self, patches: dict, swap_path: bool = False, fail_write: bool = False, provider_body: str = "printf 'CLAUDE_AUTH_OK\\n'\n"
+    ) -> tuple[int, dict, str, Path, str | None]:
+        """Drive a preflight in-process with patches on the launcher's diagnostics seams.
 
         With ``swap_path`` the destination is replaced by another actor during the write while the
-        wrapper still holds its own file open; ``fail_write`` then makes the write fail afterwards.
-        Returns exit code, stderr record, stdout, destination, and the destination's final text (None if absent).
+        wrapper still holds its own file open; ``fail_write`` makes completion fail after the bytes
+        landed. ``patches`` maps launcher-module attribute names (e.g. ``close_descriptor``,
+        ``names_identity``) to replacements. Returns exit code, stderr record, stdout, destination,
+        and the destination's final text (None if absent).
         """
         launcher = load_launcher(LAUNCHER, "claude_review_diagnostics_fixture")
         shared = sys.modules["review_launcher"]
@@ -439,18 +443,18 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 state["destination"].unlink()
                 state["destination"].write_text("replacement by another actor\n", encoding="utf-8")
             if fail_write:
-                raise OSError("fixture: device full after create")
+                raise OSError("fixture: fsync failed after the bytes landed")
 
         stdout, stderr = io.StringIO(), io.StringIO()
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
-            executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
+            executable = self.make_fake_claude(root, provider_body)
             destination = state["destination"] = root / "diagnostics.json"
             from contextlib import ExitStack
             with ExitStack() as stack:
                 stack.enter_context(mock.patch.object(shared, "write_bytes", write))
                 for name, replacement in patches.items():
-                    stack.enter_context(mock.patch.object(shared.os, name, replacement))
+                    stack.enter_context(mock.patch.object(shared, name, replacement))
                 with redirect_stdout(stdout), redirect_stderr(stderr):
                     code = launcher.main(
                         launcher.PROVIDER, ["--claude-bin", str(executable), "--auth-preflight", "--diagnostics-file", str(destination)]
@@ -467,9 +471,62 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(stdout, "")
         self.assertEqual(record["status"], "failed")
         self.assertEqual(record["diagnostics_file"], "incomplete")
-        self.assertIn("device full after create", record["failure"])
+        self.assertIn("fsync failed after the bytes landed", record["failure"])
         self.assertIn("not valid evidence", record["failure"])
         self.assertNotIn("removed", record["failure"])
+        # every byte landed, so the file parses — and it must still not certify itself
+        retained = json.loads(after)
+        self.assertEqual(retained["diagnostics_file"], "unverified")
+        self.assertEqual(retained["status"], "ok")  # the provider did succeed; retention did not, and the file says so
+
+    def test_retained_file_never_certifies_its_own_retention(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
+            destination = root / "diagnostics.json"
+            completed = self.run_launcher(executable, "--auth-preflight", "--diagnostics-file", str(destination))
+            retained = json.loads(destination.read_text(encoding="utf-8"))
+        terminal = json.loads(completed.stderr.decode().split("diagnostics: ", 1)[1])
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+        self.assertEqual(retained["diagnostics_file"], "unverified")
+        self.assertEqual(terminal["diagnostics_file"], "written")
+
+    def test_path_inspection_failure_is_reported_as_such_not_as_mismatch(self):
+        shared_names = sys.modules.get("review_launcher")
+        code, record, _, _, _ = self.run_preflight_with_diagnostics_patches({"names_identity": lambda destination, identity: None})
+        self.assertEqual(code, 70)
+        self.assertEqual(record["diagnostics_file"], "unknown")
+        self.assertIn("could not be inspected", record["failure"])
+        self.assertNotIn("different file", record["failure"])
+
+    def test_close_failure_composes_into_the_bounded_result(self):
+        def refuse_close(descriptor):
+            import os as _os
+            _os.close(descriptor)
+            raise OSError("fixture: close failed token=close-secret-value")
+
+        # otherwise-successful retention: close failure is the primary diagnostics cause, state unknown
+        code, record, stdout, _, _ = self.run_preflight_with_diagnostics_patches({"close_descriptor": refuse_close})
+        self.assertEqual(code, 70)
+        self.assertEqual(stdout, "")
+        self.assertEqual(record["status"], "failed")
+        self.assertEqual(record["diagnostics_file"], "unknown")
+        self.assertTrue(record["failure"].startswith("requested diagnostics file descriptor could not be closed"))
+        self.assertNotIn("close-secret-value", json.dumps(record))
+        # write failure + close failure: write failure stays primary, close failure survives
+        code, record, _, _, _ = self.run_preflight_with_diagnostics_patches({"close_descriptor": refuse_close}, fail_write=True)
+        self.assertEqual(code, 70)
+        self.assertEqual(record["diagnostics_file"], "unknown")
+        self.assertTrue(record["failure"].startswith("requested diagnostics file could not be written: fixture: fsync failed"))
+        self.assertIn("descriptor could not be closed", record["failure"])
+        # auth primary + close failure: auth classification and exit 78 preserved
+        code, record, _, _, _ = self.run_preflight_with_diagnostics_patches(
+            {"close_descriptor": refuse_close},
+            provider_body="printf '{\"error\":{\"type\":\"authentication_error\",\"message\":\"invalid x-api-key\"}}\\n' >&2\nexit 1\n",
+        )
+        self.assertEqual(code, 78)
+        self.assertTrue(record["failure"].startswith("Claude authentication needs operator attention\n"))
+        self.assertIn("descriptor could not be closed", record["failure"])
 
     def test_destination_appearing_after_validation_is_not_created_and_left_alone(self):
         """A create race is reported as this attempt not creating the artifact, with no claim about the path."""
@@ -490,7 +547,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         code, record, _, _, after = self.run_preflight_with_diagnostics_patches({}, swap_path=True, fail_write=True)
         self.assertEqual(code, 70)
         self.assertEqual(record["diagnostics_file"], "unknown")
-        self.assertIn("no longer names the file this attempt created", record["failure"])
+        self.assertIn("the path now names a different file", record["failure"])
         self.assertEqual(after, "replacement by another actor\n")
 
     def test_completed_write_whose_path_was_replaced_is_not_reported_written(self):
@@ -559,6 +616,29 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(once, "OPENAI_API_KEY=[REDACTED]")
         self.assertEqual(redact(once), once)  # idempotent
 
+    def test_credential_constructs_are_redacted_to_end_of_line_and_ordinary_fields_survive(self):
+        load_launcher(LAUNCHER, "claude_review_redact_shapes_fixture")
+        redact = sys.modules["review_launcher"].redact
+        adversarial = {
+            "Authorization: Basic dXNlcjpwYXNz": "dXNlcjpwYXNz",
+            "Proxy-Authorization: Basic abc def": "abc def",
+            '{"client_secret":"part one"}': "part one",
+            "'refresh_token'='part two'": "part two",
+            "OPENAI_API_KEY=plain-value; next=field": "plain-value",
+            "password: hunter2 (from config)": "hunter2",
+        }
+        for text, secret in adversarial.items():
+            with self.subTest(text):
+                out = redact(text)
+                self.assertNotIn(secret, out)
+                self.assertIn("[REDACTED]", out)
+                self.assertEqual(redact(out), out)
+        ordinary = "model: gpt-5.6-sol\nreasoning effort: high\ntokens used\n2,108\ntoken_count=5\nsandbox: read-only"
+        self.assertEqual(redact(ordinary), ordinary)
+        # a construct on one line does not erase the next line
+        two_lines = "client_secret=abc\nsandbox: read-only"
+        self.assertEqual(redact(two_lines), "client_secret=[REDACTED]\nsandbox: read-only")
+
     def test_pre_existing_diagnostics_destination_is_refused_and_untouched(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
@@ -590,7 +670,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             for name in leaked:
                 shutil.rmtree(name, ignore_errors=True)
         self.assertEqual(code, 70)
-        self.assertTrue(record["failure"].startswith("Claude exited 3 without substantive output; "))
+        self.assertTrue(record["failure"].startswith("Claude exited 3 without substantive output\n"))
         self.assertIn("temporary-directory cleanup failed: fixture cleanup failure", record["failure"])
 
     def test_record_values_are_bounded_and_redacted(self):

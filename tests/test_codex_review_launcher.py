@@ -224,7 +224,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
             completed = self.run_launcher(executable, prompt=b"Review\n")
         record = json.loads(completed.stderr.decode().split("diagnostics: ", 1)[1])
         self.assertEqual(completed.returncode, 70)
-        self.assertTrue(record["failure"].startswith("Codex exited 2 despite producing output; "))
+        self.assertTrue(record["failure"].startswith("Codex exited 2 despite producing output\n"))
         self.assertIn("did not report its effective model", record["failure"])
 
     def test_selector_acceptance_canary_gates_the_substantive_review(self):
@@ -239,7 +239,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
             "canary substitutes the effort": (reply, block.format("model: gpt-5.6-terra\nreasoning effort: low"), 70, False, b"effort low instead of the requested high"),
             "canary omits the banner": (reply, "", 70, False, b"did not report its effective model"),
             "canary answers wrongly": ("printf 'hello\\n' > \"$out\"\n", None, 70, False, b"did not return the expected canary response"),
-            "canary establishes auth failure": ("printf '2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized\\n' >&2\nexit 1\n", None, 78, False, b"authentication needs operator attention"),
+            "canary establishes auth failure": ("printf '2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized\\nuser\\n' >&2\nexit 1\n", None, 78, False, b"authentication needs operator attention"),
         }
         for label, (canary, banner, code, invoked, message) in cases.items():
             with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:
@@ -339,6 +339,8 @@ class CodexReviewLauncherTests(unittest.TestCase):
             "model transcript": (f"user\\nReview\\n\\ncodex\\nThe log showed:\\n{error_line}\\n", 70),
             "exec output": (f"user\\nReview\\n\\nexec\\ncat log.txt\\n{error_line}\\n", 70),
             "marker-shaped lines inside content": (f"user\\nReview\\n\\ncodex\\ntokens used\\nuser\\n{error_line}\\n", 70),
+            "no transcript marker at all": (f"{error_line}\\n", 70),
+            "changed marker": (f"{error_line}\\nUser:\\nReview\\n", 70),
         }
         for label, (transcript, code) in cases.items():
             with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:
@@ -352,7 +354,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
             root = Path(temporary_directory)
             executable = self.make_fake_codex(
                 root,
-                "printf '2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized token=super-secret-value Authorization: Bearer another-secret sk-proj-bare-secret\\n' >&2\nexit 1\n",
+                "printf '2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized token=super-secret-value Authorization: Bearer another-secret sk-proj-bare-secret\\nuser\\n' >&2\nexit 1\n",
                 canary=False,
             )
             diagnostics_file = root / "diagnostics.json"

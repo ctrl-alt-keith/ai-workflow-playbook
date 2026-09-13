@@ -207,28 +207,33 @@ and human transition authority remain outside the wrapper.
 The wrapper captures Claude output and status. A review succeeds only when
 Claude exits successfully with non-empty output. Diagnostics are bounded and
 redact obvious credentials; `--diagnostics-file` can retain them at a new
-absolute path with exclusive creation. The record's `diagnostics_file` states
-describe this attempt's artifact, not the namespace: `written` (this attempt
-completed the record and final verification saw the path still naming its
-open file), `not_created` (exclusive create failed; nothing was created and
-no claim is made about the path), `incomplete` (this attempt created the file
-but could not complete the record; the path still named that file when
-checked; the bytes are not valid evidence), `unknown` (identity could not be
-bound, or the path no longer names this attempt's file). Identity is bound
-with `fstat` and checked with `lstat` while the file is still open. The
+absolute path with exclusive creation. The bytes written to that file always
+carry `diagnostics_file: unverified`: a file cannot certify its own retention,
+so only the wrapper's terminal stderr record states the final observation.
+That record's `diagnostics_file` describes this attempt's artifact, not the
+namespace: `written` (the record was completed, final verification saw the
+path still naming this attempt's open file, and the descriptor closed
+cleanly), `not_created` (exclusive create failed; nothing was created and no
+claim is made about the path), `incomplete` (this attempt created the file
+but could not complete the record while the path still named that file; the
+bytes are not valid evidence), `unknown` (identity could not be bound, the
+path no longer names or could not be checked against this attempt's file, or
+the descriptor did not close cleanly). Wording distinguishes a mismatch that
+was observed from an inspection that could not be completed. Identity is
+bound with `fstat` and checked with `lstat` while the file is still open. The
 wrapper performs no cleanup at the destination: no portable operation
 unlinks exactly the file behind an open descriptor, so it never deletes
 whatever the path names. Any state other than `written` fails the attempt
-when a diagnostics file was requested, and an `incomplete` or `unknown`
-destination is never valid evidence. When several
+when a diagnostics file was requested; a retained file is evidence only when
+the terminal record says `written`. When several
 failures coincide, the record's `failure` lists the
 primary cause first — provider exit, then unacceptable output, then
 effective-selection evidence, then scratch cleanup, then the diagnostics
 write — with an established authentication failure taking precedence and
 keeping its exit code; secondary causes are preserved after it. Every string
 in the record is bounded and credential-redacted, including quoted JSON-style
-credential fields, including qualified key names such as `refresh_token` or
-`OPENAI_API_KEY`. The diagnostics record carries `configured_envelope` under
+credential fields (see the retention and redaction contract below). The
+diagnostics record carries `configured_envelope` under
 the
 [exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract)
 in three states: a failure before the wrapper has constructed its intended
@@ -237,6 +242,22 @@ and no runtime evidence; once that configuration exists, later pre-launch
 failures retain it as a declaration only; once a provider attempt runs,
 runtime evidence is paired only with that attempt's exact configured
 envelope.
+
+Retention and redaction contract: wrapper-owned fields (configured envelope,
+requested and effective selection, exit code, status, failure causes,
+artifact state, candidate identity) are retained in full through their known
+structure. Provider stdout and stderr are untrusted diagnostic material kept
+only as a bounded excerpt — they carry the banner, transcript, and any
+runtime errors an operator needs to read the record. Every retained string
+is bounded and passed through one transformation: a recognized
+credential-bearing construct — a key whose last `_`/`-` joined component is a
+credential word, or an `authorization` header, followed by `:` or `=` — is
+redacted from the separator to the end of that line, and known secret
+prefixes are removed wherever they appear. Failure causes are one per line
+so a construct in one cause cannot erase the next. This recognizes obvious
+structures and biases toward over-redacting the rest of a line; it is not
+comprehensive secret detection, and no claim is made that arbitrary provider
+prose is credential-free.
 The project rule keeps local reviewer execution approval-gated.
 
 ### Local Codex reviewer launch
@@ -292,11 +313,12 @@ these Codex deltas differ:
   reports the access it saw.
 - Authentication failure is classified only from runtime error lines in the
   runtime-owned region of Codex's stderr before the transcript begins (the
-  first `user` line); the echoed prompt, command output, and model text can
-  never re-enter that region, so an error-shaped line they contain is inert.
-  The bias is toward under-classification: an auth error Codex reports after
-  the prompt echo, or under a changed layout, is generic wrapper failure (exit
-  70) with the raw diagnostics still in the record.
+  first exact `user` line), and only when that marker is present to bound the
+  region; without it no line is eligible. The echoed prompt, command output,
+  and model text can never enter that region, so an error-shaped line they
+  contain is inert. The bias is toward under-classification: an auth error
+  Codex reports after the prompt echo, or under a changed layout, is generic
+  wrapper failure (exit 70) with the bounded diagnostics still in the record.
 - Invoke it as `./scripts/codex-review` from the active Playbook checkout.
   Codex prefix rules match argv literally, so that checkout-relative form is
   the one the project rule gates. An absolute-path invocation from another

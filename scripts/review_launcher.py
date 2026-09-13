@@ -75,24 +75,29 @@ class Provider:
         return f"Reply exactly: {self.auth_response}\n".encode("utf-8")
 
 
+CREDENTIAL_CONSTRUCT = re.compile(
+    r"(?im)\b((?:[a-z0-9]+[_-])*(?:authorization|token|secret|api[_-]?key|credential|cookie|password|passwd))\b"
+    r"[\"']?\s*[:=].*$"
+)
+SECRET_PREFIX = re.compile(r"\b(?:sk|gho|ghp)[_-][A-Za-z0-9_=-]+")
+
+
 def redact(value: str) -> str:
-    """Keep operational diagnostics without retaining obvious credentials."""
+    """Bound a retained string and remove obvious credential-bearing constructs from it.
+
+    Retained text is a bounded excerpt. A recognized construct — a key whose
+    last `_`/`-` joined component is a credential word (or an
+    ``authorization`` header), followed by ``:``/``=`` — is redacted from the
+    separator to the end of that line, so the value's extent (quoting, schemes
+    such as ``Basic``, embedded spaces) never has to be guessed; known secret
+    prefixes are removed wherever they appear. This is not comprehensive secret
+    detection: only these structures are recognized, and the bias is to
+    over-redact the remainder of a line rather than retain a credential tail.
+    The transformation is idempotent.
+    """
     value = value[:MAX_DIAGNOSTIC_CHARS]
-    # Names may be quoted (JSON/TOML) and values may be quoted strings.
-    # A sensitive component may be qualified by `_`/`-` joined components (refresh_token,
-    # client-secret, OPENAI_API_KEY); the key as a whole is still bounded by word boundaries.
-    value = re.sub(
-        r"(?i)\b((?:[a-z0-9]+[_-])*authorization)\b[\"']?\s*[:=]\s*[\"']?(?:bearer\s+)?[^\s,;\"']+",
-        r"\1=[REDACTED]",
-        value,
-    )
-    value = re.sub(
-        r"(?i)\b((?:[a-z0-9]+[_-])*(?:token|secret|api[_-]?key|credential|cookie))\b[\"']?\s*[:=]\s*[\"']?[^\s,;\"']+",
-        r"\1=[REDACTED]",
-        value,
-    )
-    value = re.sub(r"\b(?:sk|gho|ghp)[_-][A-Za-z0-9_=-]+", "[REDACTED]", value)
-    return value
+    value = CREDENTIAL_CONSTRUCT.sub(r"\1=[REDACTED]", value)
+    return SECRET_PREFIX.sub("[REDACTED]", value)
 
 
 def parse_options(provider: Provider, arguments: list[str]) -> dict[str, str]:
@@ -187,13 +192,17 @@ def bounded(value: Any) -> Any:
 
 
 def compose(causes: list[str]) -> str:
-    """One failure string from already-sanitized causes, primary first, sharing the single bound."""
+    """One failure string from already-sanitized causes, primary first, one per line, sharing the single bound.
+
+    Causes are separated by newlines because redaction runs to the end of a
+    line: a credential construct inside one cause must not erase the next.
+    """
     share = MAX_DIAGNOSTIC_CHARS // len(causes)
-    return redact("; ".join(cause[:share] for cause in causes))
+    return redact("\n".join(cause[:share] for cause in causes))
 
 
 def names_identity(destination: Path, identity: tuple[int, int]) -> bool | None:
-    """Whether the pathname still names this attempt's file; None when that cannot be established.
+    """Tri-state: True when the pathname names this attempt's file, False when it names another, None when it could not be inspected.
 
     Meaningful only while the descriptor that produced ``identity`` is still
     open: a released inode number can be reused by another file.
@@ -212,47 +221,68 @@ def write_bytes(descriptor: int, data: bytes) -> None:
     os.fsync(descriptor)
 
 
+def close_descriptor(descriptor: int) -> None:
+    os.close(descriptor)
+
+
+IDENTITY_WORDING = {
+    False: "the path now names a different file",
+    None: "the path could not be inspected",
+}
+
+
 def write_record(record: dict[str, Any], destination: Path) -> tuple[str | None, str]:
     """Create the requested diagnostics file exclusively and report this attempt's artifact state.
 
     Returns ``(cause, state)``; ``cause`` is None only for ``written``. States
     describe the artifact this attempt created, never the namespace:
-    ``written`` (this attempt completed the record and final verification saw
-    the pathname still naming its open file), ``not_created`` (exclusive create
-    failed; nothing was created and no claim is made about the pathname),
-    ``incomplete`` (this attempt created the file but could not complete the
-    record; the pathname still named that file when checked; the bytes are not
-    valid evidence), ``unknown`` (identity could not be bound, or the pathname
-    no longer names this attempt's file). The wrapper performs no pathname
-    cleanup: no portable operation unlinks exactly the file behind an open
-    descriptor, so nothing is ever deleted at the destination.
+    ``written`` (the record was completed, the pathname still named this
+    attempt's open file at final verification, and the descriptor closed
+    cleanly), ``not_created`` (exclusive create failed; nothing was created
+    and no claim is made about the pathname), ``incomplete`` (this attempt
+    created the file but could not complete the record while the pathname
+    still named that file; the bytes are not valid evidence), ``unknown``
+    (identity could not be bound, the pathname no longer names or could not
+    be checked against this attempt's file, or the descriptor did not close
+    cleanly). The wrapper performs no cleanup at the destination: no portable
+    operation unlinks exactly the file behind an open descriptor, so nothing
+    is ever deleted there. The bytes written carry ``diagnostics_file:
+    unverified`` — a file cannot certify its own retention; only the
+    terminal stderr record states the final observation.
     """
     try:
         descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     except OSError as error:
         return f"requested diagnostics file could not be created: {redact(str(error))}", "not_created"
+    cause: str | None
     try:
-        try:
-            created = os.fstat(descriptor)
-        except OSError as error:
-            return f"requested diagnostics file identity could not be established: {redact(str(error))}", "unknown"
+        created = os.fstat(descriptor)
+    except OSError as error:
+        cause, state = f"requested diagnostics file identity could not be established: {redact(str(error))}", "unknown"
+    else:
         identity = (created.st_dev, created.st_ino)
+        payload = json.dumps({**record, "diagnostics_file": "unverified"}, sort_keys=True) + "\n"
         try:
-            write_bytes(descriptor, (json.dumps(record, sort_keys=True) + "\n").encode("utf-8"))
+            write_bytes(descriptor, payload.encode("utf-8"))
         except OSError as error:
-            cause = f"requested diagnostics file could not be written: {redact(str(error))}"
-            if names_identity(destination, identity) is True:
-                return f"{cause}; the incomplete file remains at the path and is not valid evidence", "incomplete"
-            return (
-                f"{cause}; the path no longer names the file this attempt created, and that file's bytes are "
-                "incomplete and not valid evidence",
-                "unknown",
-            )
-        if names_identity(destination, identity) is not True:
-            return "requested diagnostics file could not be verified after writing: the path no longer names the file this attempt created", "unknown"
-        return None, "written"
-    finally:
-        os.close(descriptor)
+            matches = names_identity(destination, identity)
+            written_cause = f"requested diagnostics file could not be written: {redact(str(error))}"
+            if matches is True:
+                cause, state = f"{written_cause}; the incomplete file remains at the path and is not valid evidence", "incomplete"
+            else:
+                cause, state = f"{written_cause}; {IDENTITY_WORDING[matches]}; the created file's bytes are incomplete and not valid evidence", "unknown"
+        else:
+            matches = names_identity(destination, identity)
+            if matches is True:
+                cause, state = None, "written"
+            else:
+                cause, state = f"requested diagnostics file could not be verified after writing: {IDENTITY_WORDING[matches]}", "unknown"
+    try:
+        close_descriptor(descriptor)
+    except OSError as error:
+        close_cause = f"requested diagnostics file descriptor could not be closed: {redact(str(error))}"
+        return (close_cause if cause is None else f"{cause}; {close_cause}"), "unknown"
+    return cause, state
 
 
 def classify(

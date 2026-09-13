@@ -21,8 +21,9 @@ LAST_MESSAGE_FILE = "last-message.txt"
 # echoes the prompt, command output, and the model's own text (observed
 # structure, codex-cli 0.154.0). Only runtime error lines (observed shape:
 # `<timestamp> ERROR <target>: <message>`) in that leading region are eligible
-# for auth-failure classification; nothing after the transcript begins can
-# re-enter it, so a format change under-classifies rather than misclassifies.
+# for auth-failure classification, and only when the `user` marker is present
+# to bound it; otherwise nothing is eligible, so a format change
+# under-classifies rather than misclassifies.
 DIAGNOSTIC_LINE = re.compile(r"^\S+\s+ERROR\s")
 TRANSCRIPT_START = "user"
 # Codex reports the effective configuration in a leading stderr banner
@@ -200,14 +201,17 @@ def effective(selection: dict[str, str], stdout: str, stderr: str) -> tuple[dict
 
 
 def diagnostic(stdout: str, stderr: str) -> str:
-    """Runtime error lines from the region before the transcript begins; one-way, never re-entered."""
-    lines = []
-    for line in stderr.splitlines():
-        if line == TRANSCRIPT_START:
-            break
-        if DIAGNOSTIC_LINE.match(line):
-            lines.append(line)
-    return "\n".join(lines)
+    """Runtime error lines from the region before the transcript begins.
+
+    The region exists only when the exact transcript marker is present; with
+    no marker the layout is not the one this wrapper knows, and no line is
+    eligible — a format change under-classifies (generic failure) rather than
+    letting prompt or model text become credential evidence.
+    """
+    lines = stderr.splitlines()
+    if TRANSCRIPT_START not in lines:
+        return ""
+    return "\n".join(line for line in lines[: lines.index(TRANSCRIPT_START)] if DIAGNOSTIC_LINE.match(line))
 
 
 def output(result: subprocess.CompletedProcess[bytes], launch: Launch) -> str:
