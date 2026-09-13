@@ -212,11 +212,14 @@ The project rule keeps local reviewer execution approval-gated.
 
 ### Local Codex reviewer launch
 
-When a Claude Code run selects Codex as the independent reviewer, use the
-checkout's [`codex-review`](../../scripts/codex-review) exactly as described
-for `claude-review` above, with `--codex-bin` in place of `--claude-bin`. It
-shares that wrapper's launch contract and record shape; only these Codex
-deltas differ:
+To launch Codex as the reviewer, use the checkout's
+[`codex-review`](../../scripts/codex-review) exactly as described for
+`claude-review` above, with `--codex-bin` in place of `--claude-bin`. Whether
+a given invocation satisfies the external-review role, and what provider
+choice does and does not add, is owned by
+[`external-ai-reviewer.md`](../external-ai-reviewer.md), not by the wrapper
+selected. It shares that wrapper's launch contract and record shape; only
+these Codex deltas differ:
 
 - `--model` after `--` is required: the exact selector from the
   [Codex selector table](codex.md#codex-selector-routing-and-acceptance).

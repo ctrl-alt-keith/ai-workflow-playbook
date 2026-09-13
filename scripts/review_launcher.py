@@ -50,6 +50,7 @@ class Provider:
     configured_envelope: Callable[..., dict[str, Any]]
     command: Callable[[dict[str, Any], Launch], list[str]]
     output: Callable[[subprocess.CompletedProcess[bytes], Launch], str]
+    output_field: str  # record key naming where substantive output is read from
     environment: Mapping[str, str] = field(default_factory=dict)
     require_model: bool = False
     accept: Callable[[str, dict[str, str], dict[str, str]], None] = lambda executable, selection, environment: None
@@ -301,7 +302,7 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
         {
             "status": "ok" if successful else "failed",
             f"{provider.name}_exit_code": result.returncode,
-            "output_received": bool(output.strip()),
+            provider.output_field: bool(output.strip()),
             "stderr": redact(stderr),
         }
     )

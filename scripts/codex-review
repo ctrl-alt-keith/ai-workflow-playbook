@@ -143,6 +143,7 @@ PROVIDER = Provider(
     configured_envelope=configured_envelope,
     command=command,
     output=output,
+    output_field="last_message_received",
 )
 
 

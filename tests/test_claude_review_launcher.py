@@ -174,6 +174,21 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         expected = launcher.configured_envelope({"model": "opus", "effort": "high"}, preflight=False)
         self.assertEqual(record["configured_envelope"], expected)
 
+    def test_record_keeps_the_existing_stdout_received_field(self):
+        """Archived governed-review diagnostics already carry this key; keep its name and meaning."""
+        with_output, _ = self.run_with_recorded_arguments(prompt=b"Review\n", output="cat\n")
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            diagnostics_file = root / "diagnostics.json"
+            executable = self.make_fake_claude(root, "exit 0\n")
+            completed = self.run_launcher(
+                executable, "--diagnostics-file", str(diagnostics_file), prompt=b"Review\n"
+            )
+            without_output = json.loads(diagnostics_file.read_text(encoding="utf-8"))
+        self.assertEqual(completed.returncode, 70)
+        self.assertIs(with_output["stdout_received"], True)
+        self.assertIs(without_output["stdout_received"], False)
+
     def test_review_requires_candidate_commit(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             executable = self.make_fake_claude(Path(temporary_directory), "printf 'review\n'\n")

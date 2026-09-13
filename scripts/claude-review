@@ -99,6 +99,7 @@ PROVIDER = Provider(
     configured_envelope=configured_envelope,
     command=command,
     output=output,
+    output_field="stdout_received",
 )
 
 
