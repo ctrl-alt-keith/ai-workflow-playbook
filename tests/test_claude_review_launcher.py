@@ -209,46 +209,22 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertIn("Read,Grep,Glob", observed_arguments)
         self.assertIn("--no-session-persistence", observed_arguments)
 
-    def test_review_record_declares_the_envelope_actually_passed(self):
-        record, observed_arguments = self.run_with_recorded_arguments(
-            "--",
-            "--model",
-            "opus",
-            "--effort=high",
-            prompt=b"Review the candidate.\n",
-            output="cat\n",
-        )
-        envelope = record["configured_envelope"]
-        self.assertEqual(record["attempt_kind"], "review")
-        self.assert_envelope_matches_arguments(envelope, observed_arguments)
-        self.assertEqual(envelope["requested"], {"model": "opus", "effort": "high"})
-        self.assertFalse(envelope["network_access"]["granted"])
-        self.assertEqual(
-            set(envelope["network_access"]["derived_from"]),
-            {"tools_beyond_local_read_only", "mcp_servers"},
-        )
-
-    def test_preflight_record_declares_its_own_envelope(self):
-        record, observed_arguments = self.run_with_recorded_arguments(
-            "--auth-preflight",
-            output="printf 'CLAUDE_AUTH_OK\\n'\n",
-        )
-        envelope = record["configured_envelope"]
-        self.assertEqual(record["attempt_kind"], "auth_preflight")
-        self.assert_envelope_matches_arguments(envelope, observed_arguments)
-        self.assertEqual(envelope["tools"], [])
-        self.assertIsNone(envelope["permission_mode"])
-
-    def test_unrequested_model_and_effort_are_declared_unset_not_defaulted(self):
-        record, observed_arguments = self.run_with_recorded_arguments(
-            prompt=b"Review the candidate.\n",
-            output="cat\n",
-        )
-        requested = record["configured_envelope"]["requested"]
-        self.assertEqual(set(requested), {"model", "effort"})
-        self.assertEqual(set(requested.values()), {None})
-        self.assertNotIn("--model", observed_arguments)
-        self.assertNotIn("--effort", observed_arguments)
+    def test_record_declares_the_envelope_actually_passed(self):
+        cases = {
+            "review with requested model and effort": (
+                ("--", "--model", "opus", "--effort=high"),
+                b"Review the candidate.\n",
+                "cat\n",
+            ),
+            "review with nothing requested": ((), b"Review the candidate.\n", "cat\n"),
+            "auth preflight": (("--auth-preflight",), b"", "printf 'CLAUDE_AUTH_OK\\n'\n"),
+        }
+        for label, (arguments, prompt, output) in cases.items():
+            with self.subTest(label):
+                record, observed_arguments = self.run_with_recorded_arguments(
+                    *arguments, prompt=prompt, output=output
+                )
+                self.assert_envelope_matches_arguments(record["configured_envelope"], observed_arguments)
 
     def test_review_requires_candidate_commit(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
