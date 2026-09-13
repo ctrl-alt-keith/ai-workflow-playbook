@@ -186,6 +186,20 @@ class CodexReviewLauncherTests(unittest.TestCase):
                 self.assertEqual(completed.returncode, code, completed.stderr.decode())
                 self.assertIn(message, completed.stderr)
                 self.assertEqual(completed.stdout, b"CODEX_AUTH_OK\n" if code == 0 else b"")
+                if code != 0:  # on a clean provider exit the selection failure is the primary cause
+                    record = json.loads(completed.stderr.decode().split("diagnostics: ", 1)[1])
+                    self.assertIn(message.decode(), record["failure"].split(";")[0])
+
+    def test_provider_exit_is_primary_over_missing_selector_evidence(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_codex(
+                Path(temporary_directory), "printf 'review\\n' > \"$out\"\nexit 2\n", banner=""
+            )
+            completed = self.run_launcher(executable, prompt=b"Review\n")
+        record = json.loads(completed.stderr.decode().split("diagnostics: ", 1)[1])
+        self.assertEqual(completed.returncode, 70)
+        self.assertTrue(record["failure"].startswith("Codex exited 2 despite producing output; "))
+        self.assertIn("did not report its effective model", record["failure"])
 
     def test_unreadable_model_catalog_is_wrapper_failure(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -243,7 +257,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
             record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
             diagnostics_mode = stat.S_IMODE(diagnostics_file.stat().st_mode)
         self.assertEqual(completed.returncode, 78)
-        self.assertEqual(record["failure"], "Codex authentication needs operator attention")
+        self.assertTrue(record["failure"].startswith("Codex authentication needs operator attention"))
         self.assertIn("[REDACTED]", record["stderr"])
         for secret in ("super-secret-value", "another-secret", "sk-proj-bare-secret"):
             self.assertNotIn(secret, record["stderr"])

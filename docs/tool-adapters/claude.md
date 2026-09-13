@@ -207,10 +207,18 @@ and human transition authority remain outside the wrapper.
 The wrapper captures Claude output and status. A review succeeds only when
 Claude exits successfully with non-empty output. Diagnostics are bounded and
 redact obvious credentials; `--diagnostics-file` can retain them at a new
-absolute path, and a requested file that cannot be written fails the attempt
-and its record even when the provider succeeded, leaving no partial file
-behind. Every string in the record is bounded and credential-redacted,
-including quoted JSON-style credential fields. The diagnostics record declares the configured envelope of the
+absolute path with exclusive creation. A requested file that cannot be
+written fails the attempt and its record even when the provider succeeded;
+the wrapper removes a file it created but could not complete, and when that
+removal also fails the record says the destination holds incomplete,
+untrusted bytes (`diagnostics_file: residue`) rather than presenting it as
+evidence. When several failures coincide, the record's `failure` lists the
+primary cause first — provider exit, then unacceptable output, then
+effective-selection evidence, then scratch cleanup, then the diagnostics
+write — with an established authentication failure taking precedence and
+keeping its exit code; secondary causes are preserved after it. Every string
+in the record is bounded and credential-redacted, including quoted JSON-style
+credential fields. The diagnostics record declares the configured envelope of the
 branch actually taken, preflight or review, under the
 [exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract).
 The project rule keeps local reviewer execution approval-gated.

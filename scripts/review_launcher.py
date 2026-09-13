@@ -177,55 +177,105 @@ def bounded(value: Any) -> Any:
     return value
 
 
-def write_record(record: dict[str, Any], destination: Path) -> str | None:
-    """Create the requested diagnostics file exclusively; return the bounded error when it cannot be written.
+def compose(causes: list[str]) -> str:
+    """One failure string from already-sanitized causes, primary first, sharing the single bound."""
+    share = MAX_DIAGNOSTIC_CHARS // len(causes)
+    return redact("; ".join(cause[:share] for cause in causes))
 
-    A file this call created but could not finish writing is removed again, so
-    a failed write never leaves a partial or pre-failure record at the path.
+
+def write_record(record: dict[str, Any], destination: Path) -> tuple[str | None, str]:
+    """Create the requested diagnostics file exclusively.
+
+    Returns ``(cause, state)``: ``cause`` is None on success, otherwise the
+    bounded failure text; ``state`` is what is durably at the path afterwards:
+    ``written``, ``absent`` (nothing created, or removed after a failed write),
+    or ``residue`` (created, write failed, removal also failed — the bytes are
+    incomplete and untrusted). Only a file this call created is ever removed.
     """
     try:
         descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     except OSError as error:
-        return redact(str(error))
+        return f"requested diagnostics file could not be created: {redact(str(error))}", "absent"
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
             stream.write(json.dumps(record, sort_keys=True) + "\n")
     except OSError as error:
+        cause = f"requested diagnostics file could not be written: {redact(str(error))}"
         try:
             os.unlink(destination)
-        except OSError:
-            pass
-        return redact(str(error))
-    return None
+        except OSError as removal:
+            return (
+                f"{cause}; the incomplete file could not be removed and may contain incomplete, "
+                f"untrusted bytes ({redact(str(removal))})",
+                "residue",
+            )
+        return cause, "absent"
+    return None, "written"
+
+
+def classify(
+    provider: Provider,
+    *,
+    preflight: bool,
+    returncode: int,
+    received: bool,
+    expected: bool,
+    substitution: str | None,
+    cleanup_error: str | None,
+) -> list[str]:
+    """The result-classification policy for a returned provider attempt, in one place.
+
+    Returns the ordered causes: the first is primary — the most fundamental
+    reason the result cannot be accepted — and the rest are preserved as
+    secondary. Order: provider process failure; unacceptable output (missing
+    canary or empty review) on a clean exit; effective-selection evidence
+    failure; scratch cleanup failure. Authentication classification is layered
+    on top by the caller from the qualified diagnostic surface.
+    """
+    causes: list[str] = []
+    if returncode != 0:
+        qualifier = "despite producing output" if received else "without substantive output"
+        causes.append(f"{provider.label} exited {returncode} {qualifier}")
+    elif not expected:
+        causes.append(
+            f"{provider.label} preflight did not return the expected canary response"
+            if preflight
+            else f"{provider.label} did not return substantive review output"
+        )
+    if substitution is not None:
+        causes.append(substitution)
+    if cleanup_error is not None:
+        causes.append(f"{provider.label} temporary-directory cleanup failed: {cleanup_error}")
+    return causes
 
 
 def finish(
     provider: Provider,
     record: dict[str, Any],
     *,
-    failure: str | None,
+    causes: list[str],
     auth_failure: bool = False,
     destination: Path | None,
     output: str = "",
 ) -> int:
     """The one result path: emit the record, then exit with the primary classification.
 
-    The primary failure stays primary; a failed write of the requested
-    diagnostics file is appended as an additional cause and fails an otherwise
-    successful attempt. Every cause passes through ``redact`` before it can
-    enter the record, so composition never reintroduces raw text; the record
-    as a whole is bounded once, and the corrected record goes to stderr only.
+    ``causes`` is the policy-ordered list from ``classify`` (or a single
+    pre-launch failure); the first entry stays primary. A failed write of the
+    requested diagnostics file is appended as a further cause and fails an
+    otherwise successful attempt. Every cause passes through ``redact`` before
+    it can enter the record, so composition never reintroduces raw text; the
+    record as a whole is bounded once, and the corrected record goes to stderr.
     """
-    causes = [redact(failure)] if failure else []
-    record = bounded({**record, "status": "failed" if causes else "ok", **({"failure": causes[0]} if causes else {})})
+    causes = [redact(cause) for cause in causes]
+    record = bounded({**record, "status": "failed" if causes else "ok", **({"failure": compose(causes)} if causes else {})})
     if destination is not None:
-        write_error = write_record(record, destination)
-        if write_error is not None:
-            causes.append(f"requested diagnostics file could not be written: {write_error}")
+        write_cause, state = write_record(record, destination)
+        record["diagnostics_file"] = state
+        if write_cause is not None:
+            causes.append(write_cause)
             record["status"] = "failed"
-            # Already-sanitized causes share the one bound so neither can crowd the other out.
-            share = MAX_DIAGNOSTIC_CHARS // len(causes)
-            record["failure"] = redact("; ".join(cause[:share] for cause in causes))
+            record["failure"] = compose(causes)
     print(f"{provider.name}-review diagnostics: {json.dumps(record, sort_keys=True)}", file=sys.stderr)
     if causes:
         return AUTH_FAILURE_EXIT if auth_failure else REVIEWER_FAILURE_EXIT
@@ -306,7 +356,7 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     }
 
     def fail(failure: str, destination: Path | None) -> int:
-        return finish(provider, record, failure=failure, destination=destination)
+        return finish(provider, record, causes=[failure], destination=destination)
 
     try:
         validate_diagnostics_destination(args.diagnostics_file)
@@ -370,35 +420,30 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     stderr = result.stderr.decode("utf-8", errors="replace")
     received = bool(output.strip())
     expected = output.strip() == provider.auth_response if preflight else received
-    if cleanup_error is not None:
-        stderr = "\n".join(filter(None, (stderr, f"temporary-directory cleanup failed: {cleanup_error}")))
     effective, substitution = provider.effective(selection, stdout, stderr)
-    successful = result.returncode == 0 and expected and cleanup_error is None and substitution is None
-    auth_failure = not successful and bool(provider.auth_failure.search(provider.diagnostic(stdout, stderr).lower()))
+    causes = classify(
+        provider,
+        preflight=preflight,
+        returncode=result.returncode,
+        received=received,
+        expected=expected,
+        substitution=substitution,
+        cleanup_error=cleanup_error,
+    )
+    # Authentication is established only from the provider's qualified diagnostic surface and
+    # only for a failed attempt; when established it is the primary classification.
+    auth_failure = bool(causes) and bool(provider.auth_failure.search(provider.diagnostic(stdout, stderr).lower()))
+    if auth_failure:
+        causes.insert(0, f"{provider.label} authentication needs operator attention")
     record.update({f"{provider.name}_exit_code": result.returncode, provider.output_field: received, "stderr": stderr})
     if effective:
         record["effective"] = effective
-    failure = None
-    if not successful:
-        failure = (
-            f"{provider.label} authentication needs operator attention"
-            if auth_failure
-            else f"{provider.label} temporary-directory cleanup failed"
-            if cleanup_error is not None
-            else substitution
-            if substitution is not None
-            else f"{provider.label} preflight did not return the expected canary response"
-            if preflight and not expected
-            else f"{provider.label} exited {result.returncode} despite producing output"
-            if result.returncode != 0 and received
-            else f"{provider.label} did not return substantive review output"
-        )
-        if stdout:
-            record["stdout"] = stdout
+    if causes and stdout:
+        record["stdout"] = stdout
     return finish(
         provider,
         record,
-        failure=failure,
+        causes=causes,
         auth_failure=auth_failure,
         destination=args.diagnostics_file,
         output=f"{provider.auth_response}\n" if preflight else output,
