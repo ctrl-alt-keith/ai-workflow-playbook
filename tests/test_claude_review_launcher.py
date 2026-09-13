@@ -1,27 +1,17 @@
 import json
-import importlib.machinery
-import importlib.util
 import os
 from pathlib import Path
 import pwd
-import subprocess
 import stat
+import subprocess
 import tempfile
 import unittest
 
+from launcher_support import ROOT, current_commit, load_launcher, run_launcher
 
-ROOT = Path(__file__).resolve().parents[1]
+
 LAUNCHER = ROOT / "scripts" / "claude-review"
 CODEX_RULE = ROOT / ".codex" / "rules" / "claude-review.rules"
-
-
-def load_launcher(name: str):
-    loader = importlib.machinery.SourceFileLoader(name, str(LAUNCHER))
-    spec = importlib.util.spec_from_loader(loader.name, loader)
-    assert spec is not None
-    module = importlib.util.module_from_spec(spec)
-    loader.exec_module(module)
-    return module
 
 
 class ClaudeReviewLauncherTests(unittest.TestCase):
@@ -36,34 +26,8 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         executable.chmod(0o700)
         return executable
 
-    def current_commit(self) -> str:
-        return subprocess.run(
-            ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
-            check=True,
-            stdout=subprocess.PIPE,
-            text=True,
-        ).stdout.strip()
-
-    def run_launcher(
-        self,
-        executable: Path,
-        *arguments: str,
-        prompt: bytes = b"",
-        candidate_commit: str | None = "current",
-    ) -> subprocess.CompletedProcess[bytes]:
-        command = [str(LAUNCHER), "--claude-bin", str(executable)]
-        if "--auth-preflight" not in arguments and candidate_commit is not None:
-            commit = self.current_commit() if candidate_commit == "current" else candidate_commit
-            command.extend(("--candidate-commit", commit))
-        command.extend(arguments)
-        return subprocess.run(
-            command,
-            input=prompt,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-            cwd=ROOT,
-        )
+    def run_launcher(self, executable: Path, *arguments: str, **options) -> subprocess.CompletedProcess[bytes]:
+        return run_launcher(LAUNCHER, "--claude-bin", executable, *arguments, **options)
 
     def run_with_recorded_arguments(self, *arguments: str, prompt: bytes = b"", output: str):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -107,22 +71,17 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr.decode())
         self.assertEqual(completed.stdout, b"CLAUDE_AUTH_OK\n")
 
-    def test_preflight_isolated_from_connectors_and_memory(self):
+    def test_preflight_isolated_from_memory_and_instruction_files(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
-            arguments_file = root / "arguments"
             environment_file = root / "environment"
             executable = self.make_fake_claude(
                 root,
-                f"printf '%s\\n' \"$@\" > {arguments_file}\nprintf '%s\\n' \"$CLAUDE_CODE_DISABLE_AUTO_MEMORY\" \"$CLAUDE_CODE_DISABLE_CLAUDE_MDS\" > {environment_file}\nprintf 'CLAUDE_AUTH_OK\\n'\n",
+                f"printf '%s\\n' \"$CLAUDE_CODE_DISABLE_AUTO_MEMORY\" \"$CLAUDE_CODE_DISABLE_CLAUDE_MDS\" > {environment_file}\nprintf 'CLAUDE_AUTH_OK\\n'\n",
             )
             completed = self.run_launcher(executable, "--auth-preflight")
-            observed_arguments = arguments_file.read_text(encoding="utf-8").splitlines()
             observed_environment = environment_file.read_text(encoding="utf-8").splitlines()
         self.assertEqual(completed.returncode, 0, completed.stderr.decode())
-        self.assertIn("--strict-mcp-config", observed_arguments)
-        self.assertIn('{"mcpServers":{}}', observed_arguments)
-        self.assertIn("--setting-sources", observed_arguments)
         self.assertEqual(observed_environment, ["1", "1"])
 
     def test_non_auth_preflight_failure_is_not_reported_as_reauthentication(self):
@@ -145,42 +104,16 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 78)
         self.assertIn(b"authentication needs operator attention", completed.stderr)
 
-    def test_temporary_directory_cleanup_failure_is_bounded(self):
-        launcher = load_launcher("claude_review_cleanup_fixture")
-
-        class FailingDirectory:
-            def cleanup(self):
-                raise OSError("fixture cleanup failure")
-
-        self.assertEqual(launcher.cleanup_temporary_directory(FailingDirectory()), "fixture cleanup failure")
-
-    def test_review_delivers_prompt_on_stdin_and_owns_restricted_arguments(self):
+    def test_review_delivers_prompt_on_stdin_with_verified_candidate_context(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
-            root = Path(temporary_directory)
-            arguments_file = root / "arguments"
-            executable = self.make_fake_claude(
-                root,
-                f"printf '%s\\n' \"$@\" > {arguments_file}\ncat\n",
-            )
-            completed = self.run_launcher(
-                executable,
-                "--",
-                "--model",
-                "opus",
-                "--effort=high",
-                prompt=b"Review the candidate.\n",
-            )
-            observed_arguments = arguments_file.read_text(encoding="utf-8").splitlines()
+            executable = self.make_fake_claude(Path(temporary_directory), "cat\n")
+            completed = self.run_launcher(executable, prompt=b"Review the candidate.\n")
         self.assertEqual(completed.returncode, 0, completed.stderr.decode())
         self.assertIn(b"Verified review selection:", completed.stdout)
         self.assertIn(str(ROOT).encode(), completed.stdout)
-        self.assertIn(self.current_commit().encode(), completed.stdout)
+        self.assertIn(current_commit().encode(), completed.stdout)
         self.assertIn(b"uncommitted worktree bytes were validated", completed.stdout)
         self.assertTrue(completed.stdout.endswith(b"Review question:\nReview the candidate.\n"))
-        self.assertEqual(observed_arguments[:3], ["-p", "--model", "opus"])
-        self.assertIn("--tools", observed_arguments)
-        self.assertIn("Read,Grep,Glob", observed_arguments)
-        self.assertIn("--no-session-persistence", observed_arguments)
 
     ENVELOPE_CASES = {
         "review with requested model and effort": (
@@ -193,7 +126,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
     }
 
     def test_record_declares_the_envelope_actually_passed(self):
-        launcher = load_launcher("claude_review_envelope_fixture")
+        launcher = load_launcher(LAUNCHER, "claude_review_envelope_fixture")
         for label, (arguments, prompt, output) in self.ENVELOPE_CASES.items():
             with self.subTest(label):
                 record, observed_arguments = self.run_with_recorded_arguments(
@@ -203,7 +136,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 self.assertEqual(observed_arguments, rendered)
 
     def test_record_declares_network_reach_from_configured_tools_and_servers(self):
-        launcher = load_launcher("claude_review_network_fixture")
+        launcher = load_launcher(LAUNCHER, "claude_review_network_fixture")
         self.assertEqual(set(launcher.LOCAL_READ_ONLY_TOOLS), {"Read", "Grep", "Glob"})
         for label, (arguments, prompt, output) in self.ENVELOPE_CASES.items():
             with self.subTest(label):
@@ -218,7 +151,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 self.assertFalse(network["granted"])
 
     def test_candidate_mismatch_record_retains_the_configured_envelope(self):
-        launcher = load_launcher("claude_review_mismatch_fixture")
+        launcher = load_launcher(LAUNCHER, "claude_review_mismatch_fixture")
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
             diagnostics_file = root / "diagnostics.json"
@@ -238,7 +171,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 70)
         self.assertIn("candidate commit mismatch", record["failure"])
         self.assertEqual(record["attempt_kind"], "review")
-        expected = launcher.configured_envelope(["--model", "opus", "--effort", "high"], preflight=False)
+        expected = launcher.configured_envelope({"model": "opus", "effort": "high"}, preflight=False)
         self.assertEqual(record["configured_envelope"], expected)
 
     def test_review_requires_candidate_commit(self):

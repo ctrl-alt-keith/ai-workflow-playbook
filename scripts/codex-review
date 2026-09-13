@@ -3,117 +3,41 @@
 
 from __future__ import annotations
 
-import argparse
 import json
-import os
 from pathlib import Path
-import pwd
 import re
 import subprocess
 import sys
-import tempfile
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-AUTH_FAILURE_EXIT = 78
-REVIEWER_FAILURE_EXIT = 70
-AUTH_PREFLIGHT_PROMPT = b"Reply exactly: CODEX_AUTH_OK\n"
-AUTH_PREFLIGHT_RESPONSE = "CODEX_AUTH_OK"
-MAX_DIAGNOSTIC_CHARS = 1_000
-ALLOWED_OPTIONS = {"--model", "--effort"}
-OPTION_VALUE = re.compile(r"[A-Za-z0-9._-]+")
-EXACT_COMMIT = re.compile(r"[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?")
+from review_launcher import Launch, Provider, main, redact  # noqa: E402
+
+
 LAST_MESSAGE_FILE = "last-message.txt"
-
-
-def redact(value: str) -> str:
-    """Keep operational diagnostics without retaining obvious credentials."""
-    value = value[:MAX_DIAGNOSTIC_CHARS]
-    value = re.sub(
-        r"(?i)\bauthorization\b\s*[:=]\s*(?:bearer\s+)?[^\s,;]+",
-        "authorization=[REDACTED]",
-        value,
-    )
-    value = re.sub(
-        r"(?i)\b(token|secret|api[_-]?key|credential|cookie)\b\s*[:=]\s*[^\s,;]+",
-        r"\1=[REDACTED]",
-        value,
-    )
-    value = re.sub(r"\b(?:sk|gho|ghp)[_-][A-Za-z0-9_=-]+", "[REDACTED]", value)
-    return value
-
-
-def parse_codex_options(arguments: list[str]) -> dict[str, str]:
-    """Allow only an exact model selector and effort; the wrapper owns review controls."""
-    selected: dict[str, str] = {}
-    index = 0
-    while index < len(arguments):
-        argument = arguments[index]
-        option, separator, inline_value = argument.partition("=")
-        if option not in ALLOWED_OPTIONS:
-            raise ValueError(f"unsupported Codex option: {argument}")
-        if option in selected:
-            raise ValueError(f"{option} may be provided only once")
-        if separator:
-            value = inline_value
-        else:
-            if index + 1 >= len(arguments):
-                raise ValueError(f"{option} requires a value")
-            value = arguments[index + 1]
-            index += 1
-        if not OPTION_VALUE.fullmatch(value):
-            raise ValueError(f"{option} requires a plain selector value")
-        selected[option.lstrip("-")] = value
-        index += 1
-    if "model" not in selected:
-        raise ValueError("--model is required: pass the exact Codex selector after --")
-    return selected
-
-
-def codex_environment() -> dict[str, str]:
-    """Use one coherent effective-account context for every Codex child."""
-    account = pwd.getpwuid(os.geteuid())
-    environment = os.environ.copy()
-    environment.update(
-        {
-            "HOME": account.pw_dir,
-            "USER": account.pw_name,
-            "LOGNAME": account.pw_name,
-        }
-    )
-    return environment
-
-
-def resolve_codex(path_value: str | None, environment: dict[str, str]) -> tuple[str, str]:
-    if path_value is None:
-        raise ValueError("--codex-bin is required")
-    requested = Path(path_value)
-    if not requested.is_absolute():
-        raise ValueError("--codex-bin must be an absolute path")
-    resolved = requested.resolve(strict=True)
-    if not resolved.is_file() or not os.access(resolved, os.X_OK):
-        raise ValueError("--codex-bin must resolve to an executable file")
-    try:
-        result = subprocess.run(
-            [str(resolved), "--version"],
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-            text=True,
-            timeout=5,
-            env=environment,
-        )
-    except (OSError, subprocess.TimeoutExpired) as error:
-        raise ValueError(f"could not obtain Codex version: {error}") from error
-    version = (result.stdout or result.stderr).strip()
-    if result.returncode != 0 or not version:
-        raise ValueError("the Codex executable did not return a version")
-    return str(resolved), redact(version)
+AUTH_FAILURE = re.compile(
+    r"\b(?:"
+    r"not logged in|"
+    r"codex login|"
+    r"failed to authenticate|"
+    r"authentication[_ ](?:error|failed)|"
+    r"refresh token|"
+    r"token (?:has )?expired|"
+    r"invalid (?:api[ _-]?key|authentication credentials)|"
+    r"401[ :_-]+unauthorized|"
+    r"unauthorized"
+    r")\b"
+)
 
 
 def require_accepted_selector(executable: str, selection: dict[str, str], environment: dict[str, str]) -> None:
-    """Reject a selector the runtime's own model catalog does not list before any task starts."""
+    """Reject a selector the runtime's own model catalog does not list before any task starts.
+
+    ``codex debug models`` is observed behavior of codex-cli 0.154.0 (checked
+    2026-09-13), not a documented CLI contract; an unreadable catalog fails
+    closed rather than falling back to the launch.
+    """
     try:
         result = subprocess.run(
             [executable, "debug", "models"],
@@ -130,10 +54,9 @@ def require_accepted_selector(executable: str, selection: dict[str, str], enviro
     try:
         if result.returncode != 0:
             raise ValueError(redact(result.stderr.strip()) or f"exit {result.returncode}")
-        models = json.loads(result.stdout)["models"]
         catalog = {
             entry["slug"]: [level["effort"] for level in entry.get("supported_reasoning_levels", [])]
-            for entry in models
+            for entry in json.loads(result.stdout)["models"]
         }
     except (KeyError, TypeError, ValueError) as error:
         raise ValueError(f"could not read the Codex model catalog: {error}") from error
@@ -145,65 +68,15 @@ def require_accepted_selector(executable: str, selection: dict[str, str], enviro
         raise ValueError(f"the Codex runtime does not accept effort {effort} for {model}")
 
 
-def validate_diagnostics_destination(destination: Path | None) -> None:
-    if destination is None:
-        return
-    if not destination.is_absolute() or destination.exists() or destination.is_symlink():
-        raise ValueError("--diagnostics-file must be a new absolute path")
-    if not destination.parent.is_dir():
-        raise ValueError("--diagnostics-file parent must exist")
-
-
-def diagnostics(record: dict[str, Any], destination: Path | None) -> None:
-    encoded = json.dumps(record, sort_keys=True)
-    print(f"codex-review diagnostics: {encoded}", file=sys.stderr)
-    if destination is None:
-        return
-    try:
-        descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
-            stream.write(encoded + "\n")
-    except OSError as error:
-        print(f"codex-review diagnostics file could not be written: {redact(str(error))}", file=sys.stderr)
-
-
-def failure_is_auth_shaped(stdout: str, stderr: str) -> bool:
-    combined = f"{stdout}\n{stderr}".lower()
-    return bool(
-        re.search(
-            r"\b(?:"
-            r"not logged in|"
-            r"codex login|"
-            r"failed to authenticate|"
-            r"authentication[_ ](?:error|failed)|"
-            r"refresh token|"
-            r"token (?:has )?expired|"
-            r"invalid (?:api[ _-]?key|authentication credentials)|"
-            r"401[ :_-]+unauthorized|"
-            r"unauthorized"
-            r")\b",
-            combined,
-        )
-    )
-
-
-def cleanup_temporary_directory(directory: tempfile.TemporaryDirectory[str]) -> str | None:
-    try:
-        directory.cleanup()
-    except OSError as error:
-        return redact(str(error))
-    return None
-
-
 def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[str, Any]:
     """Declare the envelope the wrapper configures; codex_arguments() renders it.
 
     A ``None`` control was not set by the wrapper: the executor default applies
     and is not observed here. Requested model and effort are requests, not the
     effective runtime values. Skipping the user config drops user-configured
-    MCP servers; a trusted checkout's own project-scoped config is not
-    overridden, and sandbox network semantics are not observed, so network
-    reach is not established from the wrapper's controls alone.
+    MCP servers; a trusted checkout's project-scoped config is not overridden
+    and sandbox network semantics are not observed, so network reach is not
+    established from these controls alone.
     """
     return {
         "requested": {"model": selection["model"], "effort": selection.get("effort")},
@@ -228,14 +101,13 @@ def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[s
 
 
 def codex_arguments(envelope: dict[str, Any]) -> list[str]:
-    """Render the declared envelope as the Codex argv; the run adds only its output path, root, and stdin marker."""
+    """Render the declared envelope as the Codex argv; command() adds only the run's output path, root, and stdin marker."""
     arguments = ["exec"]
     if not envelope["user_config_loaded"]:
         arguments.append("--ignore-user-config")
     if envelope["ephemeral"]:
         arguments.append("--ephemeral")
-    arguments.extend(("--sandbox", envelope["sandbox"], "--color", "never"))
-    arguments.extend(("--model", envelope["requested"]["model"]))
+    arguments.extend(("--sandbox", envelope["sandbox"], "--color", "never", "--model", envelope["requested"]["model"]))
     if envelope["requested"]["effort"] is not None:
         arguments.extend(("--config", f'model_reasoning_effort="{envelope["requested"]["effort"]}"'))
     for key in ("approval_policy", "web_search"):
@@ -246,188 +118,33 @@ def codex_arguments(envelope: dict[str, Any]) -> list[str]:
     return arguments
 
 
-def run_arguments(envelope: dict[str, Any], last_message: Path, repository: str | None) -> list[str]:
-    arguments = [*codex_arguments(envelope), "--output-last-message", str(last_message)]
-    if repository is not None:
-        arguments.extend(("--cd", repository))
+def command(envelope: dict[str, Any], launch: Launch) -> list[str]:
+    arguments = [*codex_arguments(envelope), "--output-last-message", str(launch.scratch / LAST_MESSAGE_FILE)]
+    if launch.repository is not None:
+        arguments.extend(("--cd", launch.repository))
     arguments.append("-")
     return arguments
 
 
-def resolve_candidate(expected_commit: str, environment: dict[str, str]) -> tuple[str, str]:
-    """Resolve the current worktree and require its HEAD to match exactly."""
-    if not EXACT_COMMIT.fullmatch(expected_commit):
-        raise ValueError("--candidate-commit must be an exact commit object ID")
-    candidate = Path.cwd().resolve(strict=True)
-    results = []
-    for arguments in (("--show-toplevel",), ("--verify", "HEAD^{commit}")):
-        result = subprocess.run(
-            ["git", "-C", str(candidate), "rev-parse", *arguments],
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-            text=True,
-            env={**environment, "GIT_OPTIONAL_LOCKS": "0", "LC_ALL": "C"},
-        )
-        if result.returncode != 0 or not result.stdout.strip():
-            raise ValueError("current directory is not a readable Git worktree")
-        results.append(result.stdout.strip())
-    repository = str(Path(results[0]).resolve(strict=True))
-    observed_commit = results[1].lower()
-    expected_commit = expected_commit.lower()
-    if observed_commit != expected_commit:
-        raise ValueError(
-            f"candidate commit mismatch: expected {expected_commit}, observed {observed_commit}"
-        )
-    return repository, observed_commit
-
-
-def review_prompt(prompt: bytes, repository: str, commit: str) -> bytes:
-    context = (
-        "Verified review selection:\n"
-        f"- repository/worktree: {json.dumps(repository)}\n"
-        f"- HEAD commit at launch: {commit}\n"
-        "Use this commit as the candidate identity. The wrapper does not claim that "
-        "uncommitted worktree bytes were validated.\n\n"
-        "Review question:\n"
-    )
-    return context.encode("utf-8") + prompt
-
-
-def read_last_message(last_message: Path) -> str:
+def output(result: subprocess.CompletedProcess[bytes], launch: Launch) -> str:
     try:
-        return last_message.read_text(encoding="utf-8", errors="replace")
+        return (launch.scratch / LAST_MESSAGE_FILE).read_text(encoding="utf-8", errors="replace")
     except OSError:
         return ""
 
 
-def parse_arguments(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Run a constrained Codex review; provide the review prompt on standard input."
-    )
-    parser.add_argument("--codex-bin")
-    parser.add_argument("--auth-preflight", action="store_true")
-    parser.add_argument("--diagnostics-file", type=Path)
-    parser.add_argument("--candidate-commit")
-    parser.add_argument("codex_args", nargs=argparse.REMAINDER)
-    args = parser.parse_args(argv)
-    if args.codex_args[:1] == ["--"]:
-        args.codex_args = args.codex_args[1:]
-    return args
-
-
-def main(argv: list[str] | None = None) -> int:
-    args = parse_arguments(argv or sys.argv[1:])
-    preflight = args.auth_preflight
-    attempt_kind = "auth_preflight" if preflight else "review"
-    try:
-        validate_diagnostics_destination(args.diagnostics_file)
-    except ValueError as error:
-        diagnostics(
-            {"kind": "codex_review", "attempt_kind": attempt_kind, "status": "failed", "failure": redact(str(error))},
-            None,
-        )
-        return REVIEWER_FAILURE_EXIT
-    try:
-        environment = codex_environment()
-        executable, version = resolve_codex(args.codex_bin, environment)
-        selection = parse_codex_options(args.codex_args)
-        envelope = configured_envelope(selection, preflight=preflight)
-        prompt = AUTH_PREFLIGHT_PROMPT if preflight else sys.stdin.buffer.read()
-        if not preflight and not prompt.strip():
-            raise ValueError("review prompt must be supplied on standard input")
-        if preflight and args.candidate_commit is not None:
-            raise ValueError("--candidate-commit is only valid for review execution")
-        if not preflight and args.candidate_commit is None:
-            raise ValueError("--candidate-commit is required for review execution")
-        require_accepted_selector(executable, selection, environment)
-    except (OSError, ValueError) as error:
-        diagnostics(
-            {"kind": "codex_review", "attempt_kind": attempt_kind, "status": "failed", "failure": redact(str(error))},
-            args.diagnostics_file,
-        )
-        return REVIEWER_FAILURE_EXIT
-
-    temporary_directory = tempfile.TemporaryDirectory(prefix="codex-review-")
-    last_message_file = Path(temporary_directory.name) / LAST_MESSAGE_FILE
-    candidate: dict[str, str] | None = None
-    try:
-        if preflight:
-            repository = None
-            cwd = temporary_directory.name
-        else:
-            repository, commit = resolve_candidate(args.candidate_commit, environment)
-            candidate = {"repository": repository, "commit": commit}
-            prompt = review_prompt(prompt, repository, commit)
-            cwd = repository
-        command = [executable, *run_arguments(envelope, last_message_file, repository)]
-        result = subprocess.run(
-            command,
-            input=prompt,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-            cwd=cwd,
-            env=environment,
-        )
-        last_message = read_last_message(last_message_file)
-    except (OSError, ValueError) as error:
-        cleanup_temporary_directory(temporary_directory)
-        diagnostics(
-            {
-                "kind": "codex_review",
-                "attempt_kind": attempt_kind,
-                "status": "failed",
-                "codex_version": version,
-                "failure": redact(str(error)),
-                "configured_envelope": envelope,
-            },
-            args.diagnostics_file,
-        )
-        return REVIEWER_FAILURE_EXIT
-    cleanup_error = cleanup_temporary_directory(temporary_directory)
-
-    stdout = result.stdout.decode("utf-8", errors="replace")
-    stderr = result.stderr.decode("utf-8", errors="replace")
-    if preflight:
-        successful = result.returncode == 0 and last_message.strip() == AUTH_PREFLIGHT_RESPONSE
-    else:
-        successful = result.returncode == 0 and bool(last_message.strip())
-    if cleanup_error is not None:
-        successful = False
-        stderr = "\n".join(filter(None, (stderr, f"temporary-directory cleanup failed: {cleanup_error}")))
-    auth_failure = preflight and failure_is_auth_shaped(stdout, stderr)
-    record = {
-        "kind": "codex_review",
-        "attempt_kind": attempt_kind,
-        "status": "ok" if successful else "failed",
-        "codex_version": version,
-        "codex_exit_code": result.returncode,
-        "last_message_received": bool(last_message.strip()),
-        "stderr": redact(stderr),
-        "configured_envelope": envelope,
-    }
-    if candidate is not None:
-        record["candidate"] = candidate
-    if not successful:
-        record["failure"] = (
-            "Codex authentication needs operator attention"
-            if auth_failure
-            else "Codex temporary-directory cleanup failed"
-            if cleanup_error is not None
-            else "Codex preflight did not return the expected canary response"
-            if preflight
-            else "Codex did not return substantive review output"
-        )
-        if stdout:
-            record["stdout"] = redact(stdout)
-    diagnostics(record, args.diagnostics_file)
-    if not successful:
-        return AUTH_FAILURE_EXIT if auth_failure else REVIEWER_FAILURE_EXIT
-    sys.stdout.write(f"{AUTH_PREFLIGHT_RESPONSE}\n" if preflight else last_message)
-    return 0
+PROVIDER = Provider(
+    name="codex",
+    label="Codex",
+    auth_response="CODEX_AUTH_OK",
+    auth_failure=AUTH_FAILURE,
+    require_model=True,
+    accept=require_accepted_selector,
+    configured_envelope=configured_envelope,
+    command=command,
+    output=output,
+)
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(PROVIDER))

@@ -213,36 +213,24 @@ The project rule keeps local reviewer execution approval-gated.
 ### Local Codex reviewer launch
 
 When a Claude Code run selects Codex as the independent reviewer, use the
-active Playbook checkout's repository-owned
-[`codex-review`](../../scripts/codex-review) source directly; it is the
-symmetric twin of `claude-review` under the same
-[exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract),
-and the same candidate binding, stdin prompt delivery, output capture,
-`--auth-preflight` canary, `--diagnostics-file`, and approval-gating project
-rule apply. Give it an explicit absolute `--codex-bin`; it resolves an
-executable file, obtains its `--version`, and normalizes `HOME`, `USER`, and
-`LOGNAME` from the effective account under the Codex adapter's
-[child-process login identity rule](codex.md#child-process-login-identity).
+checkout's [`codex-review`](../../scripts/codex-review) exactly as described
+for `claude-review` above, with `--codex-bin` in place of `--claude-bin`. It
+shares that wrapper's launch contract and record shape; only these Codex
+deltas differ:
 
-Codex deltas:
-
-- `--model` after `--` is required and must be an exact selector from the
-  [Codex selector table](codex.md#codex-selector-routing-and-acceptance);
-  `--effort` is optional. Before any task starts, the wrapper reads the
-  runtime's own model catalog through `codex debug models` and rejects a
-  selector or effort that catalog does not list; an unreadable catalog is a
-  wrapper failure, not a fallback. That catalog command is observed behavior
-  of `codex-cli 0.154.0`, checked 2026-09-13, not a documented CLI contract.
-- The wrapper supplies `--sandbox read-only`, `approval_policy="never"`,
-  `--ignore-user-config`, `--ephemeral`, `history.persistence="none"`, and
-  `web_search="disabled"` itself rather than reconstructing Codex's native
-  sandbox. The review output is the final message captured through
-  `--output-last-message`; an empty or failed response is wrapper failure.
-- Skipping the user config drops user-configured MCP servers, but a trusted
-  checkout's own project-scoped `.codex/config.toml` is not overridden and
-  read-only sandbox network semantics are not observed. The configured
-  envelope therefore records network reach as not established by the wrapper;
-  the reviewer still reports the access it observed from inside the review.
+- `--model` after `--` is required: the exact selector from the
+  [Codex selector table](codex.md#codex-selector-routing-and-acceptance).
+  Before any task starts, the wrapper checks the selector and any `--effort`
+  against the runtime's own catalog (`codex debug models`, observed in
+  `codex-cli 0.154.0` on 2026-09-13, not a documented CLI contract) and fails
+  closed when the catalog rejects them or cannot be read.
+- The review controls are Codex's native ones (`--sandbox read-only`,
+  `approval_policy="never"`, `--ignore-user-config`, `--ephemeral`, no history
+  or web search); the review output is the final message.
+- The configured envelope records network reach as not established: user
+  MCP servers go with the user config, but a trusted checkout's project-scoped
+  `.codex/config.toml` is not overridden and read-only sandbox network
+  semantics are not observed. The reviewer still reports the access it saw.
 
 ```text
 /ABSOLUTE/PATH/TO/ai-workflow-playbook/scripts/codex-review \
