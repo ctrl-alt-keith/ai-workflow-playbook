@@ -29,7 +29,8 @@ TRANSCRIPT_START = "user"
 # Codex reports the effective configuration in a leading stderr banner
 # delimited by `--------` lines (observed shape, codex-cli 0.154.0); it is the
 # only runtime evidence of the selector actually served. Only that block is
-# read, because the transcript that follows echoes the model's own text.
+# read, only when the same `user` marker that bounds the auth region is
+# present, because the transcript that follows echoes the model's own text.
 BANNER_DELIMITER = "--------"
 BANNER_MODEL = re.compile(r"^model:\s*(\S+)\s*$", re.MULTILINE)
 BANNER_EFFORT = re.compile(r"^reasoning effort:\s*(\S+)\s*$", re.MULTILINE)
@@ -170,12 +171,17 @@ def command(envelope: dict[str, Any], launch: Launch) -> list[str]:
 def banner_block(stderr: str) -> str:
     """Return the text between the first two delimiter lines of the runtime-owned region, or empty.
 
-    Only lines before the transcript's first `user` line are considered, so
-    prompt or model text can never supply the banner.
+    The region exists only when the exact transcript marker is present; with
+    no marker the layout is not the one this wrapper knows and no banner is
+    trusted, so a format change under-classifies (no effective evidence)
+    rather than accepting a block of uncertain ownership. Only lines before
+    the first `user` line are considered, so prompt or model text can never
+    supply the banner.
     """
     lines = stderr.splitlines()
-    if TRANSCRIPT_START in lines:
-        lines = lines[: lines.index(TRANSCRIPT_START)]
+    if TRANSCRIPT_START not in lines:
+        return ""
+    lines = lines[: lines.index(TRANSCRIPT_START)]
     delimiters = [index for index, line in enumerate(lines) if line.strip() == BANNER_DELIMITER]
     if len(delimiters) < 2 or delimiters[0] > 1:
         return ""

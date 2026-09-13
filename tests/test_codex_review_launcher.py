@@ -35,21 +35,30 @@ class CodexReviewLauncherTests(unittest.TestCase):
         banner: str | None = None,
         canary: str | bool | None = True,
         review_banner: str | None = None,
+        runtime: str = "",
     ) -> Path:
-        """Fake Codex: answers --version and debug models; for exec, prints a banner to stderr then runs a body.
+        """Fake Codex: answers --version and debug models; for exec, prints the runtime-owned region to stderr then runs a body.
 
-        A canary invocation (no `--cd`) is answered by `canary`: True writes the exact canary reply,
-        a string is a custom canary body, False disables interception so `body` handles every
-        invocation. `banner` overrides the echoed banner ("" for none); `review_banner` overrides it
-        for the review invocation only. `$out` is the last-message file; `$stdin_copy` receives stdin.
+        The default region is the delimited banner echoing the requested model/effort, any `runtime`
+        lines, then the exact `user` transcript marker — the observed real layout. `banner` replaces
+        the banner and marker verbatim ("" for none), so a test controls whether the marker exists;
+        `review_banner` does the same for the review invocation only. A canary invocation (no
+        `--cd`) is answered by `canary`: True writes the exact reply, a string is a custom canary
+        body, False disables interception so `body` handles every invocation. `$out` is the
+        last-message file.
         """
         catalog_file = root / "catalog.json"
         catalog_file.write_text(json.dumps(CATALOG if catalog is None else catalog), encoding="utf-8")
 
         def report(override: str | None) -> str:
+            runtime_lines = f"printf '%s\\n' '{runtime}' >&2\n" if runtime else ""
             if override is None:
-                return "printf 'OpenAI Codex v9.9.9\\n--------\\nmodel: %s\\nreasoning effort: %s\\n--------\\n' \"$model\" \"$effort\" >&2\n"
-            return f"printf '%s\\n' '{override}' >&2\n" if override else ""
+                return (
+                    "printf 'OpenAI Codex v9.9.9\\n--------\\nmodel: %s\\nreasoning effort: %s\\n--------\\n' \"$model\" \"$effort\" >&2\n"
+                    + runtime_lines
+                    + "printf 'user\\n' >&2\n"
+                )
+            return (f"printf '%s\\n' '{override}' >&2\n" if override else "") + runtime_lines
 
         canary_branch = ""
         if canary is not False:
@@ -196,14 +205,18 @@ class CodexReviewLauncherTests(unittest.TestCase):
         """Catalog listing is a pre-task observation; the banner is the execution evidence and must match."""
         reply = "printf 'CODEX_AUTH_OK\\n' > \"$out\"\n"
         block = "OpenAI Codex v9.9.9\n--------\n{}\n--------"
+        valid = block.format("model: gpt-5.6-terra\nreasoning effort: high")
         cases = {
             "exact model and effort": (None, (*TERRA, "--effort", "high"), 0, b""),
-            "substituted model": (block.format("model: gpt-5.6-luna\nreasoning effort: high"), (*TERRA, "--effort", "high"), 70, b"instead of the requested gpt-5.6-terra"),
-            "different effort": (block.format("model: gpt-5.6-terra\nreasoning effort: low"), (*TERRA, "--effort", "high"), 70, b"effort low instead of the requested high"),
+            "substituted model": (block.format("model: gpt-5.6-luna\nreasoning effort: high") + "\nuser", (*TERRA, "--effort", "high"), 70, b"instead of the requested gpt-5.6-terra"),
+            "different effort": (block.format("model: gpt-5.6-terra\nreasoning effort: low") + "\nuser", (*TERRA, "--effort", "high"), 70, b"effort low instead of the requested high"),
             "no effective model reported": ("", TERRA, 70, b"did not report its effective model"),
-            "model line only in the echoed transcript": ("codex\nmodel: gpt-5.6-terra\nreasoning effort: high", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
-            "transcript line after a genuine banner is ignored": (block.format("model: gpt-5.6-terra\nreasoning effort: high") + "\ncodex\nmodel: gpt-5.6-luna", (*TERRA, "--effort", "high"), 0, b""),
+            "model line only in the echoed transcript": ("user\ncodex\nmodel: gpt-5.6-terra\nreasoning effort: high", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
+            "transcript line after a genuine banner is ignored": (valid + "\nuser\ncodex\nmodel: gpt-5.6-luna", (*TERRA, "--effort", "high"), 0, b""),
             "delimited block inside the echoed prompt is not a banner": ("user\n--------\nmodel: gpt-5.6-terra\nreasoning effort: high\n--------", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
+            # symmetry with the auth surface: no transcript marker, no trusted runtime region
+            "valid-looking banner but no transcript marker": (valid, (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
+            "valid-looking banner with a changed marker": (valid + "\nUser:", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
         }
         for label, (banner, selector, code, message) in cases.items():
             with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:
@@ -235,17 +248,21 @@ class CodexReviewLauncherTests(unittest.TestCase):
             # label: (canary, banner, expected exit, review invoked, message)
             "exact model and effort accepted": (True, None, 0, True, b""),
             "canary exits nonzero": ("exit 3\n", None, 70, False, b"selector acceptance canary: Codex exited 3"),
-            "canary substitutes the model": (reply, block.format("model: gpt-5.6-luna\nreasoning effort: high"), 70, False, b"instead of the requested gpt-5.6-terra"),
-            "canary substitutes the effort": (reply, block.format("model: gpt-5.6-terra\nreasoning effort: low"), 70, False, b"effort low instead of the requested high"),
+            "canary substitutes the model": (reply, block.format("model: gpt-5.6-luna\nreasoning effort: high") + "\nuser", 70, False, b"instead of the requested gpt-5.6-terra"),
+            "canary substitutes the effort": (reply, block.format("model: gpt-5.6-terra\nreasoning effort: low") + "\nuser", 70, False, b"effort low instead of the requested high"),
             "canary omits the banner": (reply, "", 70, False, b"did not report its effective model"),
             "canary answers wrongly": ("printf 'hello\\n' > \"$out\"\n", None, 70, False, b"did not return the expected canary response"),
-            "canary establishes auth failure": ("printf '2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized\\nuser\\n' >&2\nexit 1\n", None, 78, False, b"authentication needs operator attention"),
+            "canary establishes auth failure": ("exit 1\n", "AUTH", 78, False, b"authentication needs operator attention"),
         }
+        error_line = "2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized"
         for label, (canary, banner, code, invoked, message) in cases.items():
             with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:
                 root = Path(temporary_directory)
                 marker = root / "review-invoked"
-                executable = self.make_fake_codex(root, f"touch {marker}\ncat > \"$out\"\n", canary=canary, banner=banner)
+                runtime = error_line if banner == "AUTH" else ""  # a genuine runtime-region error before the marker
+                executable = self.make_fake_codex(
+                    root, f"touch {marker}\ncat > \"$out\"\n", canary=canary, banner=None if banner == "AUTH" else banner, runtime=runtime
+                )
                 completed = self.run_launcher(executable, prompt=b"SECRET-REVIEW-QUESTION\n", selector=(*TERRA, "--effort", "high"))
                 canary_stdin = (root / "canary-stdin").read_bytes()
                 self.assertEqual(completed.returncode, code, completed.stderr.decode())
@@ -295,7 +312,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
             executable = self.make_fake_codex(
                 root,
                 "cat > \"$out\"\n",
-                review_banner="OpenAI Codex v9.9.9\n--------\nmodel: gpt-5.6-luna\nreasoning effort: high\n--------",
+                review_banner="OpenAI Codex v9.9.9\n--------\nmodel: gpt-5.6-luna\nreasoning effort: high\n--------\nuser",
             )
             completed = self.run_launcher(executable, prompt=b"Review\n", selector=(*TERRA, "--effort", "high"))
         self.assertEqual(completed.returncode, 70)
@@ -333,18 +350,22 @@ class CodexReviewLauncherTests(unittest.TestCase):
     def test_auth_classification_reads_only_the_runtime_region_before_the_transcript(self):
         """Only runtime-owned lines before the transcript begins are credential evidence; content never re-enters."""
         error_line = "2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized"
+        block = "OpenAI Codex v9.9.9\n--------\nmodel: gpt-5.6-terra\nreasoning effort: high\n--------"
+        # (banner override or None for the real layout, runtime lines before the marker, transcript body after it, expected exit)
         cases = {
-            "runtime region": (f"{error_line}\\nuser\\nReview\\n", 78),
-            "echoed user prompt": (f"user\\nReview this log line: {error_line}\\n", 70),
-            "model transcript": (f"user\\nReview\\n\\ncodex\\nThe log showed:\\n{error_line}\\n", 70),
-            "exec output": (f"user\\nReview\\n\\nexec\\ncat log.txt\\n{error_line}\\n", 70),
-            "marker-shaped lines inside content": (f"user\\nReview\\n\\ncodex\\ntokens used\\nuser\\n{error_line}\\n", 70),
-            "no transcript marker at all": (f"{error_line}\\n", 70),
-            "changed marker": (f"{error_line}\\nUser:\\nReview\\n", 70),
+            "runtime region": (None, error_line, "Review\\n", 78),
+            "echoed user prompt": (None, "", f"Review this log line: {error_line}\\n", 70),
+            "model transcript": (None, "", f"Review\\n\\ncodex\\nThe log showed:\\n{error_line}\\n", 70),
+            "exec output": (None, "", f"Review\\n\\nexec\\ncat log.txt\\n{error_line}\\n", 70),
+            "marker-shaped lines inside content": (None, "", f"Review\\n\\ncodex\\ntokens used\\nuser\\n{error_line}\\n", 70),
+            "no transcript marker at all": (block, error_line, "", 70),
+            "changed marker": (block + "\nUser:", error_line, "", 70),
         }
-        for label, (transcript, code) in cases.items():
+        for label, (banner, runtime, transcript, code) in cases.items():
             with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:
-                executable = self.make_fake_codex(Path(temporary_directory), f"printf '{transcript}' >&2\nexit 1\n")
+                executable = self.make_fake_codex(
+                    Path(temporary_directory), f"printf '{transcript}' >&2\nexit 1\n", banner=banner, runtime=runtime
+                )
                 completed = self.run_launcher(executable, prompt=b"Review\n")
                 self.assertEqual(completed.returncode, code, completed.stderr.decode())
                 self.assertEqual(b"authentication needs operator attention" in completed.stderr, code == 78)
@@ -354,8 +375,9 @@ class CodexReviewLauncherTests(unittest.TestCase):
             root = Path(temporary_directory)
             executable = self.make_fake_codex(
                 root,
-                "printf '2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized token=super-secret-value Authorization: Bearer another-secret sk-proj-bare-secret\\nuser\\n' >&2\nexit 1\n",
+                "exit 1\n",
                 canary=False,
+                runtime="2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized token=super-secret-value Authorization: Bearer another-secret sk-proj-bare-secret",
             )
             diagnostics_file = root / "diagnostics.json"
             completed = self.run_launcher(executable, "--auth-preflight", "--diagnostics-file", str(diagnostics_file))
