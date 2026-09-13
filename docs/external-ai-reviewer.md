@@ -120,19 +120,13 @@ configuration when the provider supports those controls. If required source
 access is unavailable, the reviewer reports the gap and limits its verdict
 instead of receiving broader authority.
 
-When a launcher configures the reviewer's tool set, permission mode, connector
-configuration, instruction sources, session persistence, slash commands, and
-requested model and effort, the launcher emits that configured envelope with
-the attempt record, including whether the tool set and connector configuration
-admit network reach. The envelope reaches the review record because the
-launcher declared it, not because the reviewer described it. Requested model
-and effort are requests: the record marks an unrequested control as unset
-rather than asserting a default, and effective runtime values remain a separate
-observation under the executor adapter. The reviewer still reports the sources
-it actually inspected and the capability gaps it encountered, which the
-launcher cannot observe. Keep the two claims attributed to their observers: a
-reviewer's account of its own tools does not replace the declared envelope, and
-the declared envelope does not establish what the reviewer read.
+When a launcher configures those controls, it emits the configured envelope
+with the attempt record: the controls, the requested model and effort, and
+whether the tool set and connectors admit network reach. An unrequested control
+is recorded as unset, not as a default; effective runtime values are a separate
+observation. The reviewer reports the sources it actually inspected and the
+capability gaps it encountered, which the launcher cannot observe. Neither
+claim substitutes for the other.
 
 Read-only review constrains the reviewer's capabilities; it does not require
 the repository, worktree registry, or shared Git administration to remain

@@ -506,11 +506,10 @@ Before invocation, bind the brief to the exact path, commit, or byte identity
 and name the decision boundary, review dimensions, authoritative sources,
 prohibited mutations, and stop conditions. Require the reviewer to report its
 identity, sources actually inspected, material capability gaps, source
-attribution, anchored findings with severity, and explicit verdict. Take the
-declared tool and access envelope from the launcher-emitted attempt record when
-the invoking launcher declares one; the reviewer's own account of its tools
-supplements that declaration and does not replace it. Preserve the output at a
-reviewable identity.
+attribution, anchored findings with severity, and explicit verdict; the
+declared envelope comes from the launcher record under the
+[exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract).
+Preserve the output at a reviewable identity.
 
 After review, Codex must not turn a verdict into approval. Use the finding
 disposition and re-review applicability contract in

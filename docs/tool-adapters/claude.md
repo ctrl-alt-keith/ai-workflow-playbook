@@ -205,13 +205,10 @@ and human transition authority remain outside the wrapper.
 The wrapper captures Claude output and status. A review succeeds only when
 Claude exits successfully with non-empty output. Diagnostics are bounded and
 redact obvious credentials; `--diagnostics-file` can retain them at a new
-absolute path. The diagnostics record declares the configured envelope for the
-branch actually taken, preflight or review: tool set, permission mode, MCP
-configuration, setting sources, session persistence, slash commands, network
-reach derived from the tool set and MCP configuration, and the requested model
-and effort. An unrequested model or effort is recorded as unset, not as a
-default; the wrapper does not observe effective runtime values. The project
-rule keeps local reviewer execution approval-gated.
+absolute path. The diagnostics record declares the configured envelope of the
+branch actually taken, preflight or review, under the
+[exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract).
+The project rule keeps local reviewer execution approval-gated.
 
 ## Worktrees And Subagents
 
