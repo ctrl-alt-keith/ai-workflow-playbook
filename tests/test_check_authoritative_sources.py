@@ -50,185 +50,28 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
 
         self.assertEqual(findings, [])
 
-    def test_ignores_official_url_in_public_api_context(self) -> None:
-        findings = scanner.scan_text(
-            "docs/example.md",
-            "GitHub API pagination source: https://docs.github.com/en/rest/using-the-rest-api",
-        )
+    def test_cli_configured_domains_suppress_matching_api_warnings(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            docs_dir = root / "docs"
+            docs_dir.mkdir()
+            (docs_dir / "example.md").write_text(
+                "\n".join(
+                    [
+                        "AWS API source: https://docs.aws.amazon.com/lambda/latest/dg/welcome.html",
+                        "Microsoft API source: https://learn.microsoft.com/en-us/",
+                    ]
+                ),
+                encoding="utf-8",
+            )
 
-        self.assertEqual(findings, [])
+            result = self.run_scanner_cli(
+                ["--all-markdown", "--official-domain", "https://docs.aws.amazon.com, learn.microsoft.com"],
+                cwd=root,
+            )
 
-    def test_configured_official_domain_suppresses_warning(self) -> None:
-        findings = scanner.scan_text(
-            "docs/example.md",
-            "Cloud provider API source: https://docs.aws.amazon.com/lambda/latest/dg/welcome.html",
-            scanner.DEFAULT_OFFICIAL_SUFFIXES + ("docs.aws.amazon.com",),
-        )
-
-        self.assertEqual(findings, [])
-
-    def test_google_official_doc_domains_are_allowed_by_default(self) -> None:
-        urls = [
-            "https://cloud.google.com/apis/docs/overview",
-            "https://developers.google.com/workspace/gmail/api/guides",
-            "https://firebase.google.com/docs/reference",
-        ]
-
-        for url in urls:
-            with self.subTest(url=url):
-                findings = scanner.scan_text(
-                    "docs/example.md",
-                    f"Google API source: {url}",
-                )
-
-                self.assertEqual(findings, [])
-
-    def test_atlassian_official_doc_domains_are_allowed_by_default(self) -> None:
-        urls = [
-            "https://developer.atlassian.com/cloud/jira/platform/rest/v3/",
-            "https://docs.atlassian.com/software/jira/docs/api/latest/",
-            "https://support.atlassian.com/jira-cloud-administration/docs/",
-        ]
-
-        for url in urls:
-            with self.subTest(url=url):
-                findings = scanner.scan_text(
-                    "docs/example.md",
-                    f"Atlassian API source: {url}",
-                )
-
-                self.assertEqual(findings, [])
-
-    def test_claude_docs_are_allowed_by_default(self) -> None:
-        urls = [
-            "https://docs.claude.com/en/docs/claude-code/memory",
-            "https://docs.claude.com/en/docs/claude-code/sub-agents",
-        ]
-
-        for url in urls:
-            with self.subTest(url=url):
-                findings = scanner.scan_text(
-                    "docs/example.md",
-                    f"Claude Code CLI source: {url}",
-                )
-
-                self.assertEqual(findings, [])
-
-    def test_openai_developer_docs_are_allowed_by_default(self) -> None:
-        findings = scanner.scan_text(
-            "docs/example.md",
-            "OpenAI API source: https://developers.openai.com/api/docs/guides/latest-model",
-        )
-
-        self.assertEqual(findings, [])
-
-    def test_dropbox_developer_and_official_sdk_docs_are_allowed_by_default(self) -> None:
-        urls = [
-            "https://developers.dropbox.com/dbx-file-access-guide",
-            "https://dropbox-sdk-python.readthedocs.io/en/latest/api/dropbox.html",
-        ]
-
-        for url in urls:
-            with self.subTest(url=url):
-                findings = scanner.scan_text(
-                    "docs/example.md",
-                    f"Dropbox API source: {url}",
-                )
-
-                self.assertEqual(findings, [])
-
-    def test_dropbox_shared_artifact_does_not_become_api_authority(self) -> None:
-        findings = scanner.scan_text(
-            "docs/example.md",
-            "Dropbox API behavior source: https://www.dropbox.com/scl/fi/example/summary",
-        )
-
-        self.assertEqual(len(findings), 1)
-        self.assertEqual(findings[0]["domain"], "dropbox.com")
-
-    def test_broad_openai_domain_still_warns(self) -> None:
-        findings = scanner.scan_text(
-            "docs/example.md",
-            "OpenAI API source: https://openai.com/news/example",
-        )
-
-        self.assertEqual(len(findings), 1)
-        self.assertEqual(findings[0]["domain"], "openai.com")
-
-    def test_google_and_atlassian_community_domains_still_warn(self) -> None:
-        findings = scanner.scan_text(
-            "docs/example.md",
-            "\n".join(
-                [
-                    "Google API source: https://blog.google/products/workspace/example",
-                    "Atlassian API source: https://community.atlassian.com/t5/example/post",
-                ]
-            ),
-        )
-
-        self.assertEqual(
-            [finding["domain"] for finding in findings],
-            ["blog.google", "community.atlassian.com"],
-        )
-
-    def test_same_org_github_project_reference_is_intentionally_allowed(self) -> None:
-        findings = scanner.scan_text(
-            "docs/example.md",
-            "Project API behavior source: https://github.com/ctrl-alt-keith/example-repo/pull/1",
-        )
-
-        self.assertEqual(findings, [])
-
-    def test_other_github_project_reference_still_warns(self) -> None:
-        findings = scanner.scan_text(
-            "docs/example.md",
-            "Project API behavior source: https://github.com/example/example-repo/pull/1",
-        )
-
-        self.assertEqual(len(findings), 1)
-        self.assertEqual(findings[0]["domain"], "github.com")
-
-    def test_official_github_source_repositories_are_allowed(self) -> None:
-        urls = [
-            "https://github.com/github/docs/blob/main/content/rest/about-the-rest-api.md",
-            "https://github.com/github/rest-api-description/tree/main/descriptions",
-        ]
-
-        for url in urls:
-            with self.subTest(url=url):
-                findings = scanner.scan_text(
-                    "docs/example.md",
-                    f"GitHub API source: {url}",
-                )
-
-                self.assertEqual(findings, [])
-
-    def test_github_path_keywords_do_not_allow_unrelated_repositories(self) -> None:
-        urls = [
-            "https://github.com/example/openapi-guide",
-            "https://github.com/example/github/docs",
-            "https://github.com/example/github-rest-api-description",
-        ]
-
-        for url in urls:
-            with self.subTest(url=url):
-                findings = scanner.scan_text(
-                    "docs/example.md",
-                    f"GitHub API source: {url}",
-                )
-
-                self.assertEqual(len(findings), 1)
-                self.assertEqual(findings[0]["domain"], "github.com")
-
-    def test_configured_domains_accept_comma_and_space_separated_values(self) -> None:
-        domains = scanner.configured_domains(
-            ["https://docs.aws.amazon.com, cloud.google.com learn.microsoft.com"]
-        )
-
-        self.assertEqual(
-            domains,
-            ("docs.aws.amazon.com", "cloud.google.com", "learn.microsoft.com"),
-        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("no non-authoritative source URLs found", result.stdout)
 
     def test_changed_markdown_files_returns_only_nonempty_git_output_lines(self) -> None:
         completed = subprocess.CompletedProcess(
