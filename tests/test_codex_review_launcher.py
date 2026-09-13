@@ -26,20 +26,33 @@ CATALOG = {
 
 
 class CodexReviewLauncherTests(unittest.TestCase):
-    def make_fake_codex(self, root: Path, body: str, catalog: dict | None = None) -> Path:
-        """Answer --version and debug models; run body for exec with $out as the last-message file."""
+    def make_fake_codex(self, root: Path, body: str, catalog: dict | None = None, banner: str | None = None) -> Path:
+        """Answer --version and debug models; for exec, print the banner to stderr then run body with $out as the last-message file.
+
+        By default the banner echoes the requested model and effort, as the real runtime does; pass
+        `banner` to report something else (or "" for no banner).
+        """
         catalog_file = root / "catalog.json"
         catalog_file.write_text(json.dumps(CATALOG if catalog is None else catalog), encoding="utf-8")
+        report = (
+            "printf 'model: %s\\nreasoning effort: %s\\n' \"$model\" \"$effort\" >&2\n"
+            if banner is None
+            else f"printf '%s\\n' '{banner}' >&2\n" if banner else ""
+        )
         executable = root / "codex"
         executable.write_text(
             "#!/bin/sh\n"
             "if [ \"$1\" = \"--version\" ]; then printf 'codex-cli 9.9.9\\n'; exit 0; fi\n"
             f"if [ \"$1\" = \"debug\" ]; then cat {catalog_file}; exit 0; fi\n"
-            "out=\"\"\n"
+            "out=\"\"; model=\"\"; effort=\"\"; prev=\"\"\n"
             "for arg in \"$@\"; do\n"
-            "  if [ \"$expect_out\" = 1 ]; then out=\"$arg\"; expect_out=0; fi\n"
-            "  if [ \"$arg\" = \"--output-last-message\" ]; then expect_out=1; fi\n"
-            "done\n" + body,
+            "  case \"$prev\" in\n"
+            "    --output-last-message) out=\"$arg\";;\n"
+            "    --model) model=\"$arg\";;\n"
+            "    --config) case \"$arg\" in model_reasoning_effort=*) effort=${arg#model_reasoning_effort=\\\"}; effort=${effort%\\\"};; esac;;\n"
+            "  esac\n"
+            "  prev=\"$arg\"\n"
+            "done\n" + report + body,
             encoding="utf-8",
         )
         executable.chmod(0o700)
@@ -152,6 +165,23 @@ class CodexReviewLauncherTests(unittest.TestCase):
         self.assertEqual(effort_rejected.returncode, 70)
         self.assertIn(b"does not list effort ultra", effort_rejected.stderr)
         self.assertFalse(review_invoked)
+
+    def test_effective_selector_is_verified_from_the_runtime_banner(self):
+        """Catalog listing is a pre-task observation; the banner is the execution evidence and must match."""
+        canary = "printf 'CODEX_AUTH_OK\\n' > \"$out\"\n"
+        cases = {
+            "exact model and effort": (None, (*TERRA, "--effort", "high"), 0, b""),
+            "substituted model": ("model: gpt-5.6-luna\nreasoning effort: high", (*TERRA, "--effort", "high"), 70, b"instead of the requested gpt-5.6-terra"),
+            "different effort": ("model: gpt-5.6-terra\nreasoning effort: low", (*TERRA, "--effort", "high"), 70, b"effort low instead of the requested high"),
+            "no effective model reported": ("", TERRA, 70, b"did not report its effective model"),
+        }
+        for label, (banner, selector, code, message) in cases.items():
+            with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:
+                executable = self.make_fake_codex(Path(temporary_directory), canary, banner=banner)
+                completed = self.run_launcher(executable, "--auth-preflight", selector=selector)
+                self.assertEqual(completed.returncode, code, completed.stderr.decode())
+                self.assertIn(message, completed.stderr)
+                self.assertEqual(completed.stdout, b"CODEX_AUTH_OK\n" if code == 0 else b"")
 
     def test_unreadable_model_catalog_is_wrapper_failure(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

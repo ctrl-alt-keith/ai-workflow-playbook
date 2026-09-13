@@ -9,6 +9,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -251,6 +252,94 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertIs(record["stdout_received"], True)
         self.assertIn("cleanup failed", record["failure"])
         self.assertIn("fixture cleanup failure", record["stderr"])
+
+    def run_in_process(self, *arguments: str, executable: Path, patches: dict, prompt: bytes = b"") -> tuple[int, dict, str]:
+        """Drive main() in-process so shared-launcher internals can be patched; return exit code, record, stderr."""
+        launcher = load_launcher(LAUNCHER, "claude_review_in_process_fixture")
+        shared = sys.modules["review_launcher"]
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            diagnostics_file = Path(temporary_directory) / "diagnostics.json"
+            stdin = mock.Mock(buffer=io.BytesIO(prompt))
+            with mock.patch.multiple(shared, **patches), mock.patch.object(sys, "stdin", stdin):
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    code = launcher.main(
+                        launcher.PROVIDER, ["--claude-bin", str(executable), "--diagnostics-file", str(diagnostics_file), *arguments]
+                    )
+            record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
+        self.assertEqual(stdout.getvalue(), "")
+        return code, record, stderr.getvalue()
+
+    def test_preflight_is_time_bounded(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_claude(Path(temporary_directory), "sleep 30\nprintf 'CLAUDE_AUTH_OK\\n'\n")
+            started = time.monotonic()
+            code, record, _ = self.run_in_process(
+                "--auth-preflight", executable=executable, patches={"AUTH_PREFLIGHT_TIMEOUT_SECONDS": 1}
+            )
+            elapsed = time.monotonic() - started
+        self.assertEqual(code, 70)
+        self.assertLess(elapsed, 10)
+        self.assertIn("preflight exceeded 1 seconds", record["failure"])
+        self.assertNotIn("authentication", record["failure"])
+
+    def test_scratch_allocation_failure_is_bounded_wrapper_failure(self):
+        def refuse(prefix: str):
+            raise OSError("fixture: no scratch available")
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_claude(Path(temporary_directory), "printf 'CLAUDE_AUTH_OK\\n'\n")
+            code, record, _ = self.run_in_process(
+                "--auth-preflight",
+                executable=executable,
+                patches={"tempfile": mock.Mock(TemporaryDirectory=refuse)},
+            )
+        self.assertEqual(code, 70)
+        self.assertIn("could not allocate a scratch directory", record["failure"])
+        self.assertIn("fixture: no scratch available", record["failure"])
+
+    def test_exception_path_keeps_the_original_failure_and_surfaces_cleanup_failure(self):
+        leaked: list[str] = []
+
+        class FailingDirectory(tempfile.TemporaryDirectory):
+            def cleanup(self):
+                leaked.append(self.name)
+                raise OSError("fixture cleanup failure")
+
+        try:
+            with tempfile.TemporaryDirectory() as temporary_directory:
+                executable = self.make_fake_claude(Path(temporary_directory), "printf 'review\\n'\n")
+                code, record, _ = self.run_in_process(
+                    "--candidate-commit",
+                    "0" * 40,
+                    executable=executable,
+                    prompt=b"Review\n",
+                    patches={"tempfile": mock.Mock(TemporaryDirectory=FailingDirectory)},
+                )
+        finally:
+            for name in leaked:
+                shutil.rmtree(name, ignore_errors=True)
+        self.assertEqual(code, 70)
+        self.assertIn("candidate commit mismatch", record["failure"])
+        self.assertIn("cleanup failed: fixture cleanup failure", record["failure"])
+
+    def test_requested_diagnostics_file_that_cannot_be_written_prevents_success(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            destination_dir = root / "evidence"
+            destination_dir.mkdir()
+            executable = self.make_fake_claude(root, f"chmod 500 {destination_dir}\nprintf 'CLAUDE_AUTH_OK\\n'\n")
+            try:
+                completed = self.run_launcher(
+                    executable, "--auth-preflight", "--diagnostics-file", str(destination_dir / "diagnostics.json")
+                )
+                written = (destination_dir / "diagnostics.json").exists()
+            finally:
+                destination_dir.chmod(0o700)
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(completed.stdout, b"")
+        self.assertFalse(written)
+        self.assertIn(b"diagnostics file could not be written", completed.stderr)
 
     def test_review_requires_candidate_commit(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

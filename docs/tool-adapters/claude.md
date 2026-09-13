@@ -194,9 +194,11 @@ wrapper verifies `HEAD` immediately before review and includes the repository
 path and selected commit in Claude's context.
 
 Run `--auth-preflight` before an expensive review. It uses a fixed stdin
-canary, no tools, an ordinary temporary directory, and the effective account's
-`HOME`, `USER`, and `LOGNAME`. A failed canary means Claude authentication needs
-operator attention; do not represent that outcome as a substantive review result.
+canary, no tools, an ordinary temporary directory, the effective account's
+`HOME`, `USER`, and `LOGNAME`, and a fixed execution bound; a hung provider is
+wrapper failure, not an authentication result. A failed canary means Claude
+authentication needs operator attention; do not represent that outcome as a
+substantive review result.
 It disables Claude memory loading and uses an empty MCP configuration. This is
 the Claude projection of the exact-candidate review contract in
 [`external-ai-reviewer.md`](../external-ai-reviewer.md); finding disposition
@@ -205,7 +207,8 @@ and human transition authority remain outside the wrapper.
 The wrapper captures Claude output and status. A review succeeds only when
 Claude exits successfully with non-empty output. Diagnostics are bounded and
 redact obvious credentials; `--diagnostics-file` can retain them at a new
-absolute path. The diagnostics record declares the configured envelope of the
+absolute path, and a requested file that cannot be written fails the attempt
+even when the provider succeeded. The diagnostics record declares the configured envelope of the
 branch actually taken, preflight or review, under the
 [exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract).
 The project rule keeps local reviewer execution approval-gated.
@@ -223,13 +226,16 @@ these Codex deltas differ:
 
 - `--model` after `--` is required: the exact selector from the
   [Codex selector table](codex.md#codex-selector-routing-and-acceptance).
-  Before any task starts, the wrapper rejects a selector or `--effort` that
-  the runtime's model catalog does not list, and fails closed when the
-  catalog cannot be read. This is a catalog observation, not acceptance under
-  the governed envelope: `codex debug models` is undocumented (checked
-  2026-09-13 against `codex-cli 0.154.0`), takes no `--ignore-user-config`,
-  and falls back to the binary's bundled catalog when unauthenticated. The
-  run's own banner is the effective-model evidence.
+  Two separate checks apply. Before any task starts, the wrapper rejects a
+  selector or `--effort` the runtime's model catalog does not list and fails
+  closed when the catalog cannot be read; this is a pre-task observation, not
+  acceptance (`codex debug models` is undocumented, checked 2026-09-13
+  against `codex-cli 0.154.0`, takes no `--ignore-user-config`, and falls
+  back to the bundled catalog when unauthenticated). After the run, the
+  wrapper reads the effective model and reasoning effort from Codex's stderr
+  banner, records them as `effective`, and fails the attempt when they differ
+  from the request or are not reported; exact-model requirements do not fall
+  back.
 - The review controls are Codex's native ones (`--sandbox read-only`,
   `approval_policy="never"`, `--ignore-user-config`, `--ephemeral`, no history
   or web search, and app connectors disabled through `features.apps` and

@@ -20,6 +20,11 @@ LAST_MESSAGE_FILE = "last-message.txt"
 # runtime error lines (observed shape: `<timestamp> ERROR <target>: <message>`,
 # codex-cli 0.154.0) are eligible for auth-failure classification.
 DIAGNOSTIC_LINE = re.compile(r"^\S+\s+ERROR\s")
+# Codex reports the effective configuration in its stderr banner (observed
+# shape, codex-cli 0.154.0); it is the only runtime evidence of the selector
+# actually served.
+BANNER_MODEL = re.compile(r"^model:\s*(\S+)\s*$", re.MULTILINE)
+BANNER_EFFORT = re.compile(r"^reasoning effort:\s*(\S+)\s*$", re.MULTILINE)
 AUTH_FAILURE = re.compile(
     r"\b(?:"
     r"not logged in|"
@@ -148,6 +153,23 @@ def command(envelope: dict[str, Any], launch: Launch) -> list[str]:
     return arguments
 
 
+def effective(selection: dict[str, str], stdout: str, stderr: str) -> tuple[dict[str, Any], str | None]:
+    """Require the banner to report the requested selector; exact-model requirements do not fall back."""
+    model = BANNER_MODEL.search(stderr)
+    effort = BANNER_EFFORT.search(stderr)
+    observed: dict[str, Any] = {"model": model.group(1) if model else None, "effort": effort.group(1) if effort else None}
+    if observed["model"] is None:
+        return observed, "the Codex runtime did not report its effective model"
+    if observed["model"] != selection["model"]:
+        return observed, f"Codex ran {observed['model']} instead of the requested {selection['model']}"
+    if "effort" in selection:
+        if observed["effort"] is None:
+            return observed, "the Codex runtime did not report its effective reasoning effort"
+        if observed["effort"] != selection["effort"]:
+            return observed, f"Codex ran effort {observed['effort']} instead of the requested {selection['effort']}"
+    return observed, None
+
+
 def diagnostic(stdout: str, stderr: str) -> str:
     return "\n".join(line for line in stderr.splitlines() if DIAGNOSTIC_LINE.match(line))
 
@@ -171,6 +193,7 @@ PROVIDER = Provider(
     output=output,
     output_field="last_message_received",
     diagnostic=diagnostic,
+    effective=effective,
 )
 
 

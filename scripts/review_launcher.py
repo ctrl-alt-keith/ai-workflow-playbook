@@ -25,6 +25,7 @@ from typing import Any, Callable, Mapping
 
 AUTH_FAILURE_EXIT = 78
 REVIEWER_FAILURE_EXIT = 70
+AUTH_PREFLIGHT_TIMEOUT_SECONDS = 120
 MAX_DIAGNOSTIC_CHARS = 1_000
 ALLOWED_OPTIONS = {"--model", "--effort"}
 EXACT_COMMIT = re.compile(r"[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?")
@@ -57,6 +58,12 @@ class Provider:
     # Text eligible for auth-failure classification: the provider's diagnostic
     # surface, never its substantive output. Defaults to stderr.
     diagnostic: Callable[[str, str], str] = lambda stdout, stderr: stderr
+    # Effective execution evidence: (observed values for the record, failure
+    # reason when they do not establish the requested selection). Defaults to
+    # no runtime evidence surface.
+    effective: Callable[[dict[str, str], str, str], tuple[dict[str, Any], str | None]] = (
+        lambda selection, stdout, stderr: ({}, None)
+    )
 
     @property
     def auth_prompt(self) -> bytes:
@@ -154,11 +161,12 @@ def validate_diagnostics_destination(destination: Path | None) -> None:
         raise ValueError("--diagnostics-file parent must exist")
 
 
-def diagnostics(provider: Provider, record: dict[str, Any], destination: Path | None) -> None:
+def diagnostics(provider: Provider, record: dict[str, Any], destination: Path | None) -> bool:
+    """Emit the record to stderr and, when requested, to a new file; report whether the file was written."""
     encoded = json.dumps(record, sort_keys=True)
     print(f"{provider.name}-review diagnostics: {encoded}", file=sys.stderr)
     if destination is None:
-        return
+        return True
     try:
         descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
@@ -168,6 +176,8 @@ def diagnostics(provider: Provider, record: dict[str, Any], destination: Path | 
             f"{provider.name}-review diagnostics file could not be written: {redact(str(error))}",
             file=sys.stderr,
         )
+        return False
+    return True
 
 
 def cleanup_temporary_directory(directory: tempfile.TemporaryDirectory[str]) -> str | None:
@@ -267,7 +277,10 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as error:
         return fail(str(error), args.diagnostics_file)
 
-    scratch = tempfile.TemporaryDirectory(prefix=f"{provider.name}-review-")
+    try:
+        scratch = tempfile.TemporaryDirectory(prefix=f"{provider.name}-review-")
+    except OSError as error:
+        return fail(f"could not allocate a scratch directory: {error}", args.diagnostics_file)
     try:
         repository: str | None = None
         if preflight:
@@ -286,11 +299,19 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
             check=False,
             cwd=cwd,
             env=environment,
+            timeout=AUTH_PREFLIGHT_TIMEOUT_SECONDS if preflight else None,
         )
         output = provider.output(result, launch)
-    except (OSError, ValueError) as error:
-        cleanup_temporary_directory(scratch)
-        return fail(str(error), args.diagnostics_file)
+    except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+        failure = (
+            f"{provider.label} preflight exceeded {AUTH_PREFLIGHT_TIMEOUT_SECONDS} seconds"
+            if isinstance(error, subprocess.TimeoutExpired)
+            else str(error)
+        )
+        cleanup_error = cleanup_temporary_directory(scratch)
+        if cleanup_error is not None:
+            failure = f"{failure}; temporary-directory cleanup failed: {cleanup_error}"
+        return fail(failure, args.diagnostics_file)
     cleanup_error = cleanup_temporary_directory(scratch)
 
     stdout = result.stdout.decode("utf-8", errors="replace")
@@ -300,6 +321,9 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     if cleanup_error is not None:
         successful = False
         stderr = "\n".join(filter(None, (stderr, f"temporary-directory cleanup failed: {cleanup_error}")))
+    effective, substitution = provider.effective(selection, stdout, stderr)
+    if substitution is not None:
+        successful = False
     auth_failure = not successful and bool(provider.auth_failure.search(provider.diagnostic(stdout, stderr).lower()))
     record.update(
         {
@@ -309,19 +333,24 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
             "stderr": redact(stderr),
         }
     )
+    if effective:
+        record["effective"] = effective
     if not successful:
         record["failure"] = (
             f"{provider.label} authentication needs operator attention"
             if auth_failure
             else f"{provider.label} temporary-directory cleanup failed"
             if cleanup_error is not None
+            else substitution
+            if substitution is not None
             else f"{provider.label} preflight did not return the expected canary response"
             if preflight
             else f"{provider.label} did not return substantive review output"
         )
         if stdout:
             record["stdout"] = redact(stdout)
-    diagnostics(provider, record, args.diagnostics_file)
+    if not diagnostics(provider, record, args.diagnostics_file):
+        return REVIEWER_FAILURE_EXIT
     if not successful:
         return AUTH_FAILURE_EXIT if auth_failure else REVIEWER_FAILURE_EXIT
     sys.stdout.write(f"{provider.auth_response}\n" if preflight else output)
