@@ -77,6 +77,9 @@ class CodexReviewLauncherTests(unittest.TestCase):
                 self.assertIs(envelope["network_access"]["derived_from"]["project_layers_loaded"], False)
                 loaded = launcher.codex_arguments({**envelope, "user_config_loaded": True})
                 self.assertNotEqual(loaded, launcher.codex_arguments(envelope))
+                # Account-level app connectors are not user config; the wrapper disables them explicitly.
+                self.assertEqual(envelope["apps"], "disabled")
+                self.assertNotEqual(launcher.codex_arguments({**envelope, "apps": None}), launcher.codex_arguments(envelope))
 
     ENVELOPE_CASES = {
         "review with model and effort": ((), b"Review the candidate.\n", (*TERRA, "--effort=high")),

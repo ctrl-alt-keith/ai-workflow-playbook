@@ -86,7 +86,9 @@ def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[s
     layers (config, hooks, rules) only for a trusted project, and trust lives
     in the user config that ``--ignore-user-config`` leaves unloaded, so the
     candidate cannot extend the reviewer's surface through its own
-    ``.codex/config.toml``. ``project_layers_loaded`` is that derivation
+    ``.codex/config.toml``. Account-level app connectors are not part of the
+    user config and remain exposed unless disabled, so the wrapper disables
+    the apps feature and the default app state. ``project_layers_loaded`` is that derivation
     declared, not an observed runtime fact, and it renders no argv of its own;
     ``user_config_loaded`` is the control that renders. Operator-managed
     configuration and read-only sandbox network semantics are not observed, so
@@ -101,11 +103,13 @@ def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[s
         "ephemeral": True,
         "history_persistence": "none",
         "web_search": "disabled",
+        "apps": "disabled",
         "git_repo_check": not preflight,
         "network_access": {
             "granted": None,
             "derived_from": {
                 "web_search": "disabled",
+                "apps": "disabled",
                 "sandbox": "read-only",
                 "user_config_loaded": False,
                 "project_layers_loaded": False,
@@ -127,6 +131,10 @@ def codex_arguments(envelope: dict[str, Any]) -> list[str]:
         arguments.extend(("--config", f'model_reasoning_effort="{envelope["requested"]["effort"]}"'))
     for key in ("approval_policy", "web_search"):
         arguments.extend(("--config", f'{key}="{envelope[key]}"'))
+    if envelope["apps"] == "disabled":
+        # Account-level app connectors (e.g. codex_apps/github) survive
+        # --ignore-user-config; observed reaching GitHub during a canary.
+        arguments.extend(("--disable", "apps", "--config", "apps._default.enabled=false"))
     arguments.extend(("--config", f'history.persistence="{envelope["history_persistence"]}"'))
     if not envelope["git_repo_check"]:
         arguments.append("--skip-git-repo-check")

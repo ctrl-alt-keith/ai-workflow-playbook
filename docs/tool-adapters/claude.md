@@ -233,7 +233,11 @@ these Codex deltas differ:
   effective-model evidence.
 - The review controls are Codex's native ones (`--sandbox read-only`,
   `approval_policy="never"`, `--ignore-user-config`, `--ephemeral`, no history
-  or web search); the review output is the final message.
+  or web search, and app connectors disabled through `features.apps` and
+  `apps._default.enabled`); the review output is the final message.
+  Account-level app connectors are not user config: before that control was
+  added, a preflight canary under `--ignore-user-config` was observed calling
+  `codex_apps/github.fetch_file` (2026-09-13).
 - Candidate isolation: Codex loads a checkout's project-scoped `.codex/`
   layers (config, hooks, rules) only for a trusted project, and trust is
   recorded in the user config that `--ignore-user-config` leaves unloaded, so
