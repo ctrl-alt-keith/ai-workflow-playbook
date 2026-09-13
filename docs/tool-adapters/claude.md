@@ -207,12 +207,20 @@ and human transition authority remain outside the wrapper.
 The wrapper captures Claude output and status. A review succeeds only when
 Claude exits successfully with non-empty output. Diagnostics are bounded and
 redact obvious credentials; `--diagnostics-file` can retain them at a new
-absolute path with exclusive creation. A requested file that cannot be
-written fails the attempt and its record even when the provider succeeded;
-the wrapper removes a file it created but could not complete, and when that
-removal also fails the record says the destination holds incomplete,
-untrusted bytes (`diagnostics_file: residue`) rather than presenting it as
-evidence. When several failures coincide, the record's `failure` lists the
+absolute path with exclusive creation. The record's `diagnostics_file` states
+describe this attempt's artifact, not the namespace: `written` (created,
+completed, and the path still named it at the final check), `not_created`
+(exclusive create failed; no claim about the path), `removed` (created,
+write failed, identity matched, unlinked), `residue` (created, write failed,
+identity matched, unlink failed — incomplete, untrusted bytes), `unknown`
+(identity could not be bound or the path stopped naming this attempt's file;
+nothing was removed). Cleanup is identity-guarded — the file's `fstat`
+identity is compared with `lstat` of the path before unlink — and the
+`lstat`→`unlink` window is not closed; the wrapper claims neither race-free
+cleanup nor knowledge of the whole path namespace. Any state other than
+`written` fails the attempt when a diagnostics file was requested, and an
+`unknown` or `residue` destination is never valid evidence. When several
+failures coincide, the record's `failure` lists the
 primary cause first — provider exit, then unacceptable output, then
 effective-selection evidence, then scratch cleanup, then the diagnostics
 write — with an established authentication failure taking precedence and
@@ -236,18 +244,24 @@ these Codex deltas differ:
 
 - `--model` after `--` is required: the exact selector from the
   [Codex selector table](codex.md#codex-selector-routing-and-acceptance).
-  Two separate checks apply. Before any task starts, the wrapper rejects a
-  selector or `--effort` the runtime's model catalog does not list and fails
-  closed when the catalog cannot be read; this is a pre-task observation, not
-  acceptance (`codex debug models` is undocumented, checked 2026-09-13
-  against `codex-cli 0.154.0`, takes no `--ignore-user-config`, and falls
-  back to the bundled catalog when unauthenticated). After the run, the
-  wrapper reads the effective model and reasoning effort from the leading
-  delimited banner block in the runtime-owned region of Codex's stderr,
-  before the transcript's first `user` line — prompt and model text can never
-  supply it — records them as `effective`, and fails the attempt when they
-  differ from the request or are not reported; exact-model requirements do
-  not fall back.
+  Three checks apply, in order. A cheap listing check rejects a selector or
+  `--effort` the runtime's model catalog does not list and fails closed when
+  the catalog cannot be read; listing is not acceptance (`codex debug models`
+  is undocumented, checked 2026-09-13 against `codex-cli 0.154.0`, takes no
+  `--ignore-user-config`, and falls back to the bundled catalog when
+  unauthenticated). Then, before the review prompt is delivered, an
+  acceptance canary runs the fixed canary prompt under the same governed
+  controls with the exact selection and requires a clean exit, the exact
+  reply, and runtime evidence of that model and effort; the canary never
+  sees the review prompt, its evidence is recorded as `acceptance`, and any
+  failure ends the attempt as `stage: selector_acceptance` with no
+  substantive run. Finally, after the review itself, the wrapper reads the
+  effective model and reasoning effort again from the leading delimited
+  banner block in the runtime-owned region of Codex's stderr, before the
+  transcript's first `user` line — prompt and model text can never supply
+  it — records them as `effective`, and fails the attempt when they differ
+  from the request or are not reported. The canary does not stand in for
+  that verification; exact-model requirements do not fall back.
 - The review controls are Codex's native ones (`--sandbox read-only`,
   `approval_policy="never"`, `--ignore-user-config`, `--ephemeral`, no history
   or web search, app connectors disabled through `features.apps` and

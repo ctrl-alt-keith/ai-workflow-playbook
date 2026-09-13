@@ -55,6 +55,10 @@ class Provider:
     output_field: str  # record key naming where substantive output is read from
     environment: Mapping[str, str] = field(default_factory=dict)
     require_model: bool = False
+    # Review mode runs a fixed canary with the exact requested selection before
+    # the substantive prompt is delivered, and requires the runtime's effective
+    # evidence to match. Providers without an effective-evidence surface leave it off.
+    acceptance_canary: bool = False
     accept: Callable[[str, dict[str, str], dict[str, str]], None] = lambda executable, selection, environment: None
     # Text eligible for auth-failure classification: the provider's diagnostic
     # surface, never its substantive output. Defaults to stderr.
@@ -121,7 +125,10 @@ def parse_options(provider: Provider, arguments: list[str]) -> dict[str, str]:
 
 def child_environment(provider: Provider) -> dict[str, str]:
     """Use one coherent effective-account context for every provider child."""
-    account = pwd.getpwuid(os.geteuid())
+    try:
+        account = pwd.getpwuid(os.geteuid())
+    except KeyError as error:
+        raise ValueError(f"no password-database entry for effective uid {os.geteuid()}") from error
     environment = os.environ.copy()
     environment.update({"HOME": account.pw_dir, "USER": account.pw_name, "LOGNAME": account.pw_name})
     environment.update(provider.environment)
@@ -183,24 +190,49 @@ def compose(causes: list[str]) -> str:
     return redact("; ".join(cause[:share] for cause in causes))
 
 
-def write_record(record: dict[str, Any], destination: Path) -> tuple[str | None, str]:
-    """Create the requested diagnostics file exclusively.
+def names_identity(destination: Path, identity: tuple[int, int]) -> bool | None:
+    """Whether the pathname still names this attempt's file; None when that cannot be established."""
+    try:
+        current = os.lstat(destination)
+    except OSError:
+        return None
+    return (current.st_dev, current.st_ino) == identity
 
-    Returns ``(cause, state)``: ``cause`` is None on success, otherwise the
-    bounded failure text; ``state`` is what is durably at the path afterwards:
-    ``written``, ``absent`` (nothing created, or removed after a failed write),
-    or ``residue`` (created, write failed, removal also failed — the bytes are
-    incomplete and untrusted). Only a file this call created is ever removed.
+
+def write_record(record: dict[str, Any], destination: Path) -> tuple[str | None, str]:
+    """Create the requested diagnostics file exclusively and report this attempt's artifact state.
+
+    Returns ``(cause, state)``. ``cause`` is None only for ``written``. States
+    describe the artifact this attempt created, not the namespace: ``written``
+    (created, completed, and the pathname still named it at final check),
+    ``not_created`` (exclusive create failed; no claim about the pathname),
+    ``removed`` (created, write failed, identity matched, unlinked),
+    ``residue`` (created, write failed, identity matched, unlink failed — the
+    bytes are incomplete and untrusted), ``unknown`` (identity could not be
+    bound, or the pathname stopped naming this attempt's file — nothing was
+    removed). Identity is bound with ``fstat`` after creation and checked with
+    ``lstat`` before unlink; the ``lstat``→``unlink`` window is not closed.
     """
     try:
         descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     except OSError as error:
-        return f"requested diagnostics file could not be created: {redact(str(error))}", "absent"
+        return f"requested diagnostics file could not be created: {redact(str(error))}", "not_created"
+    try:
+        created = os.fstat(descriptor)
+        identity = (created.st_dev, created.st_ino)
+    except OSError as error:
+        os.close(descriptor)
+        return f"requested diagnostics file identity could not be established: {redact(str(error))}; nothing was removed", "unknown"
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
             stream.write(json.dumps(record, sort_keys=True) + "\n")
     except OSError as error:
         cause = f"requested diagnostics file could not be written: {redact(str(error))}"
+        matches = names_identity(destination, identity)
+        if matches is None:
+            return f"{cause}; the path no longer names the file this attempt created, or could not be inspected; nothing was removed", "unknown"
+        if not matches:
+            return f"{cause}; the path now names a different file; nothing was removed", "unknown"
         try:
             os.unlink(destination)
         except OSError as removal:
@@ -209,7 +241,9 @@ def write_record(record: dict[str, Any], destination: Path) -> tuple[str | None,
                 f"untrusted bytes ({redact(str(removal))})",
                 "residue",
             )
-        return cause, "absent"
+        return f"{cause}; the incomplete file was removed", "removed"
+    if names_identity(destination, identity) is not True:
+        return "requested diagnostics file could not be verified after writing: the path no longer names the file this attempt created; nothing was removed", "unknown"
     return None, "written"
 
 
@@ -347,6 +381,94 @@ def parse_arguments(provider: Provider, argv: list[str]) -> argparse.Namespace:
     return args
 
 
+@dataclass
+class Attempt:
+    """One provider invocation, evaluated under the shared result policy."""
+
+    causes: list[str]
+    auth_failure: bool
+    evidence: dict[str, Any]
+    output: str
+
+
+def run_attempt(
+    provider: Provider,
+    *,
+    executable: str,
+    environment: dict[str, str],
+    selection: dict[str, str],
+    canary: bool,
+    prompt: bytes,
+    repository: str | None,
+) -> Attempt:
+    """Launch the provider once and classify the result; the only launch path for every attempt kind.
+
+    A canary attempt (operator auth preflight or automatic selector acceptance)
+    runs the fixed canary prompt in scratch with a time bound; a review runs the
+    candidate prompt in the verified checkout. Effective-selection evidence and
+    authentication classification come from the same provider hooks in both.
+    """
+    envelope = provider.configured_envelope(selection, preflight=canary)
+    try:
+        scratch = tempfile.TemporaryDirectory(prefix=f"{provider.name}-review-")
+    except OSError as error:
+        return Attempt([f"could not allocate a scratch directory: {error}"], False, {}, "")
+    try:
+        launch = Launch(preflight=canary, repository=repository, scratch=Path(scratch.name))
+        result = subprocess.run(
+            [executable, *provider.command(envelope, launch)],
+            input=prompt,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            cwd=scratch.name if canary else repository,
+            env=environment,
+            timeout=AUTH_PREFLIGHT_TIMEOUT_SECONDS if canary else None,
+        )
+        output = provider.output(result, launch)
+    except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+        causes = [
+            f"{provider.label} canary exceeded {AUTH_PREFLIGHT_TIMEOUT_SECONDS} seconds"
+            if isinstance(error, subprocess.TimeoutExpired)
+            else str(error)
+        ]
+        cleanup_error = cleanup_temporary_directory(scratch)
+        if cleanup_error is not None:
+            causes.append(f"{provider.label} temporary-directory cleanup failed: {cleanup_error}")
+        return Attempt(causes, False, {}, "")
+    cleanup_error = cleanup_temporary_directory(scratch)
+
+    stdout = result.stdout.decode("utf-8", errors="replace")
+    stderr = result.stderr.decode("utf-8", errors="replace")
+    received = bool(output.strip())
+    expected = output.strip() == provider.auth_response if canary else received
+    effective, substitution = provider.effective(selection, stdout, stderr)
+    causes = classify(
+        provider,
+        preflight=canary,
+        returncode=result.returncode,
+        received=received,
+        expected=expected,
+        substitution=substitution,
+        cleanup_error=cleanup_error,
+    )
+    # Authentication is established only from the provider's qualified diagnostic surface and
+    # only for a failed attempt; when established it is the primary classification.
+    auth_failure = bool(causes) and bool(provider.auth_failure.search(provider.diagnostic(stdout, stderr).lower()))
+    if auth_failure:
+        causes.insert(0, f"{provider.label} authentication needs operator attention")
+    evidence: dict[str, Any] = {
+        f"{provider.name}_exit_code": result.returncode,
+        provider.output_field: received,
+        "stderr": stderr,
+    }
+    if effective:
+        evidence["effective"] = effective
+    if causes and stdout:
+        evidence["stdout"] = stdout
+    return Attempt(causes, auth_failure, evidence, output)
+
+
 def main(provider: Provider, argv: list[str] | None = None) -> int:
     args = parse_arguments(provider, argv or sys.argv[1:])
     preflight = args.auth_preflight
@@ -379,73 +501,48 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as error:
         return fail(str(error), args.diagnostics_file)
 
-    try:
-        scratch = tempfile.TemporaryDirectory(prefix=f"{provider.name}-review-")
-    except OSError as error:
-        return fail(f"could not allocate a scratch directory: {error}", args.diagnostics_file)
-    try:
-        repository: str | None = None
-        if preflight:
-            cwd = scratch.name
-        else:
-            repository, commit = resolve_candidate(args.candidate_commit, environment)
-            record["candidate"] = {"repository": repository, "commit": commit}
-            prompt = review_prompt(prompt, repository, commit)
-            cwd = repository
-        launch = Launch(preflight=preflight, repository=repository, scratch=Path(scratch.name))
-        result = subprocess.run(
-            [executable, *provider.command(record["configured_envelope"], launch)],
-            input=prompt,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-            cwd=cwd,
-            env=environment,
-            timeout=AUTH_PREFLIGHT_TIMEOUT_SECONDS if preflight else None,
+    launch = dict(executable=executable, environment=environment, selection=selection)
+    if preflight:
+        attempt = run_attempt(provider, canary=True, prompt=provider.auth_prompt, repository=None, **launch)
+        record.update(attempt.evidence)
+        return finish(
+            provider,
+            record,
+            causes=attempt.causes,
+            auth_failure=attempt.auth_failure,
+            destination=args.diagnostics_file,
+            output=f"{provider.auth_response}\n",
         )
-        output = provider.output(result, launch)
-    except (OSError, ValueError, subprocess.TimeoutExpired) as error:
-        failure = (
-            f"{provider.label} preflight exceeded {AUTH_PREFLIGHT_TIMEOUT_SECONDS} seconds"
-            if isinstance(error, subprocess.TimeoutExpired)
-            else str(error)
-        )
-        causes = [failure]
-        cleanup_error = cleanup_temporary_directory(scratch)
-        if cleanup_error is not None:
-            causes.append(f"{provider.label} temporary-directory cleanup failed: {cleanup_error}")
-        return finish(provider, record, causes=causes, destination=args.diagnostics_file)
-    cleanup_error = cleanup_temporary_directory(scratch)
 
-    stdout = result.stdout.decode("utf-8", errors="replace")
-    stderr = result.stderr.decode("utf-8", errors="replace")
-    received = bool(output.strip())
-    expected = output.strip() == provider.auth_response if preflight else received
-    effective, substitution = provider.effective(selection, stdout, stderr)
-    causes = classify(
-        provider,
-        preflight=preflight,
-        returncode=result.returncode,
-        received=received,
-        expected=expected,
-        substitution=substitution,
-        cleanup_error=cleanup_error,
+    if provider.acceptance_canary:
+        # Runtime acceptance of the exact selection is established before the review prompt
+        # is delivered; the canary never sees that prompt, and the review is verified again.
+        acceptance = run_attempt(provider, canary=True, prompt=provider.auth_prompt, repository=None, **launch)
+        record["acceptance"] = acceptance.evidence
+        if acceptance.causes:
+            record["stage"] = "selector_acceptance"
+            return finish(
+                provider,
+                record,
+                causes=[f"selector acceptance canary: {acceptance.causes[0]}", *acceptance.causes[1:]],
+                auth_failure=acceptance.auth_failure,
+                destination=args.diagnostics_file,
+            )
+
+    try:
+        repository, commit = resolve_candidate(args.candidate_commit, environment)
+    except (OSError, ValueError) as error:
+        return fail(str(error), args.diagnostics_file)
+    record["candidate"] = {"repository": repository, "commit": commit}
+    attempt = run_attempt(
+        provider, canary=False, prompt=review_prompt(prompt, repository, commit), repository=repository, **launch
     )
-    # Authentication is established only from the provider's qualified diagnostic surface and
-    # only for a failed attempt; when established it is the primary classification.
-    auth_failure = bool(causes) and bool(provider.auth_failure.search(provider.diagnostic(stdout, stderr).lower()))
-    if auth_failure:
-        causes.insert(0, f"{provider.label} authentication needs operator attention")
-    record.update({f"{provider.name}_exit_code": result.returncode, provider.output_field: received, "stderr": stderr})
-    if effective:
-        record["effective"] = effective
-    if causes and stdout:
-        record["stdout"] = stdout
+    record.update(attempt.evidence)
     return finish(
         provider,
         record,
-        causes=causes,
-        auth_failure=auth_failure,
+        causes=attempt.causes,
+        auth_failure=attempt.auth_failure,
         destination=args.diagnostics_file,
-        output=f"{provider.auth_response}\n" if preflight else output,
+        output=attempt.output,
     )

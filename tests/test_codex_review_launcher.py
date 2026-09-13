@@ -26,33 +26,52 @@ CATALOG = {
 
 
 class CodexReviewLauncherTests(unittest.TestCase):
-    def make_fake_codex(self, root: Path, body: str, catalog: dict | None = None, banner: str | None = None) -> Path:
-        """Answer --version and debug models; for exec, print the banner to stderr then run body with $out as the last-message file.
+    def make_fake_codex(
+        self,
+        root: Path,
+        body: str,
+        catalog: dict | None = None,
+        banner: str | None = None,
+        canary: str | bool | None = True,
+        review_banner: str | None = None,
+    ) -> Path:
+        """Fake Codex: answers --version and debug models; for exec, prints a banner to stderr then runs a body.
 
-        By default the banner echoes the requested model and effort, as the real runtime does; pass
-        `banner` to report something else (or "" for no banner).
+        A canary invocation (no `--cd`) is answered by `canary`: True writes the exact canary reply,
+        a string is a custom canary body, False disables interception so `body` handles every
+        invocation. `banner` overrides the echoed banner ("" for none); `review_banner` overrides it
+        for the review invocation only. `$out` is the last-message file; `$stdin_copy` receives stdin.
         """
         catalog_file = root / "catalog.json"
         catalog_file.write_text(json.dumps(CATALOG if catalog is None else catalog), encoding="utf-8")
-        report = (
-            "printf 'OpenAI Codex v9.9.9\\n--------\\nmodel: %s\\nreasoning effort: %s\\n--------\\n' \"$model\" \"$effort\" >&2\n"
-            if banner is None
-            else f"printf '%s\\n' '{banner}' >&2\n" if banner else ""
-        )
+
+        def report(override: str | None) -> str:
+            if override is None:
+                return "printf 'OpenAI Codex v9.9.9\\n--------\\nmodel: %s\\nreasoning effort: %s\\n--------\\n' \"$model\" \"$effort\" >&2\n"
+            return f"printf '%s\\n' '{override}' >&2\n" if override else ""
+
+        canary_branch = ""
+        if canary is not False:
+            canary_body = "printf 'CODEX_AUTH_OK\\n' > \"$out\"\n" if canary is True else canary
+            canary_branch = (
+                "if [ \"$is_canary\" = 1 ]; then\n"
+                f"  cat > {root}/canary-stdin\n" + report(banner) + canary_body + "  exit 0\nfi\n"
+            )
         executable = root / "codex"
         executable.write_text(
             "#!/bin/sh\n"
             "if [ \"$1\" = \"--version\" ]; then printf 'codex-cli 9.9.9\\n'; exit 0; fi\n"
             f"if [ \"$1\" = \"debug\" ]; then cat {catalog_file}; exit 0; fi\n"
-            "out=\"\"; model=\"\"; effort=\"\"; prev=\"\"\n"
+            "out=\"\"; model=\"\"; effort=\"\"; prev=\"\"; is_canary=1\n"
             "for arg in \"$@\"; do\n"
             "  case \"$prev\" in\n"
             "    --output-last-message) out=\"$arg\";;\n"
             "    --model) model=\"$arg\";;\n"
             "    --config) case \"$arg\" in model_reasoning_effort=*) effort=${arg#model_reasoning_effort=\\\"}; effort=${effort%\\\"};; esac;;\n"
             "  esac\n"
+            "  [ \"$arg\" = \"--cd\" ] && is_canary=0\n"
             "  prev=\"$arg\"\n"
-            "done\n" + report + body,
+            "done\n" + canary_branch + report(banner if review_banner is None else review_banner) + body,
             encoding="utf-8",
         )
         executable.chmod(0o700)
@@ -112,6 +131,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
                     f"printf '%s\\n' \"$@\" > {arguments_file}\ninput=$(cat)\n"
                     "case \"$input\" in *CODEX_AUTH_OK*) printf 'CODEX_AUTH_OK\\n' > \"$out\";; "
                     "*) printf '%s\\n' \"$input\" > \"$out\";; esac\n",
+                    canary="--auth-preflight" not in arguments and True or False,
                 )
                 completed = self.run_launcher(
                     executable, "--diagnostics-file", str(diagnostics_file), *arguments, prompt=prompt, selector=selector
@@ -168,7 +188,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
 
     def test_effective_selector_is_verified_from_the_runtime_banner(self):
         """Catalog listing is a pre-task observation; the banner is the execution evidence and must match."""
-        canary = "printf 'CODEX_AUTH_OK\\n' > \"$out\"\n"
+        reply = "printf 'CODEX_AUTH_OK\\n' > \"$out\"\n"
         block = "OpenAI Codex v9.9.9\n--------\n{}\n--------"
         cases = {
             "exact model and effort": (None, (*TERRA, "--effort", "high"), 0, b""),
@@ -181,7 +201,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
         }
         for label, (banner, selector, code, message) in cases.items():
             with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:
-                executable = self.make_fake_codex(Path(temporary_directory), canary, banner=banner)
+                executable = self.make_fake_codex(Path(temporary_directory), reply, banner=banner, canary=False)
                 completed = self.run_launcher(executable, "--auth-preflight", selector=selector)
                 self.assertEqual(completed.returncode, code, completed.stderr.decode())
                 self.assertIn(message, completed.stderr)
@@ -193,13 +213,60 @@ class CodexReviewLauncherTests(unittest.TestCase):
     def test_provider_exit_is_primary_over_missing_selector_evidence(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             executable = self.make_fake_codex(
-                Path(temporary_directory), "printf 'review\\n' > \"$out\"\nexit 2\n", banner=""
+                Path(temporary_directory), "printf 'review\\n' > \"$out\"\nexit 2\n", review_banner=""
             )
             completed = self.run_launcher(executable, prompt=b"Review\n")
         record = json.loads(completed.stderr.decode().split("diagnostics: ", 1)[1])
         self.assertEqual(completed.returncode, 70)
         self.assertTrue(record["failure"].startswith("Codex exited 2 despite producing output; "))
         self.assertIn("did not report its effective model", record["failure"])
+
+    def test_selector_acceptance_canary_gates_the_substantive_review(self):
+        """Listing is not acceptance: the review prompt is delivered only after the runtime served the exact selection."""
+        block = "OpenAI Codex v9.9.9\n--------\n{}\n--------"
+        reply = "printf 'CODEX_AUTH_OK\\n' > \"$out\"\n"
+        cases = {
+            # label: (canary, banner, expected exit, review invoked, message)
+            "exact model and effort accepted": (True, None, 0, True, b""),
+            "canary exits nonzero": ("exit 3\n", None, 70, False, b"selector acceptance canary: Codex exited 3"),
+            "canary substitutes the model": (reply, block.format("model: gpt-5.6-luna\nreasoning effort: high"), 70, False, b"instead of the requested gpt-5.6-terra"),
+            "canary substitutes the effort": (reply, block.format("model: gpt-5.6-terra\nreasoning effort: low"), 70, False, b"effort low instead of the requested high"),
+            "canary omits the banner": (reply, "", 70, False, b"did not report its effective model"),
+            "canary answers wrongly": ("printf 'hello\\n' > \"$out\"\n", None, 70, False, b"did not return the expected canary response"),
+            "canary establishes auth failure": ("printf '2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized\\n' >&2\nexit 1\n", None, 78, False, b"authentication needs operator attention"),
+        }
+        for label, (canary, banner, code, invoked, message) in cases.items():
+            with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:
+                root = Path(temporary_directory)
+                marker = root / "review-invoked"
+                executable = self.make_fake_codex(root, f"touch {marker}\ncat > \"$out\"\n", canary=canary, banner=banner)
+                completed = self.run_launcher(executable, prompt=b"SECRET-REVIEW-QUESTION\n", selector=(*TERRA, "--effort", "high"))
+                canary_stdin = (root / "canary-stdin").read_bytes()
+                self.assertEqual(completed.returncode, code, completed.stderr.decode())
+                self.assertEqual(marker.exists(), invoked)
+                self.assertEqual(canary_stdin, b"Reply exactly: CODEX_AUTH_OK\n")
+                self.assertNotIn(b"SECRET-REVIEW-QUESTION", canary_stdin)
+                if message:
+                    self.assertIn(message, completed.stderr)
+                    self.assertEqual(completed.stdout, b"")
+                    self.assertIn(b'"stage": "selector_acceptance"', completed.stderr)
+                else:
+                    self.assertTrue(completed.stdout.endswith(b"Review question:\nSECRET-REVIEW-QUESTION\n"))
+                    self.assertIn(b'"acceptance": {', completed.stderr)
+
+    def test_review_is_verified_again_after_a_passing_acceptance_canary(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_codex(
+                root,
+                "cat > \"$out\"\n",
+                review_banner="OpenAI Codex v9.9.9\n--------\nmodel: gpt-5.6-luna\nreasoning effort: high\n--------",
+            )
+            completed = self.run_launcher(executable, prompt=b"Review\n", selector=(*TERRA, "--effort", "high"))
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(completed.stdout, b"")
+        self.assertIn(b"Codex ran gpt-5.6-luna instead of the requested gpt-5.6-terra", completed.stderr)
+        self.assertNotIn(b'"stage": "selector_acceptance"', completed.stderr)
 
     def test_unreadable_model_catalog_is_wrapper_failure(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -251,6 +318,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
             executable = self.make_fake_codex(
                 root,
                 "printf '2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized token=super-secret-value Authorization: Bearer another-secret sk-proj-bare-secret\\n' >&2\nexit 1\n",
+                canary=False,
             )
             diagnostics_file = root / "diagnostics.json"
             completed = self.run_launcher(executable, "--auth-preflight", "--diagnostics-file", str(diagnostics_file))

@@ -230,6 +230,7 @@ PROVIDER = Provider(
     output_field="last_message_received",
     diagnostic=diagnostic,
     effective=effective,
+    acceptance_canary=True,
 )
 
 
