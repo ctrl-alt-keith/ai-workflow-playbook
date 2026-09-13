@@ -459,31 +459,17 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         record = json.loads(stderr.getvalue().split("diagnostics: ", 1)[1])
         return code, record, stdout.getvalue(), destination, after
 
-    def test_late_diagnostics_write_failure_leaves_no_partial_file(self):
-        code, record, stdout, _, after = self.run_preflight_with_diagnostics_patches({}, fail_write=True)
+    def test_failed_diagnostics_write_leaves_the_file_marked_incomplete_without_cleanup(self):
+        """The wrapper never unlinks at the destination: an incomplete file stays, is reported, and is not evidence."""
+        code, record, stdout, destination, after = self.run_preflight_with_diagnostics_patches({}, fail_write=True)
         self.assertEqual(code, 70)
-        self.assertIsNone(after)
+        self.assertIsNotNone(after)  # nothing was deleted
         self.assertEqual(stdout, "")
         self.assertEqual(record["status"], "failed")
-        self.assertEqual(record["diagnostics_file"], "removed")
+        self.assertEqual(record["diagnostics_file"], "incomplete")
         self.assertIn("device full after create", record["failure"])
-
-    def test_late_write_failure_with_failed_removal_reports_untrusted_residue(self):
-        """When the created file can be neither completed nor removed, the record says so and never calls it evidence."""
-
-        def refuse_unlink(path):
-            raise OSError("fixture: unlink refused token=unlink-secret-value " + "x" * 1500)
-
-        code, record, _, _, after = self.run_preflight_with_diagnostics_patches({"unlink": refuse_unlink}, fail_write=True)
-        self.assertEqual(code, 70)
-        self.assertIsNotNone(after)
-        self.assertEqual(record["status"], "failed")
-        self.assertEqual(record["diagnostics_file"], "residue")
-        self.assertTrue(record["failure"].startswith("requested diagnostics file could not be written: fixture: device full"))
-        self.assertIn("could not be removed", record["failure"])
-        self.assertIn("incomplete, untrusted bytes", record["failure"])
-        self.assertNotIn("unlink-secret-value", json.dumps(record))
-        self.assertLessEqual(len(record["failure"]), 1000)
+        self.assertIn("not valid evidence", record["failure"])
+        self.assertNotIn("removed", record["failure"])
 
     def test_destination_appearing_after_validation_is_not_created_and_left_alone(self):
         """A create race is reported as this attempt not creating the artifact, with no claim about the path."""
@@ -500,11 +486,11 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(after, "someone else\n")
 
     def test_replaced_destination_is_never_unlinked_and_reported_unknown(self):
-        """If the path stops naming this attempt's file before cleanup, nothing is removed and the state is unknown."""
+        """If the path stops naming this attempt's file, the replacement is untouched and the state is unknown."""
         code, record, _, _, after = self.run_preflight_with_diagnostics_patches({}, swap_path=True, fail_write=True)
         self.assertEqual(code, 70)
         self.assertEqual(record["diagnostics_file"], "unknown")
-        self.assertIn("now names a different file; nothing was removed", record["failure"])
+        self.assertIn("no longer names the file this attempt created", record["failure"])
         self.assertEqual(after, "replacement by another actor\n")
 
     def test_completed_write_whose_path_was_replaced_is_not_reported_written(self):
@@ -528,6 +514,50 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(record["status"], "failed")
         self.assertIn("no password-database entry for effective uid", record["failure"])
         self.assertNotIn("Traceback", stderr)
+        self.assertNotIn("configured_envelope", record)  # configuration had not been constructed yet
+
+    def test_executable_failure_before_configuration_claims_no_envelope_or_evidence(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            missing = Path(temporary_directory) / "no-such-claude"
+            completed = self.run_launcher(missing, "--auth-preflight", "--", "--model", "opus")
+        record = json.loads(completed.stderr.decode().split("diagnostics: ", 1)[1])
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(record["status"], "failed")
+        self.assertNotIn("configured_envelope", record)
+        self.assertNotIn("claude_exit_code", record)
+
+    def test_provider_options_must_follow_the_delimiter(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_claude(Path(temporary_directory), "printf 'CLAUDE_AUTH_OK\\n'\n")
+            delimited = self.run_launcher(executable, "--auth-preflight", "--", "--model", "opus", "--effort=high")
+            bare_model = self.run_launcher(executable, "--auth-preflight", "--model", "opus")
+            bare_effort = self.run_launcher(executable, "--auth-preflight", "--effort=high")
+        self.assertEqual(delimited.returncode, 0, delimited.stderr.decode())
+        for completed in (bare_model, bare_effort):
+            self.assertEqual(completed.returncode, 70)
+            self.assertIn(b"provider options must follow --", completed.stderr)
+
+    def test_qualified_credential_keys_are_redacted(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_claude(
+                root,
+                "printf 'refresh_token=plain-a client_secret=plain-b OPENAI_API_KEY=plain-c ANTHROPIC_API_KEY=plain-d\\n' >&2\n"
+                "printf '%s\\n' '{\"refresh_token\":\"plain-e\",\"Proxy-Authorization\":\"Bearer plain-f\"}' >&2\n"
+                "printf 'CLAUDE_AUTH_OK\\n'\n",
+            )
+            diagnostics_file = root / "diagnostics.json"
+            completed = self.run_launcher(executable, "--auth-preflight", "--diagnostics-file", str(diagnostics_file))
+            stored = diagnostics_file.read_text(encoding="utf-8")
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+        for secret in ("plain-a", "plain-b", "plain-c", "plain-d", "plain-e", "plain-f"):
+            self.assertNotIn(secret, stored)
+            self.assertNotIn(secret.encode(), completed.stderr)
+        load_launcher(LAUNCHER, "claude_review_redact_fixture")
+        redact = sys.modules["review_launcher"].redact
+        once = redact("OPENAI_API_KEY=plain-c")
+        self.assertEqual(once, "OPENAI_API_KEY=[REDACTED]")
+        self.assertEqual(redact(once), once)  # idempotent
 
     def test_pre_existing_diagnostics_destination_is_refused_and_untouched(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

@@ -208,34 +208,35 @@ The wrapper captures Claude output and status. A review succeeds only when
 Claude exits successfully with non-empty output. Diagnostics are bounded and
 redact obvious credentials; `--diagnostics-file` can retain them at a new
 absolute path with exclusive creation. The record's `diagnostics_file` states
-describe this attempt's artifact, not the namespace: `written` (created,
-completed, and the path still named it at the final check), `not_created`
-(exclusive create failed; no claim about the path), `removed` (created,
-write failed, identity matched, unlinked), `residue` (created, write failed,
-identity matched, unlink failed — incomplete, untrusted bytes), `unknown`
-(identity could not be bound or the path stopped naming this attempt's file;
-nothing was removed). Cleanup is identity-guarded — the file's `fstat`
-identity is compared with `lstat` of the path, and every check and the unlink
-happen while the wrapper still holds the file open so its inode cannot be
-recycled underneath them — but the `lstat`→`unlink` window itself is not
-closed; the wrapper claims neither race-free cleanup nor knowledge of the
-whole path namespace. Any state other than
-`written` fails the attempt when a diagnostics file was requested, and an
-`unknown` or `residue` destination is never valid evidence. When several
+describe this attempt's artifact, not the namespace: `written` (this attempt
+completed the record and final verification saw the path still naming its
+open file), `not_created` (exclusive create failed; nothing was created and
+no claim is made about the path), `incomplete` (this attempt created the file
+but could not complete the record; the path still named that file when
+checked; the bytes are not valid evidence), `unknown` (identity could not be
+bound, or the path no longer names this attempt's file). Identity is bound
+with `fstat` and checked with `lstat` while the file is still open. The
+wrapper performs no cleanup at the destination: no portable operation
+unlinks exactly the file behind an open descriptor, so it never deletes
+whatever the path names. Any state other than `written` fails the attempt
+when a diagnostics file was requested, and an `incomplete` or `unknown`
+destination is never valid evidence. When several
 failures coincide, the record's `failure` lists the
 primary cause first — provider exit, then unacceptable output, then
 effective-selection evidence, then scratch cleanup, then the diagnostics
 write — with an established authentication failure taking precedence and
 keeping its exit code; secondary causes are preserved after it. Every string
 in the record is bounded and credential-redacted, including quoted JSON-style
-credential fields. The diagnostics record carries `configured_envelope` under
+credential fields, including qualified key names such as `refresh_token` or
+`OPENAI_API_KEY`. The diagnostics record carries `configured_envelope` under
 the
-[exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract):
-when the attempt fails before any provider invocation, it is the declaration
-of the configuration the wrapper intended to use, and no runtime evidence
-exists for it; once a provider attempt runs, it is that attempt's exact
-envelope, and runtime evidence is paired only with the envelope of the attempt
-that produced it.
+[exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract)
+in three states: a failure before the wrapper has constructed its intended
+launch configuration (account or executable resolution) carries no envelope
+and no runtime evidence; once that configuration exists, later pre-launch
+failures retain it as a declaration only; once a provider attempt runs,
+runtime evidence is paired only with that attempt's exact configured
+envelope.
 The project rule keeps local reviewer execution approval-gated.
 
 ### Local Codex reviewer launch

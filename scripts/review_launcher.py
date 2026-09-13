@@ -79,13 +79,15 @@ def redact(value: str) -> str:
     """Keep operational diagnostics without retaining obvious credentials."""
     value = value[:MAX_DIAGNOSTIC_CHARS]
     # Names may be quoted (JSON/TOML) and values may be quoted strings.
+    # A sensitive component may be qualified by `_`/`-` joined components (refresh_token,
+    # client-secret, OPENAI_API_KEY); the key as a whole is still bounded by word boundaries.
     value = re.sub(
-        r"(?i)\bauthorization\b[\"']?\s*[:=]\s*[\"']?(?:bearer\s+)?[^\s,;\"']+",
-        "authorization=[REDACTED]",
+        r"(?i)\b((?:[a-z0-9]+[_-])*authorization)\b[\"']?\s*[:=]\s*[\"']?(?:bearer\s+)?[^\s,;\"']+",
+        r"\1=[REDACTED]",
         value,
     )
     value = re.sub(
-        r"(?i)\b(token|secret|api[_-]?key|credential|cookie)\b[\"']?\s*[:=]\s*[\"']?[^\s,;\"']+",
+        r"(?i)\b((?:[a-z0-9]+[_-])*(?:token|secret|api[_-]?key|credential|cookie))\b[\"']?\s*[:=]\s*[\"']?[^\s,;\"']+",
         r"\1=[REDACTED]",
         value,
     )
@@ -213,18 +215,17 @@ def write_bytes(descriptor: int, data: bytes) -> None:
 def write_record(record: dict[str, Any], destination: Path) -> tuple[str | None, str]:
     """Create the requested diagnostics file exclusively and report this attempt's artifact state.
 
-    Returns ``(cause, state)``. ``cause`` is None only for ``written``. States
-    describe the artifact this attempt created, not the namespace: ``written``
-    (created, completed, and the pathname still named it at the final check),
-    ``not_created`` (exclusive create failed; no claim about the pathname),
-    ``removed`` (created, write failed, identity matched, unlinked),
-    ``residue`` (created, write failed, identity matched, unlink failed — the
-    bytes are incomplete and untrusted), ``unknown`` (identity could not be
-    bound, or the pathname stopped naming this attempt's file — nothing was
-    removed). Identity is bound with ``fstat`` and every check and the guarded
-    unlink happen while the descriptor is still open, so the inode cannot be
-    recycled underneath them; the ``lstat``→``unlink`` window itself is not
-    closed.
+    Returns ``(cause, state)``; ``cause`` is None only for ``written``. States
+    describe the artifact this attempt created, never the namespace:
+    ``written`` (this attempt completed the record and final verification saw
+    the pathname still naming its open file), ``not_created`` (exclusive create
+    failed; nothing was created and no claim is made about the pathname),
+    ``incomplete`` (this attempt created the file but could not complete the
+    record; the pathname still named that file when checked; the bytes are not
+    valid evidence), ``unknown`` (identity could not be bound, or the pathname
+    no longer names this attempt's file). The wrapper performs no pathname
+    cleanup: no portable operation unlinks exactly the file behind an open
+    descriptor, so nothing is ever deleted at the destination.
     """
     try:
         descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -234,28 +235,21 @@ def write_record(record: dict[str, Any], destination: Path) -> tuple[str | None,
         try:
             created = os.fstat(descriptor)
         except OSError as error:
-            return f"requested diagnostics file identity could not be established: {redact(str(error))}; nothing was removed", "unknown"
+            return f"requested diagnostics file identity could not be established: {redact(str(error))}", "unknown"
         identity = (created.st_dev, created.st_ino)
         try:
             write_bytes(descriptor, (json.dumps(record, sort_keys=True) + "\n").encode("utf-8"))
         except OSError as error:
             cause = f"requested diagnostics file could not be written: {redact(str(error))}"
-            matches = names_identity(destination, identity)
-            if matches is None:
-                return f"{cause}; the path no longer names the file this attempt created, or could not be inspected; nothing was removed", "unknown"
-            if not matches:
-                return f"{cause}; the path now names a different file; nothing was removed", "unknown"
-            try:
-                os.unlink(destination)
-            except OSError as removal:
-                return (
-                    f"{cause}; the incomplete file could not be removed and may contain incomplete, "
-                    f"untrusted bytes ({redact(str(removal))})",
-                    "residue",
-                )
-            return f"{cause}; the incomplete file was removed", "removed"
+            if names_identity(destination, identity) is True:
+                return f"{cause}; the incomplete file remains at the path and is not valid evidence", "incomplete"
+            return (
+                f"{cause}; the path no longer names the file this attempt created, and that file's bytes are "
+                "incomplete and not valid evidence",
+                "unknown",
+            )
         if names_identity(destination, identity) is not True:
-            return "requested diagnostics file could not be verified after writing: the path no longer names the file this attempt created; nothing was removed", "unknown"
+            return "requested diagnostics file could not be verified after writing: the path no longer names the file this attempt created", "unknown"
         return None, "written"
     finally:
         os.close(descriptor)
@@ -389,9 +383,11 @@ def parse_arguments(provider: Provider, argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--diagnostics-file", type=Path)
     parser.add_argument("--candidate-commit")
     parser.add_argument("provider_args", nargs=argparse.REMAINDER)
-    args = parser.parse_args(argv)
-    if args.provider_args[:1] == ["--"]:
-        args.provider_args = args.provider_args[1:]
+    args, undelimited = parser.parse_known_args(argv)
+    # Provider model/effort choices are accepted only after `--`; anything else that reached
+    # the remainder or was not a wrapper option is rejected on the bounded failure path.
+    args.undelimited = undelimited + ([] if args.provider_args[:1] == ["--"] else args.provider_args)
+    args.provider_args = args.provider_args[1:] if args.provider_args[:1] == ["--"] else []
     return args
 
 
@@ -504,10 +500,12 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
         environment = child_environment(provider)
         executable, version = resolve_executable(provider, args.binary, environment)
         record[f"{provider.name}_version"] = version
+        if args.undelimited:
+            raise ValueError(f"provider options must follow --: {' '.join(args.undelimited)}")
         selection = parse_options(provider, args.provider_args)
-        # Pre-launch declaration: the configuration the wrapper intends to use. It produced no
-        # runtime evidence because no provider attempt exists yet; an attempt that runs replaces
-        # it with the exact envelope that attempt launched with.
+        # From here the intended launch configuration exists: later pre-launch failures retain it
+        # as a declaration only (no provider attempt has produced evidence); failures before this
+        # point carry no envelope; an attempt that runs replaces it with the envelope it used.
         record["configured_envelope"] = provider.configured_envelope(selection, preflight=preflight)
         prompt = provider.auth_prompt if preflight else sys.stdin.buffer.read()
         if not preflight and not prompt.strip():
