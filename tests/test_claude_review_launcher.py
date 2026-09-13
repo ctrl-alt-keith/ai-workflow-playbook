@@ -342,8 +342,8 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             for name in leaked:
                 shutil.rmtree(name, ignore_errors=True)
         self.assertEqual(code, 70)
-        self.assertIn("candidate commit mismatch", record["failure"])
-        self.assertIn("cleanup failed: fixture cleanup failure", record["failure"])
+        self.assertTrue(record["failure"].startswith("candidate commit mismatch"))
+        self.assertIn("temporary-directory cleanup failed: fixture cleanup failure", record["failure"])
 
     def test_requested_diagnostics_file_that_cannot_be_written_prevents_success(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

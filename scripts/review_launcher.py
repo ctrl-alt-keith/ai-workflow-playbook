@@ -410,10 +410,11 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
             if isinstance(error, subprocess.TimeoutExpired)
             else str(error)
         )
+        causes = [failure]
         cleanup_error = cleanup_temporary_directory(scratch)
         if cleanup_error is not None:
-            failure = f"{failure}; temporary-directory cleanup failed: {cleanup_error}"
-        return fail(failure, args.diagnostics_file)
+            causes.append(f"{provider.label} temporary-directory cleanup failed: {cleanup_error}")
+        return finish(provider, record, causes=causes, destination=args.diagnostics_file)
     cleanup_error = cleanup_temporary_directory(scratch)
 
     stdout = result.stdout.decode("utf-8", errors="replace")
