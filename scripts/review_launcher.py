@@ -28,6 +28,7 @@ REVIEWER_FAILURE_EXIT = 70
 AUTH_PREFLIGHT_TIMEOUT_SECONDS = 120
 MAX_DIAGNOSTIC_CHARS = 1_000
 ALLOWED_OPTIONS = {"--model", "--effort"}
+MAX_OPTION_VALUE_CHARS = 128
 EXACT_COMMIT = re.compile(r"[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?")
 
 
@@ -107,6 +108,8 @@ def parse_options(provider: Provider, arguments: list[str]) -> dict[str, str]:
             index += 1
         if not value or value.startswith("-"):
             raise ValueError(f"{option} requires a non-option value")
+        if len(value) > MAX_OPTION_VALUE_CHARS:
+            raise ValueError(f"{option} value exceeds {MAX_OPTION_VALUE_CHARS} characters")
         selected[option.removeprefix("--")] = value
         index += 1
     if provider.require_model and "model" not in selected:
@@ -161,23 +164,33 @@ def validate_diagnostics_destination(destination: Path | None) -> None:
         raise ValueError("--diagnostics-file parent must exist")
 
 
+def bounded(value: Any) -> Any:
+    """Apply the diagnostic bound and credential redaction to every string in a record."""
+    if isinstance(value, str):
+        return redact(value)
+    if isinstance(value, dict):
+        return {key: bounded(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [bounded(item) for item in value]
+    return value
+
+
 def diagnostics(provider: Provider, record: dict[str, Any], destination: Path | None) -> bool:
-    """Emit the record to stderr and, when requested, to a new file; report whether the file was written."""
-    encoded = json.dumps(record, sort_keys=True)
-    print(f"{provider.name}-review diagnostics: {encoded}", file=sys.stderr)
-    if destination is None:
-        return True
-    try:
-        descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
-            stream.write(encoded + "\n")
-    except OSError as error:
-        print(
-            f"{provider.name}-review diagnostics file could not be written: {redact(str(error))}",
-            file=sys.stderr,
-        )
-        return False
-    return True
+    """Write the record to the requested file first, then emit it to stderr; a failed write marks the record failed."""
+    record = bounded(record)
+    written = True
+    if destination is not None:
+        encoded = json.dumps(record, sort_keys=True)
+        try:
+            descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+                stream.write(encoded + "\n")
+        except OSError as error:
+            written = False
+            record["status"] = "failed"
+            record["failure"] = f"requested diagnostics file could not be written: {redact(str(error))}"
+    print(f"{provider.name}-review diagnostics: {json.dumps(record, sort_keys=True)}", file=sys.stderr)
+    return written
 
 
 def cleanup_temporary_directory(directory: tempfile.TemporaryDirectory[str]) -> str | None:
@@ -253,7 +266,7 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     }
 
     def fail(failure: str, destination: Path | None) -> int:
-        diagnostics(provider, {**record, "status": "failed", "failure": redact(failure)}, destination)
+        diagnostics(provider, {**record, "status": "failed", "failure": failure}, destination)
         return REVIEWER_FAILURE_EXIT
 
     try:

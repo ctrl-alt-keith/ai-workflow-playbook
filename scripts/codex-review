@@ -20,9 +20,11 @@ LAST_MESSAGE_FILE = "last-message.txt"
 # runtime error lines (observed shape: `<timestamp> ERROR <target>: <message>`,
 # codex-cli 0.154.0) are eligible for auth-failure classification.
 DIAGNOSTIC_LINE = re.compile(r"^\S+\s+ERROR\s")
-# Codex reports the effective configuration in its stderr banner (observed
-# shape, codex-cli 0.154.0); it is the only runtime evidence of the selector
-# actually served.
+# Codex reports the effective configuration in a leading stderr banner
+# delimited by `--------` lines (observed shape, codex-cli 0.154.0); it is the
+# only runtime evidence of the selector actually served. Only that block is
+# read, because the transcript that follows echoes the model's own text.
+BANNER_DELIMITER = "--------"
 BANNER_MODEL = re.compile(r"^model:\s*(\S+)\s*$", re.MULTILINE)
 BANNER_EFFORT = re.compile(r"^reasoning effort:\s*(\S+)\s*$", re.MULTILINE)
 AUTH_FAILURE = re.compile(
@@ -153,10 +155,20 @@ def command(envelope: dict[str, Any], launch: Launch) -> list[str]:
     return arguments
 
 
+def banner_block(stderr: str) -> str:
+    """Return the text between the first two delimiter lines, or empty when no such block leads stderr."""
+    lines = stderr.splitlines()
+    delimiters = [index for index, line in enumerate(lines) if line.strip() == BANNER_DELIMITER]
+    if len(delimiters) < 2 or delimiters[0] > 1:
+        return ""
+    return "\n".join(lines[delimiters[0] + 1 : delimiters[1]])
+
+
 def effective(selection: dict[str, str], stdout: str, stderr: str) -> tuple[dict[str, Any], str | None]:
     """Require the banner to report the requested selector; exact-model requirements do not fall back."""
-    model = BANNER_MODEL.search(stderr)
-    effort = BANNER_EFFORT.search(stderr)
+    banner = banner_block(stderr)
+    model = BANNER_MODEL.search(banner)
+    effort = BANNER_EFFORT.search(banner)
     observed: dict[str, Any] = {"model": model.group(1) if model else None, "effort": effort.group(1) if effort else None}
     if observed["model"] is None:
         return observed, "the Codex runtime did not report its effective model"

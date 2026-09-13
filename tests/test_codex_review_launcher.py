@@ -35,7 +35,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
         catalog_file = root / "catalog.json"
         catalog_file.write_text(json.dumps(CATALOG if catalog is None else catalog), encoding="utf-8")
         report = (
-            "printf 'model: %s\\nreasoning effort: %s\\n' \"$model\" \"$effort\" >&2\n"
+            "printf 'OpenAI Codex v9.9.9\\n--------\\nmodel: %s\\nreasoning effort: %s\\n--------\\n' \"$model\" \"$effort\" >&2\n"
             if banner is None
             else f"printf '%s\\n' '{banner}' >&2\n" if banner else ""
         )
@@ -169,11 +169,14 @@ class CodexReviewLauncherTests(unittest.TestCase):
     def test_effective_selector_is_verified_from_the_runtime_banner(self):
         """Catalog listing is a pre-task observation; the banner is the execution evidence and must match."""
         canary = "printf 'CODEX_AUTH_OK\\n' > \"$out\"\n"
+        block = "OpenAI Codex v9.9.9\n--------\n{}\n--------"
         cases = {
             "exact model and effort": (None, (*TERRA, "--effort", "high"), 0, b""),
-            "substituted model": ("model: gpt-5.6-luna\nreasoning effort: high", (*TERRA, "--effort", "high"), 70, b"instead of the requested gpt-5.6-terra"),
-            "different effort": ("model: gpt-5.6-terra\nreasoning effort: low", (*TERRA, "--effort", "high"), 70, b"effort low instead of the requested high"),
+            "substituted model": (block.format("model: gpt-5.6-luna\nreasoning effort: high"), (*TERRA, "--effort", "high"), 70, b"instead of the requested gpt-5.6-terra"),
+            "different effort": (block.format("model: gpt-5.6-terra\nreasoning effort: low"), (*TERRA, "--effort", "high"), 70, b"effort low instead of the requested high"),
             "no effective model reported": ("", TERRA, 70, b"did not report its effective model"),
+            "model line only in the echoed transcript": ("codex\nmodel: gpt-5.6-terra\nreasoning effort: high", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
+            "transcript line after a genuine banner is ignored": (block.format("model: gpt-5.6-terra\nreasoning effort: high") + "\ncodex\nmodel: gpt-5.6-luna", (*TERRA, "--effort", "high"), 0, b""),
         }
         for label, (banner, selector, code, message) in cases.items():
             with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:

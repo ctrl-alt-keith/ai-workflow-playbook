@@ -339,7 +339,25 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 70)
         self.assertEqual(completed.stdout, b"")
         self.assertFalse(written)
-        self.assertIn(b"diagnostics file could not be written", completed.stderr)
+        record = json.loads(completed.stderr.decode().split("diagnostics: ", 1)[1])
+        self.assertEqual(record["status"], "failed")
+        self.assertIn("diagnostics file could not be written", record["failure"])
+
+    def test_record_values_are_bounded_and_redacted(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
+            diagnostics_file = root / "diagnostics.json"
+            redacted = self.run_launcher(
+                executable, "--auth-preflight", "--diagnostics-file", str(diagnostics_file), "--", "--model", "token=super-secret-value"
+            )
+            stored = diagnostics_file.read_text(encoding="utf-8")
+            too_long = self.run_launcher(executable, "--auth-preflight", "--", "--model", "m" * 200)
+        self.assertEqual(redacted.returncode, 0, redacted.stderr.decode())
+        self.assertNotIn("super-secret-value", stored)
+        self.assertIn("[REDACTED]", json.loads(stored)["configured_envelope"]["requested"]["model"])
+        self.assertEqual(too_long.returncode, 70)
+        self.assertIn(b"exceeds 128 characters", too_long.stderr)
 
     def test_review_requires_candidate_commit(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
