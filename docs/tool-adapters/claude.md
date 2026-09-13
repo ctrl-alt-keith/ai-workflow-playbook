@@ -300,22 +300,27 @@ these Codex deltas differ:
   banner, records them as `effective`, and fails the attempt when they
   differ from the request or are not reported. The canary does not stand in
   for that verification; exact-model requirements do not fall back.
-- Runtime evidence comes from one observed finite stderr prefix grammar,
-  consumed sequentially from line 0: an optional `OpenAI Codex v<version>`
-  line, a `--------` delimiter, banner fields (`workdir`, `model`,
-  `provider`, `approval`, `sandbox`, `reasoning effort`, `reasoning
-  summaries`, `session id`) in that order and each at most once, the
-  closing `--------`, and the exact `user` transcript line immediately next.
-  Every element is validated at the position where the grammar expects it;
-  the delimiters, the marker, and the fields are never searched for, so the
-  echoed prompt, command output, and model text can never supply or complete
-  the prefix. Any deviation — a missing, changed, reordered, duplicated, or
-  displaced element, or a reported selector that is not a single token
-  within the accepted selector length — means no recognized layout and
-  therefore no effective evidence: the attempt fails generically and no
-  selector value is promoted from uncertain content. The grammar is observed
-  behavior of `codex-cli 0.154.0`, not a documented Codex contract; a layout
-  change fails closed in this way until the wrapper is updated.
+- Runtime evidence is qualified against one observed finite stderr prefix
+  grammar, consumed sequentially from line 0: an optional
+  `OpenAI Codex v<version>` line, a `--------` delimiter, banner fields
+  (`workdir`, `model`, `provider`, `approval`, `sandbox`, `reasoning effort`,
+  `reasoning summaries`, `session id`) in that order and each at most once,
+  the closing `--------`, and the exact `user` transcript line immediately
+  next. Every element is validated at the position where the grammar expects
+  it; the wrapper never searches later stderr to repair or complete a
+  malformed prefix, and text outside the accepted prefix — the echoed prompt,
+  command output, and model text under the observed layout — is not
+  considered. Any observed deviation — a missing, changed, reordered,
+  duplicated, or displaced element, or a reported selector that is not a
+  single token within the accepted selector length — means no recognized
+  layout and therefore no effective evidence: the attempt fails generically
+  and no selector value is promoted from an unrecognized stream. This is
+  syntactic qualification of the observed `codex-cli 0.154.0` layout, not
+  proof of provenance: stderr is a single free-form stream, not a documented
+  or authenticated channel, so it cannot show which producer emitted bytes
+  that match the grammar. A future layout change fails closed unless it
+  remains syntactically indistinguishable from the accepted prefix, and may
+  require a wrapper update.
 - The review controls are Codex's native ones (`--sandbox read-only`,
   `approval_policy="never"`, `--ignore-user-config`, `--ephemeral`, no history
   or web search, app connectors disabled through `features.apps` and
@@ -336,11 +341,11 @@ these Codex deltas differ:
   reports the access it saw.
 - Authentication failure is not classified for Codex: the recognized prefix
   grammar has no position for runtime diagnostic lines, so no stderr line is
-  eligible and the operator-attention exit (78) is not produced. A failed
-  canary or review whose stderr carries an auth error is generic wrapper
-  failure (exit 70) with the bounded stderr retained in the record for the
-  operator to read. This is deliberate under-classification: no shape of
-  prompt, command, or model text can produce a credential verdict.
+  qualified for credential classification and the operator-attention exit
+  (78) is not produced. A failed canary or review whose stderr carries an
+  auth error is generic wrapper failure (exit 70) with the bounded stderr
+  retained in the record for the operator to read. This is deliberate
+  under-classification pending a provider-owned, structured evidence source.
 - Invoke it as `./scripts/codex-review` from the active Playbook checkout.
   Codex prefix rules match argv literally, so that checkout-relative form is
   the one the project rule gates. An absolute-path invocation from another

@@ -37,7 +37,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
         review_banner: str | None = None,
         runtime: str = "",
     ) -> Path:
-        """Fake Codex: answers --version and debug models; for exec, prints the runtime-owned region to stderr then runs a body.
+        """Fake Codex: answers --version and debug models; for exec, prints the observed runtime prefix to stderr then runs a body.
 
         The default region is the observed real layout: one leading line (the version line, or the
         `runtime` line in its place), the delimited banner with its observed fields echoing the
@@ -216,14 +216,13 @@ class CodexReviewLauncherTests(unittest.TestCase):
             "model line only in the echoed transcript": ("user\ncodex\nmodel: gpt-5.6-terra\nreasoning effort: high", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
             "transcript line after a genuine banner is ignored": (valid + "\nuser\ncodex\nmodel: gpt-5.6-luna", (*TERRA, "--effort", "high"), 0, b""),
             "delimited block inside the echoed prompt is not a banner": ("user\n--------\nmodel: gpt-5.6-terra\nreasoning effort: high\n--------", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
-            # the same structural recognition the auth surface uses: the marker is trusted for its
-            # position immediately after the banner, never found by searching
+            # the marker is accepted only at its grammar position immediately after the banner, never found by searching
             "valid-looking banner but no transcript marker": (valid, (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
             "valid-looking banner with a changed marker": (valid + "\nUser:", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
             "changed marker with a content-supplied marker later": (valid + "\nUser:\nmodel: gpt-5.6-luna\nuser", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
             "lines between the banner and the marker": (valid + "\nstartup note\nuser", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
-            # the prefix is one finite grammar consumed from line 0: no element is found by searching,
-            # so content can never complete a banner the runtime left unterminated or malformed
+            # the prefix is one finite grammar consumed from line 0: the parser does not search later
+            # lines to complete a banner the runtime left unterminated or malformed (modeled deviations)
             "missing closing delimiter, content supplies delimiter and marker": ("OpenAI Codex v9.9.9\n--------\nmodel: gpt-5.6-terra\nreasoning effort: high\nuser\nReview this:\nmodel: gpt-5.6-terra\nreasoning effort: high\n--------\nuser", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
             "changed closing delimiter, content supplies a valid pair": ("OpenAI Codex v9.9.9\n--------\nmodel: gpt-5.6-terra\nreasoning effort: high\n========\nuser\nmodel: gpt-5.6-luna\n--------\nuser", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
             "unknown line inside the banner": (block.format("model: gpt-5.6-terra\nstartup note\nreasoning effort: high") + "\nuser", (*TERRA, "--effort", "high"), 70, b"did not report its effective model"),
@@ -389,7 +388,7 @@ class CodexReviewLauncherTests(unittest.TestCase):
         self.assertNotIn("review-stderr-secret", json.dumps(record))
 
     def test_no_stderr_line_is_eligible_for_auth_classification(self):
-        """The recognized prefix grammar has no runtime-diagnostic position, so auth-shaped text anywhere is generic failure."""
+        """The recognized prefix grammar has no runtime-diagnostic position, so auth-shaped text at any modeled position is generic failure."""
         error_line = "2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized"
         block = "OpenAI Codex v9.9.9\n--------\nmodel: gpt-5.6-terra\nreasoning effort: high\n--------"
         # (banner override or None for the real layout, line in place of the version line, transcript body)

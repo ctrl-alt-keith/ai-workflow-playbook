@@ -16,10 +16,10 @@ from review_launcher import MAX_OPTION_VALUE_CHARS, Launch, Provider, main, reda
 
 
 LAST_MESSAGE_FILE = "last-message.txt"
-# Codex's formatted stderr opens with a runtime-owned prefix and then a
-# transcript that echoes the prompt, command output, and the model's own text
-# (observed structure, codex-cli 0.154.0; not a documented contract). The
-# prefix is the only runtime evidence the wrapper trusts, and runtime_layout()
+# Codex's formatted stderr (observed layout, codex-cli 0.154.0; not a
+# documented contract) opens with a runtime prefix and then a transcript that
+# echoes the prompt, command output, and the model's own text. The prefix is
+# the wrapper's runtime-evidence qualification surface: runtime_layout()
 # recognizes it by consuming one finite grammar from line 0:
 #
 #     [OpenAI Codex v<version>]      optional, exactly this shape
@@ -28,14 +28,17 @@ LAST_MESSAGE_FILE = "last-message.txt"
 #     --------
 #     user                           exact transcript marker, immediately next
 #
-# Every line is validated at the index where the grammar expects it; no
-# delimiter, marker, or field is ever discovered by searching later in the
-# stream, so transcript content can never complete or supply the prefix. Any
+# Every line is validated at the index where the grammar expects it; the
+# parser never searches later stderr to repair or complete a malformed prefix,
+# and text outside the accepted prefix is not considered. Any observed
 # deviation — a missing, changed, reordered, duplicated, or displaced element
-# — is no recognized layout, and a layout change under-classifies (no
-# effective evidence, generic failure) rather than misclassifies. The grammar
-# has no position for runtime diagnostic lines, so no stderr line is eligible
-# for auth-failure classification: a Codex authentication failure is generic
+# — is no recognized layout: no effective evidence, generic failure. This is
+# syntactic qualification of the observed layout, not proof of provenance: a
+# single free-form stream cannot show which producer emitted bytes that match
+# the grammar, so a future format change fails closed unless it remains
+# syntactically indistinguishable from the accepted prefix. The grammar has no
+# position for runtime diagnostic lines, so no stderr line is qualified for
+# auth-failure classification: a Codex authentication failure is generic
 # wrapper failure with the bounded stderr retained.
 VERSION_LINE = re.compile(r"^OpenAI Codex v\S+$")
 BANNER_DELIMITER = "--------"
@@ -169,7 +172,7 @@ def command(envelope: dict[str, Any], launch: Launch) -> list[str]:
 
 
 def runtime_layout(stderr: str) -> dict[str, str] | None:
-    """Consume the runtime-owned prefix of Codex's stderr as one finite grammar; return its banner fields or nothing.
+    """Consume the observed runtime prefix of Codex's stderr as one finite grammar; return its banner fields or nothing.
 
     The banner loop iterates the grammar, not the stream: for each field in its
     observed order, the current line is consumed only if it names that field.
@@ -212,7 +215,7 @@ def effective(selection: dict[str, str], stdout: str, stderr: str) -> tuple[dict
 
 
 def diagnostic(stdout: str, stderr: str) -> str:
-    """No line is eligible for auth-failure classification: the recognized prefix grammar has no runtime-diagnostic position."""
+    """No line is qualified for auth-failure classification: the recognized prefix grammar has no runtime-diagnostic position."""
     return ""
 
 
@@ -227,7 +230,7 @@ PROVIDER = Provider(
     name="codex",
     label="Codex",
     auth_response="CODEX_AUTH_OK",
-    auth_failure=re.compile(r"(?!)"),  # nothing is eligible; see diagnostic()
+    auth_failure=re.compile(r"(?!)"),  # nothing is qualified; see diagnostic()
     require_model=True,
     accept=require_listed_selector,
     configured_envelope=configured_envelope,
