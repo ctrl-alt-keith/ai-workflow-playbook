@@ -24,15 +24,17 @@ LAST_MESSAGE_FILE = "last-message.txt"
 #
 #     [OpenAI Codex v<version>]      optional, exactly this shape
 #     --------
-#     <field>: <value>               BANNER_FIELDS, observed order, each at most once
+#     <field>: <value>               BANNER_FIELDS, observed order, each at most once;
+#                                    only `model` is required; other values are not inspected
 #     --------
 #     user                           exact transcript marker, immediately next
 #
 # Every line is validated at the index where the grammar expects it; the
 # parser never searches later stderr to repair or complete a malformed prefix,
 # and text outside the accepted prefix is not considered. Any observed
-# deviation — a missing, changed, reordered, duplicated, or displaced element
-# — is no recognized layout: no effective evidence, generic failure. This is
+# deviation — a missing required element, or a changed, reordered, duplicated,
+# unknown, or displaced one — is no recognized layout: no effective evidence,
+# generic failure. This is
 # syntactic qualification of the observed layout, not proof of provenance: a
 # single free-form stream cannot show which producer emitted bytes that match
 # the grammar, so a future format change fails closed unless it remains

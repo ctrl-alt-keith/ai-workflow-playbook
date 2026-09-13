@@ -196,8 +196,10 @@ path and selected commit in Claude's context.
 Run `--auth-preflight` before an expensive review. It uses a fixed stdin
 canary, no tools, an ordinary temporary directory, the effective account's
 `HOME`, `USER`, and `LOGNAME`, and a fixed execution bound; a hung provider is
-wrapper failure, not an authentication result. A failed canary means Claude
-authentication needs operator attention; do not represent that outcome as a
+wrapper failure, not an authentication result. A canary that ends in an
+established authentication failure (exit 78) means Claude authentication
+needs operator attention; any other failed canary — wrong reply, no output,
+timeout, provider exit — is generic wrapper failure (exit 70). Neither is a
 substantive review result.
 It disables Claude memory loading and uses an empty MCP configuration. This is
 the Claude projection of the exact-candidate review contract in
@@ -304,15 +306,17 @@ these Codex deltas differ:
   grammar, consumed sequentially from line 0: an optional
   `OpenAI Codex v<version>` line, a `--------` delimiter, banner fields
   (`workdir`, `model`, `provider`, `approval`, `sandbox`, `reasoning effort`,
-  `reasoning summaries`, `session id`) in that order and each at most once,
-  the closing `--------`, and the exact `user` transcript line immediately
-  next. Every element is validated at the position where the grammar expects
+  `reasoning summaries`, `session id`) in that order and each at most once —
+  only `model` is required, and values other than the model and effort
+  selectors are not inspected — the closing `--------`, and the exact `user`
+  transcript line immediately next. Every element is validated at the position where the grammar expects
   it; the wrapper never searches later stderr to repair or complete a
   malformed prefix, and text outside the accepted prefix — the echoed prompt,
   command output, and model text under the observed layout — is not
-  considered. Any observed deviation — a missing, changed, reordered,
-  duplicated, or displaced element, or a reported selector that is not a
-  single token within the accepted selector length — means no recognized
+  considered. Any observed deviation — a missing required element, a
+  changed, reordered, duplicated, unknown, or displaced one, or a reported
+  selector that is not a single token within the accepted selector length —
+  means no recognized
   layout and therefore no effective evidence: the attempt fails generically
   and no selector value is promoted from an unrecognized stream. This is
   syntactic qualification of the observed `codex-cli 0.154.0` layout, not
