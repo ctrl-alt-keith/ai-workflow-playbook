@@ -146,6 +146,20 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0]["domain"], "dropbox.com")
 
+    def test_requests_api_docs_are_allowed_but_other_readthedocs_projects_warn(self) -> None:
+        official_findings = scanner.scan_text(
+            "docs/example.md",
+            "Requests API source: https://requests.readthedocs.io/en/latest/api/",
+        )
+        unrelated_findings = scanner.scan_text(
+            "docs/example.md",
+            "Example API source: https://unrelated-project.readthedocs.io/en/latest/api/",
+        )
+
+        self.assertEqual(official_findings, [])
+        self.assertEqual(len(unrelated_findings), 1)
+        self.assertEqual(unrelated_findings[0]["domain"], "unrelated-project.readthedocs.io")
+
     def test_broad_openai_domain_still_warns(self) -> None:
         findings = scanner.scan_text(
             "docs/example.md",

@@ -34,6 +34,7 @@ DEFAULT_OFFICIAL_SUFFIXES = (
     "claude.com",
     "developers.dropbox.com",
     "dropbox-sdk-python.readthedocs.io",
+    "requests.readthedocs.io",
     "developer.atlassian.com",
     "docs.atlassian.com",
     "support.atlassian.com",

@@ -64,6 +64,8 @@ because they are common adoption targets:
 - Dropbox: `developers.dropbox.com` and the exact
   `dropbox-sdk-python.readthedocs.io` host for its official Python SDK API
   reference.
+- Requests: the exact `requests.readthedocs.io` host for its official API
+  documentation.
 - Atlassian: `developer.atlassian.com`, `docs.atlassian.com`, and
   `support.atlassian.com`.
 
