@@ -5,6 +5,10 @@
 > Current doctrine representation: [Accepted v2 Architecture Foundation](../v2-architecture-foundation.md)
 >
 > Repository integration at record creation: pending review and merge of this promotion PR
+>
+> Post-integration note: PR [#455](https://github.com/ctrl-alt-keith/ai-workflow-playbook/pull/455)
+> merged as `97ff461c5f897e8ae84c8b3bc93922a7a74dc60d` on 2026-09-12; the
+> preceding integration statement remains historical.
 
 ## Human decision and effect
 

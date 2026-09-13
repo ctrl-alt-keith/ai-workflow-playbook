@@ -341,8 +341,9 @@ medium M1 finding identified missing reader-path fixture coverage; later
 tests added mismatch, unavailable metadata, folder target, and multi-version
 readback cases. Focused review accepted the pre-rebase head
 `e6cebe4f6ee1891b56697a71b4846608a9034f66` before the completed live run.
-The rebased head requires its own focused review of architecture fidelity and
-the old qualification's applicability.
+Focused post-rebase controller review covered the delivered exact head
+`3d4285acff69d210038e1f57e5bc38ff1d991817` (PR #460), confirming
+architecture fidelity and the earlier qualification's applicability.
 
 This remains one cohesive branch/worktree/PR. Live Dropbox requests are outside
 repository validation; the completed bounded run is evidenced separately.
