@@ -16,10 +16,14 @@ from review_launcher import Launch, Provider, main, redact  # noqa: E402
 
 
 LAST_MESSAGE_FILE = "last-message.txt"
-# Codex's formatted stderr transcript echoes the model's own text, so only its
-# runtime error lines (observed shape: `<timestamp> ERROR <target>: <message>`,
-# codex-cli 0.154.0) are eligible for auth-failure classification.
+# Codex's formatted stderr transcript echoes the model's own text under a
+# `codex` section and command output under `exec` sections (observed section
+# markers, codex-cli 0.154.0). Only runtime error lines (observed shape:
+# `<timestamp> ERROR <target>: <message>`) outside those sections are eligible
+# for auth-failure classification.
 DIAGNOSTIC_LINE = re.compile(r"^\S+\s+ERROR\s")
+SECTION_MARKERS = {"user", "codex", "exec", "tokens used"}
+CONTENT_SECTIONS = {"codex", "exec"}
 # Codex reports the effective configuration in a leading stderr banner
 # delimited by `--------` lines (observed shape, codex-cli 0.154.0); it is the
 # only runtime evidence of the selector actually served. Only that block is
@@ -189,7 +193,16 @@ def effective(selection: dict[str, str], stdout: str, stderr: str) -> tuple[dict
 
 
 def diagnostic(stdout: str, stderr: str) -> str:
-    return "\n".join(line for line in stderr.splitlines() if DIAGNOSTIC_LINE.match(line))
+    """Runtime error lines outside the transcript's model and command-output sections."""
+    section = None
+    lines = []
+    for line in stderr.splitlines():
+        if line in SECTION_MARKERS:
+            section = line
+            continue
+        if section not in CONTENT_SECTIONS and DIAGNOSTIC_LINE.match(line):
+            lines.append(line)
+    return "\n".join(lines)
 
 
 def output(result: subprocess.CompletedProcess[bytes], launch: Launch) -> str:

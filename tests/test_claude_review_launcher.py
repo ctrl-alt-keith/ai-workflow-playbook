@@ -216,8 +216,31 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             )
             completed = self.run_launcher(executable, prompt=b"Review the authentication path.\n")
         self.assertEqual(completed.returncode, 70)
-        self.assertIn(b"substantive review output", completed.stderr)
+        self.assertIn(b"exited 1 despite producing output", completed.stderr)
         self.assertNotIn(b"authentication needs operator attention", completed.stderr)
+
+    def test_compound_failure_keeps_the_primary_cause_and_its_exit_code(self):
+        """A failed diagnostics write is appended evidence; an auth failure stays auth (78)."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            destination_dir = root / "evidence"
+            destination_dir.mkdir()
+            executable = self.make_fake_claude(
+                root,
+                f"chmod 500 {destination_dir}\n"
+                "printf '{\"error\":{\"type\":\"authentication_error\",\"message\":\"invalid x-api-key\"}}\\n' >&2\nexit 1\n",
+            )
+            try:
+                completed = self.run_launcher(
+                    executable, "--auth-preflight", "--diagnostics-file", str(destination_dir / "diagnostics.json")
+                )
+            finally:
+                destination_dir.chmod(0o700)
+        record = json.loads(completed.stderr.decode().split("diagnostics: ", 1)[1])
+        self.assertEqual(completed.returncode, 78)
+        self.assertEqual(record["status"], "failed")
+        self.assertTrue(record["failure"].startswith("Claude authentication needs operator attention; "))
+        self.assertIn("diagnostics file could not be written", record["failure"])
 
     def test_scratch_cleanup_failure_fails_an_otherwise_successful_attempt(self):
         """Shared-flow behavior, covered once here: provider output alone does not make the attempt succeed."""

@@ -175,22 +175,45 @@ def bounded(value: Any) -> Any:
     return value
 
 
-def diagnostics(provider: Provider, record: dict[str, Any], destination: Path | None) -> bool:
-    """Write the record to the requested file first, then emit it to stderr; a failed write marks the record failed."""
-    record = bounded(record)
-    written = True
+def write_record(record: dict[str, Any], destination: Path) -> str | None:
+    """Create the requested diagnostics file exclusively; return the bounded error when it cannot be written."""
+    try:
+        descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            stream.write(json.dumps(record, sort_keys=True) + "\n")
+    except OSError as error:
+        return redact(str(error))
+    return None
+
+
+def finish(
+    provider: Provider,
+    record: dict[str, Any],
+    *,
+    failure: str | None,
+    auth_failure: bool = False,
+    destination: Path | None,
+    output: str = "",
+) -> int:
+    """The one result path: emit the record, then exit with the primary classification.
+
+    The primary failure stays primary; a failed write of the requested
+    diagnostics file is appended as an additional cause and fails an otherwise
+    successful attempt. The corrected record goes to stderr only.
+    """
+    causes = [failure] if failure else []
+    record = bounded({**record, "status": "failed" if causes else "ok", **({"failure": failure} if failure else {})})
     if destination is not None:
-        encoded = json.dumps(record, sort_keys=True)
-        try:
-            descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
-                stream.write(encoded + "\n")
-        except OSError as error:
-            written = False
+        write_error = write_record(record, destination)
+        if write_error is not None:
+            causes.append(f"requested diagnostics file could not be written: {write_error}")
             record["status"] = "failed"
-            record["failure"] = f"requested diagnostics file could not be written: {redact(str(error))}"
+            record["failure"] = "; ".join(causes)
     print(f"{provider.name}-review diagnostics: {json.dumps(record, sort_keys=True)}", file=sys.stderr)
-    return written
+    if causes:
+        return AUTH_FAILURE_EXIT if auth_failure else REVIEWER_FAILURE_EXIT
+    sys.stdout.write(output)
+    return 0
 
 
 def cleanup_temporary_directory(directory: tempfile.TemporaryDirectory[str]) -> str | None:
@@ -266,8 +289,7 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     }
 
     def fail(failure: str, destination: Path | None) -> int:
-        diagnostics(provider, {**record, "status": "failed", "failure": failure}, destination)
-        return REVIEWER_FAILURE_EXIT
+        return finish(provider, record, failure=failure, destination=destination)
 
     try:
         validate_diagnostics_destination(args.diagnostics_file)
@@ -329,27 +351,19 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
 
     stdout = result.stdout.decode("utf-8", errors="replace")
     stderr = result.stderr.decode("utf-8", errors="replace")
-    expected = output.strip() == provider.auth_response if preflight else bool(output.strip())
-    successful = result.returncode == 0 and expected
+    received = bool(output.strip())
+    expected = output.strip() == provider.auth_response if preflight else received
     if cleanup_error is not None:
-        successful = False
         stderr = "\n".join(filter(None, (stderr, f"temporary-directory cleanup failed: {cleanup_error}")))
     effective, substitution = provider.effective(selection, stdout, stderr)
-    if substitution is not None:
-        successful = False
+    successful = result.returncode == 0 and expected and cleanup_error is None and substitution is None
     auth_failure = not successful and bool(provider.auth_failure.search(provider.diagnostic(stdout, stderr).lower()))
-    record.update(
-        {
-            "status": "ok" if successful else "failed",
-            f"{provider.name}_exit_code": result.returncode,
-            provider.output_field: bool(output.strip()),
-            "stderr": redact(stderr),
-        }
-    )
+    record.update({f"{provider.name}_exit_code": result.returncode, provider.output_field: received, "stderr": stderr})
     if effective:
         record["effective"] = effective
+    failure = None
     if not successful:
-        record["failure"] = (
+        failure = (
             f"{provider.label} authentication needs operator attention"
             if auth_failure
             else f"{provider.label} temporary-directory cleanup failed"
@@ -357,14 +371,18 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
             else substitution
             if substitution is not None
             else f"{provider.label} preflight did not return the expected canary response"
-            if preflight
+            if preflight and not expected
+            else f"{provider.label} exited {result.returncode} despite producing output"
+            if result.returncode != 0 and received
             else f"{provider.label} did not return substantive review output"
         )
         if stdout:
-            record["stdout"] = redact(stdout)
-    if not diagnostics(provider, record, args.diagnostics_file):
-        return REVIEWER_FAILURE_EXIT
-    if not successful:
-        return AUTH_FAILURE_EXIT if auth_failure else REVIEWER_FAILURE_EXIT
-    sys.stdout.write(f"{provider.auth_response}\n" if preflight else output)
-    return 0
+            record["stdout"] = stdout
+    return finish(
+        provider,
+        record,
+        failure=failure,
+        auth_failure=auth_failure,
+        destination=args.diagnostics_file,
+        output=f"{provider.auth_response}\n" if preflight else output,
+    )

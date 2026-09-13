@@ -210,27 +210,26 @@ class CodexReviewLauncherTests(unittest.TestCase):
         for completed in (empty, failing):
             self.assertEqual(completed.returncode, 70)
             self.assertEqual(completed.stdout, b"")
-            self.assertIn(b"substantive review output", completed.stderr)
+        self.assertIn(b"did not return substantive review output", empty.stderr)
+        self.assertIn(b"exited 1 despite producing output", failing.stderr)
 
     def test_auth_classification_reads_runtime_error_lines_not_the_echoed_transcript(self):
-        """Codex echoes the model's text on stderr; only its runtime error lines are credential evidence."""
+        """The same error-shaped line is credential evidence in the runtime region and inert inside the model's `codex` section."""
+        error_line = "2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized"
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
-            diagnostic = self.make_fake_codex(
-                root, "printf '2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized\\n' >&2\nexit 1\n"
-            )
-            diagnostic_result = self.run_launcher(diagnostic, prompt=b"Review\n")
-            transcript = self.make_fake_codex(
+            runtime = self.make_fake_codex(root, f"printf 'user\\nReview\\n\\n{error_line}\\n' >&2\nexit 1\n")
+            runtime_result = self.run_launcher(runtime, prompt=b"Review\n")
+            quoted = self.make_fake_codex(
                 root,
-                "printf 'codex\\nThe handler returns 401 Unauthorized when the token is missing.\\n' >&2\n"
+                f"printf 'user\\nReview\\n\\ncodex\\nThe log showed:\\n{error_line}\\n' >&2\n"
                 "printf 'stream closed unexpectedly\\n' >&2\nexit 1\n",
             )
-            transcript_result = self.run_launcher(transcript, prompt=b"Review\n")
-        self.assertEqual(diagnostic_result.returncode, 78)
-        self.assertIn(b"authentication needs operator attention", diagnostic_result.stderr)
-        self.assertEqual(transcript_result.returncode, 70)
-        self.assertIn(b"substantive review output", transcript_result.stderr)
-        self.assertNotIn(b"authentication needs operator attention", transcript_result.stderr)
+            quoted_result = self.run_launcher(quoted, prompt=b"Review\n")
+        self.assertEqual(runtime_result.returncode, 78)
+        self.assertIn(b"authentication needs operator attention", runtime_result.stderr)
+        self.assertEqual(quoted_result.returncode, 70)
+        self.assertNotIn(b"authentication needs operator attention", quoted_result.stderr)
 
     def test_auth_failure_diagnostics_are_redacted_and_can_be_retained(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
