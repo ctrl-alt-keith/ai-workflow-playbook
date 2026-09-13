@@ -1,0 +1,7 @@
+# Repository-relative wrapper bytes are writable during development, so the
+# project layer requires explicit approval before reviewer execution.
+prefix_rule(
+    pattern=["./scripts/codex-review"],
+    decision="prompt",
+    justification="Repository-relative Codex reviewer execution requires explicit approval.",
+)
