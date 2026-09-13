@@ -597,43 +597,26 @@ need review later. Use attempt-local scratch only for short-lived private
 process mechanics whose loss cannot impair recovery; the shared lifecycle
 contract is in [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
-### Local Claude Code Review
+### Local reviewer launch
 
-Invoke the active Playbook checkout's `scripts/claude-review` directly. No
-supported workflow installs, copies, or reconciles a machine-local launcher.
+Only when Codex launches or interprets a local `claude-review` or
+`codex-review` attempt, apply the shared
+[`external-ai-reviewer.md`](../external-ai-reviewer.md) contract and the
+launcher-owned [`review-launchers.md`](../../scripts/review-launchers.md).
+Use only the active Playbook checkout's repository-owned launcher, its explicit
+provider binary, and the checkout's exact `--candidate-commit`; a mismatch
+stops before review. The configured launcher supplies read-only controls, and
+the repository project rule keeps local reviewer execution approval-gated.
 
-Pass the absolute Claude executable with `--claude-bin`; the wrapper resolves
-it, verifies that it is executable, and records its `--version` result. It does
-not use inherited `PATH` to select Claude. It normalizes `HOME`, `USER`, and
-`LOGNAME` from the effective account before starting Claude. Before an expensive
-review, use the cheap authentication canary in that context:
-
-```text
-/ABSOLUTE/PATH/TO/ai-workflow-playbook/scripts/claude-review \
-  --claude-bin /ABSOLUTE/PATH/TO/CLAUDE \
-  --auth-preflight -- --model opus --effort high
-```
-
-For a review, run the command from the intended checkout, pass its exact commit
-with `--candidate-commit`, and supply the review question on standard input.
-Immediately before invoking Claude, the wrapper verifies that the checkout
-resolves to that commit and adds the verified repository path and commit to the
-review context. A mismatch fails before review rather than selecting a new
-candidate.
-
-The wrapper accepts only model and effort choices after `--`; it supplies the
-read-only Claude tools, no-session-persistence, no-connector, and
-non-interactive permission settings itself. It captures provider output, treats
-an empty or failed response as wrapper failure, and emits bounded redacted
-diagnostics. `--diagnostics-file` can retain those diagnostics at a new absolute
-path when needed. Together with the caller's review question and subsequent
-finding disposition, this is the Claude projection of the exact-candidate
-review contract in [`external-ai-reviewer.md`](../external-ai-reviewer.md).
-It grants no implementation, merge, release, or promotion authority.
-
-The repository project rule keeps this local reviewer execution approval-gated.
-Run the preflight before review and stop for operator attention if it fails;
-do not treat a Claude failure as an ACCEPT or REJECT result.
+Run required preflight before expensive review. Claude exit 78 is the qualified
+operator-reauthentication case; other Claude failures and every Codex failure
+are generic wrapper failures. A failed attempt is neither a verdict nor grounds
+for silent substitution. Treat diagnostics as review evidence only when the
+terminal record says `diagnostics_file: written`; preserve every other failure
+and stop at the selected-review boundary. For exact-model Codex review, require
+the explicit selector, pre-prompt acceptance, and matching post-review
+effective selection; it does not fall back. Operator-layer instructions and
+configuration remain outside launcher control.
 
 ## Autonomous Lane
 
