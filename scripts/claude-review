@@ -343,6 +343,7 @@ def main(argv: list[str] | None = None) -> int:
                 "status": "failed",
                 "claude_version": version,
                 "failure": redact(str(error)),
+                "configured_envelope": envelope,
             },
             args.diagnostics_file,
         )
