@@ -238,11 +238,15 @@ these Codex deltas differ:
   layers (config, hooks, rules) only for a trusted project, and trust is
   recorded in the user config that `--ignore-user-config` leaves unloaded, so
   the candidate cannot extend the reviewer's surface through its own
-  `.codex/config.toml` (documented; observed 2026-09-13 — a candidate
-  `model_provider` override did not take effect). The configured envelope
-  declares `project_layers_loaded: false`. Operator-managed configuration and
-  read-only sandbox network semantics are not observed, so network reach
-  stays unestablished and the reviewer still reports the access it saw.
+  `.codex/config.toml` (documented; consistent with a 2026-09-13 observation
+  in which a candidate `model_provider` override did not take effect). The
+  envelope's `project_layers_loaded: false` is that derivation declared, not
+  an observed runtime fact; `user_config_loaded` is the control that renders.
+  Operator-managed configuration and read-only sandbox network semantics are
+  not observed, so network reach stays unestablished and the reviewer still
+  reports the access it saw.
+- Authentication failure is classified only from Codex's runtime error lines
+  on stderr, never from the review text, which Codex also echoes there.
 - Invoke it as `./scripts/codex-review` from the active Playbook checkout.
   Codex prefix rules match argv literally, so that checkout-relative form is
   the one the project rule gates. An absolute-path invocation from another

@@ -205,6 +205,19 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertIn(b"authentication needs operator attention", completed.stderr)
         self.assertNotIn(b"substantive review output", completed.stderr)
 
+    def test_auth_words_in_review_output_do_not_diagnose_credentials(self):
+        """Reviewer prose is not provider evidence: an unrelated failure stays generic reviewer failure."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_claude(
+                Path(temporary_directory),
+                "printf 'Finding: the endpoint returns 401 Unauthorized without a token check.\\n'\n"
+                "printf 'reviewer process crashed after streaming\\n' >&2\nexit 1\n",
+            )
+            completed = self.run_launcher(executable, prompt=b"Review the authentication path.\n")
+        self.assertEqual(completed.returncode, 70)
+        self.assertIn(b"substantive review output", completed.stderr)
+        self.assertNotIn(b"authentication needs operator attention", completed.stderr)
+
     def test_scratch_cleanup_failure_fails_an_otherwise_successful_attempt(self):
         """Shared-flow behavior, covered once here: provider output alone does not make the attempt succeed."""
         launcher = load_launcher(LAUNCHER, "claude_review_cleanup_fixture")

@@ -66,8 +66,8 @@ class CodexReviewLauncherTests(unittest.TestCase):
         self.assertTrue(matches(pattern, ["./scripts/codex-review", "--codex-bin", "/opt/codex"]))
         self.assertFalse(matches(pattern, [str(LAUNCHER), "--codex-bin", "/opt/codex"]))
 
-    def test_candidate_project_layers_are_declared_unloaded_and_rendered(self):
-        """The candidate's own .codex/ layers cannot extend the review: the envelope declares them unloaded and the argv carries it."""
+    def test_project_layer_declaration_follows_the_rendered_user_config_control(self):
+        """`project_layers_loaded: false` is a declaration derived from Codex's trust rule; only `user_config_loaded` renders."""
         launcher = load_launcher(LAUNCHER, "codex_review_isolation_fixture")
         for preflight in (False, True):
             with self.subTest(preflight=preflight):
@@ -176,12 +176,32 @@ class CodexReviewLauncherTests(unittest.TestCase):
             self.assertEqual(completed.stdout, b"")
             self.assertIn(b"substantive review output", completed.stderr)
 
+    def test_auth_classification_reads_runtime_error_lines_not_the_echoed_transcript(self):
+        """Codex echoes the model's text on stderr; only its runtime error lines are credential evidence."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            diagnostic = self.make_fake_codex(
+                root, "printf '2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized\\n' >&2\nexit 1\n"
+            )
+            diagnostic_result = self.run_launcher(diagnostic, prompt=b"Review\n")
+            transcript = self.make_fake_codex(
+                root,
+                "printf 'codex\\nThe handler returns 401 Unauthorized when the token is missing.\\n' >&2\n"
+                "printf 'stream closed unexpectedly\\n' >&2\nexit 1\n",
+            )
+            transcript_result = self.run_launcher(transcript, prompt=b"Review\n")
+        self.assertEqual(diagnostic_result.returncode, 78)
+        self.assertIn(b"authentication needs operator attention", diagnostic_result.stderr)
+        self.assertEqual(transcript_result.returncode, 70)
+        self.assertIn(b"substantive review output", transcript_result.stderr)
+        self.assertNotIn(b"authentication needs operator attention", transcript_result.stderr)
+
     def test_auth_failure_diagnostics_are_redacted_and_can_be_retained(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
             executable = self.make_fake_codex(
                 root,
-                "printf 'Not logged in: token=super-secret-value Authorization: Bearer another-secret sk-proj-bare-secret\\n' >&2\nexit 1\n",
+                "printf '2026-09-13T07:57:42Z ERROR codex_api::endpoint: HTTP error: 401 Unauthorized token=super-secret-value Authorization: Bearer another-secret sk-proj-bare-secret\\n' >&2\nexit 1\n",
             )
             diagnostics_file = root / "diagnostics.json"
             completed = self.run_launcher(executable, "--auth-preflight", "--diagnostics-file", str(diagnostics_file))

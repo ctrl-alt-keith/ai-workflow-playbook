@@ -16,6 +16,10 @@ from review_launcher import Launch, Provider, main, redact  # noqa: E402
 
 
 LAST_MESSAGE_FILE = "last-message.txt"
+# Codex's formatted stderr transcript echoes the model's own text, so only its
+# runtime error lines (observed shape: `<timestamp> ERROR <target>: <message>`,
+# codex-cli 0.154.0) are eligible for auth-failure classification.
+DIAGNOSTIC_LINE = re.compile(r"^\S+\s+ERROR\s")
 AUTH_FAILURE = re.compile(
     r"\b(?:"
     r"not logged in|"
@@ -82,11 +86,11 @@ def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[s
     layers (config, hooks, rules) only for a trusted project, and trust lives
     in the user config that ``--ignore-user-config`` leaves unloaded, so the
     candidate cannot extend the reviewer's surface through its own
-    ``.codex/config.toml`` (documented; observed 2026-09-13 with codex-cli
-    0.154.0, where a candidate ``model_provider`` override did not take
-    effect). Operator-managed configuration and read-only sandbox network
-    semantics are not observed, so network reach is not established from
-    these controls alone.
+    ``.codex/config.toml``. ``project_layers_loaded`` is that derivation
+    declared, not an observed runtime fact, and it renders no argv of its own;
+    ``user_config_loaded`` is the control that renders. Operator-managed
+    configuration and read-only sandbox network semantics are not observed, so
+    network reach is not established from these controls alone.
     """
     return {
         "requested": {"model": selection["model"], "effort": selection.get("effort")},
@@ -137,6 +141,10 @@ def command(envelope: dict[str, Any], launch: Launch) -> list[str]:
     return arguments
 
 
+def diagnostic(stdout: str, stderr: str) -> str:
+    return "\n".join(line for line in stderr.splitlines() if DIAGNOSTIC_LINE.match(line))
+
+
 def output(result: subprocess.CompletedProcess[bytes], launch: Launch) -> str:
     try:
         return (launch.scratch / LAST_MESSAGE_FILE).read_text(encoding="utf-8", errors="replace")
@@ -155,6 +163,7 @@ PROVIDER = Provider(
     command=command,
     output=output,
     output_field="last_message_received",
+    diagnostic=diagnostic,
 )
 
 

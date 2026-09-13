@@ -54,6 +54,9 @@ class Provider:
     environment: Mapping[str, str] = field(default_factory=dict)
     require_model: bool = False
     accept: Callable[[str, dict[str, str], dict[str, str]], None] = lambda executable, selection, environment: None
+    # Text eligible for auth-failure classification: the provider's diagnostic
+    # surface, never its substantive output. Defaults to stderr.
+    diagnostic: Callable[[str, str], str] = lambda stdout, stderr: stderr
 
     @property
     def auth_prompt(self) -> bytes:
@@ -297,7 +300,7 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     if cleanup_error is not None:
         successful = False
         stderr = "\n".join(filter(None, (stderr, f"temporary-directory cleanup failed: {cleanup_error}")))
-    auth_failure = not successful and bool(provider.auth_failure.search(f"{stdout}\n{stderr}".lower()))
+    auth_failure = not successful and bool(provider.auth_failure.search(provider.diagnostic(stdout, stderr).lower()))
     record.update(
         {
             "status": "ok" if successful else "failed",
