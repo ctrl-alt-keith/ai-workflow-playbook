@@ -199,7 +199,8 @@ def configured_envelope(options: list[str], *, preflight: bool) -> dict[str, Any
 def claude_arguments(envelope: dict[str, Any]) -> list[str]:
     """Render the declared envelope as the Claude argv; nothing else adds flags."""
     arguments: list[str] = []
-    for name, value in envelope["requested"].items():
+    for name in ("model", "effort"):
+        value = envelope["requested"][name]
         if value is not None:
             arguments.extend((f"--{name}", value))
     arguments.extend(("--tools", ",".join(envelope["tools"])))
