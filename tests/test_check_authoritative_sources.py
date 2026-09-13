@@ -234,15 +234,28 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
                 self.assertEqual(len(findings), 1)
                 self.assertEqual(findings[0]["domain"], "github.com")
 
-    def test_configured_domains_accept_comma_and_space_separated_values(self) -> None:
-        domains = scanner.configured_domains(
-            ["https://docs.aws.amazon.com, cloud.google.com learn.microsoft.com"]
-        )
+    def test_cli_configured_domains_suppress_matching_api_warnings(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            docs_dir = root / "docs"
+            docs_dir.mkdir()
+            (docs_dir / "example.md").write_text(
+                "\n".join(
+                    [
+                        "AWS API source: https://docs.aws.amazon.com/lambda/latest/dg/welcome.html",
+                        "Microsoft API source: https://learn.microsoft.com/en-us/",
+                    ]
+                ),
+                encoding="utf-8",
+            )
 
-        self.assertEqual(
-            domains,
-            ("docs.aws.amazon.com", "cloud.google.com", "learn.microsoft.com"),
-        )
+            result = self.run_scanner_cli(
+                ["--all-markdown", "--official-domain", "https://docs.aws.amazon.com, learn.microsoft.com"],
+                cwd=root,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("no non-authoritative source URLs found", result.stdout)
 
     def test_changed_markdown_files_returns_only_nonempty_git_output_lines(self) -> None:
         completed = subprocess.CompletedProcess(
