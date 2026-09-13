@@ -286,13 +286,16 @@ these Codex deltas differ:
   with the canary's own configured envelope, and any failure ends the attempt
   as `stage: selector_acceptance` with no substantive run and no review
   envelope in the record. Every attempt's evidence is paired with the exact
-  envelope that produced it. Finally, after the review itself, the wrapper reads the
-  effective model and reasoning effort again from the leading delimited
-  banner block in the runtime-owned region of Codex's stderr, before the
-  transcript's first `user` line — prompt and model text can never supply
-  it — records them as `effective`, and fails the attempt when they differ
-  from the request or are not reported. The canary does not stand in for
-  that verification; exact-model requirements do not fall back.
+  envelope that produced it. Finally, after the review itself, the wrapper
+  reads the effective model and reasoning effort again from the leading
+  delimited banner block in the runtime-owned region of Codex's stderr — the
+  lines before the first exact `user` line, trusted only when that marker is
+  present, the same boundary the authentication path requires — records them
+  as `effective`, and fails the attempt when they differ from the request or
+  are not reported. Prompt and model text can never supply the banner, and a
+  missing or changed marker means no effective evidence at all. The canary
+  does not stand in for that verification; exact-model requirements do not
+  fall back.
 - The review controls are Codex's native ones (`--sandbox read-only`,
   `approval_policy="never"`, `--ignore-user-config`, `--ephemeral`, no history
   or web search, app connectors disabled through `features.apps` and
@@ -319,6 +322,9 @@ these Codex deltas differ:
   contain is inert. The bias is toward under-classification: an auth error
   Codex reports after the prompt echo, or under a changed layout, is generic
   wrapper failure (exit 70) with the bounded diagnostics still in the record.
+  The banner delimiters and the `user` marker are observed layout, not a
+  documented Codex contract; a layout change makes both evidence paths shrink
+  to nothing until the wrapper is updated.
 - Invoke it as `./scripts/codex-review` from the active Playbook checkout.
   Codex prefix rules match argv literally, so that checkout-relative form is
   the one the project rule gates. An absolute-path invocation from another
