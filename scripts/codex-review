@@ -31,12 +31,15 @@ AUTH_FAILURE = re.compile(
 )
 
 
-def require_accepted_selector(executable: str, selection: dict[str, str], environment: dict[str, str]) -> None:
-    """Reject a selector the runtime's own model catalog does not list before any task starts.
+def require_listed_selector(executable: str, selection: dict[str, str], environment: dict[str, str]) -> None:
+    """Reject a selector the runtime's model catalog does not list before any task starts.
 
-    ``codex debug models`` is observed behavior of codex-cli 0.154.0 (checked
-    2026-09-13), not a documented CLI contract; an unreadable catalog fails
-    closed rather than falling back to the launch.
+    This is a runtime-catalog observation, not proof of acceptance under the
+    governed envelope: ``codex debug models`` is undocumented (observed with
+    codex-cli 0.154.0 on 2026-09-13), takes no ``--ignore-user-config``, returns
+    the account-refreshed catalog when authenticated and silently falls back to
+    the binary's bundled catalog otherwise. The governed run's own banner is
+    the effective-model evidence. An unreadable catalog fails closed.
     """
     try:
         result = subprocess.run(
@@ -62,10 +65,10 @@ def require_accepted_selector(executable: str, selection: dict[str, str], enviro
         raise ValueError(f"could not read the Codex model catalog: {error}") from error
     model = selection["model"]
     if model not in catalog:
-        raise ValueError(f"the Codex runtime does not accept model selector {model}")
+        raise ValueError(f"the Codex model catalog does not list model selector {model}")
     effort = selection.get("effort")
     if effort is not None and effort not in catalog[model]:
-        raise ValueError(f"the Codex runtime does not accept effort {effort} for {model}")
+        raise ValueError(f"the Codex model catalog does not list effort {effort} for {model}")
 
 
 def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[str, Any]:
@@ -73,20 +76,27 @@ def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[s
 
     A ``None`` control was not set by the wrapper: the executor default applies
     and is not observed here. Requested model and effort are requests, not the
-    effective runtime values. Skipping the user config drops user-configured
-    MCP servers; a trusted checkout's project-scoped config is not overridden
-    and sandbox network semantics are not observed, so network reach is not
-    established from these controls alone.
+    effective runtime values.
+
+    Candidate isolation: Codex loads a checkout's project-scoped ``.codex/``
+    layers (config, hooks, rules) only for a trusted project, and trust lives
+    in the user config that ``--ignore-user-config`` leaves unloaded, so the
+    candidate cannot extend the reviewer's surface through its own
+    ``.codex/config.toml`` (documented; observed 2026-09-13 with codex-cli
+    0.154.0, where a candidate ``model_provider`` override did not take
+    effect). Operator-managed configuration and read-only sandbox network
+    semantics are not observed, so network reach is not established from
+    these controls alone.
     """
     return {
         "requested": {"model": selection["model"], "effort": selection.get("effort")},
         "sandbox": "read-only",
         "approval_policy": "never",
         "user_config_loaded": False,
+        "project_layers_loaded": False,
         "ephemeral": True,
         "history_persistence": "none",
         "web_search": "disabled",
-        "mcp_servers": None,
         "git_repo_check": not preflight,
         "network_access": {
             "granted": None,
@@ -94,7 +104,8 @@ def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[s
                 "web_search": "disabled",
                 "sandbox": "read-only",
                 "user_config_loaded": False,
-                "project_config_overridden": False,
+                "project_layers_loaded": False,
+                "managed_config": None,
             },
         },
     }
@@ -139,7 +150,7 @@ PROVIDER = Provider(
     auth_response="CODEX_AUTH_OK",
     auth_failure=AUTH_FAILURE,
     require_model=True,
-    accept=require_accepted_selector,
+    accept=require_listed_selector,
     configured_envelope=configured_envelope,
     command=command,
     output=output,

@@ -1,11 +1,16 @@
+from contextlib import redirect_stderr, redirect_stdout
+import io
 import json
 import os
 from pathlib import Path
 import pwd
+import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
+from unittest import mock
 
 from launcher_support import ROOT, current_commit, load_launcher, run_launcher
 
@@ -188,6 +193,51 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 70)
         self.assertIs(with_output["stdout_received"], True)
         self.assertIs(without_output["stdout_received"], False)
+
+    def test_auth_failure_during_review_stops_for_operator_attention(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_claude(
+                Path(temporary_directory),
+                "printf '{\"error\":{\"type\":\"authentication_error\",\"message\":\"invalid x-api-key\"}}\\n' >&2\nexit 1\n",
+            )
+            completed = self.run_launcher(executable, prompt=b"Review\n")
+        self.assertEqual(completed.returncode, 78)
+        self.assertIn(b"authentication needs operator attention", completed.stderr)
+        self.assertNotIn(b"substantive review output", completed.stderr)
+
+    def test_scratch_cleanup_failure_fails_an_otherwise_successful_attempt(self):
+        """Shared-flow behavior, covered once here: provider output alone does not make the attempt succeed."""
+        launcher = load_launcher(LAUNCHER, "claude_review_cleanup_fixture")
+        shared = sys.modules["review_launcher"]
+        leaked: list[str] = []
+
+        class FailingDirectory(tempfile.TemporaryDirectory):
+            def cleanup(self):
+                leaked.append(self.name)
+                raise OSError("fixture cleanup failure")
+
+        stdout, stderr = io.StringIO(), io.StringIO()
+        try:
+            with tempfile.TemporaryDirectory() as temporary_directory:
+                root = Path(temporary_directory)
+                executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
+                diagnostics_file = root / "diagnostics.json"
+                with mock.patch.object(shared.tempfile, "TemporaryDirectory", FailingDirectory):
+                    with redirect_stdout(stdout), redirect_stderr(stderr):
+                        code = launcher.main(
+                            launcher.PROVIDER,
+                            ["--claude-bin", str(executable), "--auth-preflight", "--diagnostics-file", str(diagnostics_file)],
+                        )
+                record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
+        finally:
+            for name in leaked:
+                shutil.rmtree(name, ignore_errors=True)
+        self.assertEqual(code, 70)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(record["status"], "failed")
+        self.assertIs(record["stdout_received"], True)
+        self.assertIn("cleanup failed", record["failure"])
+        self.assertIn("fixture cleanup failure", record["stderr"])
 
     def test_review_requires_candidate_commit(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

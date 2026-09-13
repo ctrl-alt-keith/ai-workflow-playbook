@@ -223,17 +223,30 @@ these Codex deltas differ:
 
 - `--model` after `--` is required: the exact selector from the
   [Codex selector table](codex.md#codex-selector-routing-and-acceptance).
-  Before any task starts, the wrapper checks the selector and any `--effort`
-  against the runtime's own catalog (`codex debug models`, observed in
-  `codex-cli 0.154.0` on 2026-09-13, not a documented CLI contract) and fails
-  closed when the catalog rejects them or cannot be read.
+  Before any task starts, the wrapper rejects a selector or `--effort` that
+  the runtime's model catalog does not list, and fails closed when the
+  catalog cannot be read. This is a catalog observation, not acceptance under
+  the governed envelope: `codex debug models` is undocumented (observed with
+  `codex-cli 0.154.0`, 2026-09-13), has no `--ignore-user-config`, and returns
+  the account-refreshed catalog when authenticated but silently falls back to
+  the binary's bundled catalog otherwise. The run's own banner is the
+  effective-model evidence.
 - The review controls are Codex's native ones (`--sandbox read-only`,
   `approval_policy="never"`, `--ignore-user-config`, `--ephemeral`, no history
   or web search); the review output is the final message.
-- The configured envelope records network reach as not established: user
-  MCP servers go with the user config, but a trusted checkout's project-scoped
-  `.codex/config.toml` is not overridden and read-only sandbox network
-  semantics are not observed. The reviewer still reports the access it saw.
+- Candidate isolation: Codex loads a checkout's project-scoped `.codex/`
+  layers (config, hooks, rules) only for a trusted project, and trust is
+  recorded in the user config that `--ignore-user-config` leaves unloaded, so
+  the candidate cannot extend the reviewer's surface through its own
+  `.codex/config.toml` (documented; observed 2026-09-13 — a candidate
+  `model_provider` override did not take effect). The configured envelope
+  declares `project_layers_loaded: false`. Operator-managed configuration and
+  read-only sandbox network semantics are not observed, so network reach
+  stays unestablished and the reviewer still reports the access it saw.
+- Codex prefix rules match argv literally, so the project rule gates
+  `./scripts/codex-review` run from this checkout; the absolute-path form used
+  to review another checkout is an ordinary command under the operator's
+  user-layer policy and sandbox.
 
 ```text
 /ABSOLUTE/PATH/TO/ai-workflow-playbook/scripts/codex-review \

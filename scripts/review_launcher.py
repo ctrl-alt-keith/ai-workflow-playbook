@@ -297,7 +297,7 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     if cleanup_error is not None:
         successful = False
         stderr = "\n".join(filter(None, (stderr, f"temporary-directory cleanup failed: {cleanup_error}")))
-    auth_failure = preflight and bool(provider.auth_failure.search(f"{stdout}\n{stderr}".lower()))
+    auth_failure = not successful and bool(provider.auth_failure.search(f"{stdout}\n{stderr}".lower()))
     record.update(
         {
             "status": "ok" if successful else "failed",

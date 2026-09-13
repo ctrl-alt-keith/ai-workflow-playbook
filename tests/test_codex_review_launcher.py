@@ -50,9 +50,33 @@ class CodexReviewLauncherTests(unittest.TestCase):
     ) -> subprocess.CompletedProcess[bytes]:
         return run_launcher(LAUNCHER, "--codex-bin", executable, *arguments, trailing=selector, **options)
 
-    def test_project_rule_keeps_codex_review_approval_gated(self):
-        rule = CODEX_RULE.read_text(encoding="utf-8")
-        self.assertIn('"./scripts/codex-review"', rule)
+    def test_project_rule_gates_the_checkout_relative_invocation(self):
+        """Codex prefix rules match argv literally, so only `./scripts/codex-review` run from this checkout is gated."""
+        rules: list[tuple[list, str]] = []
+        namespace = {"prefix_rule": lambda *, pattern, decision, justification=None: rules.append((pattern, decision))}
+        exec(CODEX_RULE.read_text(encoding="utf-8"), namespace)  # rule files are a Starlark subset that Python evaluates
+
+        def matches(pattern: list, argv: list[str]) -> bool:
+            return len(argv) >= len(pattern) and all(
+                argument in (token if isinstance(token, list) else [token]) for token, argument in zip(pattern, argv)
+            )
+
+        self.assertEqual([decision for _, decision in rules], ["prompt"])
+        (pattern, _), = rules
+        self.assertTrue(matches(pattern, ["./scripts/codex-review", "--codex-bin", "/opt/codex"]))
+        self.assertFalse(matches(pattern, [str(LAUNCHER), "--codex-bin", "/opt/codex"]))
+
+    def test_candidate_project_layers_are_declared_unloaded_and_rendered(self):
+        """The candidate's own .codex/ layers cannot extend the review: the envelope declares them unloaded and the argv carries it."""
+        launcher = load_launcher(LAUNCHER, "codex_review_isolation_fixture")
+        for preflight in (False, True):
+            with self.subTest(preflight=preflight):
+                envelope = launcher.configured_envelope({"model": "gpt-5.6-terra"}, preflight=preflight)
+                self.assertIs(envelope["user_config_loaded"], False)
+                self.assertIs(envelope["project_layers_loaded"], False)
+                self.assertIs(envelope["network_access"]["derived_from"]["project_layers_loaded"], False)
+                loaded = launcher.codex_arguments({**envelope, "user_config_loaded": True})
+                self.assertNotEqual(loaded, launcher.codex_arguments(envelope))
 
     ENVELOPE_CASES = {
         "review with model and effort": ((), b"Review the candidate.\n", (*TERRA, "--effort=high")),
@@ -121,9 +145,9 @@ class CodexReviewLauncherTests(unittest.TestCase):
             effort_rejected = self.run_launcher(executable, prompt=b"Review\n", selector=(*TERRA, "--effort", "ultra"))
             review_invoked = invoked.exists()
         self.assertEqual(model_rejected.returncode, 70)
-        self.assertIn(b"does not accept model selector gpt-5.6", model_rejected.stderr)
+        self.assertIn(b"does not list model selector gpt-5.6", model_rejected.stderr)
         self.assertEqual(effort_rejected.returncode, 70)
-        self.assertIn(b"does not accept effort ultra", effort_rejected.stderr)
+        self.assertIn(b"does not list effort ultra", effort_rejected.stderr)
         self.assertFalse(review_invoked)
 
     def test_unreadable_model_catalog_is_wrapper_failure(self):
