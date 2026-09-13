@@ -132,8 +132,7 @@ def codex_arguments(envelope: dict[str, Any]) -> list[str]:
     for key in ("approval_policy", "web_search"):
         arguments.extend(("--config", f'{key}="{envelope[key]}"'))
     if envelope["apps"] == "disabled":
-        # Account-level app connectors (e.g. codex_apps/github) survive
-        # --ignore-user-config; observed reaching GitHub during a canary.
+        # Account-level app connectors are not user config; --ignore-user-config leaves them exposed.
         arguments.extend(("--disable", "apps", "--config", "apps._default.enabled=false"))
     arguments.extend(("--config", f'history.persistence="{envelope["history_persistence"]}"'))
     if not envelope["git_repo_check"]:

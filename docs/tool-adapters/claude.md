@@ -226,26 +226,22 @@ these Codex deltas differ:
   Before any task starts, the wrapper rejects a selector or `--effort` that
   the runtime's model catalog does not list, and fails closed when the
   catalog cannot be read. This is a catalog observation, not acceptance under
-  the governed envelope: `codex debug models` is undocumented (observed with
-  `codex-cli 0.154.0`, 2026-09-13), has no `--ignore-user-config`, and returns
-  the account-refreshed catalog when authenticated but silently falls back to
-  the binary's bundled catalog otherwise. The run's own banner is the
-  effective-model evidence.
+  the governed envelope: `codex debug models` is undocumented (checked
+  2026-09-13 against `codex-cli 0.154.0`), takes no `--ignore-user-config`,
+  and falls back to the binary's bundled catalog when unauthenticated. The
+  run's own banner is the effective-model evidence.
 - The review controls are Codex's native ones (`--sandbox read-only`,
   `approval_policy="never"`, `--ignore-user-config`, `--ephemeral`, no history
   or web search, and app connectors disabled through `features.apps` and
-  `apps._default.enabled`); the review output is the final message.
-  Account-level app connectors are not user config: before that control was
-  added, a preflight canary under `--ignore-user-config` was observed calling
-  `codex_apps/github.fetch_file` (2026-09-13).
+  `apps._default.enabled`, which `--ignore-user-config` does not cover); the
+  review output is the final message.
 - Candidate isolation: Codex loads a checkout's project-scoped `.codex/`
   layers (config, hooks, rules) only for a trusted project, and trust is
   recorded in the user config that `--ignore-user-config` leaves unloaded, so
   the candidate cannot extend the reviewer's surface through its own
-  `.codex/config.toml` (documented; consistent with a 2026-09-13 observation
-  in which a candidate `model_provider` override did not take effect). The
-  envelope's `project_layers_loaded: false` is that derivation declared, not
-  an observed runtime fact; `user_config_loaded` is the control that renders.
+  `.codex/config.toml`. The envelope's `project_layers_loaded: false` is that
+  derivation declared, not an observed runtime fact; `user_config_loaded` is
+  the control that renders.
   Operator-managed configuration and read-only sandbox network semantics are
   not observed, so network reach stays unestablished and the reviewer still
   reports the access it saw.
