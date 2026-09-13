@@ -86,7 +86,8 @@ boundary visible in the review packet. Record:
 
 - the exact artifact or commit the reviewer inspected;
 - reviewer identity and role;
-- material tools, access, and capability gaps;
+- material tools, access, and capability gaps, each attributed to the
+  launcher that declared it or the reviewer that observed it;
 - the sources the reviewer actually verified;
 - any follow-up verification, attributed to the actor and source that performed
   it; and
@@ -102,8 +103,19 @@ explicit disposition:
 - accepted;
 - accepted with modification;
 - reasoned decline;
-- superseded; or
-- verified externally.
+- superseded;
+- verified externally; or
+- unverified from the review surface.
+
+Use `unverified from the review surface` for a load-bearing claim the reviewer
+could not falsify because its declared envelope offered no channel to the
+owning source. Keep three states distinct: a failed transport is a channel the
+reviewer had that failed, recorded among its capability gaps; this disposition
+is a fact left unverified for want of a channel; an absent capability is a
+claim about every route, which the reviewer cannot make from its surface. When
+another actor verifies the claim, the disposition becomes `verified
+externally`, attributed to that actor and source. Until then the finding stays
+open at the decision boundary.
 
 Record the resolution and any remaining gap. Keep the taxonomy proportionate:
 trivial nits can be handled inline, but substantive findings must not disappear
@@ -126,6 +138,17 @@ Do not require another review merely because bytes changed, and do not skip one
 merely because the filename or headline stayed the same. Continued
 applicability is the governing question. The human-owned approval identity and
 validity rules above still control after the review decision.
+
+## Measured Evidence
+
+A packet claim about a surface, transport, runtime, or capability that the
+claimant could not observe from its own surface must carry the measurement it
+rests on: the observer that took it, the surface it was taken on, and when it
+was taken. Carry the measurement as recorded; do not restate it as the packet
+author's own observation.
+
+A cross-surface claim without observer, surface, and timestamp is reported as
+unverified. It is neither omitted nor presented as established.
 
 ## What Codex Should Summarize
 

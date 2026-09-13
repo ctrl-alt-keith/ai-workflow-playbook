@@ -65,6 +65,50 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             cwd=ROOT,
         )
 
+    def observed_claude_arguments(self, arguments: list[str]) -> dict[str, object]:
+        """Map each Claude flag to its value, or True when it takes none."""
+        observed: dict[str, object] = {}
+        index = 0
+        while index < len(arguments):
+            flag = arguments[index]
+            value = arguments[index + 1] if index + 1 < len(arguments) else None
+            if value is not None and not value.startswith("-"):
+                observed[flag] = value
+                index += 2
+            else:
+                observed[flag] = True
+                index += 1
+        return observed
+
+    def assert_envelope_matches_arguments(self, envelope: dict, arguments: list[str]) -> None:
+        observed = self.observed_claude_arguments(arguments)
+        for name, requested in envelope["requested"].items():
+            self.assertEqual(observed.get(f"--{name}"), requested)
+        self.assertEqual(observed["--tools"], ",".join(envelope["tools"]))
+        self.assertEqual(observed.get("--permission-mode"), envelope["permission_mode"])
+        self.assertEqual("--strict-mcp-config" in observed, envelope["strict_mcp_config"])
+        self.assertEqual(json.loads(observed["--mcp-config"]), envelope["mcp_config"])
+        self.assertEqual(observed["--setting-sources"], ",".join(envelope["setting_sources"]))
+        self.assertEqual("--no-session-persistence" in observed, not envelope["session_persistence"])
+        self.assertEqual("--disable-slash-commands" in observed, envelope["slash_commands"] is False)
+
+    def run_with_recorded_arguments(self, *arguments: str, prompt: bytes = b"", output: str):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            arguments_file = root / "arguments"
+            diagnostics_file = root / "diagnostics.json"
+            executable = self.make_fake_claude(
+                root,
+                f"printf '%s\\n' \"$@\" > {arguments_file}\n{output}",
+            )
+            completed = self.run_launcher(
+                executable, "--diagnostics-file", str(diagnostics_file), *arguments, prompt=prompt
+            )
+            observed_arguments = arguments_file.read_text(encoding="utf-8").splitlines()
+            record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+        return record, observed_arguments
+
     def test_project_rule_keeps_claude_review_approval_gated(self):
         rule = CODEX_RULE.read_text(encoding="utf-8")
         self.assertIn('"./scripts/claude-review"', rule)
@@ -164,6 +208,47 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertIn("--tools", observed_arguments)
         self.assertIn("Read,Grep,Glob", observed_arguments)
         self.assertIn("--no-session-persistence", observed_arguments)
+
+    def test_review_record_declares_the_envelope_actually_passed(self):
+        record, observed_arguments = self.run_with_recorded_arguments(
+            "--",
+            "--model",
+            "opus",
+            "--effort=high",
+            prompt=b"Review the candidate.\n",
+            output="cat\n",
+        )
+        envelope = record["configured_envelope"]
+        self.assertEqual(record["attempt_kind"], "review")
+        self.assert_envelope_matches_arguments(envelope, observed_arguments)
+        self.assertEqual(envelope["requested"], {"model": "opus", "effort": "high"})
+        self.assertFalse(envelope["network_access"]["granted"])
+        self.assertEqual(
+            set(envelope["network_access"]["derived_from"]),
+            {"tools_beyond_local_read_only", "mcp_servers"},
+        )
+
+    def test_preflight_record_declares_its_own_envelope(self):
+        record, observed_arguments = self.run_with_recorded_arguments(
+            "--auth-preflight",
+            output="printf 'CLAUDE_AUTH_OK\\n'\n",
+        )
+        envelope = record["configured_envelope"]
+        self.assertEqual(record["attempt_kind"], "auth_preflight")
+        self.assert_envelope_matches_arguments(envelope, observed_arguments)
+        self.assertEqual(envelope["tools"], [])
+        self.assertIsNone(envelope["permission_mode"])
+
+    def test_unrequested_model_and_effort_are_declared_unset_not_defaulted(self):
+        record, observed_arguments = self.run_with_recorded_arguments(
+            prompt=b"Review the candidate.\n",
+            output="cat\n",
+        )
+        requested = record["configured_envelope"]["requested"]
+        self.assertEqual(set(requested), {"model", "effort"})
+        self.assertEqual(set(requested.values()), {None})
+        self.assertNotIn("--model", observed_arguments)
+        self.assertNotIn("--effort", observed_arguments)
 
     def test_review_requires_candidate_commit(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

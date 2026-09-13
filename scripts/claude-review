@@ -21,6 +21,7 @@ AUTH_PREFLIGHT_PROMPT = b"Reply exactly: CLAUDE_AUTH_OK\n"
 AUTH_PREFLIGHT_RESPONSE = "CLAUDE_AUTH_OK"
 MAX_DIAGNOSTIC_CHARS = 1_000
 ALLOWED_OPTIONS = {"--model", "--effort"}
+LOCAL_READ_ONLY_TOOLS = ("Read", "Grep", "Glob")
 EXACT_COMMIT = re.compile(r"[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?")
 
 
@@ -161,33 +162,58 @@ def cleanup_temporary_directory(directory: tempfile.TemporaryDirectory[str]) -> 
     return None
 
 
-def claude_arguments(options: list[str], *, preflight: bool) -> list[str]:
-    if preflight:
-        return [
-            *options,
-            "--tools",
-            "",
-            "--strict-mcp-config",
-            "--mcp-config",
-            '{"mcpServers":{}}',
-            "--setting-sources",
-            "",
-            "--no-session-persistence",
-        ]
-    return [
-        *options,
-        "--tools",
-        "Read,Grep,Glob",
-        "--permission-mode",
-        "dontAsk",
-        "--strict-mcp-config",
-        "--mcp-config",
-        '{"mcpServers":{}}',
-        "--setting-sources",
-        "",
-        "--no-session-persistence",
-        "--disable-slash-commands",
-    ]
+def configured_envelope(options: list[str], *, preflight: bool) -> dict[str, Any]:
+    """Declare the envelope the wrapper configures; claude_arguments() renders it.
+
+    A ``None`` control was not set by the wrapper: the executor default applies
+    and is not observed here. Requested model and effort are requests, not the
+    effective runtime values.
+    """
+    requested: dict[str, str | None] = {"model": None, "effort": None}
+    for option, value in zip(options[::2], options[1::2]):
+        requested[option.removeprefix("--")] = value
+    tools = [] if preflight else list(LOCAL_READ_ONLY_TOOLS)
+    mcp_config: dict[str, Any] = {"mcpServers": {}}
+    # Network reach is not a flag: it follows from every granted tool being a
+    # local read-only tool and no MCP server being configured.
+    network_reaching = {
+        "tools_beyond_local_read_only": sorted(set(tools) - set(LOCAL_READ_ONLY_TOOLS)),
+        "mcp_servers": sorted(mcp_config["mcpServers"]),
+    }
+    return {
+        "requested": requested,
+        "tools": tools,
+        "permission_mode": None if preflight else "dontAsk",
+        "strict_mcp_config": True,
+        "mcp_config": mcp_config,
+        "setting_sources": [],
+        "session_persistence": False,
+        "slash_commands": None if preflight else False,
+        "network_access": {
+            "granted": any(network_reaching.values()),
+            "derived_from": network_reaching,
+        },
+    }
+
+
+def claude_arguments(envelope: dict[str, Any]) -> list[str]:
+    """Render the declared envelope as the Claude argv; nothing else adds flags."""
+    arguments: list[str] = []
+    for name, value in envelope["requested"].items():
+        if value is not None:
+            arguments.extend((f"--{name}", value))
+    arguments.extend(("--tools", ",".join(envelope["tools"])))
+    if envelope["permission_mode"] is not None:
+        arguments.extend(("--permission-mode", envelope["permission_mode"]))
+    if envelope["strict_mcp_config"]:
+        arguments.append("--strict-mcp-config")
+    arguments.extend(("--mcp-config", json.dumps(envelope["mcp_config"], separators=(",", ":"))))
+    arguments.extend(("--setting-sources", ",".join(envelope["setting_sources"])))
+    if not envelope["session_persistence"]:
+        arguments.append("--no-session-persistence")
+    if envelope["slash_commands"] is False:
+        arguments.append("--disable-slash-commands")
+    return arguments
 
 
 def resolve_candidate(expected_commit: str, environment: dict[str, str]) -> tuple[str, str]:
@@ -285,7 +311,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         return REVIEWER_FAILURE_EXIT
 
-    command = [executable, "-p", *claude_arguments(options, preflight=preflight)]
+    envelope = configured_envelope(options, preflight=preflight)
+    command = [executable, "-p", *claude_arguments(envelope)]
     temporary_directory: tempfile.TemporaryDirectory[str] | None = None
     cleanup_error: str | None = None
     candidate: dict[str, str] | None = None
@@ -341,6 +368,7 @@ def main(argv: list[str] | None = None) -> int:
         "claude_exit_code": result.returncode,
         "stdout_received": bool(stdout.strip()),
         "stderr": redact(stderr),
+        "configured_envelope": envelope,
     }
     if candidate is not None:
         record["candidate"] = candidate

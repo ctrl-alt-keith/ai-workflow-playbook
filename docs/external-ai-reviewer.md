@@ -120,13 +120,29 @@ configuration when the provider supports those controls. If required source
 access is unavailable, the reviewer reports the gap and limits its verdict
 instead of receiving broader authority.
 
+When a launcher configures the reviewer's tool set, permission mode, connector
+configuration, instruction sources, session persistence, slash commands, and
+requested model and effort, the launcher emits that configured envelope with
+the attempt record, including whether the tool set and connector configuration
+admit network reach. The envelope reaches the review record because the
+launcher declared it, not because the reviewer described it. Requested model
+and effort are requests: the record marks an unrequested control as unset
+rather than asserting a default, and effective runtime values remain a separate
+observation under the executor adapter. The reviewer still reports the sources
+it actually inspected and the capability gaps it encountered, which the
+launcher cannot observe. Keep the two claims attributed to their observers: a
+reviewer's account of its own tools does not replace the declared envelope, and
+the declared envelope does not establish what the reviewer read.
+
 Read-only review constrains the reviewer's capabilities; it does not require
 the repository, worktree registry, or shared Git administration to remain
 still. Do not add source no-delta monitoring, worktree or object attribution,
 live stabilization, process-controller state, or integrity receipts merely to
-prove that the reviewer was read-only. Concurrent repository activity is not a
-review failure when the configured candidate identity remains the one selected
-for review.
+prove that the reviewer was read-only. A declared-configuration record is not
+such a receipt: it states what the launcher configured before the run and
+claims nothing about what occurred during it. Concurrent repository activity is
+not a review failure when the configured candidate identity remains the one
+selected for review.
 
 Run the selected provider's bounded authentication preflight when its current
 adapter requires one. Treat nonzero, empty, authentication, access, or other
@@ -309,7 +325,8 @@ Review dimensions:
 
 Required output:
 - reviewer identity and role;
-- tools, access, sources actually inspected, and material capability gaps;
+- tools and access as observed from inside the review, sources actually
+  inspected, and material capability gaps;
 - findings with severity and exact artifact anchors;
 - source attribution for each verification claim;
 - explicit verdict: ACCEPT, ACCEPT WITH CHANGES, or REJECT.
