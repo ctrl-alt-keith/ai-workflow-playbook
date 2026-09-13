@@ -157,6 +157,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 self.assertFalse(network["granted"])
 
     def test_candidate_mismatch_record_retains_the_configured_envelope(self):
+        """A failure before any provider attempt keeps the pre-launch declaration of the intended review configuration; it is not attempt evidence."""
         launcher = load_launcher(LAUNCHER, "claude_review_mismatch_fixture")
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

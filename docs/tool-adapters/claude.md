@@ -228,9 +228,14 @@ effective-selection evidence, then scratch cleanup, then the diagnostics
 write — with an established authentication failure taking precedence and
 keeping its exit code; secondary causes are preserved after it. Every string
 in the record is bounded and credential-redacted, including quoted JSON-style
-credential fields. The diagnostics record declares the configured envelope of the
-branch actually taken, preflight or review, under the
-[exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract).
+credential fields. The diagnostics record carries `configured_envelope` under
+the
+[exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract):
+when the attempt fails before any provider invocation, it is the declaration
+of the configuration the wrapper intended to use, and no runtime evidence
+exists for it; once a provider attempt runs, it is that attempt's exact
+envelope, and runtime evidence is paired only with the envelope of the attempt
+that produced it.
 The project rule keeps local reviewer execution approval-gated.
 
 ### Local Codex reviewer launch

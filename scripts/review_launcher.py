@@ -505,8 +505,9 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
         executable, version = resolve_executable(provider, args.binary, environment)
         record[f"{provider.name}_version"] = version
         selection = parse_options(provider, args.provider_args)
-        # Declared configuration of the intended attempt for failures that occur before it
-        # launches; an attempt that runs replaces it with the envelope it actually used.
+        # Pre-launch declaration: the configuration the wrapper intends to use. It produced no
+        # runtime evidence because no provider attempt exists yet; an attempt that runs replaces
+        # it with the exact envelope that attempt launched with.
         record["configured_envelope"] = provider.configured_envelope(selection, preflight=preflight)
         prompt = provider.auth_prompt if preflight else sys.stdin.buffer.read()
         if not preflight and not prompt.strip():
