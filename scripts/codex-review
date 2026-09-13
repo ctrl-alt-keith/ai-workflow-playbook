@@ -39,11 +39,11 @@ def require_listed_selector(executable: str, selection: dict[str, str], environm
     """Reject a selector the runtime's model catalog does not list before any task starts.
 
     This is a runtime-catalog observation, not proof of acceptance under the
-    governed envelope: ``codex debug models`` is undocumented (observed with
-    codex-cli 0.154.0 on 2026-09-13), takes no ``--ignore-user-config``, returns
-    the account-refreshed catalog when authenticated and silently falls back to
-    the binary's bundled catalog otherwise. The governed run's own banner is
-    the effective-model evidence. An unreadable catalog fails closed.
+    governed envelope: ``codex debug models`` is undocumented (checked
+    2026-09-13 against codex-cli 0.154.0), takes no ``--ignore-user-config``,
+    and falls back to the binary's bundled catalog when unauthenticated. The
+    governed run's own banner is the effective-model evidence. An unreadable
+    catalog fails closed.
     """
     try:
         result = subprocess.run(
