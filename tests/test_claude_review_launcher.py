@@ -204,6 +204,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
 
     def test_record_declares_network_reach_from_configured_tools_and_servers(self):
         launcher = load_launcher("claude_review_network_fixture")
+        self.assertEqual(set(launcher.LOCAL_READ_ONLY_TOOLS), {"Read", "Grep", "Glob"})
         for label, (arguments, prompt, output) in self.ENVELOPE_CASES.items():
             with self.subTest(label):
                 record, _ = self.run_with_recorded_arguments(*arguments, prompt=prompt, output=output)
@@ -217,6 +218,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 self.assertFalse(network["granted"])
 
     def test_candidate_mismatch_record_retains_the_configured_envelope(self):
+        launcher = load_launcher("claude_review_mismatch_fixture")
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
             diagnostics_file = root / "diagnostics.json"
@@ -225,13 +227,19 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 executable,
                 "--diagnostics-file",
                 str(diagnostics_file),
+                "--",
+                "--model",
+                "opus",
+                "--effort=high",
                 prompt=b"Review\n",
                 candidate_commit="0" * 40,
             )
             record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
         self.assertEqual(completed.returncode, 70)
         self.assertIn("candidate commit mismatch", record["failure"])
-        self.assertIn("configured_envelope", record)
+        self.assertEqual(record["attempt_kind"], "review")
+        expected = launcher.configured_envelope(["--model", "opus", "--effort", "high"], preflight=False)
+        self.assertEqual(record["configured_envelope"], expected)
 
     def test_review_requires_candidate_commit(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
