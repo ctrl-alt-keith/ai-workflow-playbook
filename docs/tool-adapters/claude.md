@@ -243,14 +243,16 @@ these Codex deltas differ:
   declares `project_layers_loaded: false`. Operator-managed configuration and
   read-only sandbox network semantics are not observed, so network reach
   stays unestablished and the reviewer still reports the access it saw.
-- Codex prefix rules match argv literally, so the project rule gates
-  `./scripts/codex-review` run from this checkout; the absolute-path form used
-  to review another checkout is an ordinary command under the operator's
-  user-layer policy and sandbox.
+- Invoke it as `./scripts/codex-review` from the active Playbook checkout.
+  Codex prefix rules match argv literally, so that checkout-relative form is
+  the one the project rule gates. An absolute-path invocation from another
+  checkout is outside the repository project-rule guarantee and falls under
+  the operator's user-layer policy and sandbox; do not present it as the
+  supported route.
 
 ```text
-/ABSOLUTE/PATH/TO/ai-workflow-playbook/scripts/codex-review \
-  --codex-bin /ABSOLUTE/PATH/TO/codex \
+cd /ABSOLUTE/PATH/TO/ai-workflow-playbook
+./scripts/codex-review --codex-bin /ABSOLUTE/PATH/TO/codex \
   --auth-preflight -- --model gpt-5.6-terra --effort high
 ```
 
