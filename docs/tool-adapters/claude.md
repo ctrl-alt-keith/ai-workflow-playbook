@@ -255,9 +255,11 @@ these Codex deltas differ:
   acceptance canary runs the fixed canary prompt under the same governed
   controls with the exact selection and requires a clean exit, the exact
   reply, and runtime evidence of that model and effort; the canary never
-  sees the review prompt, its evidence is recorded as `acceptance`, and any
-  failure ends the attempt as `stage: selector_acceptance` with no
-  substantive run. Finally, after the review itself, the wrapper reads the
+  sees the review prompt, its evidence is recorded as `acceptance` together
+  with the canary's own configured envelope, and any failure ends the attempt
+  as `stage: selector_acceptance` with no substantive run and no review
+  envelope in the record. Every attempt's evidence is paired with the exact
+  envelope that produced it. Finally, after the review itself, the wrapper reads the
   effective model and reasoning effort again from the leading delimited
   banner block in the runtime-owned region of Codex's stderr, before the
   transcript's first `user` line — prompt and model text can never supply

@@ -6,6 +6,7 @@ from pathlib import Path
 import pwd
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -143,6 +144,11 @@ class CodexReviewLauncherTests(unittest.TestCase):
                 self.assertEqual(observed[: len(rendered)], rendered)
                 self.assertEqual(observed[-1], "-")
                 self.assertIsNone(record["configured_envelope"]["network_access"]["granted"])
+                parsed = sys.modules["review_launcher"].parse_options(launcher.PROVIDER, list(selector[1:]))
+                self.assertEqual(
+                    record["configured_envelope"],
+                    launcher.configured_envelope(parsed, preflight="--auth-preflight" in arguments),
+                )
 
     def test_review_returns_the_last_message_from_the_effective_login_context(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -253,6 +259,35 @@ class CodexReviewLauncherTests(unittest.TestCase):
                 else:
                     self.assertTrue(completed.stdout.endswith(b"Review question:\nSECRET-REVIEW-QUESTION\n"))
                     self.assertIn(b'"acceptance": {', completed.stderr)
+
+    def test_each_attempt_record_carries_the_envelope_that_produced_its_evidence(self):
+        """Acceptance and review evidence are each paired with their own envelope; a failed acceptance never borrows the review's."""
+        launcher = load_launcher(LAUNCHER, "codex_review_provenance_fixture")
+        selection = {"model": "gpt-5.6-terra", "effort": "high"}
+        canary_envelope = launcher.configured_envelope(selection, preflight=True)
+        review_envelope = launcher.configured_envelope(selection, preflight=False)
+        self.assertNotEqual(canary_envelope, review_envelope)  # git_repo_check differs between the two attempts
+        selector = (*TERRA, "--effort", "high")
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            diagnostics = root / "failed.json"
+            failing = self.make_fake_codex(root, "cat > \"$out\"\n", canary="exit 3\n")
+            failed = self.run_launcher(failing, "--diagnostics-file", str(diagnostics), prompt=b"Review\n", selector=selector)
+            failed_record = json.loads(diagnostics.read_text(encoding="utf-8"))
+            diagnostics = root / "passed.json"
+            passing = self.make_fake_codex(root, "cat > \"$out\"\n")
+            passed = self.run_launcher(passing, "--diagnostics-file", str(diagnostics), prompt=b"Review\n", selector=selector)
+            passed_record = json.loads(diagnostics.read_text(encoding="utf-8"))
+        self.assertEqual(failed.returncode, 70)
+        self.assertEqual(failed_record["stage"], "selector_acceptance")
+        self.assertEqual(failed_record["acceptance"]["configured_envelope"], canary_envelope)
+        self.assertNotIn("configured_envelope", failed_record)
+        self.assertNotIn("effective", failed_record)
+        self.assertEqual(passed.returncode, 0, passed.stderr.decode())
+        self.assertEqual(passed_record["acceptance"]["configured_envelope"], canary_envelope)
+        self.assertEqual(passed_record["configured_envelope"], review_envelope)
+        self.assertEqual(passed_record["acceptance"]["effective"], {"model": "gpt-5.6-terra", "effort": "high"})
+        self.assertEqual(passed_record["effective"], {"model": "gpt-5.6-terra", "effort": "high"})
 
     def test_review_is_verified_again_after_a_passing_acceptance_canary(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

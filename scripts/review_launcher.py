@@ -397,7 +397,12 @@ def parse_arguments(provider: Provider, argv: list[str]) -> argparse.Namespace:
 
 @dataclass
 class Attempt:
-    """One provider invocation, evaluated under the shared result policy."""
+    """One provider invocation, evaluated under the shared result policy.
+
+    ``evidence`` always carries ``configured_envelope``: the exact envelope
+    this attempt rendered and launched with, so its runtime evidence is never
+    interpreted against a sibling attempt's configuration.
+    """
 
     causes: list[str]
     auth_failure: bool
@@ -423,10 +428,11 @@ def run_attempt(
     authentication classification come from the same provider hooks in both.
     """
     envelope = provider.configured_envelope(selection, preflight=canary)
+    evidence: dict[str, Any] = {"configured_envelope": envelope}
     try:
         scratch = tempfile.TemporaryDirectory(prefix=f"{provider.name}-review-")
     except OSError as error:
-        return Attempt([f"could not allocate a scratch directory: {error}"], False, {}, "")
+        return Attempt([f"could not allocate a scratch directory: {error}"], False, evidence, "")
     try:
         launch = Launch(preflight=canary, repository=repository, scratch=Path(scratch.name))
         result = subprocess.run(
@@ -449,7 +455,7 @@ def run_attempt(
         cleanup_error = cleanup_temporary_directory(scratch)
         if cleanup_error is not None:
             causes.append(f"{provider.label} temporary-directory cleanup failed: {cleanup_error}")
-        return Attempt(causes, False, {}, "")
+        return Attempt(causes, False, evidence, "")
     cleanup_error = cleanup_temporary_directory(scratch)
 
     stdout = result.stdout.decode("utf-8", errors="replace")
@@ -471,11 +477,7 @@ def run_attempt(
     auth_failure = bool(causes) and bool(provider.auth_failure.search(provider.diagnostic(stdout, stderr).lower()))
     if auth_failure:
         causes.insert(0, f"{provider.label} authentication needs operator attention")
-    evidence: dict[str, Any] = {
-        f"{provider.name}_exit_code": result.returncode,
-        provider.output_field: received,
-        "stderr": stderr,
-    }
+    evidence.update({f"{provider.name}_exit_code": result.returncode, provider.output_field: received, "stderr": stderr})
     if effective:
         evidence["effective"] = effective
     if causes and stdout:
@@ -503,6 +505,8 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
         executable, version = resolve_executable(provider, args.binary, environment)
         record[f"{provider.name}_version"] = version
         selection = parse_options(provider, args.provider_args)
+        # Declared configuration of the intended attempt for failures that occur before it
+        # launches; an attempt that runs replaces it with the envelope it actually used.
         record["configured_envelope"] = provider.configured_envelope(selection, preflight=preflight)
         prompt = provider.auth_prompt if preflight else sys.stdin.buffer.read()
         if not preflight and not prompt.strip():
@@ -532,9 +536,10 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
         # Runtime acceptance of the exact selection is established before the review prompt
         # is delivered; the canary never sees that prompt, and the review is verified again.
         acceptance = run_attempt(provider, canary=True, prompt=provider.auth_prompt, repository=None, **launch)
-        record["acceptance"] = acceptance.evidence
+        record["acceptance"] = acceptance.evidence  # self-contained: carries the canary's own envelope
         if acceptance.causes:
             record["stage"] = "selector_acceptance"
+            record.pop("configured_envelope")  # the review never launched; its declaration must not frame this evidence
             return finish(
                 provider,
                 record,

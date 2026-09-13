@@ -319,6 +319,9 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(code, 70)
         self.assertIn("could not allocate a scratch directory", record["failure"])
         self.assertIn("fixture: no scratch available", record["failure"])
+        # a failure after the attempt's envelope exists still reports that exact envelope
+        launcher = load_launcher(LAUNCHER, "claude_review_scratch_envelope_fixture")
+        self.assertEqual(record["configured_envelope"], launcher.configured_envelope({}, preflight=True))
 
     def test_exception_path_keeps_the_original_failure_and_surfaces_cleanup_failure(self):
         leaked: list[str] = []
