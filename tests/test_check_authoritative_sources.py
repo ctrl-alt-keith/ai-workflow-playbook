@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -23,6 +24,13 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
         args: list[str],
         cwd: Path | None = None,
     ) -> subprocess.CompletedProcess[str]:
+        # The scanner also reads the live pull-request body from the CI event
+        # payload; keep that out of the fixture so the test scans only its own inputs.
+        environment = {
+            key: value
+            for key, value in os.environ.items()
+            if key not in {"GITHUB_EVENT_PATH", "AUTHORITATIVE_SOURCE_PR_BODY"}
+        }
         return subprocess.run(
             [sys.executable, str(SCRIPT_PATH), *args],
             check=False,
@@ -30,6 +38,7 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            env=environment,
         )
 
     def test_flags_third_party_url_in_public_api_context(self) -> None:

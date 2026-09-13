@@ -1,0 +1,249 @@
+#!/usr/bin/env python3
+"""Run a constrained local Codex review from an explicit executable."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from review_launcher import MAX_OPTION_VALUE_CHARS, Launch, Provider, main, redact  # noqa: E402
+
+
+LAST_MESSAGE_FILE = "last-message.txt"
+# Codex's formatted stderr (observed layout, codex-cli 0.154.0; not a
+# documented contract) opens with a runtime prefix and then a transcript that
+# echoes the prompt, command output, and the model's own text. The prefix is
+# the wrapper's runtime-evidence qualification surface: runtime_layout()
+# recognizes it by consuming one finite grammar from line 0:
+#
+#     [OpenAI Codex v<version>]      optional, exactly this shape
+#     --------
+#     <field>: <value>               BANNER_FIELDS, observed order, each at most once;
+#                                    only `model` is required; other values are not inspected
+#     --------
+#     user                           exact transcript marker, immediately next
+#
+# Every line is validated at the index where the grammar expects it; the
+# parser never searches later stderr to repair or complete a malformed prefix,
+# and text outside the accepted prefix is not considered. Any observed
+# deviation — a missing required element, or a changed, reordered, duplicated,
+# unknown, or displaced one — is no recognized layout: no effective evidence,
+# generic failure. This is
+# syntactic qualification of the observed layout, not proof of provenance: a
+# single free-form stream cannot show which producer emitted bytes that match
+# the grammar, so a future format change fails closed unless it remains
+# syntactically indistinguishable from the accepted prefix. The grammar has no
+# position for runtime diagnostic lines, so no stderr line is qualified for
+# auth-failure classification: a Codex authentication failure is generic
+# wrapper failure with the bounded stderr retained.
+VERSION_LINE = re.compile(r"^OpenAI Codex v\S+$")
+BANNER_DELIMITER = "--------"
+BANNER_FIELDS = ("workdir", "model", "provider", "approval", "sandbox", "reasoning effort", "reasoning summaries", "session id")
+BANNER_LINE = re.compile(r"^([a-z][a-z ]*): (.*)$")
+TRANSCRIPT_START = "user"
+# A reported selector is promoted to exact structured evidence, so its value is
+# qualified as part of the grammar: one token no longer than any selector the
+# wrapper accepts. An unusable value is no recognized layout, never a
+# truncated selector.
+SELECTOR_VALUE = re.compile(rf"^\S{{1,{MAX_OPTION_VALUE_CHARS}}}$")
+
+
+def require_listed_selector(executable: str, selection: dict[str, str], environment: dict[str, str]) -> None:
+    """Reject a selector the runtime's model catalog does not list before any task starts.
+
+    This is a runtime-catalog observation, not proof of acceptance under the
+    governed envelope: ``codex debug models`` is undocumented (checked
+    2026-09-13 against codex-cli 0.154.0), takes no ``--ignore-user-config``,
+    and falls back to the binary's bundled catalog when unauthenticated. The
+    governed run's own banner is the effective-model evidence. An unreadable
+    catalog fails closed.
+    """
+    try:
+        result = subprocess.run(
+            [executable, "debug", "models"],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            text=True,
+            timeout=60,
+            env=environment,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise ValueError(f"could not read the Codex model catalog: {error}") from error
+    try:
+        if result.returncode != 0:
+            raise ValueError(redact(result.stderr.strip()) or f"exit {result.returncode}")
+        catalog = {
+            entry["slug"]: [level["effort"] for level in entry.get("supported_reasoning_levels", [])]
+            for entry in json.loads(result.stdout)["models"]
+        }
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError(f"could not read the Codex model catalog: {error}") from error
+    model = selection["model"]
+    if model not in catalog:
+        raise ValueError(f"the Codex model catalog does not list model selector {model}")
+    effort = selection.get("effort")
+    if effort is not None and effort not in catalog[model]:
+        raise ValueError(f"the Codex model catalog does not list effort {effort} for {model}")
+
+
+def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[str, Any]:
+    """Declare the envelope the wrapper configures; codex_arguments() renders it.
+
+    A ``None`` control was not set by the wrapper: the executor default applies
+    and is not observed here. Requested model and effort are requests, not the
+    effective runtime values.
+
+    Candidate isolation: Codex loads a checkout's project-scoped ``.codex/``
+    layers (config, hooks, rules) only for a trusted project, and trust lives
+    in the user config that ``--ignore-user-config`` leaves unloaded, so the
+    candidate cannot extend the reviewer's surface through its own
+    ``.codex/config.toml``. Account-level app connectors are not part of the
+    user config and remain exposed unless disabled, so the wrapper disables
+    the apps feature and the default app state. ``project_layers_loaded`` is that derivation
+    declared, not an observed runtime fact, and it renders no argv of its own;
+    ``user_config_loaded`` is the control that renders. Operator-managed
+    configuration and read-only sandbox network semantics are not observed, so
+    network reach is not established from these controls alone.
+    """
+    return {
+        "requested": {"model": selection["model"], "effort": selection.get("effort")},
+        "sandbox": "read-only",
+        "approval_policy": "never",
+        "user_config_loaded": False,
+        "project_layers_loaded": False,
+        "ephemeral": True,
+        "history_persistence": "none",
+        "web_search": "disabled",
+        "apps": "disabled",
+        "project_agents_md": "not loaded",
+        "git_repo_check": not preflight,
+        "network_access": {
+            "granted": None,
+            "derived_from": {
+                "web_search": "disabled",
+                "apps": "disabled",
+                "sandbox": "read-only",
+                "user_config_loaded": False,
+                "project_layers_loaded": False,
+                "managed_config": None,
+            },
+        },
+    }
+
+
+def codex_arguments(envelope: dict[str, Any]) -> list[str]:
+    """Render the declared envelope as the Codex argv; command() adds only the run's output path, root, and stdin marker."""
+    arguments = ["exec"]
+    if not envelope["user_config_loaded"]:
+        arguments.append("--ignore-user-config")
+    if envelope["ephemeral"]:
+        arguments.append("--ephemeral")
+    arguments.extend(("--sandbox", envelope["sandbox"], "--color", "never", "--model", envelope["requested"]["model"]))
+    if envelope["requested"]["effort"] is not None:
+        arguments.extend(("--config", f'model_reasoning_effort="{envelope["requested"]["effort"]}"'))
+    for key in ("approval_policy", "web_search"):
+        arguments.extend(("--config", f'{key}="{envelope[key]}"'))
+    if envelope["apps"] == "disabled":
+        # Account-level app connectors are not user config; --ignore-user-config leaves them exposed.
+        arguments.extend(("--disable", "apps", "--config", "apps._default.enabled=false"))
+    if envelope["project_agents_md"] == "not loaded":
+        # The candidate's AGENTS.md would otherwise be loaded as reviewer
+        # instructions; the review brief on stdin is the instruction. Operator
+        # instruction files under CODEX_HOME are not controlled here.
+        arguments.extend(("--config", "project_doc_max_bytes=0"))
+    arguments.extend(("--config", f'history.persistence="{envelope["history_persistence"]}"'))
+    if not envelope["git_repo_check"]:
+        arguments.append("--skip-git-repo-check")
+    return arguments
+
+
+def command(envelope: dict[str, Any], launch: Launch) -> list[str]:
+    arguments = [*codex_arguments(envelope), "--output-last-message", str(launch.scratch / LAST_MESSAGE_FILE)]
+    if launch.repository is not None:
+        arguments.extend(("--cd", launch.repository))
+    arguments.append("-")
+    return arguments
+
+
+def runtime_layout(stderr: str) -> dict[str, str] | None:
+    """Consume the observed runtime prefix of Codex's stderr as one finite grammar; return its banner fields or nothing.
+
+    The banner loop iterates the grammar, not the stream: for each field in its
+    observed order, the current line is consumed only if it names that field.
+    Whatever line then remains must be the closing delimiter followed by the
+    exact transcript marker, so an unknown, reordered, duplicated, or
+    displaced line ends recognition there instead of being searched past.
+    """
+    lines = stderr.splitlines()
+    index = 1 if lines and VERSION_LINE.match(lines[0]) else 0
+    if lines[index : index + 1] != [BANNER_DELIMITER]:
+        return None
+    index += 1
+    fields: dict[str, str] = {}
+    for name in BANNER_FIELDS:
+        match = BANNER_LINE.match(lines[index]) if index < len(lines) else None
+        if match is not None and match.group(1) == name:
+            fields[name] = match.group(2)
+            index += 1
+    if lines[index : index + 2] != [BANNER_DELIMITER, TRANSCRIPT_START] or "model" not in fields:
+        return None
+    if any(not SELECTOR_VALUE.match(fields[name]) for name in ("model", "reasoning effort") if name in fields):
+        return None
+    return fields
+
+
+def effective(selection: dict[str, str], stdout: str, stderr: str) -> tuple[dict[str, Any], str | None]:
+    """Require the recognized banner to report the requested selector; exact-model requirements do not fall back."""
+    fields = runtime_layout(stderr) or {}
+    observed: dict[str, Any] = {"model": fields.get("model"), "effort": fields.get("reasoning effort")}
+    if observed["model"] is None:
+        return observed, "the Codex runtime did not report its effective model"
+    if observed["model"] != selection["model"]:
+        return observed, f"Codex ran {observed['model']} instead of the requested {selection['model']}"
+    if "effort" in selection:
+        if observed["effort"] is None:
+            return observed, "the Codex runtime did not report its effective reasoning effort"
+        if observed["effort"] != selection["effort"]:
+            return observed, f"Codex ran effort {observed['effort']} instead of the requested {selection['effort']}"
+    return observed, None
+
+
+def diagnostic(stdout: str, stderr: str) -> str:
+    """No line is qualified for auth-failure classification: the recognized prefix grammar has no runtime-diagnostic position."""
+    return ""
+
+
+def output(result: subprocess.CompletedProcess[bytes], launch: Launch) -> str:
+    try:
+        return (launch.scratch / LAST_MESSAGE_FILE).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+PROVIDER = Provider(
+    name="codex",
+    label="Codex",
+    auth_response="CODEX_AUTH_OK",
+    auth_failure=re.compile(r"(?!)"),  # nothing is qualified; see diagnostic()
+    require_model=True,
+    accept=require_listed_selector,
+    configured_envelope=configured_envelope,
+    command=command,
+    output=output,
+    output_field="last_message_received",
+    diagnostic=diagnostic,
+    effective=effective,
+    acceptance_canary=True,
+)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(PROVIDER))
