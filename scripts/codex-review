@@ -18,37 +18,35 @@ from review_launcher import MAX_OPTION_VALUE_CHARS, Launch, Provider, main, reda
 LAST_MESSAGE_FILE = "last-message.txt"
 # Codex's formatted stderr opens with a runtime-owned prefix and then a
 # transcript that echoes the prompt, command output, and the model's own text
-# (observed structure, codex-cli 0.154.0). The prefix is recognized only
-# structurally, in runtime_layout(): at most one leading line, a banner
-# delimited by `--------` lines, and the exact `user` line immediately after
-# it opening the transcript. A `user` line anywhere else proves nothing —
-# transcript content can contain one — so an unrecognized prefix yields no
-# runtime evidence at all, and a format change under-classifies rather than
-# misclassifies. Only runtime error lines (observed shape:
-# `<timestamp> ERROR <target>: <message>`) in the recognized prefix, outside
-# the banner, are eligible for auth-failure classification.
-DIAGNOSTIC_LINE = re.compile(r"^\S+\s+ERROR\s")
-TRANSCRIPT_START = "user"
-# The banner is the only runtime evidence of the selector actually served. A
-# reported selector is promoted to exact structured evidence, so it is
-# qualified at parse time: a value longer than any selector the wrapper
-# accepts is unusable evidence, never a truncated one.
+# (observed structure, codex-cli 0.154.0; not a documented contract). The
+# prefix is the only runtime evidence the wrapper trusts, and runtime_layout()
+# recognizes it by consuming one finite grammar from line 0:
+#
+#     [OpenAI Codex v<version>]      optional, exactly this shape
+#     --------
+#     <field>: <value>               BANNER_FIELDS, observed order, each at most once
+#     --------
+#     user                           exact transcript marker, immediately next
+#
+# Every line is validated at the index where the grammar expects it; no
+# delimiter, marker, or field is ever discovered by searching later in the
+# stream, so transcript content can never complete or supply the prefix. Any
+# deviation — a missing, changed, reordered, duplicated, or displaced element
+# — is no recognized layout, and a layout change under-classifies (no
+# effective evidence, generic failure) rather than misclassifies. The grammar
+# has no position for runtime diagnostic lines, so no stderr line is eligible
+# for auth-failure classification: a Codex authentication failure is generic
+# wrapper failure with the bounded stderr retained.
+VERSION_LINE = re.compile(r"^OpenAI Codex v\S+$")
 BANNER_DELIMITER = "--------"
-BANNER_MODEL = re.compile(r"^model:\s*(\S+)\s*$", re.MULTILINE)
-BANNER_EFFORT = re.compile(r"^reasoning effort:\s*(\S+)\s*$", re.MULTILINE)
-AUTH_FAILURE = re.compile(
-    r"\b(?:"
-    r"not logged in|"
-    r"codex login|"
-    r"failed to authenticate|"
-    r"authentication[_ ](?:error|failed)|"
-    r"refresh token|"
-    r"token (?:has )?expired|"
-    r"invalid (?:api[ _-]?key|authentication credentials)|"
-    r"401[ :_-]+unauthorized|"
-    r"unauthorized"
-    r")\b"
-)
+BANNER_FIELDS = ("workdir", "model", "provider", "approval", "sandbox", "reasoning effort", "reasoning summaries", "session id")
+BANNER_LINE = re.compile(r"^([a-z][a-z ]*): (.*)$")
+TRANSCRIPT_START = "user"
+# A reported selector is promoted to exact structured evidence, so its value is
+# qualified as part of the grammar: one token no longer than any selector the
+# wrapper accepts. An unusable value is no recognized layout, never a
+# truncated selector.
+SELECTOR_VALUE = re.compile(rf"^\S{{1,{MAX_OPTION_VALUE_CHARS}}}$")
 
 
 def require_listed_selector(executable: str, selection: dict[str, str], environment: dict[str, str]) -> None:
@@ -170,42 +168,37 @@ def command(envelope: dict[str, Any], launch: Launch) -> list[str]:
     return arguments
 
 
-def runtime_layout(stderr: str) -> tuple[str, list[str]] | None:
-    """Recognize the runtime-owned prefix of Codex's stderr structurally, or nothing.
+def runtime_layout(stderr: str) -> dict[str, str] | None:
+    """Consume the runtime-owned prefix of Codex's stderr as one finite grammar; return its banner fields or nothing.
 
-    Returns ``(banner text, runtime lines before the banner)`` only when the
-    known layout is present exactly: the opening delimiter on line 0 or 1, a
-    closing delimiter, and the exact transcript marker as the very next line.
-    The marker is trusted for its position, not its value: it is not searched
-    for, so a marker-shaped line inside the echoed prompt, command output, or
-    model text can never establish the boundary, and a moved, changed, or
-    missing marker leaves no recognized layout. Both evidence surfaces (the
-    banner and the auth-eligible runtime lines) exist only through this one
-    recognition.
+    The banner loop iterates the grammar, not the stream: for each field in its
+    observed order, the current line is consumed only if it names that field.
+    Whatever line then remains must be the closing delimiter followed by the
+    exact transcript marker, so an unknown, reordered, duplicated, or
+    displaced line ends recognition there instead of being searched past.
     """
     lines = stderr.splitlines()
-    opening = next((index for index in range(min(2, len(lines))) if lines[index].strip() == BANNER_DELIMITER), None)
-    if opening is None:
+    index = 1 if lines and VERSION_LINE.match(lines[0]) else 0
+    if lines[index : index + 1] != [BANNER_DELIMITER]:
         return None
-    closing = next((index for index in range(opening + 1, len(lines)) if lines[index].strip() == BANNER_DELIMITER), None)
-    if closing is None or lines[closing + 1 : closing + 2] != [TRANSCRIPT_START]:
+    index += 1
+    fields: dict[str, str] = {}
+    for name in BANNER_FIELDS:
+        match = BANNER_LINE.match(lines[index]) if index < len(lines) else None
+        if match is not None and match.group(1) == name:
+            fields[name] = match.group(2)
+            index += 1
+    if lines[index : index + 2] != [BANNER_DELIMITER, TRANSCRIPT_START] or "model" not in fields:
         return None
-    return "\n".join(lines[opening + 1 : closing]), lines[:opening]
-
-
-def reported(pattern: re.Pattern[str], banner: str) -> str | None:
-    """A selector value the banner reports, or None when absent or not a usable selector."""
-    match = pattern.search(banner)
-    if match is None or len(match.group(1)) > MAX_OPTION_VALUE_CHARS:
+    if any(not SELECTOR_VALUE.match(fields[name]) for name in ("model", "reasoning effort") if name in fields):
         return None
-    return match.group(1)
+    return fields
 
 
 def effective(selection: dict[str, str], stdout: str, stderr: str) -> tuple[dict[str, Any], str | None]:
     """Require the recognized banner to report the requested selector; exact-model requirements do not fall back."""
-    layout = runtime_layout(stderr)
-    banner = layout[0] if layout is not None else ""
-    observed: dict[str, Any] = {"model": reported(BANNER_MODEL, banner), "effort": reported(BANNER_EFFORT, banner)}
+    fields = runtime_layout(stderr) or {}
+    observed: dict[str, Any] = {"model": fields.get("model"), "effort": fields.get("reasoning effort")}
     if observed["model"] is None:
         return observed, "the Codex runtime did not report its effective model"
     if observed["model"] != selection["model"]:
@@ -219,11 +212,8 @@ def effective(selection: dict[str, str], stdout: str, stderr: str) -> tuple[dict
 
 
 def diagnostic(stdout: str, stderr: str) -> str:
-    """Runtime error lines from the recognized runtime-owned prefix, outside the banner; empty when no layout is recognized."""
-    layout = runtime_layout(stderr)
-    if layout is None:
-        return ""
-    return "\n".join(line for line in layout[1] if DIAGNOSTIC_LINE.match(line))
+    """No line is eligible for auth-failure classification: the recognized prefix grammar has no runtime-diagnostic position."""
+    return ""
 
 
 def output(result: subprocess.CompletedProcess[bytes], launch: Launch) -> str:
@@ -237,7 +227,7 @@ PROVIDER = Provider(
     name="codex",
     label="Codex",
     auth_response="CODEX_AUTH_OK",
-    auth_failure=AUTH_FAILURE,
+    auth_failure=re.compile(r"(?!)"),  # nothing is eligible; see diagnostic()
     require_model=True,
     accept=require_listed_selector,
     configured_envelope=configured_envelope,

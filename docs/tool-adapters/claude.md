@@ -296,17 +296,26 @@ these Codex deltas differ:
   as `stage: selector_acceptance` with no substantive run and no review
   envelope in the record. Every attempt's evidence is paired with the exact
   envelope that produced it. Finally, after the review itself, the wrapper
-  reads the effective model and reasoning effort again from the leading
-  delimited banner block of Codex's stderr, records them as `effective`, and
-  fails the attempt when they differ from the request or are not reported.
-  The banner is read only through the one structural recognition of the
-  runtime-owned prefix that the authentication path also uses (below): the
-  exact `user` transcript line must be the line immediately after the
-  banner. The marker is trusted for its position, never found by searching,
-  so prompt and model text can never supply the banner or the marker, and a
-  missing, moved, or changed marker means no effective evidence at all. The
-  canary does not stand in for that verification; exact-model requirements
-  do not fall back.
+  reads the effective model and reasoning effort again from Codex's stderr
+  banner, records them as `effective`, and fails the attempt when they
+  differ from the request or are not reported. The canary does not stand in
+  for that verification; exact-model requirements do not fall back.
+- Runtime evidence comes from one observed finite stderr prefix grammar,
+  consumed sequentially from line 0: an optional `OpenAI Codex v<version>`
+  line, a `--------` delimiter, banner fields (`workdir`, `model`,
+  `provider`, `approval`, `sandbox`, `reasoning effort`, `reasoning
+  summaries`, `session id`) in that order and each at most once, the
+  closing `--------`, and the exact `user` transcript line immediately next.
+  Every element is validated at the position where the grammar expects it;
+  the delimiters, the marker, and the fields are never searched for, so the
+  echoed prompt, command output, and model text can never supply or complete
+  the prefix. Any deviation — a missing, changed, reordered, duplicated, or
+  displaced element, or a reported selector that is not a single token
+  within the accepted selector length — means no recognized layout and
+  therefore no effective evidence: the attempt fails generically and no
+  selector value is promoted from uncertain content. The grammar is observed
+  behavior of `codex-cli 0.154.0`, not a documented Codex contract; a layout
+  change fails closed in this way until the wrapper is updated.
 - The review controls are Codex's native ones (`--sandbox read-only`,
   `approval_policy="never"`, `--ignore-user-config`, `--ephemeral`, no history
   or web search, app connectors disabled through `features.apps` and
@@ -325,20 +334,13 @@ these Codex deltas differ:
   Operator-managed configuration and read-only sandbox network semantics are
   not observed, so network reach stays unestablished and the reviewer still
   reports the access it saw.
-- Authentication failure is classified only from runtime error lines in the
-  runtime-owned prefix of Codex's stderr, and only when that prefix is
-  recognized structurally: at most one leading line, the banner delimited by
-  `--------` lines, and the exact `user` transcript line immediately after
-  it. Eligible lines are the runtime lines of that prefix outside the banner
-  — under the observed layout at most one. A `user` line anywhere else
-  establishes nothing, so the echoed prompt, command output, and model text
-  can never enter the region however marker- or error-shaped they are. The
-  bias is toward under-classification: an auth error Codex reports after the
-  prompt echo, or under a changed layout, is generic wrapper failure (exit
-  70) with the bounded diagnostics still in the record. The banner
-  delimiters and the `user` marker are observed layout, not a documented
-  Codex contract; a layout change makes both evidence paths shrink to
-  nothing until the wrapper is updated.
+- Authentication failure is not classified for Codex: the recognized prefix
+  grammar has no position for runtime diagnostic lines, so no stderr line is
+  eligible and the operator-attention exit (78) is not produced. A failed
+  canary or review whose stderr carries an auth error is generic wrapper
+  failure (exit 70) with the bounded stderr retained in the record for the
+  operator to read. This is deliberate under-classification: no shape of
+  prompt, command, or model text can produce a credential verdict.
 - Invoke it as `./scripts/codex-review` from the active Playbook checkout.
   Codex prefix rules match argv literally, so that checkout-relative form is
   the one the project rule gates. An absolute-path invocation from another
