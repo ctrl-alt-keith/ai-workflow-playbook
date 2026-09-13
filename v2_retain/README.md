@@ -27,6 +27,24 @@ success. The model exercises I1--I5 as source/condition inputs, authority,
 uncertain-effect holding, exact applicability, and explicit route/claim
 identity; it adds no sixth invariant and makes no remote guarantee.
 
+## Synthetic recovery-join experiment
+
+`recovery_join.py` is a second local-only CAK-301 dogfood model. A compact
+breadcrumb names one durable decision and the current owners needed to join it.
+Explicit supplied observations then recover an explainable next-action ceiling:
+the historical decision must be exact and applicable, while repository,
+authority, effect, and route facts must come from their named current owners.
+The model performs no retrieval, storage, GitHub call, or effect; its caller
+supplies all observations.
+
+An approved durable summary, a worker reconstruction, matching output, or an
+old instruction never creates current authority. Current owner contradiction,
+owner mismatch, unknown effect, unavailable required owner, or unsupported
+route produces a bounded hold for that conclusion. The sole positive result is
+limited to the model's named local bounded action. This exercises I1--I5 as a
+small experiment; it is not a universal handoff format, evidence graph,
+manifest registry, or agent-memory layer.
+
 ## Contract and ownership
 
 One synchronous operation retains exact supplied bytes at one reserved target.
