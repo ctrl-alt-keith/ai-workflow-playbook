@@ -120,13 +120,23 @@ configuration when the provider supports those controls. If required source
 access is unavailable, the reviewer reports the gap and limits its verdict
 instead of receiving broader authority.
 
+When a launcher configures those controls, it emits the configured envelope
+with the attempt record: the controls, the requested model and effort, and
+whether the tool set and connectors admit network reach. An unrequested control
+is recorded as unset, not as a default; effective runtime values are a separate
+observation. The reviewer reports the sources it actually inspected and the
+capability gaps it encountered, which the launcher cannot observe. Neither
+claim substitutes for the other.
+
 Read-only review constrains the reviewer's capabilities; it does not require
 the repository, worktree registry, or shared Git administration to remain
 still. Do not add source no-delta monitoring, worktree or object attribution,
 live stabilization, process-controller state, or integrity receipts merely to
-prove that the reviewer was read-only. Concurrent repository activity is not a
-review failure when the configured candidate identity remains the one selected
-for review.
+prove that the reviewer was read-only. A declared-configuration record is not
+such a receipt: it states what the launcher configured before the run and
+claims nothing about what occurred during it. Concurrent repository activity is
+not a review failure when the configured candidate identity remains the one
+selected for review.
 
 Run the selected provider's bounded authentication preflight when its current
 adapter requires one. Treat nonzero, empty, authentication, access, or other
@@ -309,7 +319,8 @@ Review dimensions:
 
 Required output:
 - reviewer identity and role;
-- tools, access, sources actually inspected, and material capability gaps;
+- tools and access as observed from inside the review, sources actually
+  inspected, and material capability gaps;
 - findings with severity and exact artifact anchors;
 - source attribution for each verification claim;
 - explicit verdict: ACCEPT, ACCEPT WITH CHANGES, or REJECT.

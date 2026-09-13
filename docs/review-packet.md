@@ -86,7 +86,9 @@ boundary visible in the review packet. Record:
 
 - the exact artifact or commit the reviewer inspected;
 - reviewer identity and role;
-- material tools, access, and capability gaps;
+- the launcher-declared envelope and the reviewer-reported access and
+  capability gaps under
+  [`external-ai-reviewer.md#exact-candidate-review-contract`](external-ai-reviewer.md#exact-candidate-review-contract);
 - the sources the reviewer actually verified;
 - any follow-up verification, attributed to the actor and source that performed
   it; and
@@ -102,8 +104,17 @@ explicit disposition:
 - accepted;
 - accepted with modification;
 - reasoned decline;
-- superseded; or
-- verified externally.
+- superseded;
+- verified externally; or
+- unverified from the review surface.
+
+`unverified from the review surface` is the
+[unverified-fact state](source-first-retrieval.md#recovery) at the review
+boundary: the declared envelope offered no channel to the owning source. A
+failed transport belongs among the reviewer's capability gaps, and the reviewer
+cannot declare the capability absent from its surface. The finding stays open
+at the decision boundary until another actor verifies it, which moves it to
+`verified externally`.
 
 Record the resolution and any remaining gap. Keep the taxonomy proportionate:
 trivial nits can be handled inline, but substantive findings must not disappear
@@ -126,6 +137,13 @@ Do not require another review merely because bytes changed, and do not skip one
 merely because the filename or headline stayed the same. Continued
 applicability is the governing question. The human-owned approval identity and
 validity rules above still control after the review decision.
+
+## Measured Evidence
+
+A packet claim about a surface, transport, runtime, or capability the claimant
+could not observe from its own surface carries the measurement it rests on —
+observer, surface, and timestamp — as recorded, not as the packet author's
+observation. Without those three it is reported as unverified.
 
 ## What Codex Should Summarize
 

@@ -65,6 +65,23 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             cwd=ROOT,
         )
 
+    def run_with_recorded_arguments(self, *arguments: str, prompt: bytes = b"", output: str):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            arguments_file = root / "arguments"
+            diagnostics_file = root / "diagnostics.json"
+            executable = self.make_fake_claude(
+                root,
+                f"printf '%s\\n' \"$@\" > {arguments_file}\n{output}",
+            )
+            completed = self.run_launcher(
+                executable, "--diagnostics-file", str(diagnostics_file), *arguments, prompt=prompt
+            )
+            observed_arguments = arguments_file.read_text(encoding="utf-8").splitlines()
+            record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+        return record, observed_arguments
+
     def test_project_rule_keeps_claude_review_approval_gated(self):
         rule = CODEX_RULE.read_text(encoding="utf-8")
         self.assertIn('"./scripts/claude-review"', rule)
@@ -164,6 +181,65 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertIn("--tools", observed_arguments)
         self.assertIn("Read,Grep,Glob", observed_arguments)
         self.assertIn("--no-session-persistence", observed_arguments)
+
+    ENVELOPE_CASES = {
+        "review with requested model and effort": (
+            ("--", "--model", "opus", "--effort=high"),
+            b"Review the candidate.\n",
+            "cat\n",
+        ),
+        "review with nothing requested": ((), b"Review the candidate.\n", "cat\n"),
+        "auth preflight": (("--auth-preflight",), b"", "printf 'CLAUDE_AUTH_OK\\n'\n"),
+    }
+
+    def test_record_declares_the_envelope_actually_passed(self):
+        launcher = load_launcher("claude_review_envelope_fixture")
+        for label, (arguments, prompt, output) in self.ENVELOPE_CASES.items():
+            with self.subTest(label):
+                record, observed_arguments = self.run_with_recorded_arguments(
+                    *arguments, prompt=prompt, output=output
+                )
+                rendered = ["-p", *launcher.claude_arguments(record["configured_envelope"])]
+                self.assertEqual(observed_arguments, rendered)
+
+    def test_record_declares_network_reach_from_configured_tools_and_servers(self):
+        launcher = load_launcher("claude_review_network_fixture")
+        self.assertEqual(set(launcher.LOCAL_READ_ONLY_TOOLS), {"Read", "Grep", "Glob"})
+        for label, (arguments, prompt, output) in self.ENVELOPE_CASES.items():
+            with self.subTest(label):
+                record, _ = self.run_with_recorded_arguments(*arguments, prompt=prompt, output=output)
+                envelope = record["configured_envelope"]
+                network = envelope["network_access"]
+                reaching_tools = set(envelope["tools"]) - set(launcher.LOCAL_READ_ONLY_TOOLS)
+                self.assertEqual(
+                    network["granted"], bool(reaching_tools or envelope["mcp_config"]["mcpServers"])
+                )
+                self.assertEqual(any(network["derived_from"].values()), network["granted"])
+                self.assertFalse(network["granted"])
+
+    def test_candidate_mismatch_record_retains_the_configured_envelope(self):
+        launcher = load_launcher("claude_review_mismatch_fixture")
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            diagnostics_file = root / "diagnostics.json"
+            executable = self.make_fake_claude(root, "printf 'review\\n'\n")
+            completed = self.run_launcher(
+                executable,
+                "--diagnostics-file",
+                str(diagnostics_file),
+                "--",
+                "--model",
+                "opus",
+                "--effort=high",
+                prompt=b"Review\n",
+                candidate_commit="0" * 40,
+            )
+            record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
+        self.assertEqual(completed.returncode, 70)
+        self.assertIn("candidate commit mismatch", record["failure"])
+        self.assertEqual(record["attempt_kind"], "review")
+        expected = launcher.configured_envelope(["--model", "opus", "--effort", "high"], preflight=False)
+        self.assertEqual(record["configured_envelope"], expected)
 
     def test_review_requires_candidate_commit(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
