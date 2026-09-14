@@ -608,8 +608,12 @@ Only when Codex launches or interprets a local `claude-review` or
 launcher-owned [`review-launchers.md`](../../scripts/review-launchers.md).
 Use only the active Playbook checkout's repository-owned launcher, its explicit
 provider binary, and the checkout's exact `--candidate-commit`; a mismatch
-stops before review. The configured launcher supplies read-only controls, and
-the repository project rule keeps local reviewer execution approval-gated.
+stops before review. The configured launcher supplies read-only controls. The
+repository project rule prompts for checkout-relative `./scripts/claude-review`
+and `./scripts/codex-review` invocations. An absolute-path or otherwise
+unmatched invocation is not project-rule approval-gated; it falls under
+operator/user-layer policy and must still respect the selected review authority
+boundary.
 
 Run required preflight before expensive review. Claude exit 78 is the qualified
 operator-reauthentication case; other Claude failures and every Codex failure

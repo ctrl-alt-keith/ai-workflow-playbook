@@ -31,6 +31,9 @@ before the launcher validates enough requested selection/configuration to
 construct that envelope has no envelope or runtime evidence; a later pre-launch
 failure retains the intended envelope as a declaration only. Acceptance canaries
 and substantive reviews are separate attempts with their own envelopes.
+If a Codex selector-acceptance canary fails, its `acceptance` record retains that
+canary's configured envelope and evidence. There is no top-level substantive
+review envelope because the substantive review never started.
 
 When `--diagnostics-file` is requested, its terminal state is one of
 `written`, `not_created`, `incomplete`, or `unknown`. The file's own bytes say
