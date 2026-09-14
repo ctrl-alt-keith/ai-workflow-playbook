@@ -111,6 +111,8 @@ Use only the routes activated by the task:
   [`orchestration-and-parallelism.md`](orchestration-and-parallelism.md); use
   [`multi-agent-synthesis.md`](multi-agent-synthesis.md) for comparative
   discovery and synthesis.
+- **Model or reasoning selection:** use
+  [`model-routing.md`](model-routing.md) with the matching executor adapter.
 - **Independent artifact review:** use
   [`external-ai-reviewer.md`](external-ai-reviewer.md) and the finding
   disposition contract in [`review-packet.md`](review-packet.md).

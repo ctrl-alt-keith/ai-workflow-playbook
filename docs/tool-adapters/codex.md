@@ -11,10 +11,10 @@ and repo-local `AGENTS.md`; do not treat it as a second copy of those rules.
 
 ## OpenAI Model And Reasoning Routing
 
-Choose the lowest-cost available model and reasoning effort that preserves the
-confidence required by the bounded task. Model selection and reasoning effort
-are separate configuration decisions: select both deliberately, and do not
-default substantial work to Sol or Astra merely because it is long-running.
+Apply the shared [model and reasoning routing](../model-routing.md) doctrine.
+This adapter maps it to Codex models, effort controls, selectors, and runtime
+evidence. Model selection and reasoning effort are separate configuration
+decisions; select both deliberately.
 
 The official model references, checked 2026-09-05, position
 [GPT-6 Astra](https://developers.openai.com/api/docs/models/gpt-6-astra)
@@ -37,12 +37,6 @@ documents Astra as an option once available to the account. Rollout and
 administrator enablement remain separate from model capability; verify access
 on the actual interactive or scheduled execution surface.
 
-Use task characteristics, not duration, to route: ambiguity, consequence of
-error, repository-context breadth, novelty, architectural judgment,
-reversibility, reviewer role, repetition/volume, and strength of independent
-validation. A short task can still require Sol; a long deterministic task can
-remain on Luna.
-
 | Task class | Default model | Default reasoning | Escalate when | Downgrade/delegate when |
 | --- | --- | --- | --- | --- |
 | Status hydration; Git/Linear checks; inventories/hashes; test or lint invocation; formatting; bounded mechanical verification; evidence-only packaging | Luna | Light | the result is ambiguous, fails unexpectedly, or changes a decision | split data collection and repeatable checks from interpretation |
@@ -52,12 +46,9 @@ remain on Luna.
 | Protocol/design work; architecture synthesis; ambiguous root-cause debugging; high-consequence authority or controller semantics; difficult adversarial review | Sol | High; consider `xhigh` or `max` only with a measured need | use a bounded supported Pro-mode execution, independent review, or explicit human decision when the unresolved risk remains material | delegate established-contract implementation to Terra and mechanical verification to Luna |
 
 The Luna/Terra/Sol defaults remain in place pending representative Astra
-qualification. Defaults are routing hypotheses, not a guarantee that the
-lower-cost choice is sufficient. Do not downgrade when consequences are high, ambiguity is
-material, validation is weak, work is hard to reverse, or a failure could
-silently corrupt authority or evidence. `xhigh` and `max` are exceptional:
-use them only for a bounded demanding task with an observed quality need; do
-not promote them to a routine default.
+qualification. They are routing hypotheses, not a guarantee that the
+lower-cost choice is sufficient. `xhigh` and `max` are exceptional: use them
+only for a bounded demanding task with an observed quality need.
 
 OpenAI documents Pro mode as a distinct Responses API execution mode: it keeps
 the selected GPT-5.6 model, chooses effort independently, and applies more
@@ -113,36 +104,16 @@ at that boundary; exact-model requirements do not fall back.
 not launch Codex or qualify selectors. For SAME THREAD, preserve the parent
 configuration and use runtime-visible effective-model evidence when available.
 
-### Escalation And Delegation
-
-Escalate a lower-cost task only on evidence: unresolved ambiguity after a
-bounded investigation, an architecture decision, conflicting authorities,
-a high-consequence security/authority decision, repeated failed attempts, an
-unexplained invariant, or a reviewer finding that changes the methodology
-rather than the implementation. Prefer a bounded Sol subtask for that question
-over restarting the entire workflow on Sol when the execution topology allows
-it.
-
-A stronger parent should delegate deterministic, independently checkable work
-downward when supported: Sol architecture to Terra implementation; Sol or Terra
-to Luna for lint, hashes, inventories, fixture execution, and evidence
-packaging. Preserve each child's selected model, reasoning effort, bounded
-inputs, execution identity, durable result, and authority boundary in the
-attempt evidence when the workflow requires it. A child spawned by the reviewed
-party is not an independent external reviewer; this does not invalidate child
-work for other purposes.
-
 ### Thread Routing And Configuration Continuity
 
 Apply the shared `FRESH THREAD`, `SAME THREAD`, and `CHILD TASK` vocabulary in
 [`prompts.md`](../prompts.md#thread-routing-and-configuration-continuity).
-Select model and effort using the matrix and selector contract above. For a
-CHILD TASK, independently choose the lowest-cost sufficient configuration and
-retain the evidence required by the governing workflow.
+Select model and effort using the shared routing doctrine, this matrix, and the
+selector contract above. For a CHILD TASK, retain the evidence required by the
+governing workflow.
 
 When a SAME THREAD crosses a capability boundary, use a bounded child or an
 explicit fresh-thread transition rather than silently changing the parent.
-Preserve reviewer independence separately from model capability.
 
 ### Visible Thread Names
 
