@@ -32,10 +32,10 @@ Map each concrete capability through the core
 Initiation remains separate: scheduled Cowork is unattended, Dispatch is a
 human assignment whose execution does not require the human to remain present,
 and Claude Code may be interactive or controller-launched. Controller-launched
-independent review additionally uses the
-[`Local read-only reviewer launch`](#local-read-only-reviewer-launch) and the
-controller-side adapter for the invoking executor; each adapter governs its own
-run boundary.
+independent review additionally applies the conditional
+[`Local Read-Only Reviewer Launch`](#local-read-only-reviewer-launch) route and
+the controller-side adapter for the invoking executor; each adapter governs its
+own run boundary.
 
 ### Claude Chat-to-Cowork projection
 
@@ -176,192 +176,45 @@ Claude has no Codex-style writable-root sandbox. Apply the shared durable-state
 and scratch rules in
 [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
-### Local read-only reviewer launch
+### Local Read-Only Reviewer Launch
 
-Use the active Playbook checkout's repository-owned
-[`claude-review`](../../scripts/claude-review) source directly. There is no
-supported installed or published launcher. Give it an explicit absolute
-`--claude-bin`; it resolves an executable file and obtains its `--version`
-before invoking it.
+Apply this section only when launching or interpreting a local
+`claude-review` or `codex-review` attempt. First apply the shared
+[`external-ai-reviewer.md`](../external-ai-reviewer.md) contract and the
+launcher-owned [`review-launchers.md`](../../scripts/review-launchers.md).
+That reference owns launcher records, diagnostics, redaction, provider-runtime
+qualification, and incident interpretation; it is not ordinary Claude startup
+context.
 
-The wrapper is a small, trusted local adapter around Claude Code. It accepts
-only model and effort choices, delivers the review prompt on standard input,
-and supplies the review controls itself: read-only `Read`, `Grep`, and
-`Glob` tools; non-interactive permission mode; no MCP configuration; no
-session persistence; and no slash commands. Invoke it from the checkout to be
-reviewed and pass that checkout's exact commit with `--candidate-commit`. The
-wrapper verifies `HEAD` immediately before review and includes the repository
-path and selected commit in Claude's context.
+Use only the active Playbook checkout's repository-owned launcher, with the
+explicit absolute provider binary it requires. Invoke it from the checkout
+being reviewed and bind its exact `--candidate-commit`; a mismatch stops before
+review. The configured launcher supplies read-only review controls. Keep local
+reviewer execution behind explicit per-action approval; do not launch it in an
+auto-approving permission mode.
 
-Run `--auth-preflight` before an expensive review. It uses a fixed stdin
-canary, no tools, an ordinary temporary directory, the effective account's
-`HOME`, `USER`, and `LOGNAME`, and a fixed execution bound; a hung provider is
-wrapper failure, not an authentication result. A canary that ends in an
-established authentication failure (exit 78) means Claude authentication
-needs operator attention; any other failed canary — wrong reply, no output,
-timeout, provider exit — is generic wrapper failure (exit 70). Neither is a
-substantive review result.
-It disables Claude memory loading and uses an empty MCP configuration. This is
-the Claude projection of the exact-candidate review contract in
-[`external-ai-reviewer.md`](../external-ai-reviewer.md); finding disposition
-and human transition authority remain outside the wrapper.
+Run the selected launcher's required preflight before an expensive review. A
+qualified Claude authentication failure during preflight or review requires
+operator reauthentication; every other Claude failure is generic wrapper
+failure. Codex has no qualified authentication classification, so a failed
+Codex preflight or review is generic failure. Neither is review evidence, a
+verdict, or grounds for silent reviewer substitution.
 
-The wrapper captures Claude output and status. A review succeeds only when
-Claude exits successfully with non-empty output. Diagnostics are bounded and
-redact obvious credentials; `--diagnostics-file` can retain them at a new
-absolute path with exclusive creation. The bytes written to that file always
-carry `diagnostics_file: unverified`: a file cannot certify its own retention,
-so only the wrapper's terminal stderr record states the final observation.
-That record's `diagnostics_file` describes this attempt's artifact, not the
-namespace: `written` (the record was completed, final verification saw the
-path still naming this attempt's open file, and the descriptor closed
-cleanly), `not_created` (exclusive create failed; nothing was created and no
-claim is made about the path), `incomplete` (this attempt created the file
-but could not complete the record while the path still named that file; the
-bytes are not valid evidence), `unknown` (identity could not be bound, the
-path no longer names or could not be checked against this attempt's file, or
-the descriptor did not close cleanly). Wording distinguishes a mismatch that
-was observed from an inspection that could not be completed. Identity is
-bound with `fstat` and checked with `lstat` while the file is still open. The
-wrapper performs no cleanup at the destination: no portable operation
-unlinks exactly the file behind an open descriptor, so it never deletes
-whatever the path names. Any state other than `written` fails the attempt
-when a diagnostics file was requested; a retained file is evidence only when
-the terminal record says `written`. When several
-failures coincide, the record's `failure` lists the
-primary cause first — provider exit, then unacceptable output, then
-effective-selection evidence, then scratch cleanup, then the diagnostics
-write — with an established authentication failure taking precedence and
-keeping its exit code; secondary causes are preserved after it. Retained
-provider text and failure causes are bounded and credential-redacted;
-wrapper-owned structured evidence is exact (see the retention and redaction
-contract below). The diagnostics record carries `configured_envelope` under
-the
-[exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract)
-in three states: a failure before the wrapper has constructed its intended
-launch configuration (account or executable resolution) carries no envelope
-and no runtime evidence; once that configuration exists, later pre-launch
-failures retain it as a declaration only; once a provider attempt runs,
-runtime evidence is paired only with that attempt's exact configured
-envelope.
+Treat retained diagnostics as review evidence only when the launcher's terminal
+record says `diagnostics_file: written`; otherwise preserve the failed attempt
+and stop at the selected-review boundary. For the record states, failure
+ordering, provenance, retention, redaction, and incident interpretation, use
+[`review-launchers.md`](../../scripts/review-launchers.md).
 
-Retention and redaction contract: sanitization follows evidence ownership.
-Wrapper-owned structured evidence (configured envelope, requested selection,
-exit code, status, artifact state, candidate identity) is validated where it
-enters — option values are bounded when accepted, the candidate commit is
-exact-format checked — and then retained exactly; nothing rewrites it
-afterwards, so the record always carries the value the wrapper requested or
-resolved, even one that resembles a credential construct. Provider-derived
-values promoted into structured evidence (the effective model and effort)
-are first structurally qualified — read only from the recognized runtime
-layout — and validated at parse time, then retained exactly; a reported
-value longer than any accepted selector is unusable evidence and fails the
-attempt rather than being truncated into a different selector. Provider
-stdout and stderr are untrusted diagnostic material kept only as a bounded
-excerpt — they carry the banner, transcript, and any runtime errors an
-operator needs to read the record — and, together with failure causes,
-version text, and OS error text, pass through one transformation where they
-are retained: a recognized credential-bearing construct — a key whose last
-`_`/`-` joined component is a credential word, or an `authorization` header,
-followed by `:` or `=` — is redacted from the separator to the end of that
-line, and known secret prefixes are removed wherever they appear. Failure
-causes are one per line so a construct in one cause cannot erase the next.
-This recognizes obvious structures and biases toward over-redacting the rest
-of a line; it is not comprehensive secret detection, and no claim is made
-that arbitrary provider prose is credential-free.
-The project rule keeps local reviewer execution approval-gated.
+For a Codex review, require an explicit exact selector, successful pre-prompt
+selector acceptance, and post-review effective model/effort evidence matching
+the request. Missing or mismatched effective-selection evidence fails closed;
+exact-model qualification does not fall back. The selector and runtime details
+are in [`review-launchers.md`](../../scripts/review-launchers.md).
 
-### Local Codex reviewer launch
-
-To launch Codex as the reviewer, use the checkout's
-[`codex-review`](../../scripts/codex-review) exactly as described for
-`claude-review` above, with `--codex-bin` in place of `--claude-bin`. Whether
-a given invocation satisfies the external-review role, and what provider
-choice does and does not add, is owned by
-[`external-ai-reviewer.md`](../external-ai-reviewer.md), not by the wrapper
-selected. It shares that wrapper's launch contract and record shape; only
-these Codex deltas differ:
-
-- `--model` after `--` is required: the exact selector from the
-  [Codex selector table](codex.md#codex-selector-routing-and-acceptance).
-  Three checks apply, in order. A cheap listing check rejects a selector or
-  `--effort` the runtime's model catalog does not list and fails closed when
-  the catalog cannot be read; listing is not acceptance (`codex debug models`
-  is undocumented, checked 2026-09-13 against `codex-cli 0.154.0`, takes no
-  `--ignore-user-config`, and falls back to the bundled catalog when
-  unauthenticated). Then, before the review prompt is delivered, an
-  acceptance canary runs the fixed canary prompt under the same governed
-  controls with the exact selection and requires a clean exit, the exact
-  reply, and runtime evidence of that model and effort; the canary never
-  sees the review prompt, its evidence is recorded as `acceptance` together
-  with the canary's own configured envelope, and any failure ends the attempt
-  as `stage: selector_acceptance` with no substantive run and no review
-  envelope in the record. Every attempt's evidence is paired with the exact
-  envelope that produced it. Finally, after the review itself, the wrapper
-  reads the effective model and reasoning effort again from Codex's stderr
-  banner, records them as `effective`, and fails the attempt when they
-  differ from the request or are not reported. The canary does not stand in
-  for that verification; exact-model requirements do not fall back.
-- Runtime evidence is qualified against one observed finite stderr prefix
-  grammar, consumed sequentially from line 0: an optional
-  `OpenAI Codex v<version>` line, a `--------` delimiter, banner fields
-  (`workdir`, `model`, `provider`, `approval`, `sandbox`, `reasoning effort`,
-  `reasoning summaries`, `session id`) in that order and each at most once —
-  only `model` is required, and values other than the model and effort
-  selectors are not inspected — the closing `--------`, and the exact `user`
-  transcript line immediately next. Every element is validated at the position where the grammar expects
-  it; the wrapper never searches later stderr to repair or complete a
-  malformed prefix, and text outside the accepted prefix — the echoed prompt,
-  command output, and model text under the observed layout — is not
-  considered. Any observed deviation — a missing required element, a
-  changed, reordered, duplicated, unknown, or displaced one, or a reported
-  selector that is not a single token within the accepted selector length —
-  means no recognized
-  layout and therefore no effective evidence: the attempt fails generically
-  and no selector value is promoted from an unrecognized stream. This is
-  syntactic qualification of the observed `codex-cli 0.154.0` layout, not
-  proof of provenance: stderr is a single free-form stream, not a documented
-  or authenticated channel, so it cannot show which producer emitted bytes
-  that match the grammar. A future layout change fails closed unless it
-  remains syntactically indistinguishable from the accepted prefix, and may
-  require a wrapper update.
-- The review controls are Codex's native ones (`--sandbox read-only`,
-  `approval_policy="never"`, `--ignore-user-config`, `--ephemeral`, no history
-  or web search, app connectors disabled through `features.apps` and
-  `apps._default.enabled`, which `--ignore-user-config` does not cover, and
-  the candidate's `AGENTS.md` not loaded as reviewer instructions through
-  `project_doc_max_bytes=0`); the review output is the final message. Operator
-  instruction files under `CODEX_HOME` are outside the wrapper's controls and
-  still reach the reviewer.
-- Candidate isolation: Codex loads a checkout's project-scoped `.codex/`
-  layers (config, hooks, rules) only for a trusted project, and trust is
-  recorded in the user config that `--ignore-user-config` leaves unloaded, so
-  the candidate cannot extend the reviewer's surface through its own
-  `.codex/config.toml`. The envelope's `project_layers_loaded: false` is that
-  derivation declared, not an observed runtime fact; `user_config_loaded` is
-  the control that renders.
-  Operator-managed configuration and read-only sandbox network semantics are
-  not observed, so network reach stays unestablished and the reviewer still
-  reports the access it saw.
-- Authentication failure is not classified for Codex: the recognized prefix
-  grammar has no position for runtime diagnostic lines, so no stderr line is
-  qualified for credential classification and the operator-attention exit
-  (78) is not produced. A failed canary or review whose stderr carries an
-  auth error is generic wrapper failure (exit 70) with the bounded stderr
-  retained in the record for the operator to read. This is deliberate
-  under-classification pending a provider-owned, structured evidence source.
-- Invoke it as `./scripts/codex-review` from the active Playbook checkout.
-  Codex prefix rules match argv literally, so that checkout-relative form is
-  the one the project rule gates. An absolute-path invocation from another
-  checkout is outside the repository project-rule guarantee and falls under
-  the operator's user-layer policy and sandbox; do not present it as the
-  supported route.
-
-```text
-cd /ABSOLUTE/PATH/TO/ai-workflow-playbook
-./scripts/codex-review --codex-bin /ABSOLUTE/PATH/TO/codex \
-  --auth-preflight -- --model gpt-5.6-terra --effort high
-```
+Launcher controls do not establish total reviewer isolation: operator-layer
+instructions and configuration remain outside launcher control. Keep that
+limitation visible whenever reviewer qualification relies on isolation.
 
 ## Worktrees And Subagents
 
