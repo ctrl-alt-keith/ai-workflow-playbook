@@ -20,15 +20,17 @@ Preflight is a bounded canary before expensive review. It establishes neither
 candidate quality nor a guarantee for the later review. The launcher supplies
 the configured read-only controls; its configured envelope is a declaration,
 not a runtime receipt. The reviewer must still report sources actually
-inspected and access gaps.
+inspected and access gaps. Launcher controls do not establish total reviewer
+isolation: operator-layer instructions and configuration can remain outside
+launcher control.
 
 ## Attempt records and diagnostics
 
 An attempt that runs carries the exact `configured_envelope` it used. A failure
-before executable or account resolution has no envelope or runtime evidence;
-later pre-launch failure retains the intended envelope as a declaration only.
-Acceptance canaries and substantive reviews are separate attempts with their
-own envelopes.
+before the launcher validates enough requested selection/configuration to
+construct that envelope has no envelope or runtime evidence; a later pre-launch
+failure retains the intended envelope as a declaration only. Acceptance canaries
+and substantive reviews are separate attempts with their own envelopes.
 
 When `--diagnostics-file` is requested, its terminal state is one of
 `written`, `not_created`, `incomplete`, or `unknown`. The file's own bytes say

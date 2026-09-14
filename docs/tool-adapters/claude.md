@@ -33,7 +33,7 @@ Initiation remains separate: scheduled Cowork is unattended, Dispatch is a
 human assignment whose execution does not require the human to remain present,
 and Claude Code may be interactive or controller-launched. Controller-launched
 independent review additionally applies the conditional
-[`Local read-only reviewer launch`](#local-read-only-reviewer-launch) route and
+[`Local Read-Only Reviewer Launch`](#local-read-only-reviewer-launch) route and
 the controller-side adapter for the invoking executor; each adapter governs its
 own run boundary.
 
@@ -176,7 +176,7 @@ Claude has no Codex-style writable-root sandbox. Apply the shared durable-state
 and scratch rules in
 [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
-### Local read-only reviewer launch
+### Local Read-Only Reviewer Launch
 
 Apply this section only when launching or interpreting a local
 `claude-review` or `codex-review` attempt. First apply the shared
@@ -189,15 +189,16 @@ context.
 Use only the active Playbook checkout's repository-owned launcher, with the
 explicit absolute provider binary it requires. Invoke it from the checkout
 being reviewed and bind its exact `--candidate-commit`; a mismatch stops before
-review. The configured launcher supplies read-only review controls, and local
-reviewer execution remains approval-gated.
+review. The configured launcher supplies read-only review controls. Keep local
+reviewer execution behind explicit per-action approval; do not launch it in an
+auto-approving permission mode.
 
 Run the selected launcher's required preflight before an expensive review. A
-Claude preflight failure with exit 78 requires operator reauthentication; every
-other Claude preflight failure is generic wrapper failure. Codex has no
-qualified authentication classification, so a failed Codex preflight or review
-is generic failure. Neither is review evidence, a verdict, or grounds for
-silent reviewer substitution.
+qualified Claude authentication failure during preflight or review requires
+operator reauthentication; every other Claude failure is generic wrapper
+failure. Codex has no qualified authentication classification, so a failed
+Codex preflight or review is generic failure. Neither is review evidence, a
+verdict, or grounds for silent reviewer substitution.
 
 Treat retained diagnostics as review evidence only when the launcher's terminal
 record says `diagnostics_file: written`; otherwise preserve the failed attempt

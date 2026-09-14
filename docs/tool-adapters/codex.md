@@ -510,6 +510,9 @@ attribution, anchored findings with severity, and explicit verdict; the
 declared envelope comes from the launcher record under the
 [exact-candidate review contract](../external-ai-reviewer.md#exact-candidate-review-contract).
 Preserve the output at a reviewable identity.
+When this route uses a local launcher, continue with
+[Local Reviewer Launch](#local-reviewer-launch) for its conditional adapter
+delta.
 
 After review, Codex must not turn a verdict into approval. Use the finding
 disposition and re-review applicability contract in
@@ -597,7 +600,7 @@ need review later. Use attempt-local scratch only for short-lived private
 process mechanics whose loss cannot impair recovery; the shared lifecycle
 contract is in [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
-### Local reviewer launch
+### Local Reviewer Launch
 
 Only when Codex launches or interprets a local `claude-review` or
 `codex-review` attempt, apply the shared
