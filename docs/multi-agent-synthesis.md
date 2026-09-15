@@ -11,6 +11,15 @@ different perspectives, such as architecture review, backlog discovery,
 workflow-risk analysis, repo-ecosystem scanning, or comparison of alternative
 implementation strategies.
 
+Choose the parallel question before the lane design: use complementary
+perspectives to discover different options or risks, or independent attempts at
+the same question when their convergence or divergence could change a material
+decision. When comparison itself supplies evidence, keep conclusions isolated
+until outputs are fixed and preserve the synthesis inputs under
+[Evidence Lifecycle](evidence-lifecycle.md#accepted-evidence-and-freeze). Stop
+adding attempts when the remaining uncertainty needs different evidence or a
+human decision.
+
 It is usually not worth the coordination cost when the task is a small coherent
 implementation change, a direct bug fix, a tightly coupled edit, or a decision
 that needs one source-grounded answer rather than multiple speculative views.

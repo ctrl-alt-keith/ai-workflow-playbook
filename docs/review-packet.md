@@ -138,6 +138,11 @@ merely because the filename or headline stayed the same. Continued
 applicability is the governing question. The human-owned approval identity and
 validity rules above still control after the review decision.
 
+When a substantive correction changes a shared evidence, failure, authority, or
+isolation path, selected re-review should challenge the original finding and
+materially interacting invariants, rather than only confirm that the requested
+edit is present.
+
 ## Measured Evidence
 
 A packet claim about a surface, transport, runtime, or capability the claimant
