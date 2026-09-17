@@ -163,6 +163,14 @@ that source. If the target is unclear, ask a narrow clarifying question or
 report the missing identifier. Do not fill the gap with conversational
 inference.
 
+A bounded lookup may characterize or eliminate a candidate when that limited
+fact is needed, but its result is evidence only about that candidate or
+namespace. A returned object, including a successful hit, does not by itself
+resolve the ambiguity that made the lookup necessary. Before making a stateful
+conclusion that treats a candidate as the user's referent, establish a
+selection basis independent of that lookup; otherwise ask narrowly or keep the
+result candidate-only.
+
 ## Ordering
 
 1. Detect mandatory, optional, or ambiguous triggers in the request, visible
