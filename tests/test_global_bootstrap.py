@@ -141,6 +141,39 @@ class GlobalBootstrapTests(unittest.TestCase):
         # This exercises installed-router reconciliation, not hosted Chat execution.
         self.assert_latch_projection("Airtable Envelope Eligibility")
 
+    def test_missing_capability_discovery_precondition_is_repaired_by_projection_workflow(
+        self,
+    ) -> None:
+        # This exercises installed-router reconciliation, not hosted Chat execution.
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            codex_file = root / "AGENTS.md"
+            claude_file = root / "CLAUDE.md"
+            router = ROUTER.read_text(encoding="utf-8")
+            precondition = (
+                "Before reaching that condition,\n"
+                "inspect the currently available actions or attempt a permitted sufficient\n"
+                "retrieval route for the named source. A failed path or transport is not evidence\n"
+                "that the source itself is unavailable. "
+            )
+            terminal_blocker = "If it cannot be retrieved or\nread,"
+            self.assertEqual(router.count(precondition), 1)
+            self.assertLess(router.index(precondition), router.index(terminal_blocker))
+            drifted = router.replace(precondition, "")
+            codex_file.write_text(self.marked(drifted), encoding="utf-8")
+            claude_file.write_text(self.marked(router), encoding="utf-8")
+
+            before = self.run_check(codex_file, claude_file)
+            applied = self.run_check(codex_file, claude_file, mode="apply")
+            after = self.run_check(codex_file, claude_file)
+
+            self.assertEqual(before.returncode, 1)
+            self.assertIn("FAIL Codex: managed body differs", before.stdout)
+            self.assertEqual(applied.returncode, 0, applied.stdout + applied.stderr)
+            self.assertIn("APPLY Codex: verified", applied.stdout)
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+            self.assertEqual(codex_file.read_text(encoding="utf-8"), self.marked(router))
+
     def assert_latch_projection(self, heading: str) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
