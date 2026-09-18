@@ -13,11 +13,12 @@ and verified sources across subsequent turns; do not retrieve `start-here.md`
 again merely because the conversation continues or another tool is invoked.
 When the first-action or material-change trigger applies, retrieving and applying
 `start-here.md` is the only permitted action: Do not respond, reason about the
-task, or invoke another tool before applying it. Before reaching that condition,
+task, or invoke another tool before applying it. Before concluding that it cannot
+be retrieved or read,
 inspect the currently available actions or attempt a permitted sufficient
 retrieval route for the named source. A failed path or transport is not evidence
-that the source itself is unavailable. If it cannot be retrieved or
-read, the only permitted response is to say so plainly and stop; do not proceed
+that the source itself is unavailable. If it cannot be retrieved or read, the
+only permitted response is to say so plainly and stop; do not proceed
 from memory.
 
 ## Execution-Surface Transition Eligibility
