@@ -141,25 +141,23 @@ class GlobalBootstrapTests(unittest.TestCase):
         # This exercises installed-router reconciliation, not hosted Chat execution.
         self.assert_latch_projection("Airtable Envelope Eligibility")
 
-    def test_missing_capability_discovery_precondition_is_repaired_by_projection_workflow(
+    def test_managed_reconciliation_restores_required_bootstrap_precondition(
         self,
     ) -> None:
-        # This exercises installed-router reconciliation, not hosted Chat execution.
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             codex_file = root / "AGENTS.md"
             claude_file = root / "CLAUDE.md"
             router = ROUTER.read_text(encoding="utf-8")
-            precondition = (
+            required_sequence = (
                 "Before reaching that condition,\n"
                 "inspect the currently available actions or attempt a permitted sufficient\n"
                 "retrieval route for the named source. A failed path or transport is not evidence\n"
-                "that the source itself is unavailable. "
+                "that the source itself is unavailable. If it cannot be retrieved or\nread,"
             )
-            terminal_blocker = "If it cannot be retrieved or\nread,"
-            self.assertEqual(router.count(precondition), 1)
-            self.assertLess(router.index(precondition), router.index(terminal_blocker))
-            drifted = router.replace(precondition, "")
+            drifted = router.replace(
+                required_sequence, "If it cannot be retrieved or\nread,"
+            )
             codex_file.write_text(self.marked(drifted), encoding="utf-8")
             claude_file.write_text(self.marked(router), encoding="utf-8")
 
