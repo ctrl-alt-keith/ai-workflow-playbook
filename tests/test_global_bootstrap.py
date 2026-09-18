@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "check_global_bootstrap.py"
 PROJECTIONS = ROOT / "distributions" / "global-bootstrap"
 ROUTER = PROJECTIONS / "bootstrap-router.md"
-PRE_CAK_321_ROUTER = (
-    ROOT / "tests" / "fixtures" / "global-bootstrap-router-pre-cak-321.md"
+STALE_MANAGED_PROJECTION = (
+    ROOT / "tests" / "fixtures" / "global-bootstrap-managed-projection-stale.md"
 )
 START_MARKER = "<!-- ai-workflow-playbook:global-bootstrap:start -->"
 END_MARKER = "<!-- ai-workflow-playbook:global-bootstrap:end -->"
@@ -144,16 +144,16 @@ class GlobalBootstrapTests(unittest.TestCase):
         # This exercises installed-router reconciliation, not hosted Chat execution.
         self.assert_latch_projection("Airtable Envelope Eligibility")
 
-    def test_managed_reconciliation_restores_required_bootstrap_precondition(
-        self,
-    ) -> None:
+    def test_managed_projection_reconciles_stale_fixture(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             codex_file = root / "AGENTS.md"
             claude_file = root / "CLAUDE.md"
             router = ROUTER.read_text(encoding="utf-8")
-            stale_router = PRE_CAK_321_ROUTER.read_text(encoding="utf-8")
-            codex_file.write_text(self.marked(stale_router), encoding="utf-8")
+            codex_file.write_text(
+                STALE_MANAGED_PROJECTION.read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
             claude_file.write_text(self.marked(router), encoding="utf-8")
 
             before = self.run_check(codex_file, claude_file)
