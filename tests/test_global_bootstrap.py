@@ -13,6 +13,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "check_global_bootstrap.py"
 PROJECTIONS = ROOT / "distributions" / "global-bootstrap"
 ROUTER = PROJECTIONS / "bootstrap-router.md"
+PRE_CAK_321_ROUTER = (
+    ROOT / "tests" / "fixtures" / "global-bootstrap-router-pre-cak-321.md"
+)
 START_MARKER = "<!-- ai-workflow-playbook:global-bootstrap:start -->"
 END_MARKER = "<!-- ai-workflow-playbook:global-bootstrap:end -->"
 
@@ -149,16 +152,8 @@ class GlobalBootstrapTests(unittest.TestCase):
             codex_file = root / "AGENTS.md"
             claude_file = root / "CLAUDE.md"
             router = ROUTER.read_text(encoding="utf-8")
-            required_sequence = (
-                "Before reaching that condition,\n"
-                "inspect the currently available actions or attempt a permitted sufficient\n"
-                "retrieval route for the named source. A failed path or transport is not evidence\n"
-                "that the source itself is unavailable. If it cannot be retrieved or\nread,"
-            )
-            drifted = router.replace(
-                required_sequence, "If it cannot be retrieved or\nread,"
-            )
-            codex_file.write_text(self.marked(drifted), encoding="utf-8")
+            stale_router = PRE_CAK_321_ROUTER.read_text(encoding="utf-8")
+            codex_file.write_text(self.marked(stale_router), encoding="utf-8")
             claude_file.write_text(self.marked(router), encoding="utf-8")
 
             before = self.run_check(codex_file, claude_file)
