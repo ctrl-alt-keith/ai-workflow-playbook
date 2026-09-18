@@ -69,6 +69,13 @@ repository execution posture and
 [`maintenance-automations.md`](../maintenance-automations.md) when locality or
 unattended-work guidance is activated.
 
+A local repository path not established for the current Work execution surface
+is a candidate local path, not an established-locality contract. For a
+read-only canonical fact, treat a miss on that path as evidence only about the
+selected transport and apply [`source-first-retrieval.md`](../source-first-retrieval.md)
+recovery; preserve a narrow local blocker when current direction expressly
+requires an existing local checkout or worktree.
+
 ### Chat-to-Work projection
 
 Apply the shared
