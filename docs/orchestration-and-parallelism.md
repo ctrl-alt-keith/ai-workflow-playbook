@@ -102,7 +102,7 @@ context to supply it.
 
 Include:
 
-- Before dispatch, record each lane's explicit model and reasoning routing decision with its worker envelope, including an intentional decision to inherit. Keep requested configuration distinct from runtime-effective configuration, and record effective values when the runtime exposes them.
+- Before dispatch, record each lane's explicit model and reasoning routing decision, including intentional inheritance, in operator metadata or a lane-plan note alongside its worker envelope. Keep requested and runtime-effective configuration distinct under [model routing](model-routing.md); keep the metadata/prompt boundary under [prompts](prompts.md#operator-metadata-and-executable-prompts). After launch, record the runtime-effective configuration when exposed; otherwise mark it unobservable.
 - repository and working directory
 - interaction mode and expected deliverable
 - assigned issue, branch, worktree, and file or behavior surface
