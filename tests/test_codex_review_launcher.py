@@ -178,6 +178,34 @@ class CodexReviewLauncherTests(unittest.TestCase):
         self.assertNotIn(b"transcript noise", completed.stdout)
         self.assertEqual(observed, [account.pw_name, account.pw_name, account.pw_dir])
 
+    def test_health_probe_uses_the_substantive_codex_projection_and_requires_its_exact_answer(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            diagnostics_file = root / "diagnostics.json"
+            prompt_file = root / "prompt"
+            executable = self.make_fake_codex(root, f"cat > {prompt_file}\ncat scripts/reviewer-health-probe.txt > \"$out\"\n")
+            completed = self.run_launcher(executable, "--health-probe", "--diagnostics-file", str(diagnostics_file))
+            record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
+            prompt = prompt_file.read_bytes()
+            expected = (ROOT / "scripts" / "reviewer-health-probe.txt").read_bytes().strip()
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+        self.assertEqual(completed.stdout, expected + b"\n")
+        self.assertNotIn(expected, prompt)
+        self.assertEqual(record["attempt_kind"], "health_probe")
+        self.assertEqual(record["health_probe"], {"fixture": "scripts/reviewer-health-probe.txt", "expected_output": expected.decode()})
+        self.assertEqual(record["diagnostics_file"], "unverified")
+        self.assertIn(b'"diagnostics_file": "written"', completed.stderr)
+        self.assertTrue(record["configured_envelope"]["git_repo_check"])
+        self.assertEqual(record["acceptance"]["configured_envelope"]["git_repo_check"], False)
+
+    def test_health_probe_rejects_a_wrong_deterministic_answer(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_codex(Path(temporary_directory), "cat >/dev/null\nprintf 'wrong\\n' > \"$out\"\n")
+            completed = self.run_launcher(executable, "--health-probe")
+        self.assertEqual(completed.returncode, 70)
+        self.assertIn(b"Codex health probe returned 'wrong'", completed.stderr)
+        self.assertEqual(completed.stdout, b"")
+
     def test_candidate_commit_mismatch_fails_before_review_invocation(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
