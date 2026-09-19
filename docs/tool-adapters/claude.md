@@ -224,12 +224,33 @@ limitation visible whenever reviewer qualification relies on isolation.
 
 ## Worktrees And Subagents
 
-Non-fork Claude subagents (`Task` tool) start with a separate context and do not
-receive parent conversation history or previously read files. Give each one the
-complete standalone envelope owned by
+Claude Code spawns subagents through the `Agent` tool; Anthropic documents the
+rename from `Task` in v2.1.63 and keeps `Task(...)` references working as
+aliases. A call selects the subagent with `subagent_type`, may set
+`isolation: worktree` to run it in a temporary git worktree branched from the
+repository's default branch, and may set `run_in_background` where the session
+exposes that choice. Claude resumes a completed subagent with `SendMessage`
+addressed to its agent ID or name; the built-in Explore and Plan agents are
+one-shot and cannot be resumed.
+
+A non-fork subagent starts with a fresh, isolated context. It receives its own
+system prompt, the delegation message, the `CLAUDE.md` hierarchy (including
+`~/.claude/CLAUDE.md` and any `AGENTS.md` loaded as project instructions), and a
+git status snapshot; it does not receive the parent conversation, invoked
+skills, or previously read files. The `fork` subagent type inherits the parent
+conversation instead. Give each non-fork subagent the complete standalone
+envelope owned by
 [`orchestration-and-parallelism.md`](../orchestration-and-parallelism.md), and
 apply worktree and PR topology from
-[`repo-readiness.md`](../repo-readiness.md#pr-readiness).
+[`repo-readiness.md`](../repo-readiness.md#pr-readiness). A worktree Claude
+Code creates for `--worktree`, `EnterWorktree`, or `isolation: worktree` lives
+under `.claude/worktrees/` on a `worktree-<name>` branch from the default
+branch; it does not satisfy a repo-local `.worktrees/` implementation-isolation
+policy by itself.
+
+A harness default that discourages unprompted delegation is executor
+behavior, not Playbook doctrine: report it as a runtime observation and apply
+the Playbook's fan-out guidance to decide whether and how to delegate.
 
 ## Context Compaction And Recovery
 
@@ -287,9 +308,11 @@ for fast, high-volume, cost-sensitive work; Sonnet 5 for coding, agents, and
 enterprise workflows; and Opus 5 for complex agentic coding and enterprise
 work. Exact model IDs, aliases, model availability, context variants, and
 administrator allowlists are runtime evidence, not this adapter's assumption.
-Claude Code documents `best` as Fable where available and otherwise the latest
-Opus; it is not a durable qualification guarantee. Fable requires a current
-Claude Code version and is unavailable under zero-data-retention. Its safety
+Claude Code documents `best` as Fable where available and otherwise the same
+model as `opus`; it is not a durable qualification guarantee. Fable requires a
+current Claude Code version, and its availability under zero data retention is
+governed by Anthropic's Covered Models policy rather than by Claude Code; where
+an organization cannot use it, `best` resolves to Opus. Fable and Opus 5 safety
 classifiers can trigger documented fallback, so use an explicit Fable request
 only when its effective runtime identity can be observed and meets the task's
 qualification requirements.
@@ -299,7 +322,7 @@ qualification requirements.
 | Deterministic external verification; hashes, inventories, evidence citations; simple source inspection; mechanical fallback verification | `haiku` | Use executor default; Claude Code does not document effort control for Haiku | a result is ambiguous, changes a decision, or source access is insufficient | substantive review has converged and a qualified deterministic check remains |
 | Implementation review; evidence-package review; reviewer follow-up after substantive convergence; bounded long-context evidence synthesis | `sonnet` | Use the documented default `high`; use `medium` or `low` only as an explicit cost/latency trade-off where bounded evidence supports it | residual findings repeat, evidence conflicts, or semantics remain unresolved | split inventories, hashes, and other externally checkable claims to Haiku or another qualified mechanism |
 | Substantive adversarial code review; protocol/design review; architecture review; authority or security-boundary review | `opus` | Use the model's documented default; do not assume `xhigh` applies to every Opus runtime | a new trust boundary, unresolved architecture/security implication, conflicting authority, or a finding that changes qualification disposition appears | after substantive convergence, delegate only the remaining mechanical claim; do not relabel it as substantive review |
-| Especially hard long-running investigation, outage/root-cause work, or architecture decision that exceeds a normal Opus review | `fable`, where available | Adaptive thinking is always on; use the documented default `high`, and reserve `xhigh`/`max` for a bounded demonstrated need | a safety fallback, unavailable Fable runtime, or remaining decision risk defeats the qualification requirement; stop, seek an explicit human decision, or use another independently qualified mechanism | keep Fable out of routine review and delegate only bounded deterministic follow-up |
+| Especially hard long-running investigation, outage/root-cause work, or architecture decision that exceeds a normal Opus review | `fable`, where available | Adaptive reasoning is always on; use the documented default `high`, and reserve `xhigh`/`max` for a bounded demonstrated need | a safety fallback, unavailable Fable runtime, or remaining decision risk defeats the qualification requirement; stop, seek an explicit human decision, or use another independently qualified mechanism | keep Fable out of routine review and delegate only bounded deterministic follow-up |
 
 The table is a conservative routing hypothesis, not a quality-parity claim.
 
@@ -411,24 +434,26 @@ only when it materially affects operator review or action.
 
 ## References
 
-Behavioral claims above are grounded in official Anthropic documentation,
-including [Claude Code memory](https://code.claude.com/docs/en/memory),
+Behavioral claims above are grounded in official Anthropic documentation.
+Instruction-discovery, permission, subagent, worktree, and model-routing claims
+are grounded in [Claude Code memory](https://code.claude.com/docs/en/memory),
 [permissions](https://code.claude.com/docs/en/permissions),
-[hooks](https://code.claude.com/docs/en/hooks),
 [the tools reference](https://code.claude.com/docs/en/tools-reference),
-[subagents](https://code.claude.com/docs/en/sub-agents), and
-[worktrees](https://code.claude.com/docs/en/worktrees). Surface and hydration
-claims are additionally grounded in Anthropic's official
+[subagents](https://code.claude.com/docs/en/sub-agents),
+[worktrees](https://code.claude.com/docs/en/worktrees),
+[model configuration](https://code.claude.com/docs/en/model-config),
+[zero data retention](https://code.claude.com/docs/en/zero-data-retention),
+the platform [model-selection
+guide](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model),
+[models overview](https://platform.claude.com/docs/en/about-claude/models/overview),
+[thinking guide](https://platform.claude.com/docs/en/build-with-claude/thinking),
+and [fallback guide](https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback),
+checked 2026-09-19. Hook claims are grounded in
+[hooks](https://code.claude.com/docs/en/hooks), and surface and hydration
+claims in Anthropic's official
 [Cowork introduction](https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork),
 [Cowork surface guide](https://support.claude.com/en/articles/15520349-use-claude-cowork-on-web-desktop-and-mobile),
 [Dispatch guide](https://support.claude.com/en/articles/13947068-assign-tasks-from-anywhere-in-claude-cowork),
 [personalization guide](https://support.claude.com/en/articles/10185728-understanding-claude-s-personalization-features),
 and [GitHub integration guide](https://support.claude.com/en/articles/10167454-use-the-github-integration),
-checked 2026-08-29. Model-routing claims above are additionally derived from
-Anthropic's official [Claude Code model
-configuration](https://code.claude.com/docs/en/model-config), [model-selection
-guide](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model),
-[models overview](https://platform.claude.com/docs/en/about-claude/models/overview),
-[thinking guide](https://platform.claude.com/docs/en/build-with-claude/thinking),
-and [fallback guide](https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback),
-checked 2026-09-04.
+checked 2026-08-29.

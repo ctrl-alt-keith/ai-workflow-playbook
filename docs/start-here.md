@@ -3,13 +3,19 @@
 ## Purpose
 
 Route work whose evidence, authority, review, or completion boundaries materially
-affect its outcome. Ordinary chat, brainstorming, and conceptual discussion need no
-startup or live retrieval unless the answer depends on current external state.
+affect its outcome, and any discussion whose answer rests on Playbook principles:
+worker fan-out, subagents, orchestration, review boundaries, model routing,
+executor capability, source authority, or other reusable workflow doctrine.
+Bootstrap is qualified by whether those principles are in play, not by whether
+a repository action follows. Chat unrelated to AI-workflow doctrine or to a
+governed task needs no startup or live retrieval unless the answer depends on
+current external state.
 
 ## Startup Contract
 
 Before acting on work whose evidence, authority, review, or completion
-boundaries materially affect the outcome:
+boundaries materially affect the outcome, and before answering a workflow
+question that rests on Playbook principles:
 
 1. Read the domain-independent operating principles and role boundaries in
    [`core-model.md`](core-model.md).
@@ -34,10 +40,15 @@ authority, or subsequent behavior.
 
 ### Global bootstrap persistence
 
-Bootstrap before the first project action and when the task/repository
+Bootstrap when Playbook principles first come into play: the first project
+action or the first workflow, orchestration, or executor-capability question,
+even with no repository action. Bootstrap again when the task/repository
 materially changes. At that trigger, applying this contract is a hard
 precondition: do not respond, reason about the task, or invoke another tool
-first.
+first. A workflow question additionally activates its
+[Task Routing](#task-routing) owner before the answer; an executor's own
+harness defaults, memory, or prior summaries do not substitute for the routed
+owner.
 
 After successful bootstrap, reuse still-current repository operating mode and
 verified sources. A response, reasoning step, follow-up, tool call, or elapsed
