@@ -123,13 +123,11 @@ latter is imported or explicitly read. Explicitly read `AGENTS.md`, keep any
 `CLAUDE.md` as a thin pointer rather than a policy copy, and apply the
 [`repository instruction hierarchy`](../start-here.md#repository-instruction-hierarchy).
 
-For CAK-187, install the copy-ready
-[`global bootstrap router`](../../distributions/global-bootstrap/bootstrap-router.md)
-as a regular inline marked block in the user-level file and validate it with
-`python3 scripts/check_global_bootstrap.py --require-claude`. Do not use an
-outside-working-directory import, symlink, or hard link; desktop Cowork skips
-those forms. Preserve the HTML markers: Claude Code strips them from model
-context while the drift validator retains them.
+Install the router in `~/.claude/CLAUDE.md` as an inline marked block per the
+[distribution README](../../distributions/global-bootstrap/README.md), not as
+an outside-working-directory import, symlink, or hard link (desktop Cowork
+skips those). Keep the HTML markers: Claude Code strips them from context, the
+drift validator needs them.
 
 ## Interaction Mode And Permission Mode
 
@@ -148,9 +146,9 @@ from the interaction mode.
   the right default merely because the interaction mode is review/audit.
 - For implementation, prefer per-action approval (`default`); reserve broader
   auto-approval (`acceptEdits`) for bounded, already-agreed scope.
-- Verified evaluation: permission rules are checked `deny` -> `ask` -> `allow`,
-  first match wins. This is approval/prompting behavior, not an authorization
-  boundary.
+- [Permission rules](https://code.claude.com/docs/en/permissions) are checked
+  `deny` -> `ask` -> `allow`, first match wins. This is approval/prompting
+  behavior, not an authorization boundary.
 - `bypassPermissions` skips approval prompts; Anthropic documents it for use
   only in isolated environments such as containers or VMs. Do not use it for
   repository work with meaningful blast radius, and do not treat repository-level
@@ -172,8 +170,8 @@ run ordinary repository operations in direct, single-purpose form (`git status`,
 aliases, or compound-shell layers that hide intent. Parallelize only independent
 read-only inspection.
 
-Claude has no Codex-style writable-root sandbox. Apply the shared durable-state
-and scratch rules in
+Claude has no writable-root sandbox. Apply the shared durable-state and
+scratch rules in
 [`repo-readiness.md`](../repo-readiness.md#repo-local-workflow-state).
 
 ### Local Read-Only Reviewer Launch
@@ -298,22 +296,16 @@ retention, and visibility values remain outside this adapter.
 ## Claude Model, Thinking, And Thread Routing
 
 Apply the shared [model and reasoning routing](../model-routing.md) doctrine.
-Do not infer a mapping from OpenAI model names or tiers. Current Claude Code
-documentation, checked 2026-09-19, establishes the executor-native `haiku`,
-`sonnet`, `opus`, and `fable` aliases:
-Haiku for simple fast tasks, Sonnet for daily coding, Opus for complex reasoning,
-and Fable for the hardest and longest-running tasks.
-Anthropic's current platform model guidance independently positions Haiku 4.5
-for fast, high-volume, cost-sensitive work; Sonnet 5 for coding, agents, and
-enterprise workflows; and Opus 5 for complex agentic coding and enterprise
-work. Exact model IDs, aliases, model availability, context variants, and
-administrator allowlists are runtime evidence, not this adapter's assumption.
-Claude Code documents `best` as Fable where available and otherwise the same
-model as `opus`; it is not a durable qualification guarantee. Fable requires a
-current Claude Code version, and its availability under zero data retention is
-governed by Anthropic's Covered Models policy rather than by Claude Code; where
-an organization cannot use it, `best` resolves to Opus. Fable and Opus 5 safety
-classifiers can trigger documented fallback, so use an explicit Fable request
+Do not infer a mapping from OpenAI model names or tiers. Claude Code's
+[model configuration](https://code.claude.com/docs/en/model-config) defines the
+executor-native aliases `haiku` (simple fast tasks), `sonnet` (daily coding),
+`opus` (complex reasoning), and `fable` (hardest, longest-running tasks);
+`best` resolves to Fable where available and otherwise to `opus`. Exact model
+IDs, availability, context variants, and administrator allowlists are runtime
+evidence. Fable requires a current Claude Code version, and its availability
+under [zero data retention](https://code.claude.com/docs/en/zero-data-retention)
+follows Anthropic's Covered Models policy, not Claude Code. Fable and Opus 5
+safety classifiers can trigger documented fallback, so request Fable explicitly
 only when its effective runtime identity can be observed and meets the task's
 qualification requirements.
 
@@ -328,19 +320,14 @@ The table is a conservative routing hypothesis, not a quality-parity claim.
 
 ### Thinking And Effort
 
-Claude's thinking and effort controls are distinct from model choice where the
-active Claude surface supports them. Anthropic documents adaptive thinking and
-an `effort` parameter on current supported models; its Claude Code documentation
-lists the actual model/effort combinations and says the effort scale is
-calibrated per model. Use the executor's canonical terminology and supported
-values rather than treating `light`, `medium`, and `high` as portable numeric
-equivalents. For current Claude Code, `low`, `medium`, `high`, `xhigh`, and
-`max` availability depends on the selected model; verify the effective choice
-at runtime. Claude Code documents `high` as the default for every
-effort-capable model except Opus 4.7, which defaults to `xhigh`, and except
-where an organization default effort applies to its organization default
-model; lowering effort is the primary cost/latency lever for a bounded task. Do not invent a Haiku
-effort setting where the executor does not offer one.
+Effort is distinct from model choice. Use Claude Code's own values (`low`,
+`medium`, `high`, `xhigh`, `max`), not the Playbook's `light`/`medium`/`high`
+classes as numeric equivalents; which values a model accepts is runtime
+evidence. The documented default is `high` for every effort-capable model
+except Opus 4.7 (`xhigh`) and except where an organization default effort
+applies to its organization default model. Lowering effort is the primary
+cost/latency lever for a bounded task. Do not invent a Haiku effort setting
+where the executor does not offer one.
 
 ### Thread Routing And Review Boundaries
 
@@ -356,9 +343,7 @@ This adapter does not currently establish an executor-applied visible-thread
 naming capability. Therefore Claude-targeted `FRESH THREAD`, `SAME THREAD`,
 and `CHILD TASK` prompts resolve the shared
 `[resolved thread-name section when applicable]` placeholder to nothing. Do
-not ask Claude to rename itself or report a naming limitation. This is the
-Playbook's current adapter mapping, not a claim about every present or future
-Anthropic product surface.
+not ask Claude to rename itself or report a naming limitation.
 
 Requested configuration and effective runtime configuration are distinct.
 Claude Code can intentionally switch `opusplan` from Opus in plan mode to Sonnet
@@ -367,10 +352,7 @@ overloaded models; Fable/Opus safety-classifier fallback is also documented.
 For governed work, record the requested model/effort and the effective values
 when the runtime exposes them, plus any substitution event. `/status` exposes
 the current Claude Code model, and Claude Code shows a transcript notice when a
-documented switch occurs. On the Claude API, server-side fallback responses
-identify the serving model and expose fallback blocks and attempt iterations.
-Other providers and error paths need not expose the same evidence or perform a
-server-side fallback. If effective identity is unavailable, record that
+documented switch occurs. If effective identity is unavailable, record that
 limitation rather than treating the request as proof. Requalify, escalate, or
 stop only when the effective result violates a required capability or exact-model
 reviewer qualification; a runtime event is not automatically fatal.
@@ -435,26 +417,5 @@ only when it materially affects operator review or action.
 
 ## References
 
-Behavioral claims above are grounded in official Anthropic documentation.
-Instruction-discovery, permission, subagent, worktree, and model-routing claims
-are grounded in [Claude Code memory](https://code.claude.com/docs/en/memory),
-[permissions](https://code.claude.com/docs/en/permissions),
-[the tools reference](https://code.claude.com/docs/en/tools-reference),
-[subagents](https://code.claude.com/docs/en/sub-agents),
-[worktrees](https://code.claude.com/docs/en/worktrees),
-[model configuration](https://code.claude.com/docs/en/model-config),
-[zero data retention](https://code.claude.com/docs/en/zero-data-retention),
-the platform [model-selection
-guide](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model),
-[models overview](https://platform.claude.com/docs/en/about-claude/models/overview),
-[thinking guide](https://platform.claude.com/docs/en/build-with-claude/thinking),
-and [fallback guide](https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback),
-checked 2026-09-19. Hook claims are grounded in
-[hooks](https://code.claude.com/docs/en/hooks), and surface and hydration
-claims in Anthropic's official
-[Cowork introduction](https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork),
-[Cowork surface guide](https://support.claude.com/en/articles/15520349-use-claude-cowork-on-web-desktop-and-mobile),
-[Dispatch guide](https://support.claude.com/en/articles/13947068-assign-tasks-from-anywhere-in-claude-cowork),
-[personalization guide](https://support.claude.com/en/articles/10185728-understanding-claude-s-personalization-features),
-and [GitHub integration guide](https://support.claude.com/en/articles/10167454-use-the-github-integration),
-checked 2026-08-29.
+Claude Code and platform runtime claims above were checked against the linked
+official Anthropic pages on 2026-09-19.
