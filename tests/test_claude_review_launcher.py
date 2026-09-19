@@ -408,7 +408,8 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 safe.write_text("review output", encoding="utf-8")
                 safe.chmod(0o600)
                 os.symlink(root / "missing", child / "unexpected-link")
-                self.assertIn("unexpected member", shared.cleanup_scratch(scratch))
+                with mock.patch.object(Path, "iterdir", return_value=iter((safe, child / "unexpected-link"))):
+                    self.assertIn("unexpected member", shared.cleanup_scratch(scratch))
                 self.assertTrue((child / "unexpected-link").is_symlink())
                 self.assertTrue(safe.exists())
                 (child / "unexpected-link").unlink()
