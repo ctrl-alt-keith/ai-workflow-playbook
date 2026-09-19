@@ -4,7 +4,6 @@ import json
 import os
 from pathlib import Path
 import pwd
-import shutil
 import stat
 import subprocess
 import sys
@@ -247,29 +246,18 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         """Shared-flow behavior, covered once here: provider output alone does not make the attempt succeed."""
         launcher = load_launcher(LAUNCHER, "claude_review_cleanup_fixture")
         shared = sys.modules["review_launcher"]
-        leaked: list[str] = []
-
-        class FailingDirectory(tempfile.TemporaryDirectory):
-            def cleanup(self):
-                leaked.append(self.name)
-                raise OSError("fixture cleanup failure")
-
         stdout, stderr = io.StringIO(), io.StringIO()
-        try:
-            with tempfile.TemporaryDirectory() as temporary_directory:
-                root = Path(temporary_directory)
-                executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
-                diagnostics_file = root / "diagnostics.json"
-                with mock.patch.object(shared.tempfile, "TemporaryDirectory", FailingDirectory):
-                    with redirect_stdout(stdout), redirect_stderr(stderr):
-                        code = launcher.main(
-                            launcher.PROVIDER,
-                            ["--claude-bin", str(executable), "--auth-preflight", "--diagnostics-file", str(diagnostics_file)],
-                        )
-                record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
-        finally:
-            for name in leaked:
-                shutil.rmtree(name, ignore_errors=True)
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
+            diagnostics_file = root / "diagnostics.json"
+            with mock.patch.object(shared, "cleanup_scratch", return_value="fixture cleanup failure"):
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    code = launcher.main(
+                        launcher.PROVIDER,
+                        ["--claude-bin", str(executable), "--auth-preflight", "--diagnostics-file", str(diagnostics_file)],
+                    )
+            record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
         self.assertEqual(code, 70)
         self.assertEqual(stdout.getvalue(), "")
         self.assertEqual(record["status"], "failed")
@@ -315,7 +303,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             code, record, _ = self.run_in_process(
                 "--auth-preflight",
                 executable=executable,
-                patches={"tempfile": mock.Mock(TemporaryDirectory=refuse)},
+                patches={"allocate_scratch": refuse},
             )
         self.assertEqual(code, 70)
         self.assertIn("could not allocate a scratch directory", record["failure"])
@@ -324,25 +312,50 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         launcher = load_launcher(LAUNCHER, "claude_review_scratch_envelope_fixture")
         self.assertEqual(record["configured_envelope"], launcher.configured_envelope({}, preflight=True))
 
+    def test_linux_projection_rejects_a_non_root_owned_shared_parent(self):
+        launcher = load_launcher(LAUNCHER, "claude_review_linux_root_fixture")
+        shared = sys.modules["review_launcher"]
+        unsafe = os.stat_result((stat.S_IFDIR | 0o1777, 0, 0, 0, 501, 0, 0, 0, 0, 0))
+        with (
+            mock.patch.object(shared.platform, "system", return_value="Linux"),
+            mock.patch.object(shared.os, "lstat", return_value=unsafe),
+        ):
+            with self.assertRaisesRegex(OSError, "root-owned 01777"):
+                shared.qualified_scratch_root()
+
+    def test_scratch_cleanup_refuses_mode_drift_and_symlink_members(self):
+        launcher = load_launcher(LAUNCHER, "claude_review_scratch_cleanup_fixture")
+        shared = sys.modules["review_launcher"]
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            child = root / "attempt"
+            child.mkdir(mode=0o700)
+            root_info = os.lstat(root)
+            child_info = os.lstat(child)
+            scratch = shared.ScratchDirectory(root, (root_info.st_dev, root_info.st_ino), child, (child_info.st_dev, child_info.st_ino))
+            with mock.patch.object(shared, "qualified_scratch_root", return_value=root):
+                child.chmod(0o755)
+                self.assertIn("identity, ownership, or mode drift", shared.cleanup_scratch(scratch))
+                self.assertTrue(child.exists())
+                child.chmod(0o700)
+                os.symlink(root / "missing", child / "unexpected-link")
+                self.assertIn("unexpected member", shared.cleanup_scratch(scratch))
+                self.assertTrue((child / "unexpected-link").is_symlink())
+                (child / "unexpected-link").unlink()
+                unsafe = child / "mode-drift.txt"
+                unsafe.write_text("residue", encoding="utf-8")
+                unsafe.chmod(0o666)
+                self.assertIn("member identity or mode drift", shared.cleanup_scratch(scratch))
+                self.assertTrue(unsafe.exists())
+
     def test_exception_path_keeps_the_original_failure_and_surfaces_cleanup_failure(self):
-        leaked: list[str] = []
-
-        class FailingDirectory(tempfile.TemporaryDirectory):
-            def cleanup(self):
-                leaked.append(self.name)
-                raise OSError("fixture cleanup failure")
-
-        try:
-            with tempfile.TemporaryDirectory() as temporary_directory:
-                executable = self.make_fake_claude(Path(temporary_directory), "sleep 30\nprintf 'CLAUDE_AUTH_OK\\n'\n")
-                code, record, _ = self.run_in_process(
-                    "--auth-preflight",
-                    executable=executable,
-                    patches={"tempfile": mock.Mock(TemporaryDirectory=FailingDirectory), "AUTH_PREFLIGHT_TIMEOUT_SECONDS": 1},
-                )
-        finally:
-            for name in leaked:
-                shutil.rmtree(name, ignore_errors=True)
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_claude(Path(temporary_directory), "sleep 30\nprintf 'CLAUDE_AUTH_OK\\n'\n")
+            code, record, _ = self.run_in_process(
+                "--auth-preflight",
+                executable=executable,
+                patches={"cleanup_scratch": lambda directory: "fixture cleanup failure", "AUTH_PREFLIGHT_TIMEOUT_SECONDS": 1},
+            )
         self.assertEqual(code, 70)
         self.assertTrue(record["failure"].startswith("Claude canary exceeded 1 seconds"))
         self.assertIn("temporary-directory cleanup failed: fixture cleanup failure", record["failure"])
@@ -653,22 +666,11 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
 
     def test_provider_failure_stays_primary_over_cleanup_failure(self):
         launcher = load_launcher(LAUNCHER, "claude_review_precedence_fixture")
-        leaked: list[str] = []
-
-        class FailingDirectory(tempfile.TemporaryDirectory):
-            def cleanup(self):
-                leaked.append(self.name)
-                raise OSError("fixture cleanup failure")
-
-        try:
-            with tempfile.TemporaryDirectory() as temporary_directory:
-                executable = self.make_fake_claude(Path(temporary_directory), "exit 3\n")
-                code, record, _ = self.run_in_process(
-                    "--auth-preflight", executable=executable, patches={"tempfile": mock.Mock(TemporaryDirectory=FailingDirectory)}
-                )
-        finally:
-            for name in leaked:
-                shutil.rmtree(name, ignore_errors=True)
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            executable = self.make_fake_claude(Path(temporary_directory), "exit 3\n")
+            code, record, _ = self.run_in_process(
+                "--auth-preflight", executable=executable, patches={"cleanup_scratch": lambda directory: "fixture cleanup failure"}
+            )
         self.assertEqual(code, 70)
         self.assertTrue(record["failure"].startswith("Claude exited 3 without substantive output\n"))
         self.assertIn("temporary-directory cleanup failed: fixture cleanup failure", record["failure"])
