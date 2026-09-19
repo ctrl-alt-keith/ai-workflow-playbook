@@ -224,29 +224,29 @@ limitation visible whenever reviewer qualification relies on isolation.
 
 ## Worktrees And Subagents
 
-Claude Code spawns subagents through the `Agent` tool; Anthropic documents the
-rename from `Task` in v2.1.63 and keeps `Task(...)` references working as
-aliases. A call selects the subagent with `subagent_type`, may set
-`isolation: worktree` to run it in a temporary git worktree branched from the
-repository's default branch, and may set `run_in_background` where the session
-exposes that choice. Claude resumes a completed subagent with `SendMessage`
-addressed to its agent ID or name; the built-in Explore and Plan agents are
-one-shot and cannot be resumed.
+Claude Code spawns subagents through the `Agent` tool
+([subagents](https://code.claude.com/docs/en/sub-agents): renamed from `Task`
+in v2.1.63; `Task(...)` references remain aliases). A call selects the subagent
+with `subagent_type` and may set `isolation: worktree` to run it in a temporary
+git worktree branched from the repository's default branch. Claude resumes a
+completed subagent with `SendMessage` addressed to its agent ID or name; the
+built-in Explore and Plan agents are one-shot and cannot be resumed.
 
-A non-fork subagent starts with a fresh, isolated context. It receives its own
-system prompt, the delegation message, the `CLAUDE.md` hierarchy (including
-`~/.claude/CLAUDE.md` and any `AGENTS.md` loaded as project instructions), and a
-git status snapshot; it does not receive the parent conversation, invoked
-skills, or previously read files. The `fork` subagent type inherits the parent
-conversation instead. Give each non-fork subagent the complete standalone
-envelope owned by
+A non-fork subagent starts with a fresh, isolated context: it receives the
+delegation message and the `CLAUDE.md` hierarchy (including
+`~/.claude/CLAUDE.md` and any `AGENTS.md` loaded as project instructions), not
+the parent conversation, invoked skills, or previously read files. The `fork`
+subagent type inherits the parent conversation instead. Give each non-fork
+subagent the complete standalone envelope owned by
 [`orchestration-and-parallelism.md`](../orchestration-and-parallelism.md), and
 apply worktree and PR topology from
-[`repo-readiness.md`](../repo-readiness.md#pr-readiness). A worktree Claude
-Code creates for `--worktree`, `EnterWorktree`, or `isolation: worktree` lives
-under `.claude/worktrees/` on a `worktree-<name>` branch from the default
-branch; it does not satisfy a repo-local `.worktrees/` implementation-isolation
-policy by itself.
+[`repo-readiness.md`](../repo-readiness.md#pr-readiness). Claude Code creates
+its own worktrees under `.claude/worktrees/`
+([worktrees](https://code.claude.com/docs/en/worktrees)); such a worktree does
+not by itself satisfy a repo-local `.worktrees/` implementation-isolation
+policy. With agent teams enabled, an `Agent` call that carries a `name` can
+launch a teammate in the main working directory regardless of the subagent's
+frontmatter `isolation`.
 
 A harness default that discourages unprompted delegation is executor
 behavior, not Playbook doctrine: report it as a runtime observation and apply
@@ -299,7 +299,7 @@ retention, and visibility values remain outside this adapter.
 
 Apply the shared [model and reasoning routing](../model-routing.md) doctrine.
 Do not infer a mapping from OpenAI model names or tiers. Current Claude Code
-documentation, checked 2026-09-04, establishes the executor-native `haiku`,
+documentation, checked 2026-09-19, establishes the executor-native `haiku`,
 `sonnet`, `opus`, and `fable` aliases:
 Haiku for simple fast tasks, Sonnet for daily coding, Opus for complex reasoning,
 and Fable for the hardest and longest-running tasks.
@@ -320,9 +320,9 @@ qualification requirements.
 | Claude task class | Default Claude Code model | Thinking/effort guidance | Escalate when | Downgrade/follow up when |
 | --- | --- | --- | --- | --- |
 | Deterministic external verification; hashes, inventories, evidence citations; simple source inspection; mechanical fallback verification | `haiku` | Use executor default; Claude Code does not document effort control for Haiku | a result is ambiguous, changes a decision, or source access is insufficient | substantive review has converged and a qualified deterministic check remains |
-| Implementation review; evidence-package review; reviewer follow-up after substantive convergence; bounded long-context evidence synthesis | `sonnet` | Use the documented default `high`; use `medium` or `low` only as an explicit cost/latency trade-off where bounded evidence supports it | residual findings repeat, evidence conflicts, or semantics remain unresolved | split inventories, hashes, and other externally checkable claims to Haiku or another qualified mechanism |
+| Implementation review; evidence-package review; reviewer follow-up after substantive convergence; bounded long-context evidence synthesis | `sonnet` | Use the documented default (`high` absent an organization default); use `medium` or `low` only as an explicit cost/latency trade-off where bounded evidence supports it | residual findings repeat, evidence conflicts, or semantics remain unresolved | split inventories, hashes, and other externally checkable claims to Haiku or another qualified mechanism |
 | Substantive adversarial code review; protocol/design review; architecture review; authority or security-boundary review | `opus` | Use the model's documented default; do not assume `xhigh` applies to every Opus runtime | a new trust boundary, unresolved architecture/security implication, conflicting authority, or a finding that changes qualification disposition appears | after substantive convergence, delegate only the remaining mechanical claim; do not relabel it as substantive review |
-| Especially hard long-running investigation, outage/root-cause work, or architecture decision that exceeds a normal Opus review | `fable`, where available | Adaptive reasoning is always on; use the documented default `high`, and reserve `xhigh`/`max` for a bounded demonstrated need | a safety fallback, unavailable Fable runtime, or remaining decision risk defeats the qualification requirement; stop, seek an explicit human decision, or use another independently qualified mechanism | keep Fable out of routine review and delegate only bounded deterministic follow-up |
+| Especially hard long-running investigation, outage/root-cause work, or architecture decision that exceeds a normal Opus review | `fable`, where available | Adaptive reasoning is always on; use the documented default (`high` absent an organization default), and reserve `xhigh`/`max` for a bounded demonstrated need | a safety fallback, unavailable Fable runtime, or remaining decision risk defeats the qualification requirement; stop, seek an explicit human decision, or use another independently qualified mechanism | keep Fable out of routine review and delegate only bounded deterministic follow-up |
 
 The table is a conservative routing hypothesis, not a quality-parity claim.
 
@@ -337,8 +337,9 @@ values rather than treating `light`, `medium`, and `high` as portable numeric
 equivalents. For current Claude Code, `low`, `medium`, `high`, `xhigh`, and
 `max` availability depends on the selected model; verify the effective choice
 at runtime. Claude Code documents `high` as the default for every
-effort-capable model except Opus 4.7, which defaults to `xhigh`; lowering effort
-is the primary cost/latency lever for a bounded task. Do not invent a Haiku
+effort-capable model except Opus 4.7, which defaults to `xhigh`, and except
+where an organization default effort applies to its organization default
+model; lowering effort is the primary cost/latency lever for a bounded task. Do not invent a Haiku
 effort setting where the executor does not offer one.
 
 ### Thread Routing And Review Boundaries
