@@ -16,13 +16,48 @@ requested exact candidate immediately before review. A candidate mismatch stops
 the launch rather than selecting a different candidate. Empty or failed provider
 output is launcher failure, never a review verdict.
 
-Preflight is a bounded canary before expensive review. It establishes neither
-candidate quality nor a guarantee for the later review. The launcher supplies
-the configured read-only controls; its configured envelope is a declaration,
-not a runtime receipt. The reviewer must still report sources actually
-inspected and access gaps. Launcher controls do not establish total reviewer
-isolation: operator-layer instructions and configuration can remain outside
-launcher control.
+Preflight is a bounded canary before expensive review. It establishes route and
+authentication acceptance only; it establishes neither candidate quality nor a
+guarantee for the later review. The launcher supplies the configured read-only
+controls; its configured envelope is a declaration, not a runtime receipt. The
+reviewer must still report sources actually inspected and access gaps. Launcher
+controls do not establish total reviewer isolation: operator-layer instructions
+and configuration can remain outside launcher control.
+
+## Substantive health probe
+
+`--health-probe` is the low-cost step between auth preflight and a real review.
+Run it from the exact candidate checkout with the same absolute provider binary,
+selection, new absolute `--diagnostics-file`, and exact `--candidate-commit`.
+It accepts no stdin prompt. The shared launcher binds the candidate, verifies a
+fixed opaque one-line `scripts/reviewer-health-probe.txt` fixture, and asks the
+reviewer to return that file's contents exactly.
+
+The probe uses the substantive provider envelope, candidate checkout, output
+capture, scratch lifecycle, and terminal diagnostics path. Codex still runs its
+separate selector-acceptance canary before the probe; that canary does not see
+the fixture or probe prompt. The terminal stderr record has `attempt_kind:
+health_probe`, identifies the fixture and expected output, and reports the
+normal diagnostics-file state. A successful probe is evidence that the
+configured substantive path returned the expected local-fixture content through
+response capture and terminal diagnostics. It does not prove full-review
+success, general filesystem confinement, runtime isolation, or absence of
+Dropbox, network, MCP, connector, or other provider capability.
+
+Interpret a returned probe only through its terminal record:
+
+- expected fixture content with `diagnostics_file: written` is the minimum
+  substantive-path evidence;
+- no output, a wrong value, or a provider exit is a substantive-path failure
+  with the launcher classification retained;
+- any diagnostics state other than `written` is a diagnostics-finalization
+  failure even when the provider returned the expected fixture content.
+
+Use it for a controlled main-versus-candidate comparison by holding the exact
+candidate commit, provider selection, binary, and diagnostics handling fixed
+while changing only the launcher source being compared. It is diagnostic
+evidence, not a retry policy and not a substitute for the governed
+exact-candidate review.
 
 ## Attempt records and diagnostics
 
