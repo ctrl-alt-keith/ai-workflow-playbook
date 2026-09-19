@@ -200,6 +200,12 @@ failure. Codex has no qualified authentication classification, so a failed
 Codex preflight or review is generic failure. Neither is review evidence, a
 verdict, or grounds for silent reviewer substitution.
 
+Recover a qualified Claude authentication failure by having the operator log in
+again through the Claude CLI in their own interactive session, then rerun the
+unchanged preflight and review. Do not drive that login, mutate auth or session
+files, or retry automatically. Restored authentication is capability only: it
+is not review evidence and does not revive the failed attempt.
+
 Treat retained diagnostics as review evidence only when the launcher's terminal
 record says `diagnostics_file: written`; otherwise preserve the failed attempt
 and stop at the selected-review boundary. For the record states, failure
