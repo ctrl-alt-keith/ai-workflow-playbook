@@ -323,6 +323,24 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             with self.assertRaisesRegex(OSError, "root-owned 01777"):
                 shared.qualified_scratch_root()
 
+    def test_linux_projection_accepts_only_a_real_root_owned_sticky_directory(self):
+        launcher = load_launcher(LAUNCHER, "claude_review_linux_projection_fixture")
+        shared = sys.modules["review_launcher"]
+        accepted = os.stat_result((stat.S_IFDIR | 0o1777, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        wrong_mode = os.stat_result((stat.S_IFDIR | 0o777, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        regular_file = os.stat_result((stat.S_IFREG | 0o1777, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        symlink = os.stat_result((stat.S_IFLNK | 0o777, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        with mock.patch.object(shared.platform, "system", return_value="Linux"):
+            with mock.patch.object(shared.os, "lstat", return_value=accepted):
+                self.assertEqual(shared.qualified_scratch_root(), Path("/tmp"))
+            with mock.patch.object(shared.os, "lstat", return_value=wrong_mode):
+                with self.assertRaisesRegex(OSError, "root-owned 01777"):
+                    shared.qualified_scratch_root()
+            for malformed in (regular_file, symlink):
+                with self.subTest(mode=malformed.st_mode), mock.patch.object(shared.os, "lstat", return_value=malformed):
+                    with self.assertRaisesRegex(OSError, "real directory"):
+                        shared.qualified_scratch_root()
+
     def test_scratch_allocation_sets_private_mode_and_successful_cleanup_removes_regular_output(self):
         launcher = load_launcher(LAUNCHER, "claude_review_scratch_success_fixture")
         shared = sys.modules["review_launcher"]
