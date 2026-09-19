@@ -102,6 +102,7 @@ context to supply it.
 
 Include:
 
+- Before dispatch, record each lane's explicit model and reasoning routing decision with its worker envelope, including an intentional decision to inherit. Keep requested configuration distinct from runtime-effective configuration, and record effective values when the runtime exposes them.
 - repository and working directory
 - interaction mode and expected deliverable
 - assigned issue, branch, worktree, and file or behavior surface
