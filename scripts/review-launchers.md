@@ -51,7 +51,7 @@ Interpret a returned probe only through its terminal record:
 - no output, a wrong value, or a provider exit is a substantive-path failure
   with the launcher classification retained;
 - any diagnostics state other than `written` is a diagnostics-finalization
-  failure even when the provider returned `1`.
+  failure even when the provider returned the expected fixture content.
 
 Use it for a controlled main-versus-candidate comparison by holding the exact
 candidate commit, provider selection, binary, and diagnostics handling fixed
