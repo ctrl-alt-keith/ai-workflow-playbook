@@ -102,6 +102,39 @@ Only the qualified Claude diagnostic surface establishes authentication failure:
 it exits 78 and requires operator reauthentication. Other preflight or review
 failures exit 70.
 
+For controller-supplied evidence, pass `--evidence-bundle` with the absolute path
+of a fresh private attempt-local bundle staged under the
+[`review-evidence.md`](review-evidence.md) contract. This option is accepted only
+for Claude review execution. The launcher verifies local structure, permissions,
+bytes, and the manifest before invoking the provider executable, including its
+version probe. It requires an `applicable` repository-commit candidate matching
+the observed HEAD and the locally configured GitHub origin (`https`, SSH, or
+SCP-style URL). Other origins and immutable-artifact review candidates are not
+supported by this repository-review launcher.
+
+The existing local read-only tool set receives one additional directory via
+the documented [`--add-dir` option](https://docs.anthropic.com/en/docs/claude-code/cli-usage)
+(checked 2026-09-19); the bundle remains controller-owned and is neither copied nor
+deleted by the launcher. Bundle verification repeats before and after review;
+a failure suppresses the review result. The controller must preserve required
+evidence before disposing of its attempt directory. Only the selected bundle is
+supplied as external evidence; the candidate checkout remains the separate
+repository-review surface.
+
+Diagnostics retain the validated manifest and its canonical JSON SHA-256
+(`sort_keys=True`, compact separators, ASCII escaping, UTF-8, no trailing
+newline). They distinguish local verification from controller-supplied provider
+claims, reviewer self-report in the review output, and unobservable live provider
+state/runtime capability. The `network_access.granted` field describes only
+launcher-configured tool capability. It is not a process-level network sandbox,
+an observation of runtime reach, or a claim about provider inference transport.
+The launcher does not authenticate the controller's claims, prove issue
+ownership/current Dropbox state, or infer actual reads from bundle delivery.
+Permissions and revalidation do not exclude concurrent same-user mutation or
+establish filesystem confinement of every provider read. Operator-layer and
+provider-native residuals remain unobservable pending separately authorized
+real-provider qualification; deterministic fixtures do not qualify them.
+
 ### Codex
 
 Codex requires an exact `--model`. Its catalog check is a pre-task observation,
