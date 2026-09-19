@@ -404,10 +404,15 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 self.assertIn("identity, ownership, or mode drift", shared.cleanup_scratch(scratch))
                 self.assertTrue(child.exists())
                 child.chmod(0o700)
+                safe = child / "safe-output.txt"
+                safe.write_text("review output", encoding="utf-8")
+                safe.chmod(0o600)
                 os.symlink(root / "missing", child / "unexpected-link")
                 self.assertIn("unexpected member", shared.cleanup_scratch(scratch))
                 self.assertTrue((child / "unexpected-link").is_symlink())
+                self.assertTrue(safe.exists())
                 (child / "unexpected-link").unlink()
+                safe.unlink()
                 unsafe = child / "mode-drift.txt"
                 unsafe.write_text("residue", encoding="utf-8")
                 unsafe.chmod(0o666)

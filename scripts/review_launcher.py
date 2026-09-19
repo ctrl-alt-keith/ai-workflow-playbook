@@ -432,6 +432,7 @@ def allocate_scratch(provider_name: str) -> ScratchDirectory:
 
 def remove_scratch_members(path: Path) -> None:
     """Remove only safe regular files; reject unexpected residue before removal."""
+    members: list[Path] = []
     for member in path.iterdir():
         info = os.lstat(member)
         if info.st_uid != os.geteuid():
@@ -439,9 +440,11 @@ def remove_scratch_members(path: Path) -> None:
         if stat.S_ISREG(info.st_mode):
             if info.st_nlink != 1 or stat.S_IMODE(info.st_mode) & 0o022:
                 raise OSError(f"scratch member identity or mode drift: {member.name}")
-            os.unlink(member)
+            members.append(member)
         else:
             raise OSError(f"scratch has unexpected member: {member.name}")
+    for member in members:
+        os.unlink(member)
 
 
 def cleanup_scratch(directory: ScratchDirectory) -> str | None:
