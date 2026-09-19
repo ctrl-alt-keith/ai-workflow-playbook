@@ -29,17 +29,21 @@ from typing import Any, Callable, Mapping
 AUTH_FAILURE_EXIT = 78
 REVIEWER_FAILURE_EXIT = 70
 AUTH_PREFLIGHT_TIMEOUT_SECONDS = 120
+HEALTH_PROBE_TIMEOUT_SECONDS = 120
 MAX_DIAGNOSTIC_CHARS = 1_000
 ALLOWED_OPTIONS = {"--model", "--effort"}
 MAX_OPTION_VALUE_CHARS = 128
 EXACT_COMMIT = re.compile(r"[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?")
+HEALTH_PROBE_FIXTURE = Path("scripts/reviewer-health-probe.txt")
+HEALTH_PROBE_FIXTURE_BYTES = b"governed reviewer health probe\n"
+HEALTH_PROBE_EXPECTED_OUTPUT = "1"
 
 
 @dataclass(frozen=True)
 class Launch:
     """Per-run values a provider needs to render its command and read its output."""
 
-    preflight: bool
+    attempt_kind: str
     repository: str | None
     scratch: Path
 
@@ -285,10 +289,11 @@ def write_record(record: dict[str, Any], destination: Path) -> tuple[str | None,
 def classify(
     provider: Provider,
     *,
-    preflight: bool,
+    attempt_kind: str,
     returncode: int,
     received: bool,
     expected: bool,
+    output: str,
     substitution: str | None,
     cleanup_error: str | None,
 ) -> list[str]:
@@ -306,11 +311,16 @@ def classify(
         qualifier = "despite producing output" if received else "without substantive output"
         causes.append(f"{provider.label} exited {returncode} {qualifier}")
     elif not expected:
-        causes.append(
-            f"{provider.label} preflight did not return the expected canary response"
-            if preflight
-            else f"{provider.label} did not return substantive review output"
-        )
+        if attempt_kind in {"auth_preflight", "selector_acceptance"}:
+            causes.append(f"{provider.label} preflight did not return the expected canary response")
+        elif attempt_kind == "health_probe":
+            causes.append(
+                f"{provider.label} health probe returned {output!r}, expected {HEALTH_PROBE_EXPECTED_OUTPUT!r}"
+                if received
+                else f"{provider.label} health probe did not return output"
+            )
+        else:
+            causes.append(f"{provider.label} did not return substantive review output")
     if substitution is not None:
         causes.append(substitution)
     if cleanup_error is not None:
@@ -517,12 +527,41 @@ def review_prompt(prompt: bytes, repository: str, commit: str) -> bytes:
     return context.encode("utf-8") + prompt
 
 
+def health_probe_prompt(repository: str, commit: str) -> bytes:
+    """Render the fixed minimal substantive prompt against the verified candidate."""
+    question = (
+        "Health probe contract:\n"
+        f"- Read exactly {HEALTH_PROBE_FIXTURE.as_posix()} from the verified repository.\n"
+        "- Count its non-empty lines.\n"
+        "- Reply with only that decimal integer and no other text.\n"
+    )
+    return review_prompt(question.encode("utf-8"), repository, commit)
+
+
+def validate_health_probe_fixture(repository: str) -> None:
+    """Require the tiny probe fixture to be the exact regular file this contract names."""
+    fixture = Path(repository) / HEALTH_PROBE_FIXTURE
+    try:
+        info = os.lstat(fixture)
+    except OSError as error:
+        raise ValueError(f"health probe fixture is unavailable: {redact(str(error))}") from error
+    if not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode):
+        raise ValueError("health probe fixture must be a regular file")
+    try:
+        content = fixture.read_bytes()
+    except OSError as error:
+        raise ValueError(f"health probe fixture is unavailable: {redact(str(error))}") from error
+    if content != HEALTH_PROBE_FIXTURE_BYTES:
+        raise ValueError("health probe fixture does not match the supported deterministic content")
+
+
 def parse_arguments(provider: Provider, argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=f"Run a constrained {provider.label} review; provide the review prompt on standard input."
     )
     parser.add_argument(f"--{provider.name}-bin", dest="binary")
     parser.add_argument("--auth-preflight", action="store_true")
+    parser.add_argument("--health-probe", action="store_true")
     parser.add_argument("--diagnostics-file", type=Path)
     parser.add_argument("--candidate-commit")
     parser.add_argument("provider_args", nargs=argparse.REMAINDER)
@@ -555,17 +594,17 @@ def run_attempt(
     executable: str,
     environment: dict[str, str],
     selection: dict[str, str],
-    canary: bool,
+    attempt_kind: str,
     prompt: bytes,
     repository: str | None,
 ) -> Attempt:
     """Launch the provider once and classify the result; the only launch path for every attempt kind.
 
-    A canary attempt (operator auth preflight or automatic selector acceptance)
-    runs the fixed canary prompt in scratch with a time bound; a review runs the
-    candidate prompt in the verified checkout. Effective-selection evidence and
-    authentication classification come from the same provider hooks in both.
+    Auth and selector canaries run in scratch. Health probes and reviews run in
+    the verified candidate checkout with the substantive envelope; probes add a
+    bounded fixed-output assertion without creating a separate launch path.
     """
+    canary = attempt_kind == "auth_preflight" or attempt_kind == "selector_acceptance"
     envelope = provider.configured_envelope(selection, preflight=canary)
     evidence: dict[str, Any] = {"configured_envelope": envelope}
     try:
@@ -573,7 +612,7 @@ def run_attempt(
     except OSError as error:
         return Attempt([f"could not allocate a scratch directory: {error}"], False, evidence, "")
     try:
-        launch = Launch(preflight=canary, repository=repository, scratch=scratch.path)
+        launch = Launch(attempt_kind=attempt_kind, repository=repository, scratch=scratch.path)
         result = subprocess.run(
             [executable, *provider.command(envelope, launch)],
             input=prompt,
@@ -582,13 +621,13 @@ def run_attempt(
             check=False,
             cwd=str(scratch.path) if canary else repository,
             env=environment,
-            timeout=AUTH_PREFLIGHT_TIMEOUT_SECONDS if canary else None,
+            timeout=(AUTH_PREFLIGHT_TIMEOUT_SECONDS if canary else HEALTH_PROBE_TIMEOUT_SECONDS if attempt_kind == "health_probe" else None),
             umask=0o077,
         )
         output = provider.output(result, launch)
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
         causes = [
-            f"{provider.label} canary exceeded {AUTH_PREFLIGHT_TIMEOUT_SECONDS} seconds"
+            f"{provider.label} {'canary' if canary else 'health probe'} exceeded {AUTH_PREFLIGHT_TIMEOUT_SECONDS if canary else HEALTH_PROBE_TIMEOUT_SECONDS} seconds"
             if isinstance(error, subprocess.TimeoutExpired)
             else str(error)
         ]
@@ -601,14 +640,21 @@ def run_attempt(
     stdout = result.stdout.decode("utf-8", errors="replace")
     stderr = result.stderr.decode("utf-8", errors="replace")
     received = bool(output.strip())
-    expected = output.strip() == provider.auth_response if canary else received
+    expected = (
+        output.strip() == provider.auth_response
+        if canary
+        else output.strip() == HEALTH_PROBE_EXPECTED_OUTPUT
+        if attempt_kind == "health_probe"
+        else received
+    )
     effective, substitution = provider.effective(selection, stdout, stderr)
     causes = classify(
         provider,
-        preflight=canary,
+        attempt_kind=attempt_kind,
         returncode=result.returncode,
         received=received,
         expected=expected,
+        output=output.strip(),
         substitution=substitution,
         cleanup_error=cleanup_error,
     )
@@ -629,10 +675,13 @@ def run_attempt(
 
 def main(provider: Provider, argv: list[str] | None = None) -> int:
     args = parse_arguments(provider, argv or sys.argv[1:])
-    preflight = args.auth_preflight
+    if args.auth_preflight and args.health_probe:
+        return finish(provider, {"kind": f"{provider.name}_review", "attempt_kind": "invalid"}, causes=["--auth-preflight and --health-probe are mutually exclusive"], destination=None)
+    attempt_kind = "auth_preflight" if args.auth_preflight else "health_probe" if args.health_probe else "review"
+    preflight = attempt_kind == "auth_preflight"
     record: dict[str, Any] = {
         "kind": f"{provider.name}_review",
-        "attempt_kind": "auth_preflight" if preflight else "review",
+        "attempt_kind": attempt_kind,
     }
 
     def fail(failure: str, destination: Path | None) -> int:
@@ -654,8 +703,10 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
         # point carry no envelope; an attempt that runs replaces it with the envelope it used.
         record["configured_envelope"] = provider.configured_envelope(selection, preflight=preflight)
         prompt = provider.auth_prompt if preflight else sys.stdin.buffer.read()
-        if not preflight and not prompt.strip():
+        if attempt_kind == "review" and not prompt.strip():
             raise ValueError("review prompt must be supplied on standard input")
+        if attempt_kind == "health_probe" and prompt.strip():
+            raise ValueError("health probe uses its fixed prompt and accepts no standard-input prompt")
         if preflight and args.candidate_commit is not None:
             raise ValueError("--candidate-commit is only valid for review execution")
         if not preflight and args.candidate_commit is None:
@@ -666,7 +717,7 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
 
     launch = dict(executable=executable, environment=environment, selection=selection)
     if preflight:
-        attempt = run_attempt(provider, canary=True, prompt=provider.auth_prompt, repository=None, **launch)
+        attempt = run_attempt(provider, attempt_kind="auth_preflight", prompt=provider.auth_prompt, repository=None, **launch)
         record.update(attempt.evidence)
         return finish(
             provider,
@@ -680,7 +731,7 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     if provider.acceptance_canary:
         # Runtime acceptance of the exact selection is established before the review prompt
         # is delivered; the canary never sees that prompt, and the review is verified again.
-        acceptance = run_attempt(provider, canary=True, prompt=provider.auth_prompt, repository=None, **launch)
+        acceptance = run_attempt(provider, attempt_kind="selector_acceptance", prompt=provider.auth_prompt, repository=None, **launch)
         record["acceptance"] = acceptance.evidence  # self-contained: carries the canary's own envelope
         if acceptance.causes:
             record["stage"] = "selector_acceptance"
@@ -698,8 +749,22 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as error:
         return fail(str(error), args.diagnostics_file)
     record["candidate"] = {"repository": repository, "commit": commit}
+    if attempt_kind == "health_probe":
+        try:
+            validate_health_probe_fixture(repository)
+        except ValueError as error:
+            return fail(str(error), args.diagnostics_file)
+        record["health_probe"] = {
+            "fixture": HEALTH_PROBE_FIXTURE.as_posix(),
+            "expected_output": HEALTH_PROBE_EXPECTED_OUTPUT,
+        }
+        prompt = health_probe_prompt(repository, commit)
     attempt = run_attempt(
-        provider, canary=False, prompt=review_prompt(prompt, repository, commit), repository=repository, **launch
+        provider,
+        attempt_kind=attempt_kind,
+        prompt=prompt if attempt_kind == "health_probe" else review_prompt(prompt, repository, commit),
+        repository=repository,
+        **launch,
     )
     record.update(attempt.evidence)
     return finish(

@@ -120,6 +120,39 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertIn(b"uncommitted worktree bytes were validated", completed.stdout)
         self.assertTrue(completed.stdout.endswith(b"Review question:\nReview the candidate.\n"))
 
+    def test_health_probe_uses_the_substantive_path_and_requires_its_exact_answer(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            diagnostics_file = root / "diagnostics.json"
+            prompt_file = root / "prompt"
+            executable = self.make_fake_claude(root, f"cat > {prompt_file}\nprintf '1\\n'\n")
+            completed = self.run_launcher(executable, "--health-probe", "--diagnostics-file", str(diagnostics_file))
+            record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
+            prompt = prompt_file.read_bytes()
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+        self.assertEqual(completed.stdout, b"1\n")
+        self.assertIn(b"Read exactly scripts/reviewer-health-probe.txt", prompt)
+        self.assertTrue(prompt.endswith(b"Reply with only that decimal integer and no other text.\n"))
+        self.assertEqual(record["attempt_kind"], "health_probe")
+        self.assertEqual(record["health_probe"], {"fixture": "scripts/reviewer-health-probe.txt", "expected_output": "1"})
+        self.assertEqual(record["diagnostics_file"], "unverified")
+        self.assertIn(b'"diagnostics_file": "written"', completed.stderr)
+        self.assertEqual(record["configured_envelope"], load_launcher(LAUNCHER, "claude_probe_envelope").configured_envelope({}, preflight=False))
+
+    def test_health_probe_classifies_no_output_wrong_output_and_provider_failure(self):
+        cases = {
+            "no output": ("exit 0\n", b"health probe did not return output"),
+            "wrong output": ("printf '2\\n'\n", b"health probe returned '2', expected '1'"),
+            "provider failure": ("printf '1\\n'\nexit 3\n", b"Claude exited 3 despite producing output"),
+        }
+        for label, (body, expected) in cases.items():
+            with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:
+                executable = self.make_fake_claude(Path(temporary_directory), body)
+                completed = self.run_launcher(executable, "--health-probe")
+                self.assertEqual(completed.returncode, 70)
+                self.assertIn(expected, completed.stderr)
+                self.assertEqual(completed.stdout, b"")
+
     ENVELOPE_CASES = {
         "review with requested model and effort": (
             ("--", "--model", "opus", "--effort=high"),
