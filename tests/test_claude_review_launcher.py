@@ -329,11 +329,15 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
             root.chmod(0o700)
-            with (
-                mock.patch.object(shared, "qualified_scratch_root", return_value=root),
-                mock.patch.object(shared.secrets, "token_hex", return_value="fixture-token"),
-            ):
-                scratch = shared.allocate_scratch("claude")
+            previous_umask = os.umask(0o277)
+            try:
+                with (
+                    mock.patch.object(shared, "qualified_scratch_root", return_value=root),
+                    mock.patch.object(shared.secrets, "token_hex", return_value="fixture-token"),
+                ):
+                    scratch = shared.allocate_scratch("claude")
+            finally:
+                os.umask(previous_umask)
             self.assertEqual(scratch.path, root / "claude-review-fixture-token")
             self.assertEqual(stat.S_IMODE(os.lstat(scratch.path).st_mode), 0o700)
             output = scratch.path / "review.txt"
@@ -342,6 +346,30 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             with mock.patch.object(shared, "qualified_scratch_root", return_value=root):
                 self.assertIsNone(shared.cleanup_scratch(scratch))
             self.assertFalse(scratch.path.exists())
+
+    def test_provider_scratch_output_is_private_under_a_group_umask(self):
+        launcher = load_launcher(LAUNCHER, "claude_review_group_umask_fixture")
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_claude(
+                root,
+                "printf review > provider-output.txt\nprintf 'CLAUDE_AUTH_OK\\n'\n",
+            )
+            diagnostics_file = root / "diagnostics.json"
+            previous_umask = os.umask(0o002)
+            try:
+                with redirect_stdout(stdout), redirect_stderr(stderr):
+                    code = launcher.main(
+                        launcher.PROVIDER,
+                        ["--claude-bin", str(executable), "--auth-preflight", "--diagnostics-file", str(diagnostics_file)],
+                    )
+            finally:
+                os.umask(previous_umask)
+            record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
+        self.assertEqual(code, 0)
+        self.assertEqual(stdout.getvalue(), "CLAUDE_AUTH_OK\n")
+        self.assertEqual(record["status"], "ok")
 
     def test_scratch_cleanup_refuses_mode_drift_and_symlink_members(self):
         launcher = load_launcher(LAUNCHER, "claude_review_scratch_cleanup_fixture")

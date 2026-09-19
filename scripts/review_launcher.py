@@ -580,6 +580,7 @@ def run_attempt(
             cwd=str(scratch.path) if canary else repository,
             env=environment,
             timeout=AUTH_PREFLIGHT_TIMEOUT_SECONDS if canary else None,
+            umask=0o077,
         )
         output = provider.output(result, launch)
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
