@@ -26,31 +26,28 @@ and configuration can remain outside launcher control.
 
 ## Substantive health probe
 
-`--health-probe` is the supported low-cost step between successful auth
-preflight and a real review. Run it from the exact candidate checkout with the
-same required absolute provider binary, provider selection, and a new absolute
-`--diagnostics-file` that a review would use; it also requires the exact
-`--candidate-commit`. It accepts no stdin prompt. The shared launcher binds the
-candidate, verifies the fixed one-line `scripts/reviewer-health-probe.txt`
-fixture, and supplies a fixed instruction to read that file, count its
-non-empty lines, and return only `1`.
+`--health-probe` is the low-cost step between auth preflight and a real review.
+Run it from the exact candidate checkout with the same absolute provider binary,
+selection, new absolute `--diagnostics-file`, and exact `--candidate-commit`.
+It accepts no stdin prompt. The shared launcher binds the candidate, verifies a
+fixed opaque one-line `scripts/reviewer-health-probe.txt` fixture, and asks the
+reviewer to return that file's contents exactly.
 
 The probe uses the substantive provider envelope, candidate checkout, output
 capture, scratch lifecycle, and terminal diagnostics path. Codex still runs its
 separate selector-acceptance canary before the probe; that canary does not see
 the fixture or probe prompt. The terminal stderr record has `attempt_kind:
 health_probe`, identifies the fixture and expected output, and reports the
-normal diagnostics-file state. A successful probe therefore means the
-configured reviewer completed this minimal configured local-read prompt →
-response → capture → terminal-diagnostics cycle. It does not prove that a real
-candidate review will succeed, that the reviewer actually read the fixture
-rather than answering predictably, runtime isolation, or the absence of
+normal diagnostics-file state. A successful probe is evidence that the
+configured substantive path returned the expected local-fixture content through
+response capture and terminal diagnostics. It does not prove full-review
+success, general filesystem confinement, runtime isolation, or absence of
 Dropbox, network, MCP, connector, or other provider capability.
 
 Interpret a returned probe only through its terminal record:
 
-- successful `1` with `diagnostics_file: written` is the minimum substantive
-  path evidence;
+- expected fixture content with `diagnostics_file: written` is the minimum
+  substantive-path evidence;
 - no output, a wrong value, or a provider exit is a substantive-path failure
   with the launcher classification retained;
 - any diagnostics state other than `written` is a diagnostics-finalization

@@ -125,16 +125,18 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             root = Path(temporary_directory)
             diagnostics_file = root / "diagnostics.json"
             prompt_file = root / "prompt"
-            executable = self.make_fake_claude(root, f"cat > {prompt_file}\nprintf '1\\n'\n")
+            executable = self.make_fake_claude(root, f"cat > {prompt_file}\ncat scripts/reviewer-health-probe.txt\n")
             completed = self.run_launcher(executable, "--health-probe", "--diagnostics-file", str(diagnostics_file))
             record = json.loads(diagnostics_file.read_text(encoding="utf-8"))
             prompt = prompt_file.read_bytes()
+            expected = (ROOT / "scripts" / "reviewer-health-probe.txt").read_bytes().strip()
         self.assertEqual(completed.returncode, 0, completed.stderr.decode())
-        self.assertEqual(completed.stdout, b"1\n")
+        self.assertEqual(completed.stdout, expected + b"\n")
         self.assertIn(b"Read exactly scripts/reviewer-health-probe.txt", prompt)
-        self.assertTrue(prompt.endswith(b"Reply with only that decimal integer and no other text.\n"))
+        self.assertTrue(prompt.endswith(b"Reply with its contents exactly and no other text.\n"))
+        self.assertNotIn(expected, prompt)
         self.assertEqual(record["attempt_kind"], "health_probe")
-        self.assertEqual(record["health_probe"], {"fixture": "scripts/reviewer-health-probe.txt", "expected_output": "1"})
+        self.assertEqual(record["health_probe"], {"fixture": "scripts/reviewer-health-probe.txt", "expected_output": expected.decode()})
         self.assertEqual(record["diagnostics_file"], "unverified")
         self.assertIn(b'"diagnostics_file": "written"', completed.stderr)
         self.assertEqual(record["configured_envelope"], load_launcher(LAUNCHER, "claude_probe_envelope").configured_envelope({}, preflight=False))
@@ -142,8 +144,8 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
     def test_health_probe_classifies_no_output_wrong_output_and_provider_failure(self):
         cases = {
             "no output": ("exit 0\n", b"health probe did not return output"),
-            "wrong output": ("printf '2\\n'\n", b"health probe returned '2', expected '1'"),
-            "provider failure": ("printf '1\\n'\nexit 3\n", b"Claude exited 3 despite producing output"),
+            "wrong output": ("printf 'wrong\\n'\n", b"health probe returned 'wrong'"),
+            "provider failure": ("cat scripts/reviewer-health-probe.txt\nexit 3\n", b"Claude exited 3 despite producing output"),
         }
         for label, (body, expected) in cases.items():
             with self.subTest(label), tempfile.TemporaryDirectory() as temporary_directory:

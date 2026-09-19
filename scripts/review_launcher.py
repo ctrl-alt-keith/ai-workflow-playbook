@@ -35,8 +35,8 @@ ALLOWED_OPTIONS = {"--model", "--effort"}
 MAX_OPTION_VALUE_CHARS = 128
 EXACT_COMMIT = re.compile(r"[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?")
 HEALTH_PROBE_FIXTURE = Path("scripts/reviewer-health-probe.txt")
-HEALTH_PROBE_FIXTURE_BYTES = b"governed reviewer health probe\n"
-HEALTH_PROBE_EXPECTED_OUTPUT = "1"
+HEALTH_PROBE_EXPECTED_OUTPUT = "probe-6f8a2d1c9e4b7"
+HEALTH_PROBE_FIXTURE_BYTES = f"{HEALTH_PROBE_EXPECTED_OUTPUT}\n".encode("utf-8")
 
 
 @dataclass(frozen=True)
@@ -532,8 +532,7 @@ def health_probe_prompt(repository: str, commit: str) -> bytes:
     question = (
         "Health probe contract:\n"
         f"- Read exactly {HEALTH_PROBE_FIXTURE.as_posix()} from the verified repository.\n"
-        "- Count its non-empty lines.\n"
-        "- Reply with only that decimal integer and no other text.\n"
+        "- Reply with its contents exactly and no other text.\n"
     )
     return review_prompt(question.encode("utf-8"), repository, commit)
 
