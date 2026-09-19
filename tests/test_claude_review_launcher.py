@@ -323,6 +323,26 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             with self.assertRaisesRegex(OSError, "root-owned 01777"):
                 shared.qualified_scratch_root()
 
+    def test_scratch_allocation_sets_private_mode_and_successful_cleanup_removes_regular_output(self):
+        launcher = load_launcher(LAUNCHER, "claude_review_scratch_success_fixture")
+        shared = sys.modules["review_launcher"]
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            root.chmod(0o700)
+            with (
+                mock.patch.object(shared, "qualified_scratch_root", return_value=root),
+                mock.patch.object(shared.secrets, "token_hex", return_value="fixture-token"),
+            ):
+                scratch = shared.allocate_scratch("claude")
+            self.assertEqual(scratch.path, root / "claude-review-fixture-token")
+            self.assertEqual(stat.S_IMODE(os.lstat(scratch.path).st_mode), 0o700)
+            output = scratch.path / "review.txt"
+            output.write_text("review output", encoding="utf-8")
+            output.chmod(0o600)
+            with mock.patch.object(shared, "qualified_scratch_root", return_value=root):
+                self.assertIsNone(shared.cleanup_scratch(scratch))
+            self.assertFalse(scratch.path.exists())
+
     def test_scratch_cleanup_refuses_mode_drift_and_symlink_members(self):
         launcher = load_launcher(LAUNCHER, "claude_review_scratch_cleanup_fixture")
         shared = sys.modules["review_launcher"]

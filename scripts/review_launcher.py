@@ -413,6 +413,9 @@ def allocate_scratch(provider_name: str) -> ScratchDirectory:
             os.mkdir(path, 0o700)
         except FileExistsError:
             continue
+        # mkdir honors the process umask; restore the required private mode
+        # before binding the new directory as this attempt's scratch space.
+        os.chmod(path, 0o700)
         child = os.lstat(path)
         if (
             path.parent != root
@@ -428,7 +431,7 @@ def allocate_scratch(provider_name: str) -> ScratchDirectory:
 
 
 def remove_scratch_members(path: Path) -> None:
-    """Remove only safe regular files; reject unexpected residue before recursive cleanup."""
+    """Remove only safe regular files; reject unexpected residue before removal."""
     for member in path.iterdir():
         info = os.lstat(member)
         if info.st_uid != os.geteuid():
