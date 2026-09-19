@@ -775,7 +775,7 @@ def run_attempt(
     envelope = provider.configured_envelope(selection, preflight=canary)
     evidence: dict[str, Any] = {"configured_envelope": envelope}
     if bundle is not None:
-        envelope["supplied_evidence"] = {"path": str(bundle), "access": "local_read_only",
+        envelope["supplied_evidence"] = {"path": str(bundle), "access": "configured_local_bundle",
                                          "grants_live_provider_capability": False}
         evidence["supplied_evidence"] = evidence_record(bundle, manifest)
     try:
@@ -898,7 +898,7 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
         bundle_manifest = None
         if args.evidence_bundle is not None:
             if attempt_kind != "review" or not provider.supplied_evidence:
-                raise ValueError("--evidence-bundle is supported only for Claude review execution")
+                raise ValueError("--evidence-bundle is supported only for governed review execution")
             if args.candidate_commit is None:
                 raise ValueError("--candidate-commit is required for review execution")
             repository, commit = resolve_candidate(args.candidate_commit, environment)

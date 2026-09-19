@@ -104,8 +104,8 @@ failures exit 70.
 
 For controller-supplied evidence, pass `--evidence-bundle` with the absolute path
 of a fresh private attempt-local bundle staged under the
-[`review-evidence.md`](review-evidence.md) contract. This option is accepted only
-for Claude review execution. The launcher verifies local structure, permissions,
+[`review-evidence.md`](review-evidence.md) contract. This is the shared Claude/Codex
+review-execution contract; it is never accepted for an auth preflight. The launcher verifies local structure, permissions,
 bytes, and the manifest before invoking the provider executable, including its
 version probe. It requires an `applicable` repository-commit candidate matching
 the observed HEAD and the locally configured GitHub origin (`https`, SSH, or
@@ -130,7 +130,10 @@ launcher-configured tool capability. It is not a process-level network sandbox,
 an observation of runtime reach, or a claim about provider inference transport.
 The launcher does not authenticate the controller's claims, prove issue
 ownership/current Dropbox state, or infer actual reads from bundle delivery.
-Permissions and revalidation do not exclude concurrent same-user mutation or
+The `configured_local_bundle` diagnostic access value means only that the wrapper
+rendered the selected bundle path into the provider command. It is deliberately
+not a claim that a provider's directory option alone proves read-only filesystem
+confinement. Permissions and revalidation do not exclude concurrent same-user mutation or
 establish filesystem confinement of every provider read. Operator-layer and
 provider-native residuals remain unobservable pending separately authorized
 real-provider qualification; deterministic fixtures do not qualify them.
@@ -150,3 +153,11 @@ ephemeral/no-history execution, disabled web/apps, and suppressed candidate
 unestablished; operator-layer `CODEX_HOME` instructions/configuration remain
 outside launcher control. Every failed Codex canary or review exits 70 with
 bounded diagnostics.
+
+For controller-supplied `--evidence-bundle`, the substantive Codex review gets
+the selected path through `codex exec --add-dir`; the selector-acceptance canary
+does not. The wrapper repeats candidate binding and local verification before
+and after review. It records the path as `configured_local_bundle`, not proof
+of confinement or runtime network, MCP, connector, or filesystem capability.
+Supplied bytes remain controller-supplied evidence, not independent provider
+observation.

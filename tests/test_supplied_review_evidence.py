@@ -138,11 +138,10 @@ class SuppliedEvidenceTests(unittest.TestCase):
         self.rewrite_manifest()
         self.assert_refused_before_provider()
 
-    def test_preflight_and_codex_reject_bundle_option_before_provider(self):
+    def test_preflight_rejects_bundle_option_before_provider(self):
         completed, _ = self.run_review("--auth-preflight")
         self.assertEqual(completed.returncode, 70)
         self.assertFalse(self.invocations.exists())
-        self.assert_refused_before_provider(launcher="codex-review")
 
     def test_provider_time_bundle_mutation_fails_closed(self):
         self.fake.write_text(
