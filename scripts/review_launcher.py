@@ -16,11 +16,13 @@ from dataclasses import dataclass, field
 import json
 import os
 from pathlib import Path
+import platform
 import pwd
 import re
+import secrets
+import stat
 import subprocess
 import sys
-import tempfile
 from typing import Any, Callable, Mapping
 
 
@@ -352,9 +354,123 @@ def finish(
     return 0
 
 
-def cleanup_temporary_directory(directory: tempfile.TemporaryDirectory[str]) -> str | None:
+@dataclass(frozen=True)
+class ScratchDirectory:
+    """A private attempt directory bound to a qualified platform projection."""
+
+    root: Path
+    root_identity: tuple[int, int]
+    path: Path
+    identity: tuple[int, int]
+
+
+def directory_identity(path: Path) -> tuple[int, int]:
+    info = os.lstat(path)
+    if not stat.S_ISDIR(info.st_mode):
+        raise OSError(f"{path} is not a directory")
+    return info.st_dev, info.st_ino
+
+
+def qualified_scratch_root() -> Path:
+    """Select and validate the documented Darwin or Linux scratch projection."""
+    system = platform.system()
+    if system == "Darwin":
+        result = subprocess.run(
+            ["/usr/bin/getconf", "DARWIN_USER_TEMP_DIR"],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            text=True,
+        )
+        root = Path(result.stdout.strip())
+        if result.returncode or not result.stdout.strip():
+            raise OSError("could not resolve DARWIN_USER_TEMP_DIR")
+        info = os.lstat(root)
+        if not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode):
+            raise OSError("DARWIN_USER_TEMP_DIR is not a real directory")
+        if info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o700:
+            raise OSError("DARWIN_USER_TEMP_DIR is not a private user-owned 0700 directory")
+        return root
+    if system == "Linux":
+        root = Path("/tmp")
+        info = os.lstat(root)
+        if not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode):
+            raise OSError("/tmp is not a real directory")
+        if info.st_uid != 0 or stat.S_IMODE(info.st_mode) != 0o1777:
+            raise OSError("/tmp is not a root-owned 01777 directory")
+        return root
+    raise OSError(f"no qualified scratch projection for {system}")
+
+
+def allocate_scratch(provider_name: str) -> ScratchDirectory:
+    """Allocate a fresh private child and bind both it and its parent by identity."""
+    root = qualified_scratch_root()
+    root_identity = directory_identity(root)
+    for _ in range(32):
+        path = root / f"{provider_name}-review-{secrets.token_hex(16)}"
+        try:
+            os.mkdir(path, 0o700)
+        except FileExistsError:
+            continue
+        # mkdir honors the process umask; restore the required private mode
+        # before binding the new directory as this attempt's scratch space.
+        os.chmod(path, 0o700)
+        child = os.lstat(path)
+        if (
+            path.parent != root
+            or directory_identity(path.parent) != root_identity
+            or not stat.S_ISDIR(child.st_mode)
+            or stat.S_ISLNK(child.st_mode)
+            or child.st_uid != os.geteuid()
+            or stat.S_IMODE(child.st_mode) != 0o700
+        ):
+            raise OSError("new scratch directory failed private identity validation")
+        return ScratchDirectory(root, root_identity, path, (child.st_dev, child.st_ino))
+    raise OSError("could not allocate a fresh scratch directory")
+
+
+def remove_scratch_members(path: Path) -> None:
+    """Remove only safe regular files; reject unexpected residue before removal."""
+    members: list[Path] = []
+    for member in path.iterdir():
+        info = os.lstat(member)
+        if info.st_uid != os.geteuid():
+            raise OSError(f"scratch member ownership drift: {member.name}")
+        if stat.S_ISREG(info.st_mode):
+            if info.st_nlink != 1 or stat.S_IMODE(info.st_mode) & 0o022:
+                raise OSError(f"scratch member identity or mode drift: {member.name}")
+            members.append(member)
+        else:
+            raise OSError(f"scratch has unexpected member: {member.name}")
+    for member in members:
+        os.unlink(member)
+
+
+def cleanup_scratch(directory: ScratchDirectory) -> str | None:
+    """Fail closed unless the qualified root and exact child still name this attempt."""
     try:
-        directory.cleanup()
+        if qualified_scratch_root() != directory.root:
+            raise OSError("scratch root path drift")
+        if directory_identity(directory.root) != directory.root_identity:
+            raise OSError("scratch root identity drift")
+        if directory_identity(directory.path.parent) != directory.root_identity:
+            raise OSError("scratch path escaped its qualified root")
+        child = os.lstat(directory.path)
+        if (
+            not stat.S_ISDIR(child.st_mode)
+            or stat.S_ISLNK(child.st_mode)
+            or (child.st_dev, child.st_ino) != directory.identity
+            or child.st_uid != os.geteuid()
+            or stat.S_IMODE(child.st_mode) != 0o700
+        ):
+            raise OSError("scratch directory identity, ownership, or mode drift")
+        remove_scratch_members(directory.path)
+        if directory_identity(directory.root) != directory.root_identity:
+            raise OSError("scratch root identity drift before removal")
+        if directory_identity(directory.path) != directory.identity:
+            raise OSError("scratch directory identity drift before removal")
+        os.rmdir(directory.path)
     except OSError as error:
         return redact(str(error))
     return None
@@ -453,20 +569,21 @@ def run_attempt(
     envelope = provider.configured_envelope(selection, preflight=canary)
     evidence: dict[str, Any] = {"configured_envelope": envelope}
     try:
-        scratch = tempfile.TemporaryDirectory(prefix=f"{provider.name}-review-")
+        scratch = allocate_scratch(provider.name)
     except OSError as error:
         return Attempt([f"could not allocate a scratch directory: {error}"], False, evidence, "")
     try:
-        launch = Launch(preflight=canary, repository=repository, scratch=Path(scratch.name))
+        launch = Launch(preflight=canary, repository=repository, scratch=scratch.path)
         result = subprocess.run(
             [executable, *provider.command(envelope, launch)],
             input=prompt,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=False,
-            cwd=scratch.name if canary else repository,
+            cwd=str(scratch.path) if canary else repository,
             env=environment,
             timeout=AUTH_PREFLIGHT_TIMEOUT_SECONDS if canary else None,
+            umask=0o077,
         )
         output = provider.output(result, launch)
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
@@ -475,11 +592,11 @@ def run_attempt(
             if isinstance(error, subprocess.TimeoutExpired)
             else str(error)
         ]
-        cleanup_error = cleanup_temporary_directory(scratch)
+        cleanup_error = cleanup_scratch(scratch)
         if cleanup_error is not None:
             causes.append(f"{provider.label} temporary-directory cleanup failed: {cleanup_error}")
         return Attempt(causes, False, evidence, "")
-    cleanup_error = cleanup_temporary_directory(scratch)
+    cleanup_error = cleanup_scratch(scratch)
 
     stdout = result.stdout.decode("utf-8", errors="replace")
     stderr = result.stderr.decode("utf-8", errors="replace")
