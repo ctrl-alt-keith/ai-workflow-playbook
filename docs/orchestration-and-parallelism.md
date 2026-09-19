@@ -100,6 +100,15 @@ directory or conversational context. Repository identity is part of the task's
 scope and authority boundary; do not leave it implicit or rely on inherited
 context to supply it.
 
+Before dispatch, record each lane's explicit model and reasoning routing
+decision, including intentional inheritance, in operator metadata or a lane-plan
+note alongside its worker envelope. Keep requested and runtime-effective
+configuration distinct under [model routing](model-routing.md); keep the
+metadata/prompt boundary under
+[prompts](prompts.md#operator-metadata-and-executable-prompts). After launch,
+record the runtime-effective configuration when exposed; otherwise mark it
+unobservable.
+
 Include:
 
 - repository and working directory
