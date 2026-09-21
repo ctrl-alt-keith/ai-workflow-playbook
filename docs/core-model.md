@@ -26,7 +26,9 @@ of every failure and fix.
 
 These principles apply to AI-assisted work whose evidence, authority, review,
 or completion boundaries materially affect the outcome. They do not make
-ordinary chat, brainstorming, or conceptual discussion procedural.
+chat, brainstorming, or conceptual discussion unrelated to AI-workflow doctrine
+procedural; discussion of the principles themselves activates
+[`start-here.md`](start-here.md#purpose).
 
 - **Establish relevant reality before acting.** Inspect the current sources
   that control the task when they are available. Treat conversation, memory,

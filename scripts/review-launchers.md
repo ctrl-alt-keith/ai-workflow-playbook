@@ -11,10 +11,13 @@ finding-disposition rules remain in
 
 Use a repository-owned launcher from the active Playbook checkout with its
 explicit absolute provider binary. It passes only model and effort options,
-delivers the prompt on standard input, and binds the current checkout to the
-requested exact candidate immediately before review. A candidate mismatch stops
-the launch rather than selecting a different candidate. Empty or failed provider
-output is launcher failure, never a review verdict.
+delivers the review prompt on standard input (canaries and health probes use
+fixed prompts and ignore standard input), and binds the current checkout to the
+requested exact candidate immediately before review. The review preamble tells
+a reviewer whose standing instructions require `docs/start-here.md` to read it
+from the bound checkout rather than a network route. A candidate mismatch
+stops the launch rather than selecting a different candidate. Empty or failed
+provider output is launcher failure, never a review verdict.
 
 Preflight is a bounded canary before expensive review. It establishes route and
 authentication acceptance only; it establishes neither candidate quality nor a
@@ -29,7 +32,7 @@ and configuration can remain outside launcher control.
 `--health-probe` is the low-cost step between auth preflight and a real review.
 Run it from the exact candidate checkout with the same absolute provider binary,
 selection, new absolute `--diagnostics-file`, and exact `--candidate-commit`.
-It accepts no stdin prompt. The shared launcher binds the candidate, verifies a
+It ignores standard input. The shared launcher binds the candidate, verifies a
 fixed opaque one-line `scripts/reviewer-health-probe.txt` fixture, and asks the
 reviewer to return that file's contents exactly.
 

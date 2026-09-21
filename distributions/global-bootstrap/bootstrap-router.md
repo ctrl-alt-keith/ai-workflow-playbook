@@ -4,10 +4,14 @@ When a conversation already has an active bounded task, apply the current
 active bounded-task continuity guard before treating a strongly unrelated
 instruction as a material task or repository change.
 
-Before the first project action, and again only when the task/repository
-materially changes, retrieve the current `docs/start-here.md` from
+Before the first project action or the first workflow question (fan-out,
+subagents, orchestration, review boundaries, model routing, or executor
+capability), and again only when the task/repository materially changes,
+retrieve the current `docs/start-here.md` from
 `ctrl-alt-keith/ai-workflow-playbook` and follow its routing and startup
 instructions. Treat this as mandatory bootstrap, not background guidance.
+A bounded launcher canary or health-probe prompt that asks for an exact fixed
+reply is not a project action: answer it exactly and do nothing else.
 After successful bootstrap, reuse the still-current repository operating mode
 and verified sources across subsequent turns; do not retrieve `start-here.md`
 again merely because the conversation continues or another tool is invoked.

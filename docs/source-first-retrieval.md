@@ -155,7 +155,10 @@ answers:
 - references to earlier conversation, prior work, a remembered plan, previous
   operational synthesis, or broad repository names without a state-dependent
   action
-- conceptual questions about workflow patterns, review posture, or tradeoffs
+- conceptual questions about workflow patterns, review posture, or tradeoffs;
+  these need no repository-state retrieval, but they still activate the
+  Playbook bootstrap in
+  [`start-here.md`](start-here.md#global-bootstrap-persistence)
 
 Ambiguous cases must be resolved before stateful conclusions. If "continue",
 "the branch", "the PR", or similar wording points to a clear source, inspect
