@@ -1,73 +1,43 @@
 # Copilot Adapter
 
-This document explains how GitHub Copilot maps onto the core playbook. It is adapter-specific guidance, not part of the core operating model.
+This adapter covers GitHub Copilot used for a localized editor suggestion or
+continuation. It does not select or define other Copilot products, agents, or
+workflow paths. Shared rules remain owned by the Playbook.
 
-## Context
+Provider behavior was rechecked against official GitHub documentation on
+2026-09-21; provider sources belong in reviewed PR evidence, not this
+agent-read adapter.
 
-- This guidance is based on observed usage alongside ChatGPT and Codex
-- It describes where Copilot fits well and where prompts need reshaping
-- It does not define tooling, automation, or alternate workflow paths
+## Eligible use
 
-## Role in Workflow
+Use Copilot only after task direction, scope, and boundaries are decided, for a
+small local transformation, continuation, refinement, or boilerplate edit in
+an explicit file/range/editor context. Place the cursor or selection at the
+edit site; state the local intent and constraints; rely on surrounding code
+instead of restating repository workflow.
 
-- ChatGPT: planning, orchestration, prompt design, and shaping the next bounded task
-- Codex: bounded execution, repo-level changes, validation, and PR creation
-- Copilot: inline suggestion, completion, and editing during implementation
-- Copilot is suggestion-based, not task-driven
-- Copilot operates inside editor context, not as the workflow driver
-- Copilot works best after the structure, intent, and boundaries are already decided
+Do not route to this editor-suggestion surface a multi-step task, coordinated
+repo-wide change, PR lifecycle work, broad-context/rationale-dependent prompt,
+or a request that asks it to decide scope, tradeoffs, or completion. Route work
+that needs planning, coordination, repository follow-through, canonical
+validation, commit/push/PR delivery, or another execution contract to a
+supported executor.
 
-## What Works Well
+## Material prompt contract
 
-- small, local code edits
-- filling in obvious implementations
-- iterative refinement of a function, test, query, or small block
-- continuing an established pattern already present in the file
-- drafting boilerplate inside an already-defined structure
-- shortening repetitive editing once the target shape is clear
+[`prompt-contracts.md`](../prompt-contracts.md) remains authoritative. This
+surface supports only a localized transformation/continuation when the selected
+context, intent, and constraints are already explicit. A product-neutral
+`light` reasoning class may be expressed as that small local task; it is not a
+guaranteed product knob.
 
-## What Does Not Translate
-
-- full multi-step prompts that assume the tool will plan and execute a sequence
-- repo-wide changes that require coordinated edits across many files
-- PR lifecycle tasks such as validation, commit scoping, or PR creation
-- orchestration-level instructions about phase, workflow, or review flow
-- prompts that depend on broad repo context or rationale not visible in the editor
-- instructions that ask the tool to decide scope, tradeoffs, or completion state
-
-## Prompt Adaptation Guidance
-
-- break large prompts into small, local instructions
-- place the cursor or selection at the exact edit site before prompting
-- rely on surrounding code context instead of restating full workflow context
-- use Copilot for refinement, continuation, or transformation rather than direction
-- keep intent clear but localized to one file, function, or block
-- use ChatGPT or Codex when the work needs planning, coordination, or repo-level follow-through
-
-## Prompt-Contract Capability Mapping
-
-The shared semantics in [`prompt-contracts.md`](../prompt-contracts.md) remain
-authoritative when a material task is considered for Copilot. Copilot may map
-only requirements supported by its suggestion-based editor surface:
-
-| Semantic requirement | Copilot mapping |
-| --- | --- |
-| Localized transformation or continuation in selected editor context | Supported when the selected file, range, intent, and constraints are already explicit. |
-| Product-neutral `light` reasoning class | May be represented as a small local suggestion task; this is task-shape guidance, not a guaranteed product knob. |
-| `medium` or `high` reasoning class | No testable equivalent mapping is claimed. If mandatory, use a supported executor or fail closed. |
-| Repository-wide source hydration or exact source-manifest reconstruction | Unsupported as a mandatory Copilot capability; fail closed or route to Codex. |
-| Deterministic rendering and exact executor-visible byte identity | Unsupported as a mandatory Copilot capability; editor suggestions are not claimed to be a deterministic renderer. |
-| Append-only attempt receipts, replay-exact dependencies, or checkpoint lineage | Unsupported as a mandatory Copilot capability; an owning execution layer must provide them. |
-| Canonical validation, commit, push, PR delivery, or ordered transport fallback | Unsupported as Copilot-owned workflow behavior; route to the repository executor. |
-| Live authority re-read and acting-identity verification | Unsupported as Copilot-owned authorization behavior; the execution or adoption layer must enforce it. |
-
-An advisory unsupported requirement may be omitted only when the semantic
-contract explicitly allows that degradation and no guarantee is weakened. An
-unsupported mandatory capability fails closed. Do not claim Codex/Copilot
-parity without a testable mapping for the requirement being compared.
-
-## Notes
-
-- Copilot complements the workflow; it does not replace ChatGPT or Codex
-- Treat Copilot as an implementation aid once direction is already set
-- If a prompt starts describing steps, files, and validation, it likely belongs in ChatGPT or Codex instead
+No testable mapping is claimed for a mandatory `medium` or `high` reasoning
+class; repository-wide source hydration or exact source-manifest reconstruction;
+deterministic rendering or exact executor-visible byte identity; append-only
+attempt receipts, replay-exact dependencies, or checkpoint lineage; canonical
+validation, commit, push, PR delivery, or transport fallback; or live authority
+re-read and acting-identity verification. Route a mandatory requirement to a
+supported owner or fail closed. Omit an unsupported advisory requirement only
+when the semantic contract explicitly permits that degradation and no guarantee
+is weakened. Do not claim Codex/Copilot parity without a testable mapping for
+the compared requirement.
