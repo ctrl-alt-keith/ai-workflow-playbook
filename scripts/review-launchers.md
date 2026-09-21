@@ -15,7 +15,7 @@ delivers the review prompt on standard input (canaries and health probes use
 fixed prompts and ignore standard input), and binds the current checkout to the
 requested exact candidate immediately before review. The review preamble tells
 a reviewer whose standing instructions require `docs/start-here.md` to read it
-from the bound checkout, since no network route exists. A candidate mismatch
+from the bound checkout rather than a network route. A candidate mismatch
 stops the launch rather than selecting a different candidate. Empty or failed
 provider output is launcher failure, never a review verdict.
 

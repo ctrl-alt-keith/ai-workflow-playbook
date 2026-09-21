@@ -523,7 +523,7 @@ def review_prompt(prompt: bytes, repository: str, commit: str) -> bytes:
         "Use this commit as the candidate identity. The wrapper does not claim that "
         "uncommitted worktree bytes were validated.\n"
         "If your standing instructions require reading docs/start-here.md before acting, "
-        "read it from this repository path; no network route is available.\n\n"
+        "read it from this repository path rather than using a network route.\n\n"
         "Review question:\n"
     )
     return context.encode("utf-8") + prompt
