@@ -816,7 +816,7 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     try:
         validate_output_destination(args.review_output_file)
     except ValueError as error:
-        return fail(str(error), None)
+        return fail(str(error), args.diagnostics_file)
     try:
         environment = child_environment(provider)
         executable, version = resolve_executable(provider, args.binary, environment)

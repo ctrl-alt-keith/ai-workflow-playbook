@@ -74,9 +74,9 @@ identity while its write descriptor remains open, then reads that same identity
 back with `O_NOFOLLOW` as raw bytes and records its byte length and SHA-256
 beside the candidate and terminal diagnostics record. A capture failure fails
 the attempt and leaves any residue for the owning attempt rather than
-overwriting or deleting it. If a provider attempt itself fails but produced
-bytes, the launcher may still retain those exact bytes; they remain failed-
-attempt residue and are not admissible merely because a capture file exists.
+overwriting or deleting it. If a provider attempt itself fails, the launcher
+may still retain its exact bytes (including an empty byte sequence); they remain
+failed-attempt residue and are not admissible merely because a capture file exists.
 
 The capture file is attempt evidence, not automatic durable admission,
 acceptance, reviewer correctness, or runtime-isolation evidence. Its exact

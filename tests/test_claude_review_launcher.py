@@ -153,6 +153,26 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(record["review_output"]["byte_length"], len(captured))
         self.assertEqual(record["review_output"]["sha256"], hashlib.sha256(captured).hexdigest())
 
+    def test_failed_provider_with_bytes_retains_failed_attempt_residue(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_claude(root, "printf 'partial review bytes\\n'\nexit 7\n")
+            destination = root / "review.txt"
+            diagnostics = root / "diagnostics.json"
+            completed = self.run_launcher(
+                executable, "--review-output-file", str(destination), "--diagnostics-file", str(diagnostics),
+                prompt=b"Review\n"
+            )
+            captured = destination.read_bytes()
+            record = json.loads(diagnostics.read_text(encoding="utf-8"))
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(captured, b"partial review bytes\n")
+        self.assertEqual(record["status"], "failed")
+        self.assertEqual(record["claude_exit_code"], 7)
+        self.assertEqual(record["review_output"]["byte_length"], len(captured))
+        self.assertEqual(record["review_output"]["sha256"], hashlib.sha256(captured).hexdigest())
+        self.assertIn("Claude exited 7 despite producing output", record["failure"])
+
     def test_review_output_file_refuses_existing_or_symlink_destinations_before_review(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
@@ -203,6 +223,23 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 70)
         self.assertFalse(destination.exists())
         self.assertIn(b"only valid for a governed review", completed.stderr)
+
+    def test_invalid_review_output_destination_retains_requested_diagnostics(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_claude(root, "printf 'review output\\n'\n")
+            output = root / "existing.txt"
+            output.write_bytes(b"prior evidence")
+            diagnostics = root / "diagnostics.json"
+            completed = self.run_launcher(
+                executable, "--review-output-file", str(output), "--diagnostics-file", str(diagnostics),
+                prompt=b"Review\\n"
+            )
+            record = json.loads(diagnostics.read_text(encoding="utf-8"))
+        self.assertEqual(completed.returncode, 70)
+        self.assertEqual(record["status"], "failed")
+        self.assertEqual(record["diagnostics_file"], "unverified")
+        self.assertIn("--review-output-file must be a new absolute path", record["failure"])
 
     def test_qualified_readback_accepts_a_fresh_successful_health_probe_without_stderr(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
