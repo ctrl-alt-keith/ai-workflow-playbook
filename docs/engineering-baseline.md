@@ -115,6 +115,10 @@ examples/cases only for materially distinct behavior not already clear from the
 rule. Put human rationale, history, and change explanations on human-facing
 surfaces. Add no taxonomy, scoring, checklist, or ceremony.
 
+When agent-read content relies on provider behavior, keep official source URLs
+in the reviewed change evidence rather than the agent-read text; retain only a
+dated provenance line there when the check affects the instruction.
+
 ## Config And CLI Default Changes
 
 When extending config/default precedence or CLI override logic, identify every
