@@ -79,8 +79,8 @@ transport.
 For Airtable production and consumption, resolve the permitted base, table, and
 field IDs through current actions and use the returned record ID with the exact
 `recordIds` constraint. Apply the canonical handoff's verification, correction,
-and issue-owned durable-capture rules; do not add a second record or transport
-ceremony.
+and transport rules, plus the issue-owned durable-capture profile; do not add
+any record or transport beyond what those owners require.
 
 When an inline prompt is selected, emit the shared operator metadata and the
 complete executable prompt as consecutive fenced blocks with no assistant prose
