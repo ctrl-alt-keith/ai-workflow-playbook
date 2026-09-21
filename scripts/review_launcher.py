@@ -197,7 +197,8 @@ def validate_output_destination(destination: Path | None) -> None:
     """Output capture is opt-in, but never aliases an existing artifact."""
     if destination is None:
         return
-    if not destination.is_absolute() or destination.exists() or not destination.parent.is_dir():
+    if (not destination.is_absolute() or destination.exists() or destination.is_symlink()
+            or not destination.parent.is_dir()):
         raise ValueError("--review-output-file must be a new absolute path with an existing parent")
 
 
@@ -205,23 +206,54 @@ def write_output_file(destination: Path | None, output: bytes) -> tuple[dict[str
     """Exclusively retain complete reviewer bytes before terminal presentation."""
     if destination is None:
         return None, None
-    payload = output
+    payload = output  # provider adapters return raw bytes; do not decode or normalize them here.
     try:
         descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except OSError as error:
+        return None, f"requested review output file could not be captured: {redact(str(error))}"
+    try:
+        created = os.fstat(descriptor)
+        identity = (created.st_dev, created.st_ino)
+        # ``open(..., 0o600)`` is filtered by umask. This artifact has a strict
+        # privacy contract, so restore the intended private mode explicitly.
+        os.fchmod(descriptor, 0o600)
+        write_bytes(descriptor, payload)
+        info = os.fstat(descriptor)
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid()
+                or stat.S_IMODE(info.st_mode) != 0o600 or info.st_nlink != 1):
+            raise OSError("captured output did not retain private regular-file identity or mode")
+        named = os.lstat(destination)
+        if (not stat.S_ISREG(named.st_mode) or named.st_uid != os.geteuid()
+                or stat.S_IMODE(named.st_mode) != 0o600 or named.st_nlink != 1
+                or (named.st_dev, named.st_ino) != identity):
+            raise OSError("captured output path no longer names the private created file")
+        reader = os.open(destination, os.O_RDONLY | os.O_NOFOLLOW)
         try:
-            write_bytes(descriptor, payload)
+            opened = os.fstat(reader)
+            if (not stat.S_ISREG(opened.st_mode) or opened.st_uid != os.geteuid()
+                    or stat.S_IMODE(opened.st_mode) != 0o600 or opened.st_nlink != 1
+                    or (opened.st_dev, opened.st_ino) != identity):
+                raise OSError("captured output readback file identity or privacy changed")
+            with os.fdopen(reader, "rb", closefd=False) as stream:
+                readback = stream.read()
         finally:
-            close_descriptor(descriptor)
-        info = destination.stat()
-        if not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode) != 0o600:
-            raise OSError("captured output did not retain private regular-file mode")
-        readback = destination.read_bytes()
+            close_descriptor(reader)
         digest = hashlib.sha256(payload).hexdigest()
         if readback != payload:
             raise OSError("captured output readback did not match")
+        close_descriptor(descriptor)
+        descriptor = -1
         return {"path": str(destination), "byte_length": len(payload), "sha256": digest, "readback": "exact"}, None
     except OSError as error:
         return None, f"requested review output file could not be captured: {redact(str(error))}"
+    finally:
+        if descriptor != -1:
+            try:
+                close_descriptor(descriptor)
+            except OSError:
+                # There is no portable, identity-safe cleanup for a path after
+                # a close failure. The primary failure remains authoritative.
+                pass
 
 
 def compose(causes: list[str]) -> str:
@@ -360,7 +392,10 @@ def verify_diagnostics_readback(
         raise ValueError("diagnostics readback requires the requested selection")
     if candidate is not None and record.get("candidate") != candidate:
         raise ValueError("diagnostics readback candidate does not match")
-    if selection is not None and record.get("configured_envelope", {}).get("requested") != selection:
+    configured_envelope = record.get("configured_envelope")
+    if not isinstance(configured_envelope, dict):
+        raise ValueError("diagnostics readback configured envelope is malformed")
+    if selection is not None and configured_envelope.get("requested") != selection:
         raise ValueError("diagnostics readback requested selection does not match")
     return {"path": str(destination), "byte_length": len(raw), "sha256": hashlib.sha256(raw).hexdigest(), "record": record}
 
@@ -772,11 +807,13 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     def fail(failure: str, destination: Path | None) -> int:
         return finish(provider, record, causes=[failure], destination=destination)
 
-    if args.review_output_file is not None and attempt_kind != "review":
-        return fail("--review-output-file is only valid for a governed review", args.diagnostics_file)
-
     try:
         validate_diagnostics_destination(args.diagnostics_file)
+    except ValueError as error:
+        return fail(str(error), None)
+    if args.review_output_file is not None and attempt_kind != "review":
+        return fail("--review-output-file is only valid for a governed review", args.diagnostics_file)
+    try:
         validate_output_destination(args.review_output_file)
     except ValueError as error:
         return fail(str(error), None)
