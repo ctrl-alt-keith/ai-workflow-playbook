@@ -13,22 +13,16 @@ Map each surface through the core
 [locality classes](../core-model.md#surface-classes):
 
 - **Claude Chat**: interactive, conversational, no repository filesystem.
-  [Instructions for Claude](https://support.claude.com/en/articles/10185728-understanding-claude-s-personalization-features)
-  are account-wide; project instructions apply only inside that project.
-  Repository content arrives only through
-  [explicitly selected GitHub content](https://support.claude.com/en/articles/10167454-use-the-github-integration),
-  project knowledge, or another observed route; retrieval is best-effort per
-  thread.
-- **Claude Cowork**: interactive steering plus bounded execution.
-  [Sessions run in the cloud on every surface](https://support.claude.com/en/articles/15520349-use-claude-cowork-on-web-desktop-and-mobile):
-  agentic-remote by default, agentic-local only while a desktop-connected
-  repository folder is attached.
-  [Scheduled Cowork](https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork)
-  is unattended.
-  [Dispatch](https://support.claude.com/en/articles/13947068-assign-tasks-from-anywhere-in-claude-cowork)
-  is a human assignment that runs without the human present; Anthropic
-  documents it as unavailable to new accounts, so its presence is runtime
-  evidence.
+  Instructions for Claude are account-wide; project instructions apply only
+  inside that project. Repository content arrives only through explicitly
+  selected GitHub content, project knowledge, or another observed route;
+  retrieval is best-effort per thread.
+- **Claude Cowork**: interactive steering plus bounded execution. Sessions
+  run in the cloud on every surface: agentic-remote by default, agentic-local
+  only while a desktop-connected repository folder is attached. Scheduled
+  Cowork is unattended. Dispatch is a human assignment that runs without the
+  human present; Anthropic documents it as unavailable to new accounts, so its
+  presence is runtime evidence.
 - **Claude Code**: interactive and execution roles when human-driven; a
   controller-launched run is an execution surface. Agentic-local with the
   repository filesystem, otherwise agentic-remote until current sources and
@@ -50,13 +44,11 @@ hydration; they do not prove success or source freshness.
 - **Account transports.** Instructions for Claude is account-wide, not
   Chat-only; project instructions do not replace it. Treat each
   `user_preferences` block a run exposes as an independently observed
-  transport until ownership and precedence are established.
-  [Cowork Global instructions](https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork)
-  are documented at **Settings > Cowork > Global instructions** and, in the
-  new Claude experience, as part of Instructions for Claude at
-  **Settings > General**; use the field the current UI exposes. Anthropic
-  publishes no precedence among these: verify each independently, and apply a
-  router presented more than once only once.
+  transport until ownership and precedence are established. Cowork Global
+  instructions are a separate field or part of Instructions for Claude
+  depending on the current Claude experience; the field the runtime exposes
+  is the transport. Anthropic publishes no precedence among these: verify each
+  independently, and apply a router presented more than once only once.
 - **Chat.** Router in the verified account transport; project instructions
   stay project-specific. Prefer explicitly selected current GitHub content; a
   prior project sync is not current-source evidence. If a required source
@@ -67,10 +59,9 @@ hydration; they do not prove success or source freshness.
   instructions stay thin pointers. Without a global transport, an interactive
   task may proceed only from a verified task, project, or folder trigger that
   obtains the required sources; record the gap. Unattended tasks stop when no
-  qualified current-source route exists.
-  [Desktop Cowork skips outside-working-directory imports](https://code.claude.com/docs/en/memory)
-  and linked user files; cloud, web, and mobile Cowork cannot rely on a
-  workstation `~/.claude/CLAUDE.md`.
+  qualified current-source route exists. Desktop Cowork skips
+  outside-working-directory imports and linked user files; cloud, web, and
+  mobile Cowork cannot rely on a workstation `~/.claude/CLAUDE.md`.
 - **Code.** File-backed `CLAUDE.md` discovery below. A repo-local `CLAUDE.md`
   may point to `docs/start-here.md` and `AGENTS.md` but does not replace them.
   Remote Code retrieves them through the workspace or another observed route,
@@ -80,8 +71,7 @@ The remaining sections are Claude Code-specific unless stated otherwise.
 
 ## Instruction Discovery
 
-[Claude Code memory](https://code.claude.com/docs/en/memory) loads managed
-policy, then `~/.claude/CLAUDE.md`, then `./CLAUDE.md` or
+Claude Code loads managed policy, then `~/.claude/CLAUDE.md`, then `./CLAUDE.md` or
 `./.claude/CLAUDE.md`, then project-local instructions, concatenated: load
 order is context order, not authority, and user-level `~/.claude/CLAUDE.md`
 cannot override repo-local policy. Claude Code loads `CLAUDE.md`, not
@@ -108,9 +98,8 @@ blast radius, never by inference from the interaction mode:
   approval; `plan` is not the automatic choice.
 - Implementation: `default` (per-action approval); `acceptEdits` only for a
   bounded, already-agreed scope.
-- [Permission rules](https://code.claude.com/docs/en/permissions) evaluate
-  `deny` -> `ask` -> `allow`, first match wins: prompting behavior, not an
-  authorization boundary.
+- Permission rules evaluate `deny` -> `ask` -> `allow`, first match wins:
+  prompting behavior, not an authorization boundary.
 - `bypassPermissions` is documented for isolated containers or VMs only. Do
   not use it for repository work with meaningful blast radius; `deny` rules are
   not a safety boundary under it.
@@ -163,9 +152,8 @@ interpretation.
 
 ## Worktrees And Subagents
 
-Claude Code spawns subagents with the `Agent` tool
-([subagents](https://code.claude.com/docs/en/sub-agents); renamed from `Task`
-in v2.1.63, `Task(...)` references remain aliases). A call selects the
+Claude Code spawns subagents with the `Agent` tool (`Task` is a retained
+alias for the same tool). A call selects the
 subagent with `subagent_type` and may set `isolation: worktree` for a
 temporary git worktree branched from the default branch. Resume a completed
 subagent with `SendMessage` to its agent ID or name; Explore and Plan are
@@ -178,9 +166,8 @@ previously read files; `fork` inherits the parent conversation. Give each
 non-fork subagent the standalone envelope from
 [`orchestration-and-parallelism.md`](../orchestration-and-parallelism.md) and
 apply [PR topology](../repo-readiness.md#pr-readiness). Claude Code's own
-worktrees live under `.claude/worktrees/`
-([worktrees](https://code.claude.com/docs/en/worktrees)) and do not satisfy a
-repo-local `.worktrees/` isolation policy. With agent teams enabled, a named
+worktrees live under `.claude/worktrees/` and do not satisfy a repo-local
+`.worktrees/` isolation policy. With agent teams enabled, a named
 `Agent` call can launch a teammate in the main working directory regardless of
 frontmatter `isolation`.
 
@@ -225,14 +212,11 @@ external lineage.
 ## Model And Effort Routing
 
 Apply [model routing](../model-routing.md); do not map from OpenAI model
-names or tiers. Claude Code
-[model configuration](https://code.claude.com/docs/en/model-config) defines
-`haiku` (simple fast tasks), `sonnet` (daily coding), `opus` (complex
+names or tiers. Claude Code defines `haiku` (simple fast tasks), `sonnet` (daily coding), `opus` (complex
 reasoning), `fable` (hardest, longest-running tasks), and `best` (Fable where
 available, else `opus`). Model IDs, availability, context variants, and
 allowlists are runtime evidence. Fable needs a current Claude Code version;
-under [zero data retention](https://code.claude.com/docs/en/zero-data-retention)
-its availability follows the Covered Models policy. Fable and Opus 5 safety
+under zero data retention its availability follows the Covered Models policy. Fable and Opus 5 safety
 classifiers can trigger documented fallback: request Fable only when its
 effective runtime identity can be observed and meets the task's
 qualification.
@@ -312,6 +296,6 @@ operator action.
 
 ## References
 
-Runtime claims link their official Anthropic source at the claim. Claude Code
-and platform pages were checked on 2026-09-19; Claude Chat and Cowork support
-pages on 2026-09-21.
+Runtime claims were checked against official Anthropic documentation on
+2026-09-19 (Claude Code and platform) and 2026-09-21 (Claude Chat and
+Cowork); the sources are recorded in the PR that last changed each claim.
