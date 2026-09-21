@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass, field
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -58,7 +59,7 @@ class Provider:
     auth_failure: re.Pattern[str]
     configured_envelope: Callable[..., dict[str, Any]]
     command: Callable[[dict[str, Any], Launch], list[str]]
-    output: Callable[[subprocess.CompletedProcess[bytes], Launch], str]
+    output: Callable[[subprocess.CompletedProcess[bytes], Launch], bytes]
     output_field: str  # record key naming where substantive output is read from
     environment: Mapping[str, str] = field(default_factory=dict)
     require_model: bool = False
@@ -190,6 +191,37 @@ def validate_diagnostics_destination(destination: Path | None) -> None:
         raise ValueError("--diagnostics-file must be a new absolute path")
     if not destination.parent.is_dir():
         raise ValueError("--diagnostics-file parent must exist")
+
+
+def validate_output_destination(destination: Path | None) -> None:
+    """Output capture is opt-in, but never aliases an existing artifact."""
+    if destination is None:
+        return
+    if not destination.is_absolute() or destination.exists() or not destination.parent.is_dir():
+        raise ValueError("--review-output-file must be a new absolute path with an existing parent")
+
+
+def write_output_file(destination: Path | None, output: bytes) -> tuple[dict[str, Any] | None, str | None]:
+    """Exclusively retain complete reviewer bytes before terminal presentation."""
+    if destination is None:
+        return None, None
+    payload = output
+    try:
+        descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        try:
+            write_bytes(descriptor, payload)
+        finally:
+            close_descriptor(descriptor)
+        info = destination.stat()
+        if not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode) != 0o600:
+            raise OSError("captured output did not retain private regular-file mode")
+        readback = destination.read_bytes()
+        digest = hashlib.sha256(payload).hexdigest()
+        if readback != payload:
+            raise OSError("captured output readback did not match")
+        return {"path": str(destination), "byte_length": len(payload), "sha256": digest, "readback": "exact"}, None
+    except OSError as error:
+        return None, f"requested review output file could not be captured: {redact(str(error))}"
 
 
 def compose(causes: list[str]) -> str:
@@ -335,7 +367,7 @@ def finish(
     causes: list[str],
     auth_failure: bool = False,
     destination: Path | None,
-    output: str = "",
+    output: bytes = b"",
 ) -> int:
     """The one result path: emit the record, then exit with the primary classification.
 
@@ -360,7 +392,10 @@ def finish(
     print(f"{provider.name}-review diagnostics: {json.dumps(record, sort_keys=True)}", file=sys.stderr)
     if causes:
         return AUTH_FAILURE_EXIT if auth_failure else REVIEWER_FAILURE_EXIT
-    sys.stdout.write(output)
+    if hasattr(sys.stdout, "buffer"):
+        sys.stdout.buffer.write(output)
+    else:
+        sys.stdout.write(output.decode("utf-8", errors="replace"))
     return 0
 
 
@@ -564,6 +599,7 @@ def parse_arguments(provider: Provider, argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--auth-preflight", action="store_true")
     parser.add_argument("--health-probe", action="store_true")
     parser.add_argument("--diagnostics-file", type=Path)
+    parser.add_argument("--review-output-file", type=Path)
     parser.add_argument("--candidate-commit")
     parser.add_argument("provider_args", nargs=argparse.REMAINDER)
     args, undelimited = parser.parse_known_args(argv)
@@ -586,7 +622,7 @@ class Attempt:
     causes: list[str]
     auth_failure: bool
     evidence: dict[str, Any]
-    output: str
+    output: bytes
 
 
 def run_attempt(
@@ -635,16 +671,17 @@ def run_attempt(
         cleanup_error = cleanup_scratch(scratch)
         if cleanup_error is not None:
             causes.append(f"{provider.label} temporary-directory cleanup failed: {cleanup_error}")
-        return Attempt(causes, False, evidence, "")
+        return Attempt(causes, False, evidence, b"")
     cleanup_error = cleanup_scratch(scratch)
 
+    output_text = output.decode("utf-8", errors="replace")
     stdout = result.stdout.decode("utf-8", errors="replace")
     stderr = result.stderr.decode("utf-8", errors="replace")
-    received = bool(output.strip())
+    received = bool(output_text.strip())
     expected = (
-        output.strip() == provider.auth_response
+        output_text.strip() == provider.auth_response
         if canary
-        else output.strip() == HEALTH_PROBE_EXPECTED_OUTPUT
+        else output_text.strip() == HEALTH_PROBE_EXPECTED_OUTPUT
         if attempt_kind == "health_probe"
         else received
     )
@@ -655,7 +692,7 @@ def run_attempt(
         returncode=result.returncode,
         received=received,
         expected=expected,
-        output=output.strip(),
+        output=output_text.strip(),
         substitution=substitution,
         cleanup_error=cleanup_error,
     )
@@ -688,8 +725,12 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     def fail(failure: str, destination: Path | None) -> int:
         return finish(provider, record, causes=[failure], destination=destination)
 
+    if args.review_output_file is not None and attempt_kind != "review":
+        return fail("--review-output-file is only valid for a governed review", args.diagnostics_file)
+
     try:
         validate_diagnostics_destination(args.diagnostics_file)
+        validate_output_destination(args.review_output_file)
     except ValueError as error:
         return fail(str(error), None)
     try:
@@ -726,7 +767,7 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
             causes=attempt.causes,
             auth_failure=attempt.auth_failure,
             destination=args.diagnostics_file,
-            output=f"{provider.auth_response}\n",
+            output=f"{provider.auth_response}\n".encode("utf-8"),
         )
 
     if provider.acceptance_canary:
@@ -768,6 +809,11 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
         **launch,
     )
     record.update(attempt.evidence)
+    capture, capture_cause = write_output_file(args.review_output_file, attempt.output)
+    if capture is not None:
+        record["review_output"] = capture
+    if capture_cause is not None:
+        attempt.causes.append(capture_cause)
     return finish(
         provider,
         record,

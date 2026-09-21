@@ -59,6 +59,22 @@ effective-selection failure, scratch cleanup, then diagnostics write. A
 qualified Claude authentication failure takes precedence and exits 78; detailed
 construction and terminal exit policy remain in `review_launcher.py`.
 
+### Exact review-output capture
+
+For a governed substantive review only, `--review-output-file` can retain the
+provider-extracted response as raw bytes before stdout presentation. The path
+must be a new absolute pathname beneath an existing directory. Creation is
+exclusive and private (`0600`); the launcher reads the completed file back as
+raw bytes and records its byte length and SHA-256 beside the candidate and
+terminal diagnostics record. A capture failure fails the attempt and leaves
+any residue for the owning attempt rather than overwriting or deleting it.
+
+The capture file is attempt evidence, not automatic durable admission,
+acceptance, reviewer correctness, or runtime-isolation evidence. Its exact
+bytes—not terminal stdout presentation—are the recoverable source for a later
+authorized storage-admission step. Preflight, selector-acceptance canaries,
+and health probes reject this option and cannot create review-output artifacts.
+
 ## Retention and redaction
 
 Retain configured envelope, requested selection, candidate, exit/status, and

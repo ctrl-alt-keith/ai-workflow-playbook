@@ -1,4 +1,5 @@
 from contextlib import redirect_stderr, redirect_stdout
+import hashlib
 import io
 import json
 import os
@@ -119,6 +120,32 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertIn(current_commit().encode(), completed.stdout)
         self.assertIn(b"uncommitted worktree bytes were validated", completed.stdout)
         self.assertTrue(completed.stdout.endswith(b"Review question:\nReview the candidate.\n"))
+
+    def test_review_output_file_preserves_large_exact_output(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_claude(root, "head -c 30000 /dev/zero | tr '\\0' x\n")
+            destination = root / "review.txt"
+            completed = self.run_launcher(
+                executable, "--review-output-file", str(destination), prompt=b"Review\n"
+            )
+            captured = destination.read_bytes()
+            mode = stat.S_IMODE(destination.stat().st_mode)
+            record = json.loads(completed.stderr.decode().split("diagnostics: ", 1)[1])
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+        self.assertEqual(captured, b"x" * 30000)
+        self.assertEqual(record["review_output"]["byte_length"], 30000)
+        self.assertEqual(record["review_output"]["sha256"], hashlib.sha256(captured).hexdigest())
+        self.assertEqual(mode, 0o600)
+
+    def test_review_output_file_is_not_available_to_health_probe(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "review.txt"
+            executable = self.make_fake_claude(Path(temporary_directory), "printf 'probe-6f8a2d1c9e4b7\\n'\n")
+            completed = self.run_launcher(executable, "--health-probe", "--review-output-file", str(destination))
+        self.assertEqual(completed.returncode, 70)
+        self.assertFalse(destination.exists())
+        self.assertIn(b"only valid for a governed review", completed.stderr)
 
     def test_health_probe_uses_the_substantive_path_and_requires_its_exact_answer(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
