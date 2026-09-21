@@ -16,22 +16,28 @@ Map each concrete capability through the core
 
 - **Claude Chat** is an interactive, conversational surface with no repository
   filesystem.
-  **Instructions for Claude** apply account-wide to conversations, while
-  project instructions apply only inside that project. Repository files arrive
-  through explicitly selected GitHub content, project knowledge, or another
-  currently observed retrieval route, so current source retrieval is
-  best-effort per thread rather than guaranteed by the instruction surface.
-- **Claude Cowork** combines interactive steering with bounded execution. It is
-  agentic-remote by default, or agentic-local for an active desktop-connected
-  repository folder while that connection remains available.
+  [**Instructions for Claude**](https://support.claude.com/en/articles/10185728-understanding-claude-s-personalization-features)
+  apply account-wide to conversations, while project instructions apply only
+  inside that project. Repository files arrive through
+  [explicitly selected GitHub content](https://support.claude.com/en/articles/10167454-use-the-github-integration),
+  project knowledge, or another currently observed retrieval route, so current
+  source retrieval is best-effort per thread rather than guaranteed by the
+  instruction surface.
+- **Claude Cowork** combines interactive steering with bounded execution.
+  [Sessions run in the cloud on every surface](https://support.claude.com/en/articles/15520349-use-claude-cowork-on-web-desktop-and-mobile),
+  so it is agentic-remote by default, or agentic-local for an active
+  desktop-connected repository folder while that connection remains available.
 - **Claude Code** combines interactive and execution roles when human-driven;
   a controller-launched run is an execution surface. It is agentic-local with
   the repository filesystem and otherwise agentic-remote until current source
   and repo-local instructions are available.
 
-Initiation remains separate: scheduled Cowork is unattended, Dispatch is a
+Initiation remains separate:
+[scheduled Cowork](https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork) is
+unattended; [Dispatch](https://support.claude.com/en/articles/13947068-assign-tasks-from-anywhere-in-claude-cowork) is a
 human assignment whose execution does not require the human to remain present,
-and Claude Code may be interactive or controller-launched. Controller-launched
+and Anthropic documents it as unavailable to new accounts, so its presence is
+runtime evidence; Claude Code may be interactive or controller-launched. Controller-launched
 independent review additionally applies the conditional
 [`Local Read-Only Reviewer Launch`](#local-read-only-reviewer-launch) route and
 the controller-side adapter for the invoking executor; each adapter governs its
@@ -56,17 +62,20 @@ below.
 
 ### Account-Level Hosted Transports
 
-- Anthropic documents **Instructions for Claude** as an account-wide setting
-  for conversations; it is not a Chat-only transport and project instructions
-  do not replace it.
+- Anthropic documents [**Instructions for Claude**](https://support.claude.com/en/articles/10185728-understanding-claude-s-personalization-features)
+  as an account-wide setting for conversations; it is not a Chat-only
+  transport and project instructions do not replace it.
 - When a current run exposes one or more `user_preferences` blocks, treat them
   as independently observed transports until ownership and precedence are
   established. An account-setting edit does not prove that a separately
   presented block changed.
-- Anthropic separately documents Cowork Global instructions as standing
-  Cowork instructions at **Settings > Cowork > Global instructions**. Current
-  UI exposure remains runtime evidence; do not substitute another account
-  field when that route is absent.
+- Anthropic documents [Cowork Global instructions](https://support.claude.com/en/articles/13345190-get-started-with-claude-cowork)
+  as standing instructions for every Cowork session at
+  **Settings > Cowork > Global instructions**, and states that in the new
+  Claude experience they are part of Instructions for Claude at
+  **Settings > General**. Which field the current UI exposes is runtime
+  evidence; use the field Anthropic documents for that experience, not another
+  account field.
 
 ### Claude Chat
 
@@ -89,9 +98,9 @@ record the coverage gap. A connected local folder supplies the local startup
 route while the connection remains available. Unattended tasks must name a
 qualified current-source route and stop when it is unavailable.
 
-Desktop Cowork skips outside-working-directory imports and linked user files;
-cloud, web, and mobile Cowork cannot infer coverage from a workstation
-`~/.claude/CLAUDE.md`.
+[Desktop Cowork skips outside-working-directory imports](https://code.claude.com/docs/en/memory)
+and linked user files; cloud, web, and mobile Cowork run in the cloud and
+cannot infer coverage from a workstation `~/.claude/CLAUDE.md`.
 
 Anthropic does not publish precedence among account instructions, runtime
 `user_preferences`, and Cowork Global instructions. Verify them independently;
@@ -417,5 +426,6 @@ only when it materially affects operator review or action.
 
 ## References
 
-Claude Code and platform runtime claims above were checked against the linked
-official Anthropic pages on 2026-09-19.
+Runtime claims above link their official Anthropic source at the claim.
+Claude Code and platform pages were checked on 2026-09-19; Claude Chat and
+Cowork support pages on 2026-09-21.
