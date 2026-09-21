@@ -21,7 +21,7 @@ Map each surface through the core
   run in the cloud on every surface: agentic-remote by default, agentic-local
   only while a desktop-connected repository folder is attached. Scheduled
   Cowork is unattended. Dispatch is a human assignment that runs without the
-  human present; Anthropic documents it as unavailable to new accounts, so its
+  human present; Anthropic documents it as unavailable to new users, so its
   presence is runtime evidence.
 - **Claude Code**: interactive and execution roles when human-driven; a
   controller-launched run is an execution surface. Agentic-local with the
@@ -82,8 +82,7 @@ cannot override repo-local policy. Claude Code loads `CLAUDE.md`, not
 Install the router in `~/.claude/CLAUDE.md` as an inline marked block per the
 [distribution README](../../distributions/global-bootstrap/README.md); not as
 an outside-working-directory import, symlink, or hard link (desktop Cowork
-skips those). Keep the HTML markers: Claude Code strips them from context, the
-drift validator needs them.
+skips those). Keep the HTML markers; they do not appear in model context.
 
 ## Interaction Mode And Permission Mode
 
@@ -152,8 +151,9 @@ interpretation.
 
 ## Worktrees And Subagents
 
-Claude Code spawns subagents with the `Agent` tool (`Task` is a retained
-alias for the same tool). A call selects the
+Claude Code spawns subagents with the `Agent` tool (existing `Task(...)`
+references in settings and agent definitions still work as aliases). A call
+selects the
 subagent with `subagent_type` and may set `isolation: worktree` for a
 temporary git worktree branched from the default branch. Resume a completed
 subagent with `SendMessage` to its agent ID or name; Explore and Plan are
@@ -162,7 +162,9 @@ one-shot.
 A non-fork subagent receives the delegation message and the `CLAUDE.md`
 hierarchy (including `~/.claude/CLAUDE.md` and any `AGENTS.md` loaded as
 project instructions), not the parent conversation, invoked skills, or
-previously read files; `fork` inherits the parent conversation. Give each
+previously read files; the built-in Explore and Plan agents and any subagent
+with `omitClaudeMd` do not receive the hierarchy, so the router does not reach
+them; `fork` inherits the parent conversation. Give each
 non-fork subagent the standalone envelope from
 [`orchestration-and-parallelism.md`](../orchestration-and-parallelism.md) and
 apply [PR topology](../repo-readiness.md#pr-readiness). Claude Code's own
@@ -251,9 +253,10 @@ required capability or an exact-model reviewer qualification.
 Apply the shared `FRESH THREAD`, `SAME THREAD`, and `CHILD TASK` vocabulary in
 [`prompts.md`](../prompts.md#thread-routing-and-configuration-continuity):
 FRESH THREAD selects this table's model and effort; SAME THREAD preserves the
-parent configuration. No executor-applied visible-thread naming exists:
-resolve `[resolved thread-name section when applicable]` to nothing and do not
-ask Claude to rename itself or report a naming limitation.
+parent configuration. This adapter establishes no executor-applied
+visible-thread naming: resolve `[resolved thread-name section when
+applicable]` to nothing and do not ask Claude to rename itself or report a
+naming limitation.
 
 ### Prompt Operator Metadata
 
