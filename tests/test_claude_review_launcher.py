@@ -141,6 +141,29 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertIn(b'"diagnostics_file": "written"', completed.stderr)
         self.assertEqual(record["configured_envelope"], load_launcher(LAUNCHER, "claude_probe_envelope").configured_envelope({}, preflight=False))
 
+    def test_health_probe_completes_with_an_inherited_open_standard_input(self):
+        """A canary or probe must not block reading stdin that a caller left open (backgrounded runs)."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_claude(root, "cat scripts/reviewer-health-probe.txt\n")
+            process = subprocess.Popen(
+                [str(LAUNCHER), "--claude-bin", str(executable), "--health-probe", "--candidate-commit", current_commit()],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=ROOT,
+            )
+            try:
+                process.wait(timeout=60)  # stdin stays open for the whole run
+                stdout, stderr = process.stdout.read(), process.stderr.read()
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.wait()
+                process.stdin.close()
+        self.assertEqual(process.returncode, 0, stderr.decode())
+        self.assertEqual(stdout, (ROOT / "scripts" / "reviewer-health-probe.txt").read_bytes())
+
     def test_health_probe_classifies_no_output_wrong_output_and_provider_failure(self):
         cases = {
             "no output": ("exit 0\n", b"health probe did not return output"),

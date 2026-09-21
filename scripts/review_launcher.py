@@ -521,7 +521,9 @@ def review_prompt(prompt: bytes, repository: str, commit: str) -> bytes:
         f"- repository/worktree: {json.dumps(repository)}\n"
         f"- HEAD commit at launch: {commit}\n"
         "Use this commit as the candidate identity. The wrapper does not claim that "
-        "uncommitted worktree bytes were validated.\n\n"
+        "uncommitted worktree bytes were validated.\n"
+        "If your standing instructions require reading docs/start-here.md before acting, "
+        "read it from this repository path; no network route is available.\n\n"
         "Review question:\n"
     )
     return context.encode("utf-8") + prompt
@@ -701,11 +703,11 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
         # as a declaration only (no provider attempt has produced evidence); failures before this
         # point carry no envelope; an attempt that runs replaces it with the envelope it used.
         record["configured_envelope"] = provider.configured_envelope(selection, preflight=preflight)
-        prompt = provider.auth_prompt if preflight else sys.stdin.buffer.read()
+        # Only a review reads standard input; a canary or health probe uses its fixed prompt and
+        # must not block on an inherited open stdin.
+        prompt = sys.stdin.buffer.read() if attempt_kind == "review" else provider.auth_prompt
         if attempt_kind == "review" and not prompt.strip():
             raise ValueError("review prompt must be supplied on standard input")
-        if attempt_kind == "health_probe" and prompt.strip():
-            raise ValueError("health probe uses its fixed prompt and accepts no standard-input prompt")
         if preflight and args.candidate_commit is not None:
             raise ValueError("--candidate-commit is only valid for review execution")
         if not preflight and args.candidate_commit is None:

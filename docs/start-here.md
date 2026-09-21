@@ -48,7 +48,8 @@ precondition: do not respond, reason about the task, or invoke another tool
 first. A workflow question additionally activates its
 [Task Routing](#task-routing) owner before the answer; an executor's own
 harness defaults, memory, or prior summaries do not substitute for the routed
-owner.
+owner. A bounded launcher canary or health-probe prompt that asks for an exact
+fixed reply is not a project action: answer it exactly and do nothing else.
 
 After successful bootstrap, reuse still-current repository operating mode and
 verified sources. A response, reasoning step, follow-up, tool call, or elapsed
