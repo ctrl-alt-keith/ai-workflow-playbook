@@ -159,8 +159,27 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 candidate={"repository": str(ROOT), "commit": current_commit()},
                 selection={"model": None, "effort": None},
             )
-        self.assertEqual(receipt["byte_length"], len(diagnostics.read_bytes()) if diagnostics.exists() else receipt["byte_length"])
+            raw = diagnostics.read_bytes()
+            self.assertEqual(receipt["byte_length"], len(raw))
+            self.assertEqual(receipt["sha256"], hashlib.sha256(raw).hexdigest())
         self.assertEqual(receipt["record"]["diagnostics_file"], "unverified")
+
+    def test_qualified_readback_rejects_unsafe_or_mismatched_records(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            diagnostics = root / "diagnostics.json"
+            executable = self.make_fake_claude(root, "cat scripts/reviewer-health-probe.txt\n")
+            completed = self.run_launcher(executable, "--health-probe", "--diagnostics-file", str(diagnostics))
+            shared = sys.modules["review_launcher"]
+            kwargs = dict(provider="claude", attempt_kind="health_probe", process_exit=completed.returncode,
+                          candidate={"repository": str(ROOT), "commit": current_commit()},
+                          selection={"model": None, "effort": None})
+            diagnostics.chmod(0o644)
+            with self.assertRaises(ValueError):
+                shared.verify_diagnostics_readback(diagnostics, **kwargs)
+            diagnostics.chmod(0o600)
+            with self.assertRaises(ValueError):
+                shared.verify_diagnostics_readback(diagnostics, **{**kwargs, "process_exit": 1})
 
     def test_health_probe_uses_the_substantive_path_and_requires_its_exact_answer(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

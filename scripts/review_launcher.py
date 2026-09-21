@@ -694,7 +694,7 @@ def run_attempt(
     try:
         scratch = allocate_scratch(provider.name)
     except OSError as error:
-        return Attempt([f"could not allocate a scratch directory: {error}"], False, evidence, "")
+        return Attempt([f"could not allocate a scratch directory: {error}"], False, evidence, b"")
     try:
         launch = Launch(attempt_kind=attempt_kind, repository=repository, scratch=scratch.path)
         result = subprocess.run(
