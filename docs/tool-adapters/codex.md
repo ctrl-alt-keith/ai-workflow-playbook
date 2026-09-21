@@ -109,6 +109,13 @@ risk surface and pause for coordination on overlap. Use the repository's
 canonical validation and PR-readiness paths; PR readiness never authorizes a
 merge, release, or other human decision.
 
+Place repo-changing worktrees under `<repo>/.worktrees/`. Before creating or
+reusing one, inspect `git worktree list` and select a path that clearly belongs
+to the task; create it with direct `git worktree add`, not a separate `mkdir`.
+Reuse only a clean, intelligible worktree for the same active task. When cleanup
+is in scope, remove only task worktrees and report any blocked or deferred
+cleanup rather than concealing it.
+
 Use direct repository and provider commands where the execution surface supports
 them. Do not add shell wrappers for convenience; use one only when necessary
 shell semantics cannot be expressed directly, and keep it narrow. Do not bypass

@@ -76,16 +76,11 @@ recipient Airtable capability is unknown, inspect or attempt it before routing.
 Routine prompts do not inherit the material-prompt profile merely from
 transport.
 
-For Airtable production, resolve permitted base, table, and required field IDs
-from current actions; create one record from the frozen five-field payload;
-capture its returned ID and creation time; retrieve that exact ID through the
-`recordIds` constraint; and complete canonical verification before constructing
-an envelope. Apply the append-only correction boundary on failure. For
-consumption, retrieve by that exact `recordIds` constraint, require one record,
-and apply canonical field, text, byte-length, and SHA-256 checks; do not use
-search, key lookup, update, or upsert for normal retrieval. Issue-owned durable
-capture uses the same record/envelope plus its canonical identity/evidence
-profile, not a second object or ceremony.
+For Airtable production and consumption, resolve the permitted base, table, and
+field IDs through current actions and use the returned record ID with the exact
+`recordIds` constraint. Apply the canonical handoff's verification, correction,
+and issue-owned durable-capture rules; do not add a second record or transport
+ceremony.
 
 When an inline prompt is selected, emit the shared operator metadata and the
 complete executable prompt as consecutive fenced blocks with no assistant prose
