@@ -36,7 +36,8 @@ binary, selection, fresh absolute `--diagnostics-file`, and exact
 runs selector acceptance before the probe; that canary sees neither fixture nor
 probe prompt.
 
-Interpret the returned probe through its terminal record:
+Interpret the returned probe through its terminal record or qualified
+[diagnostics readback](#attempt-records-and-diagnostics):
 
 - expected fixture content with `diagnostics_file: written` passes;
 - no output, wrong output, provider exit, or another diagnostics state fails;

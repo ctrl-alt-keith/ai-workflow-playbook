@@ -153,6 +153,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             diagnostics = root / "diagnostics.json"
             executable = self.make_fake_claude(root, "cat scripts/reviewer-health-probe.txt\n")
             completed = self.run_launcher(executable, "--health-probe", "--diagnostics-file", str(diagnostics))
+            load_launcher(LAUNCHER, "claude_readback_acceptance")
             shared = sys.modules["review_launcher"]
             receipt = shared.verify_diagnostics_readback(
                 diagnostics, provider="claude", attempt_kind="health_probe", process_exit=completed.returncode,
@@ -170,6 +171,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             diagnostics = root / "diagnostics.json"
             executable = self.make_fake_claude(root, "cat scripts/reviewer-health-probe.txt\n")
             completed = self.run_launcher(executable, "--health-probe", "--diagnostics-file", str(diagnostics))
+            load_launcher(LAUNCHER, "claude_readback_rejections")
             shared = sys.modules["review_launcher"]
             kwargs = dict(provider="claude", attempt_kind="health_probe", process_exit=completed.returncode,
                           candidate={"repository": str(ROOT), "commit": current_commit()},
@@ -180,6 +182,16 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             diagnostics.chmod(0o600)
             with self.assertRaises(ValueError):
                 shared.verify_diagnostics_readback(diagnostics, **{**kwargs, "process_exit": 1})
+            record = json.loads(diagnostics.read_text(encoding="utf-8"))
+            record["candidate"]["commit"] = "0" * 40
+            diagnostics.write_text(json.dumps(record), encoding="utf-8")
+            diagnostics.chmod(0o600)
+            with self.assertRaisesRegex(ValueError, "candidate"):
+                shared.verify_diagnostics_readback(diagnostics, **kwargs)
+            diagnostics.write_bytes(b"not json")
+            diagnostics.chmod(0o600)
+            with self.assertRaisesRegex(ValueError, "malformed"):
+                shared.verify_diagnostics_readback(diagnostics, **kwargs)
 
     def test_health_probe_uses_the_substantive_path_and_requires_its_exact_answer(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
