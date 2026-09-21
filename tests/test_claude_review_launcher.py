@@ -147,6 +147,21 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertFalse(destination.exists())
         self.assertIn(b"only valid for a governed review", completed.stderr)
 
+    def test_qualified_readback_accepts_a_fresh_successful_health_probe_without_stderr(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            diagnostics = root / "diagnostics.json"
+            executable = self.make_fake_claude(root, "cat scripts/reviewer-health-probe.txt\n")
+            completed = self.run_launcher(executable, "--health-probe", "--diagnostics-file", str(diagnostics))
+            shared = sys.modules["review_launcher"]
+            receipt = shared.verify_diagnostics_readback(
+                diagnostics, provider="claude", attempt_kind="health_probe", process_exit=completed.returncode,
+                candidate={"repository": str(ROOT), "commit": current_commit()},
+                selection={"model": None, "effort": None},
+            )
+        self.assertEqual(receipt["byte_length"], len(diagnostics.read_bytes()) if diagnostics.exists() else receipt["byte_length"])
+        self.assertEqual(receipt["record"]["diagnostics_file"], "unverified")
+
     def test_health_probe_uses_the_substantive_path_and_requires_its_exact_answer(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

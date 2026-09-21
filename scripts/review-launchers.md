@@ -51,8 +51,12 @@ only its acceptance record.
 
 For `--diagnostics-file`, terminal state is `written`, `not_created`,
 `incomplete`, or `unknown`. The file says `diagnostics_file: unverified`; only
-the terminal record establishes `written`. Any other state fails the attempt
-and leaves the destination untouched.
+the terminal record establishes `written`. A qualified post-execution observer
+may instead use `verify_diagnostics_readback()` after independently observing
+zero launcher exit and retaining the exact fresh requested path; it binds file
+identity, raw-byte digest, provider, attempt kind, successful result, candidate,
+and requested selection. Any other state fails the attempt and leaves the
+destination untouched.
 
 Failures retain ordered causes: provider exit, unacceptable output,
 effective-selection failure, scratch cleanup, then diagnostics write. A

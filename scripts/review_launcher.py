@@ -318,6 +318,53 @@ def write_record(record: dict[str, Any], destination: Path) -> tuple[str | None,
     return cause, state
 
 
+def verify_diagnostics_readback(
+    destination: Path, *, provider: str, attempt_kind: str, process_exit: int,
+    candidate: dict[str, str] | None = None, selection: dict[str, str | None] | None = None,
+) -> dict[str, Any]:
+    """Qualify an externally observed fresh diagnostics artifact after process exit.
+
+    This is an alternative receipt to terminal stderr, not a self-certification:
+    the caller supplies the requested fresh pathname and independently observed
+    process exit, while this function binds that exact regular private file to
+    the expected attempt and returns a raw-byte identity for its receipt.
+    """
+    if process_exit != 0 or not destination.is_absolute():
+        raise ValueError("diagnostics readback requires a successful process and absolute path")
+    info = os.lstat(destination)
+    if (not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode) or info.st_uid != os.geteuid()
+            or stat.S_IMODE(info.st_mode) != 0o600 or info.st_nlink != 1):
+        raise ValueError("diagnostics readback file has unsafe type, owner, mode, or links")
+    descriptor = os.open(destination, os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        opened = os.fstat(descriptor)
+        if (opened.st_dev, opened.st_ino) != (info.st_dev, info.st_ino):
+            raise ValueError("diagnostics readback file identity changed")
+        with os.fdopen(descriptor, "rb", closefd=False) as stream:
+            raw = stream.read()
+    finally:
+        os.close(descriptor)
+    try:
+        record = json.loads(raw)
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("diagnostics readback is malformed") from error
+    if not isinstance(record, dict) or record.get("diagnostics_file") != "unverified":
+        raise ValueError("diagnostics readback does not carry an unverified launcher record")
+    if record.get("kind") != f"{provider}_review" or record.get("attempt_kind") != attempt_kind:
+        raise ValueError("diagnostics readback provider or attempt kind does not match")
+    if record.get("status") != "ok" or record.get(f"{provider}_exit_code") != 0:
+        raise ValueError("diagnostics readback does not record a successful provider result")
+    if attempt_kind != "auth_preflight" and candidate is None:
+        raise ValueError("diagnostics readback requires the exact substantive candidate")
+    if selection is None:
+        raise ValueError("diagnostics readback requires the requested selection")
+    if candidate is not None and record.get("candidate") != candidate:
+        raise ValueError("diagnostics readback candidate does not match")
+    if selection is not None and record.get("configured_envelope", {}).get("requested") != selection:
+        raise ValueError("diagnostics readback requested selection does not match")
+    return {"path": str(destination), "byte_length": len(raw), "sha256": hashlib.sha256(raw).hexdigest(), "record": record}
+
+
 def classify(
     provider: Provider,
     *,
