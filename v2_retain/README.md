@@ -279,6 +279,10 @@ resolved credential or raw SDK exception is stored or printed. A partially
 completed folder/state blocks rerun; the operator reviews the retained evidence and
 remote objects rather than starting automatic cleanup or replay.
 
+## Explicit operator retention
+
+`python -m v2_retain.operator_live` is a separately authorized, non-default one-shot retention interface. It requires an exact Markdown input, an unexpired accepted decision, a fresh `/cak-301-v2-qual-...` folder, provenance, and the exact reviewed head. It performs strict no-overwrite create/readback only after identity recheck. `.v2-operator-retention/<folder-name>/` is private ignored operator state with fsync'd non-secret events and a result receipt. Any hold preserves `may_have_submitted` and `reporting_gap`; it is not retry permission. This command evidences one bounded retention only and grants no acceptance, promotion, default-v2, or release authority.
+
 Dropbox's [team-files guide](https://developers.dropbox.com/dbx-team-files-guide)
 says App Folder calls are rooted implicitly in that app's folder. The
 [SDK metadata route](https://dropbox-sdk-python.readthedocs.io/en/latest/api/dropbox.html)

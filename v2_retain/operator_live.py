@@ -1,7 +1,9 @@
 """One explicit, operator-owned live retention; never a default CLI path."""
 import argparse
 import json
+import math
 import os
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -15,11 +17,20 @@ from .qualify_live import FOLDER_PATTERN, LABEL, _head, _identity, _identity_cli
 from .store import Store
 
 
+def _append(path, event):
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(encode(event) + "\n")
+        f.flush()
+        os.fsync(f.fileno())
+
+
 def _decision(path, data, owner):
     record = json.loads(Path(path).read_text(encoding="utf-8"))
     required = ("candidate", "property", "contract_ref", "contract_hash", "owner", "verdict", "expires", "provenance")
     if (set(record) != set(required) or record["candidate"] != digest(data)
             or record["owner"] != owner or record["verdict"] != "accepted"
+            or not isinstance(record["expires"], (int, float)) or not math.isfinite(record["expires"])
+            or record["expires"] <= time.time()
             or not all(isinstance(record[k], str) and record[k] for k in required if k not in {"expires"})):
         raise Blocked("exact accepted decision record required")
     return record
@@ -37,6 +48,7 @@ def main(argv=None):
     p.add_argument("--grant-provenance", required=True)
     p.add_argument("--expected-head", required=True)
     args = p.parse_args(argv)
+    state = events = None
     try:
         if not FOLDER_PATTERN.fullmatch(args.folder) or not args.name.endswith(".md") or "/" in args.name:
             raise Blocked("isolated folder and markdown name required")
@@ -48,6 +60,7 @@ def main(argv=None):
         if not data or len(data) > 16 * 1024 * 1024:
             raise Blocked("bounded nonempty input required")
         decision = _decision(args.decision, data, args.owner)
+        Target("preflight-account", "0", "preflight-parent", args.folder + "/" + args.name).validate()
         token = _token()
         client = _identity_client(token)
         try:
@@ -66,10 +79,22 @@ def main(argv=None):
             raise Blocked("root namespace confirmation mismatch")
         if input("Type APP FOLDER: ").strip() != "APP FOLDER":
             raise Blocked("App Folder access type not confirmed")
-        state = Path(".v2-operator-retention").absolute() / args.folder[1:]
-        state.mkdir(mode=0o700, parents=True)
+        Config(facts["account_id"], facts["home_namespace_id"], "preflight-parent", args.folder, args.actor, LABEL, profile="live-qualification", root_namespace=facts["root_namespace_id"], home_namespace=facts["home_namespace_id"], head=head).validate()
+        state_root = Path(".v2-operator-retention").absolute()
+        state_root.mkdir(mode=0o700, parents=True, exist_ok=True)
+        os.chmod(state_root, 0o700)
+        state = state_root / args.folder[1:]
+        state.mkdir(mode=0o700)
+        events = state / "events.jsonl"
+        _append(events, {"kind": "confirmed-preflight", "head": head, "facts": facts})
         store = Store.initialize(state / "store.sqlite", args.owner)
         (state / "installation.json").write_text(store.identity.json() + "\n", encoding="utf-8")
+        client = _identity_client(token)
+        try:
+            if _identity(client, args.folder) != facts:
+                raise Blocked("identity, root, or folder changed before creation")
+        finally:
+            client.close()
         creator = NoRefreshDropbox(oauth2_access_token=token, max_retries_on_error=0, max_retries_on_rate_limit=0,
                                    timeout=10, session=SingleRequestSession(live=True))
         try:
@@ -77,6 +102,7 @@ def main(argv=None):
             observed = creator.files_get_metadata(args.folder)
             if not isinstance(created, dropbox.files.FolderMetadata) or not isinstance(observed, dropbox.files.FolderMetadata) or created.id != observed.id or observed.path_lower != args.folder:
                 raise Blocked("created folder identity mismatch")
+            _append(events, {"kind": "folder-verified", "folder_path": args.folder, "folder_id": observed.id})
         finally:
             creator.close()
         target = Target(facts["account_id"], facts["home_namespace_id"], observed.id, args.folder + "/" + args.name)
@@ -95,15 +121,19 @@ def main(argv=None):
             result = run(store, op.op_id, writer, args.actor)
         finally:
             writer.close()
-        if result["status"] != "retained_verified" or result["decision"] != "accepted":
-            raise Blocked("operator retention did not verify exact accepted decision")
-        record = {"status": "retained_verified", "head": head, "folder": args.folder, "folder_id": observed.id,
+        record = {"status": result["status"], "head": head, "folder": args.folder, "folder_id": observed.id,
                   "target": target.path, "input_sha256": digest(data), "decision": decision, "result": result,
                   "checked_at": datetime.now(timezone.utc).isoformat(), "ceiling": "one bounded operator retention only"}
+        _append(events, {"kind": "operation-result", "status": result["status"], "may_have_submitted": result.get("may_have_submitted", False), "reporting_gap": result.get("reporting_gap", "")})
         (state / "receipt.json").write_text(encode(record) + "\n", encoding="utf-8")
         print(encode(record))
-        return 0
-    except (Blocked, OSError, ValueError, TypeError, json.JSONDecodeError):
+        return 0 if result["status"] == "retained_verified" and result["decision"] == "accepted" else 2
+    except BaseException:
+        if events is not None:
+            try:
+                _append(events, {"kind": "blocked", "reason": "operator retention stopped; inspect non-secret durable state"})
+            except BaseException:
+                pass
         print(encode({"status": "blocked", "reason": "operator retention stopped; inspect non-secret durable state"}))
         return 2
 

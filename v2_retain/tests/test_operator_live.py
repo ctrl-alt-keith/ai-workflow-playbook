@@ -20,3 +20,12 @@ class OperatorDecisionTests(unittest.TestCase):
             with self.assertRaises(Blocked):
                 _decision(path, data, "Keith Minnig")
 
+    def test_expired_decision_is_not_accepted(self):
+        data = b"owned record\n"
+        record = {"candidate": digest(data), "property": "retain", "contract_ref": "CAK-301/operator", "contract_hash": digest(b"contract"), "owner": "Keith Minnig", "verdict": "accepted", "expires": 1, "provenance": "explicit bounded authorization"}
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / "decision.json"
+            path.write_text(json.dumps(record))
+            with self.assertRaises(Blocked):
+                _decision(path, data, "Keith Minnig")
+
