@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass, field
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -58,7 +59,7 @@ class Provider:
     auth_failure: re.Pattern[str]
     configured_envelope: Callable[..., dict[str, Any]]
     command: Callable[[dict[str, Any], Launch], list[str]]
-    output: Callable[[subprocess.CompletedProcess[bytes], Launch], str]
+    output: Callable[[subprocess.CompletedProcess[bytes], Launch], bytes]
     output_field: str  # record key naming where substantive output is read from
     environment: Mapping[str, str] = field(default_factory=dict)
     require_model: bool = False
@@ -192,6 +193,69 @@ def validate_diagnostics_destination(destination: Path | None) -> None:
         raise ValueError("--diagnostics-file parent must exist")
 
 
+def validate_output_destination(destination: Path | None) -> None:
+    """Output capture is opt-in, but never aliases an existing artifact."""
+    if destination is None:
+        return
+    if (not destination.is_absolute() or destination.exists() or destination.is_symlink()
+            or not destination.parent.is_dir()):
+        raise ValueError("--review-output-file must be a new absolute path with an existing parent")
+
+
+def write_output_file(destination: Path | None, output: bytes) -> tuple[dict[str, Any] | None, str | None]:
+    """Exclusively retain complete reviewer bytes before terminal presentation."""
+    if destination is None:
+        return None, None
+    payload = output  # provider adapters return raw bytes; do not decode or normalize them here.
+    try:
+        descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except OSError as error:
+        return None, f"requested review output file could not be captured: {redact(str(error))}"
+    try:
+        created = os.fstat(descriptor)
+        identity = (created.st_dev, created.st_ino)
+        # ``open(..., 0o600)`` is filtered by umask. This artifact has a strict
+        # privacy contract, so restore the intended private mode explicitly.
+        os.fchmod(descriptor, 0o600)
+        write_bytes(descriptor, payload)
+        info = os.fstat(descriptor)
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid()
+                or stat.S_IMODE(info.st_mode) != 0o600 or info.st_nlink != 1):
+            raise OSError("captured output did not retain private regular-file identity or mode")
+        named = os.lstat(destination)
+        if (not stat.S_ISREG(named.st_mode) or named.st_uid != os.geteuid()
+                or stat.S_IMODE(named.st_mode) != 0o600 or named.st_nlink != 1
+                or (named.st_dev, named.st_ino) != identity):
+            raise OSError("captured output path no longer names the private created file")
+        reader = os.open(destination, os.O_RDONLY | os.O_NOFOLLOW)
+        try:
+            opened = os.fstat(reader)
+            if (not stat.S_ISREG(opened.st_mode) or opened.st_uid != os.geteuid()
+                    or stat.S_IMODE(opened.st_mode) != 0o600 or opened.st_nlink != 1
+                    or (opened.st_dev, opened.st_ino) != identity):
+                raise OSError("captured output readback file identity or privacy changed")
+            with os.fdopen(reader, "rb", closefd=False) as stream:
+                readback = stream.read()
+        finally:
+            close_descriptor(reader)
+        digest = hashlib.sha256(payload).hexdigest()
+        if readback != payload:
+            raise OSError("captured output readback did not match")
+        close_descriptor(descriptor)
+        descriptor = -1
+        return {"path": str(destination), "byte_length": len(payload), "sha256": digest, "readback": "exact"}, None
+    except OSError as error:
+        return None, f"requested review output file could not be captured: {redact(str(error))}"
+    finally:
+        if descriptor != -1:
+            try:
+                close_descriptor(descriptor)
+            except OSError:
+                # There is no portable, identity-safe cleanup for a path after
+                # a close failure. The primary failure remains authoritative.
+                pass
+
+
 def compose(causes: list[str]) -> str:
     """One failure string from already-sanitized causes, primary first, one per line, sharing the single bound.
 
@@ -286,6 +350,56 @@ def write_record(record: dict[str, Any], destination: Path) -> tuple[str | None,
     return cause, state
 
 
+def verify_diagnostics_readback(
+    destination: Path, *, provider: str, attempt_kind: str, process_exit: int,
+    candidate: dict[str, str] | None = None, selection: dict[str, str | None] | None = None,
+) -> dict[str, Any]:
+    """Qualify an externally observed fresh diagnostics artifact after process exit.
+
+    This is an alternative receipt to terminal stderr, not a self-certification:
+    the caller supplies the requested fresh pathname and independently observed
+    process exit, while this function binds that exact regular private file to
+    the expected attempt and returns a raw-byte identity for its receipt.
+    """
+    if process_exit != 0 or not destination.is_absolute():
+        raise ValueError("diagnostics readback requires a successful process and absolute path")
+    info = os.lstat(destination)
+    if (not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode) or info.st_uid != os.geteuid()
+            or stat.S_IMODE(info.st_mode) != 0o600 or info.st_nlink != 1):
+        raise ValueError("diagnostics readback file has unsafe type, owner, mode, or links")
+    descriptor = os.open(destination, os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        opened = os.fstat(descriptor)
+        if (opened.st_dev, opened.st_ino) != (info.st_dev, info.st_ino):
+            raise ValueError("diagnostics readback file identity changed")
+        with os.fdopen(descriptor, "rb", closefd=False) as stream:
+            raw = stream.read()
+    finally:
+        os.close(descriptor)
+    try:
+        record = json.loads(raw)
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("diagnostics readback is malformed") from error
+    if not isinstance(record, dict) or record.get("diagnostics_file") != "unverified":
+        raise ValueError("diagnostics readback does not carry an unverified launcher record")
+    if record.get("kind") != f"{provider}_review" or record.get("attempt_kind") != attempt_kind:
+        raise ValueError("diagnostics readback provider or attempt kind does not match")
+    if record.get("status") != "ok" or record.get(f"{provider}_exit_code") != 0:
+        raise ValueError("diagnostics readback does not record a successful provider result")
+    if attempt_kind != "auth_preflight" and candidate is None:
+        raise ValueError("diagnostics readback requires the exact substantive candidate")
+    if selection is None:
+        raise ValueError("diagnostics readback requires the requested selection")
+    if candidate is not None and record.get("candidate") != candidate:
+        raise ValueError("diagnostics readback candidate does not match")
+    configured_envelope = record.get("configured_envelope")
+    if not isinstance(configured_envelope, dict):
+        raise ValueError("diagnostics readback configured envelope is malformed")
+    if selection is not None and configured_envelope.get("requested") != selection:
+        raise ValueError("diagnostics readback requested selection does not match")
+    return {"path": str(destination), "byte_length": len(raw), "sha256": hashlib.sha256(raw).hexdigest(), "record": record}
+
+
 def classify(
     provider: Provider,
     *,
@@ -335,7 +449,7 @@ def finish(
     causes: list[str],
     auth_failure: bool = False,
     destination: Path | None,
-    output: str = "",
+    output: bytes = b"",
 ) -> int:
     """The one result path: emit the record, then exit with the primary classification.
 
@@ -360,7 +474,10 @@ def finish(
     print(f"{provider.name}-review diagnostics: {json.dumps(record, sort_keys=True)}", file=sys.stderr)
     if causes:
         return AUTH_FAILURE_EXIT if auth_failure else REVIEWER_FAILURE_EXIT
-    sys.stdout.write(output)
+    if hasattr(sys.stdout, "buffer"):
+        sys.stdout.buffer.write(output)
+    else:
+        sys.stdout.write(output.decode("utf-8", errors="replace"))
     return 0
 
 
@@ -564,6 +681,7 @@ def parse_arguments(provider: Provider, argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--auth-preflight", action="store_true")
     parser.add_argument("--health-probe", action="store_true")
     parser.add_argument("--diagnostics-file", type=Path)
+    parser.add_argument("--review-output-file", type=Path)
     parser.add_argument("--candidate-commit")
     parser.add_argument("provider_args", nargs=argparse.REMAINDER)
     args, undelimited = parser.parse_known_args(argv)
@@ -586,7 +704,7 @@ class Attempt:
     causes: list[str]
     auth_failure: bool
     evidence: dict[str, Any]
-    output: str
+    output: bytes
 
 
 def run_attempt(
@@ -611,7 +729,7 @@ def run_attempt(
     try:
         scratch = allocate_scratch(provider.name)
     except OSError as error:
-        return Attempt([f"could not allocate a scratch directory: {error}"], False, evidence, "")
+        return Attempt([f"could not allocate a scratch directory: {error}"], False, evidence, b"")
     try:
         launch = Launch(attempt_kind=attempt_kind, repository=repository, scratch=scratch.path)
         result = subprocess.run(
@@ -635,16 +753,17 @@ def run_attempt(
         cleanup_error = cleanup_scratch(scratch)
         if cleanup_error is not None:
             causes.append(f"{provider.label} temporary-directory cleanup failed: {cleanup_error}")
-        return Attempt(causes, False, evidence, "")
+        return Attempt(causes, False, evidence, b"")
     cleanup_error = cleanup_scratch(scratch)
 
+    output_text = output.decode("utf-8", errors="replace")
     stdout = result.stdout.decode("utf-8", errors="replace")
     stderr = result.stderr.decode("utf-8", errors="replace")
-    received = bool(output.strip())
+    received = bool(output_text.strip())
     expected = (
-        output.strip() == provider.auth_response
+        output_text.strip() == provider.auth_response
         if canary
-        else output.strip() == HEALTH_PROBE_EXPECTED_OUTPUT
+        else output_text.strip() == HEALTH_PROBE_EXPECTED_OUTPUT
         if attempt_kind == "health_probe"
         else received
     )
@@ -655,7 +774,7 @@ def run_attempt(
         returncode=result.returncode,
         received=received,
         expected=expected,
-        output=output.strip(),
+        output=output_text.strip(),
         substitution=substitution,
         cleanup_error=cleanup_error,
     )
@@ -692,6 +811,12 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
         validate_diagnostics_destination(args.diagnostics_file)
     except ValueError as error:
         return fail(str(error), None)
+    if args.review_output_file is not None and attempt_kind != "review":
+        return fail("--review-output-file is only valid for a governed review", args.diagnostics_file)
+    try:
+        validate_output_destination(args.review_output_file)
+    except ValueError as error:
+        return fail(str(error), args.diagnostics_file)
     try:
         environment = child_environment(provider)
         executable, version = resolve_executable(provider, args.binary, environment)
@@ -726,7 +851,7 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
             causes=attempt.causes,
             auth_failure=attempt.auth_failure,
             destination=args.diagnostics_file,
-            output=f"{provider.auth_response}\n",
+            output=f"{provider.auth_response}\n".encode("utf-8"),
         )
 
     if provider.acceptance_canary:
@@ -768,6 +893,11 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
         **launch,
     )
     record.update(attempt.evidence)
+    capture, capture_cause = write_output_file(args.review_output_file, attempt.output)
+    if capture is not None:
+        record["review_output"] = capture
+    if capture_cause is not None:
+        attempt.causes.append(capture_cause)
     return finish(
         provider,
         record,

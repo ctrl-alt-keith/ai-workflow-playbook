@@ -86,8 +86,8 @@ def command(envelope: dict[str, Any], launch: Launch) -> list[str]:
     return ["-p", *claude_arguments(envelope)]
 
 
-def output(result: subprocess.CompletedProcess[bytes], launch: Launch) -> str:
-    return result.stdout.decode("utf-8", errors="replace")
+def output(result: subprocess.CompletedProcess[bytes], launch: Launch) -> bytes:
+    return result.stdout
 
 
 PROVIDER = Provider(

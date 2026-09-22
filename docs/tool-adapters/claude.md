@@ -140,7 +140,8 @@ interpretation.
   failure: not review evidence, not a verdict, not grounds for silent
   reviewer substitution.
 - Retained diagnostics are evidence only when the terminal record says
-  `diagnostics_file: written`; otherwise preserve the failed attempt and stop
+  `diagnostics_file: written` or a qualified post-execution readback under
+  [`review-launchers.md`](../../scripts/review-launchers.md); otherwise preserve the failed attempt and stop
   at the selected-review boundary.
 - Codex: exact `--model` selector, successful selector-acceptance canary, and
   post-review effective model/effort matching the request; missing or

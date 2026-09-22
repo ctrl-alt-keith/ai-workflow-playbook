@@ -1,5 +1,6 @@
 """Codex deltas of the shared review launcher; the shared contract is covered by the Claude tests."""
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -177,6 +178,23 @@ class CodexReviewLauncherTests(unittest.TestCase):
         self.assertTrue(completed.stdout.endswith(b"Review question:\nReview the candidate.\n"))
         self.assertNotIn(b"transcript noise", completed.stdout)
         self.assertEqual(observed, [account.pw_name, account.pw_name, account.pw_dir])
+
+    def test_review_output_file_captures_the_last_message_before_scratch_cleanup(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            executable = self.make_fake_codex(root, "printf 'Codex review bytes\\n' > \"$out\"\n")
+            destination = root / "review.txt"
+            diagnostics = root / "diagnostics.json"
+            completed = self.run_launcher(
+                executable, "--review-output-file", str(destination), "--diagnostics-file", str(diagnostics),
+                prompt=b"Review\n"
+            )
+            captured = destination.read_bytes()
+            record = json.loads(diagnostics.read_text(encoding="utf-8"))
+        self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+        self.assertEqual(captured, b"Codex review bytes\n")
+        self.assertEqual(record["review_output"]["byte_length"], len(captured))
+        self.assertEqual(record["review_output"]["sha256"], hashlib.sha256(captured).hexdigest())
 
     def test_health_probe_uses_the_substantive_codex_projection_and_requires_its_exact_answer(self):
         with tempfile.TemporaryDirectory() as temporary_directory:

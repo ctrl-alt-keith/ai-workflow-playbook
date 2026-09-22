@@ -151,7 +151,9 @@ checkout's repository-owned launcher with its exact candidate commit and
 required preflight; apply [launcher outcome handling](../../scripts/review-launchers.md).
 A launch mismatch stops before review; failed launch or review is not a verdict
 and does not authorize substitution. Treat diagnostics as evidence only when
-the terminal record says they were written.
+the terminal record says they were written or a qualified post-execution
+readback under [`review-launchers.md`](../../scripts/review-launchers.md)
+verifies them.
 
 Goal state, successful validation, a receipt, checkpoint, or delivered prompt
 is execution evidence, not acceptance, approval, merge, release, publication,

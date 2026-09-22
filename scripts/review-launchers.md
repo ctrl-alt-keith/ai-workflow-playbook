@@ -36,7 +36,8 @@ binary, selection, fresh absolute `--diagnostics-file`, and exact
 runs selector acceptance before the probe; that canary sees neither fixture nor
 probe prompt.
 
-Interpret the returned probe through its terminal record:
+Interpret the returned probe through its terminal record or qualified
+[diagnostics readback](#attempt-records-and-diagnostics):
 
 - expected fixture content with `diagnostics_file: written` passes;
 - no output, wrong output, provider exit, or another diagnostics state fails;
@@ -51,13 +52,37 @@ only its acceptance record.
 
 For `--diagnostics-file`, terminal state is `written`, `not_created`,
 `incomplete`, or `unknown`. The file says `diagnostics_file: unverified`; only
-the terminal record establishes `written`. Any other state fails the attempt
-and leaves the destination untouched.
+the terminal record establishes `written`. A qualified post-execution observer
+may instead use `verify_diagnostics_readback()` after independently observing
+zero launcher exit and retaining the exact fresh requested path; it binds file
+identity, raw-byte digest, provider, attempt kind, successful result, candidate,
+and requested selection. Any other state fails the attempt and leaves the
+destination untouched.
 
 Failures retain ordered causes: provider exit, unacceptable output,
 effective-selection failure, scratch cleanup, then diagnostics write. A
 qualified Claude authentication failure takes precedence and exits 78; detailed
 construction and terminal exit policy remain in `review_launcher.py`.
+
+### Exact review-output capture
+
+For a governed substantive review only, `--review-output-file` can retain the
+provider-extracted response as raw bytes before stdout presentation. The path
+must be a new absolute pathname beneath an existing directory. Creation is
+exclusive and private (`0600`); the launcher binds the created regular-file
+identity while its write descriptor remains open, then reads that same identity
+back with `O_NOFOLLOW` as raw bytes and records its byte length and SHA-256
+beside the candidate and terminal diagnostics record. A capture failure fails
+the attempt and leaves any residue for the owning attempt rather than
+overwriting or deleting it. If a provider attempt itself fails, the launcher
+may still retain its exact bytes (including an empty byte sequence); they remain
+failed-attempt residue and are not admissible merely because a capture file exists.
+
+The capture file is attempt evidence, not automatic durable admission,
+acceptance, reviewer correctness, or runtime-isolation evidence. Its exact
+bytes—not terminal stdout presentation—are the recoverable source for a later
+authorized storage-admission step. Preflight, selector-acceptance canaries,
+and health probes reject this option and cannot create review-output artifacts.
 
 ## Retention and redaction
 
