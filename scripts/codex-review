@@ -135,6 +135,8 @@ def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[s
                 "project_layers_loaded": False,
                 "managed_config": None,
             },
+            "scope": "launcher_configured_tool_capability",
+            "runtime_reach": "unobservable",
         },
     }
 
@@ -160,6 +162,11 @@ def codex_arguments(envelope: dict[str, Any]) -> list[str]:
         # instruction files under CODEX_HOME are not controlled here.
         arguments.extend(("--config", "project_doc_max_bytes=0"))
     arguments.extend(("--config", f'history.persistence="{envelope["history_persistence"]}"'))
+    if "supplied_evidence" in envelope:
+        # This is a local path projection only.  The read-only sandbox is a
+        # configured control; --add-dir itself must not be mistaken for a
+        # proof of filesystem confinement or runtime network isolation.
+        arguments.extend(("--add-dir", envelope["supplied_evidence"]["path"]))
     if not envelope["git_repo_check"]:
         arguments.append("--skip-git-repo-check")
     return arguments
@@ -242,6 +249,7 @@ PROVIDER = Provider(
     diagnostic=diagnostic,
     effective=effective,
     acceptance_canary=True,
+    supplied_evidence=True,
 )
 
 

@@ -39,8 +39,7 @@ def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[s
     """
     tools = [] if preflight else list(LOCAL_READ_ONLY_TOOLS)
     mcp_config: dict[str, Any] = {"mcpServers": {}}
-    # Network reach is not a flag: it follows from every granted tool being a
-    # local read-only tool and no MCP server being configured.
+    # This describes launcher-granted tools, not process-level network isolation.
     network_reaching = {
         "tools_beyond_local_read_only": sorted(set(tools) - set(LOCAL_READ_ONLY_TOOLS)),
         "mcp_servers": sorted(mcp_config["mcpServers"]),
@@ -57,7 +56,10 @@ def configured_envelope(selection: dict[str, str], *, preflight: bool) -> dict[s
         "network_access": {
             "granted": any(network_reaching.values()),
             "derived_from": network_reaching,
+            "scope": "launcher_configured_tool_capability",
+            "runtime_reach": "unobservable",
         },
+        "runtime_effective_selection": "unobservable",
     }
 
 
@@ -79,6 +81,8 @@ def claude_arguments(envelope: dict[str, Any]) -> list[str]:
         arguments.append("--no-session-persistence")
     if envelope["slash_commands"] is False:
         arguments.append("--disable-slash-commands")
+    if "supplied_evidence" in envelope:
+        arguments.extend(("--add-dir", envelope["supplied_evidence"]["path"]))
     return arguments
 
 
@@ -100,6 +104,7 @@ PROVIDER = Provider(
     command=command,
     output=output,
     output_field="stdout_received",
+    supplied_evidence=True,
 )
 
 
