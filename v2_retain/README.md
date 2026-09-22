@@ -281,7 +281,19 @@ remote objects rather than starting automatic cleanup or replay.
 
 ## Explicit operator retention
 
-`python -m v2_retain.operator_live` is a separately authorized, non-default one-shot retention interface. It requires an exact Markdown input, an unexpired accepted decision, a fresh `/cak-301-v2-qual-...` folder, provenance, and the exact reviewed head. It performs strict no-overwrite create/readback only after identity recheck. `.v2-operator-retention/<folder-name>/` is private ignored operator state with fsync'd non-secret events and a result receipt. Any hold preserves `may_have_submitted` and `reporting_gap`; it is not retry permission. This command evidences one bounded retention only and grants no acceptance, promotion, default-v2, or release authority.
+`python -m v2_retain.operator_live` is a separately authorized, non-default
+one-shot retention interface. It requires an exact Markdown input, an unexpired
+accepted decision, a fresh `/cak-301-v2-qual-...` folder, provenance, the exact
+reviewed head, and `--state-root ABSOLUTE_OPERATOR_DIRECTORY`. The state root
+must resolve outside Dropbox, any repository checkout, and disposable task
+storage; the operator owns that persistence property. The command creates an
+exclusive `.v2-operator-retention/<folder-name>/` child with non-secret fsync'd
+events, an installation note, a SQLite operation store, and a result receipt
+only when `run` returns. A blocked event is retained before any best-effort
+recovery projection. Holds preserve `may_have_submitted` and `reporting_gap`
+when the operation can report them; neither is retry permission. The command
+evidences one bounded retention only and grants no acceptance, promotion,
+default-v2, or release authority.
 
 Dropbox's [team-files guide](https://developers.dropbox.com/dbx-team-files-guide)
 says App Folder calls are rooted implicitly in that app's folder. The

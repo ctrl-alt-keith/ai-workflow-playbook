@@ -13,6 +13,7 @@ from .admin import Admin
 from .dropbox_adapter import Config, DropboxWriter, NoRefreshDropbox, SingleRequestSession
 from .model import Blocked, Operation, Target, digest, encode
 from .operation import run
+from .reconcile import project
 from .qualify_live import FOLDER_PATTERN, LABEL, _head, _identity, _identity_client, _token, _versions
 from .store import Store
 
@@ -44,6 +45,16 @@ def _decision(path, data, owner):
     return record
 
 
+def _state_root(raw):
+    root = Path(raw)
+    if not root.is_absolute():
+        raise Blocked("operator state root must be absolute and outside the worktree")
+    root = root.resolve()
+    if Path.cwd().resolve() in (root, *root.parents):
+        raise Blocked("operator state root must be absolute and outside the worktree")
+    return root / ".v2-operator-retention"
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description="Explicit one-shot CAK-301 operator retention")
     p.add_argument("--input", required=True)
@@ -61,6 +72,7 @@ def main(argv=None):
     try:
         if not FOLDER_PATTERN.fullmatch(args.folder) or not args.name.endswith(".md") or "/" in args.name:
             raise Blocked("isolated folder and markdown name required")
+        state_root = _state_root(args.state_root)
         head = _head()
         if head != args.expected_head:
             raise Blocked("checkout head differs from reviewed operator command head")
@@ -89,10 +101,6 @@ def main(argv=None):
         if input("Type APP FOLDER: ").strip() != "APP FOLDER":
             raise Blocked("App Folder access type not confirmed")
         Config(facts["account_id"], facts["home_namespace_id"], "preflight-parent", args.folder, args.actor, LABEL, profile="live-qualification", root_namespace=facts["root_namespace_id"], home_namespace=facts["home_namespace_id"], head=head).validate()
-        state_root = Path(args.state_root)
-        if not state_root.is_absolute() or Path.cwd() in (state_root, *state_root.parents):
-            raise Blocked("operator state root must be absolute and outside the worktree")
-        state_root = state_root / ".v2-operator-retention"
         state_root.mkdir(mode=0o700, parents=True, exist_ok=True)
         os.chmod(state_root, 0o700)
         state = state_root / args.folder[1:]
@@ -140,17 +148,20 @@ def main(argv=None):
         _write(state / "receipt.json", encode(record) + "\n")
         print(encode(record))
         return 0 if result["status"] == "retained_verified" and result["decision"] == "accepted" else 2
-    except BaseException:
+    except BaseException as exc:
+        reason = str(exc) if isinstance(exc, Blocked) else "operator retention stopped; inspect non-secret durable state"
         if events is not None:
             try:
-                recovery = {"kind": "blocked", "reason": "operator retention stopped; inspect non-secret durable state"}
-                if "store" in locals() and "op" in locals():
-                    with store.session() as c:
-                        recovery["result"] = __import__("v2_retain.reconcile", fromlist=["project"]).project(store, c, op.op_id)
-                _append(events, recovery)
+                _append(events, {"kind": "blocked", "reason": reason})
             except BaseException:
                 pass
-        print(encode({"status": "blocked", "reason": "operator retention stopped; inspect non-secret durable state"}))
+            if "store" in locals() and "op" in locals():
+                try:
+                    with store.session() as c:
+                        _append(events, {"kind": "recovery-projection", "result": project(store, c, op.op_id)})
+                except BaseException:
+                    pass
+        print(encode({"status": "blocked", "reason": reason}))
         return 2
 
 

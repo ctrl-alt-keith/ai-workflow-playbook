@@ -144,6 +144,16 @@ class OperationTests(unittest.TestCase):
             self.admin.grant(op.op_id, "cannot extend original grant")
         self.assertEqual(self.objects(), [])
 
+    def test_required_accepted_decision_blocks_admission(self):
+        op, writer = self.prepare(decision_owner="owner", decision_property="retain")
+        with self.assertRaises(Blocked):
+            run(self.store, op.op_id, writer, "executor", require_accepted_decision=True)
+        self.assertEqual(self.objects(), [])
+        self.admin.decision(op.op_id, candidate=op.input_hash, property="retain", contract_ref=op.contract_ref,
+                            contract_hash=op.contract_hash, owner="owner", verdict="accepted",
+                            expires=op.expires_at + 10, provenance="fixture")
+        self.assertEqual(run(self.store, op.op_id, writer, "executor", require_accepted_decision=True)["status"], "retained_verified")
+
     def test_final_gate_rechecks_expiry_and_keeps_latch(self):
         op, writer = self.prepare()
         ticks = iter([op.not_before + 1, op.not_before + 2, op.expires_at])
