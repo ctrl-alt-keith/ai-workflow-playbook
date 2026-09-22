@@ -183,6 +183,27 @@ result candidate-only.
 4. Only then interpret, prioritize, recommend, or explain using continuity for
    intent, constraints, tone, decisions, and output shape.
 
+### Named Repository Resolution From A Failed Local Candidate
+
+When a task explicitly names a repository and its required source, keep that
+repository identity distinct from a local filesystem candidate used to reach it.
+A parent, container, or workspace directory that is not the named repository
+root is evidence only about that candidate; it neither resolves the required
+repository nor makes its source unavailable.
+
+When such a candidate fails before the required source is verified, halt
+continuity reasoning and use the narrowest normal supported source route already
+exposed by the current execution surface to resolve that exact named repository.
+Do not broaden this into filesystem wandering, workspace-wide repository
+enumeration, clone-on-miss behavior, replacement worktrees or branches, remote
+rewiring, or hosted substitution. A hosted route may establish hosted facts,
+but it cannot satisfy a task that requires a local checkout.
+
+If those bounded routes cannot establish the required source, stop with the
+exact missing source and the attempted or unavailable routes. Do not ask the
+human to locate an explicitly named repository before performing that bounded
+recovery.
+
 ### Existing Checkout Freshness And Bounded Recovery
 
 Before beginning work in an existing local repository or worktree, reconcile
