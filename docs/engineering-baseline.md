@@ -115,6 +115,14 @@ examples/cases only for materially distinct behavior not already clear from the
 rule. Put human rationale, history, and change explanations on human-facing
 surfaces. Add no taxonomy, scoring, checklist, or ceremony.
 
+On a material edit to an agent-read process owner, proportionally audit the
+whole owner for accumulated non-consequential prose and duplicate semantics.
+Remove high-confidence redundancy directly; treat compression requiring semantic
+judgment separately. For material pruning, review the before/after owner to
+confirm that no consequential control, ownership, activation, or stop boundary
+was lost, weakened, made ambiguous, or moved. Justified growth is allowed; do
+not use compression quotas or prose-presence tests.
+
 When agent-read content relies on provider behavior, keep official source URLs
 in the reviewed change evidence rather than the agent-read text; retain only a
 dated provenance line there when the check affects the instruction.
