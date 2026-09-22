@@ -17,6 +17,14 @@ from .qualify_live import FOLDER_PATTERN, LABEL, _head, _identity, _identity_cli
 from .store import Store
 
 
+def _write(path, data):
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(data)
+        f.flush()
+        os.fsync(f.fileno())
+
+
 def _append(path, event):
     with open(path, "a", encoding="utf-8") as f:
         f.write(encode(event) + "\n")
@@ -47,6 +55,7 @@ def main(argv=None):
     p.add_argument("--actor", required=True)
     p.add_argument("--grant-provenance", required=True)
     p.add_argument("--expected-head", required=True)
+    p.add_argument("--state-root", required=True)
     args = p.parse_args(argv)
     state = events = None
     try:
@@ -80,7 +89,10 @@ def main(argv=None):
         if input("Type APP FOLDER: ").strip() != "APP FOLDER":
             raise Blocked("App Folder access type not confirmed")
         Config(facts["account_id"], facts["home_namespace_id"], "preflight-parent", args.folder, args.actor, LABEL, profile="live-qualification", root_namespace=facts["root_namespace_id"], home_namespace=facts["home_namespace_id"], head=head).validate()
-        state_root = Path(".v2-operator-retention").absolute()
+        state_root = Path(args.state_root)
+        if not state_root.is_absolute() or Path.cwd() in (state_root, *state_root.parents):
+            raise Blocked("operator state root must be absolute and outside the worktree")
+        state_root = state_root / ".v2-operator-retention"
         state_root.mkdir(mode=0o700, parents=True, exist_ok=True)
         os.chmod(state_root, 0o700)
         state = state_root / args.folder[1:]
@@ -88,7 +100,7 @@ def main(argv=None):
         events = state / "events.jsonl"
         _append(events, {"kind": "confirmed-preflight", "head": head, "facts": facts})
         store = Store.initialize(state / "store.sqlite", args.owner)
-        (state / "installation.json").write_text(store.identity.json() + "\n", encoding="utf-8")
+        _write(state / "installation.json", store.identity.json() + "\n")
         client = _identity_client(token)
         try:
             if _identity(client, args.folder) != facts:
@@ -118,20 +130,24 @@ def main(argv=None):
             admin = Admin(store, args.owner)
             admin.grant(op.op_id, args.grant_provenance)
             admin.decision(op.op_id, **decision)
-            result = run(store, op.op_id, writer, args.actor)
+            result = run(store, op.op_id, writer, args.actor, require_accepted_decision=True)
         finally:
             writer.close()
         record = {"status": result["status"], "head": head, "folder": args.folder, "folder_id": observed.id,
                   "target": target.path, "input_sha256": digest(data), "decision": decision, "result": result,
                   "checked_at": datetime.now(timezone.utc).isoformat(), "ceiling": "one bounded operator retention only"}
         _append(events, {"kind": "operation-result", "status": result["status"], "may_have_submitted": result.get("may_have_submitted", False), "reporting_gap": result.get("reporting_gap", "")})
-        (state / "receipt.json").write_text(encode(record) + "\n", encoding="utf-8")
+        _write(state / "receipt.json", encode(record) + "\n")
         print(encode(record))
         return 0 if result["status"] == "retained_verified" and result["decision"] == "accepted" else 2
     except BaseException:
         if events is not None:
             try:
-                _append(events, {"kind": "blocked", "reason": "operator retention stopped; inspect non-secret durable state"})
+                recovery = {"kind": "blocked", "reason": "operator retention stopped; inspect non-secret durable state"}
+                if "store" in locals() and "op" in locals():
+                    with store.session() as c:
+                        recovery["result"] = __import__("v2_retain.reconcile", fromlist=["project"]).project(store, c, op.op_id)
+                _append(events, recovery)
             except BaseException:
                 pass
         print(encode({"status": "blocked", "reason": "operator retention stopped; inspect non-secret durable state"}))

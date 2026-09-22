@@ -6,7 +6,7 @@ from .model import Blocked, MAX_OBSERVATIONS
 from .reconcile import inspect, observe_and_record, project
 
 
-def run(store, op_id, writer, actor, *, clock=time.time):
+def run(store, op_id, writer, actor, *, clock=time.time, require_accepted_decision=False):
     # Material remote reads precede the admission exclusion, so a revocation
     # accepted while preflight is running wins the subsequent admission race.
     with store.session() as c:
@@ -40,6 +40,8 @@ def run(store, op_id, writer, actor, *, clock=time.time):
         if not preflight.complete or preflight.error:
             raise Blocked("pre-submit target lookup incomplete")
         store.grant_valid(c, op, actor, clock())
+        if require_accepted_decision and store.decisions(c, op, clock()) != "accepted":
+            raise Blocked("accepted decision missing, expired, or conflicting at admission")
         store.check_files()
         store.admit(c, op, attempt, clock(), {"grant": op.grant_ref, "grant_revision": "original",
                     "expires_at": op.expires_at, "actor": actor,
@@ -53,6 +55,8 @@ def run(store, op_id, writer, actor, *, clock=time.time):
             writer.qualification.require_active(op)
             writer.check_binding(op, actor)
             store.grant_valid(c, op, actor, clock())
+            if require_accepted_decision and store.decisions(c, op, clock()) != "accepted":
+                raise Blocked("accepted decision missing, expired, or conflicting at admission")
         except Blocked:
             store.append(c, op_id, attempt, {"kind": "not_sent", "reason": "final admission refused"})
             return project(store, c, op_id)
