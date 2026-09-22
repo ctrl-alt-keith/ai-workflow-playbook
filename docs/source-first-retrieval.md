@@ -50,75 +50,44 @@ state and observed actions/outcomes control when they conflict.
 
 ### Failed-thread diagnostic evidence
 
-When conversational state materially participates in a workflow failure, the
-affected thread can be a useful diagnostic witness. A focused diagnostic may
-ask it to describe the observable decision seam in concrete workflow terms or,
-after current sources have been retrieved, whether a candidate correction
-would have changed the earlier decision and where. Its explanation remains
-contaminated by the failed context and may be post-hoc. Treat it as
-supplementary diagnostic or
-counterfactual-review evidence, never as authoritative internal causation,
-acceptance, approval, or execution authority.
+An affected thread may describe an observable workflow-failure seam after
+current sources are retrieved, but its account may be contaminated or post-hoc.
+Treat it only as supplementary diagnostic or counterfactual evidence, never as
+authoritative causation, acceptance, approval, or execution authority.
 
-For behavior intended to generalize across conversational histories, compare
-that evidence where useful with a deterministic fail-before/pass-after
-regression at the meaningful semantic or control seam under
-[`Regression Fixture Fidelity`](engineering-baseline.md#regression-fixture-fidelity),
-and with behavioral acceptance from a genuinely fresh or purged thread using
-ordinary task phrasing. The regression establishes only the path it exercises;
-the fresh thread is the stronger signal that the behavior survives a different
-history. Disagreement can reveal contamination, execution-path divergence,
-incomplete semantic repair, or unmodeled state rather than invalidating one
-surface by default.
-
-A richer shared workflow vocabulary can make a thread's diagnostic account
-more precise by naming activation, authority, interaction mode, handoff,
-source-ownership, transport, evidence, and completion seams. That vocabulary
-improves diagnostic resolution; it does not increase the authority of model
-self-report or require disclosure of private reasoning.
+For behavior meant to generalize across histories, combine such evidence where
+useful with a faithful fail-before/pass-after regression under
+[`Regression Fixture Fidelity`](engineering-baseline.md#regression-fixture-fidelity)
+and behavioral acceptance from a fresh or purged thread using ordinary task
+phrasing. The regression proves only its path; disagreement among surfaces is
+evidence to investigate, not grounds to discard one by default. Fresh or purged
+evidence is the stronger signal of behavior across histories.
 
 ## Minimum-Sufficient Retrieval
 
-Source-first retrieval means obtaining the minimum sufficient authoritative
-evidence needed for the current claim or decision. Name that claim or decision,
-identify the source that owns each required fact, and set the evidence boundary
-before retrieval. Inspect only the state needed to satisfy that boundary, and
-stop when the claim or decision is supported. More provider objects do not make
-the evidence more authoritative.
+Retrieve only the authoritative evidence needed for the current claim or
+decision. Name the claim, each required fact and owner, and the evidence
+boundary; stop when that boundary is satisfied. Mandatory triggers and
+essential unknowns still control: mark a materially necessary unverified fact
+partial or blocked, and omit nonessential facts instead of inventorying them.
 
-This boundary does not weaken a mandatory trigger or permit an essential
-unknown to be ignored. If a materially necessary fact cannot be verified, mark
-the gate partial or blocked. If a fact is not necessary to the current claim or
-decision, omit it instead of expanding retrieval into a speculative inventory.
+For ordinary repository work, use the narrowest normal surface that owns or
+directly exposes the fact: repository-native `git`, high-level provider CLI or
+connected GitHub reads for hosted facts, and repository-native validation or
+workflow commands for the facts they own.
 
-For ordinary repository inspection and delivery, prefer the narrowest normal
-supported surface that owns or directly exposes the required fact:
-
-- repository-native `git` commands for repository, ref, and worktree facts;
-- high-level provider CLI commands for supported hosted facts;
-- connected GitHub reads for hosted state they expose; and
-- repository-native validation or workflow commands for facts they own.
-
-The absence of a high-level convenience command does not by itself justify
-`gh api`, an equivalent raw provider API, or a provider-wide inventory. In
-ordinary repository inspection, use a lower-level provider read only when a
-concrete fact is materially necessary for the current claim or decision and
-normal supported surfaces cannot establish it. Before that escalation, state
-the exact missing fact, why it matters, and why the first-class surfaces are
-insufficient. When those conditions are not met, omit the fact or report the
-capability gap.
-
-Specialized evidence-surface audits may intentionally use a separately
-constrained low-level read path when their required evidence classes are not
-available through ordinary surfaces. Investigations where provider API behavior
-is itself the subject may also inspect that API directly. Those workflows name
-the low-level surface and its safeguards as part of their task; they are not
-ordinary-repository fallback precedent.
+A missing convenience command does not justify `gh api`, an equivalent raw
+provider API, or provider-wide inventory. Use a lower-level provider read only
+when a concrete fact is materially necessary and normal surfaces cannot
+establish it; first state the missing fact, why it matters, and why first-class
+surfaces are insufficient. Otherwise omit the fact or report the capability
+gap. A specialized evidence audit or investigation of provider API behavior
+may use its explicitly constrained low-level surface; that is not ordinary
+fallback precedent.
 
 For overlap or collision risk, current `main`, relevant pull requests, target
-files, and specifically identified refs are normally sufficient. Do not require
-an inventory of every active branch, ref, workflow, or provider object unless
-the inventory itself is materially necessary to the decision.
+files, and specifically identified refs normally suffice. Inventory broader
+state only when that inventory is materially necessary to the decision.
 
 ## Triggers
 
@@ -128,37 +97,31 @@ descriptions to reason about repository state.
 Mandatory source-first triggers require authoritative retrieval before
 stateful reasoning or recommendations:
 
-- GitHub pull request URLs, pull request numbers, or requests such as "review
-  this PR", "review directly", "take a look", "check this PR", "continue this
-  PR", or "is this ready?"
-- GitHub issue URLs, issue numbers, or requests such as "continue from this
-  issue", "implement this issue", or "what is left on this issue?"
-- repository identifiers, repository URLs, or local repository paths
-- repo-aware advisory or evaluation requests where a repository is explicitly
-  named and the answer depends on that repository's actual state
-- branch names, refs, tags, commit SHAs, comparison ranges, or release refs
-- requests to assess mergeability, CI status, review state, changed files,
-  issue closure, validation status, or current implementation scope
-- requests involving PRs, issues, branches, workflows, checks, validation
-  state, merge sequencing, or implementation quality; treat these as mandatory
-  source-first triggers and select the appropriate repo-readiness interaction
-  mode rather than defaulting to conversational analysis
-- claims or requested changes that depend on current external provider,
-  public API, SDK, CLI, package, or hosted-platform behavior
+- a referenced GitHub pull request or issue, including requests to review,
+  continue, implement, assess readiness, or identify remaining work;
+- a repository identifier, URL, or local path; a branch, ref, tag, commit,
+  comparison, or release ref; or repository-aware advice dependent on current
+  state;
+- current pull-request, issue, branch, workflow, check, validation, merge,
+  sequencing, changed-file, implementation-quality, scope, or closure claims;
+  and
+- claims or changes dependent on current external-provider, public-API, SDK,
+  CLI, package, or hosted-platform behavior.
+
+For repository workflows, select the applicable interaction mode from
+[`repo-readiness.md`](repo-readiness.md#interaction-mode-preflight).
 
 Optional triggers may guide retrieval when the next action depends on current
 state, but they do not require source inspection for purely conversational
 answers:
 
-- pasted summaries, completion reports, copied diffs, screenshots, or release
-  notes without a live artifact identifier
-- references to earlier conversation, prior work, a remembered plan, previous
-  operational synthesis, or broad repository names without a state-dependent
-  action
-- conceptual questions about workflow patterns, review posture, or tradeoffs;
-  these need no repository-state retrieval, but they still activate the
-  Playbook bootstrap in
-  [`start-here.md`](start-here.md#global-bootstrap-persistence)
+- summaries, reports, copied diffs, screenshots, or release notes without a
+  live artifact identifier;
+- earlier conversation, prior work, remembered plans, previous synthesis, or
+  broad repository names without a state-dependent action; and
+- conceptual workflow, review, or tradeoff questions, which still activate
+  [`start-here.md`](start-here.md#global-bootstrap-persistence) when about the
+  Playbook.
 
 Ambiguous cases must be resolved before stateful conclusions. If "continue",
 "the branch", "the PR", or similar wording points to a clear source, inspect
@@ -183,120 +146,77 @@ result candidate-only.
 4. Only then interpret, prioritize, recommend, or explain using continuity for
    intent, constraints, tone, decisions, and output shape.
 
+Do not make state-dependent evaluations or recommendations before required
+live inspection.
+
+### Named Repository Resolution From A Failed Local Candidate
+
+When a task explicitly names a repository and required source, a non-root local
+candidate, including a parent or container, is evidence only about that
+candidate: it neither resolves the named repository nor makes its source
+unavailable.
+
+Before escalating, use only the narrowest normal supported route already
+exposed by the current execution surface to resolve that exact repository. Do
+not broaden this into filesystem wandering or workspace-wide repository
+enumeration, cloning, replacement checkouts or worktrees, branch creation,
+remote rewiring, or hosted facts in place of a required local checkout.
+
+Perform this bounded recovery before asking the human to locate the repository.
+If the routes cannot establish the source, stop with the exact missing source
+and attempted or unavailable routes.
+
 ### Existing Checkout Freshness And Bounded Recovery
 
-Before beginning work in an existing local repository or worktree, reconcile
-the local checkout with the repository's current GitHub default branch. Treat
-stale local repository state as a recoverable cached-state condition, not by
-itself as a reason to abandon local inspection. A clean working tree or a
-cached remote-tracking ref does not prove that the checkout reflects current
-hosted GitHub state.
+Reconcile an existing repository or worktree with the current hosted default
+branch before work. Stale local state is a recoverable cached-state condition;
+a clean tree or cached remote-tracking ref does not prove current hosted state.
 
-When a task requires a named existing checkout or supplied worktree, that
-locality is part of the execution contract. Inspection, freshness, or recovery
-authority does not permit cloning, creating a replacement worktree or
-replacement branch, checkout substitution, remote rewiring, or hosted
-substitution unless current human direction, the explicit task, or repo-local
-policy separately authorizes acquisition/substitution.
-Preserve the required locality; if permitted non-destructive recovery cannot
-make it usable, stop with the blocker. Hosted evidence does not satisfy required
-local execution.
+A required named checkout or supplied worktree is part of the execution
+contract. Without separate authority, recovery does not permit cloning,
+replacement checkouts, worktrees, or branches, checkout substitution, remote
+rewiring, or hosted substitution. Preserve required locality; if permitted
+non-destructive recovery cannot make it usable, stop with the blocker.
 
-Use this bounded recovery sequence before falling back to hosted-only
-inspection, subject to any required-locality constraint above:
+Use this bounded recovery sequence:
 
-1. Before using local Git or `gh` to contact GitHub, verify the active
-   authentication state with `gh auth status`. The authentication check does
-   not make any local or remote ref fresh. If active authentication cannot be
-   verified, report that limitation and use another permitted source or leave
-   the affected claims blocked.
-2. Identify the current hosted default branch, then inspect the checked-out
-   working tree, current branch, configured remotes, upstream configuration,
-   and divergence. Keep observations about the working tree and cached
-   remote-tracking refs separate from claims about GitHub.
-3. When repo-local policy permits synchronization, select the smallest
-   non-destructive action that can restore a useful inspection surface. A
-   bounded safe synchronization attempt may fetch current remote refs, prune
-   stale remote-tracking refs, fast-forward an eligible clean local branch, or
-   use another repository-documented non-destructive synchronization command.
-   Reinspect the worktree, branch, upstream, and divergence after the attempt.
-4. If repository shell or zsh wrappers interfere with sandbox permissions or
-   command execution, direct `git` and `gh` commands without repository shell
-   wrappers are permitted for this recovery path. Follow the command-form and
-   execution-layer guidance in
+1. Before local Git or `gh` contacts GitHub, verify active authentication with
+   `gh auth status`. This does not make any ref fresh. If authentication cannot
+   be verified, report it and use another permitted source or block the affected
+   claims.
+2. Identify the current hosted default branch; inspect the checked-out tree and
+   `HEAD`, current branch, configured remotes, upstream, and divergence. Keep
+   working-tree and cached-ref observations separate from hosted claims.
+3. When repo-local policy permits, use the smallest non-destructive
+   synchronization that restores a useful inspection surface: fetch current
+   refs, prune stale remote-tracking refs, fast-forward an eligible clean local
+   branch, or use a repository-documented equivalent. Reinspect the tree,
+   branch, upstream, and divergence afterward.
+4. Follow the direct-command rule in
    [`repo-readiness.md`](repo-readiness.md#command-form-and-intent-visibility)
-   and the matching tool adapter.
+   and the matching adapter; wrapper interference does not require abandoning
+   direct `git` or `gh` recovery.
 
-This recovery path does not authorize destructive or unrelated mutation merely
-to obtain freshness. Unless the explicit task or repo-local policy separately
-authorizes the operation, do not:
+Unless separately authorized, do not discard uncommitted changes or local
+commits, reset or rewrite history, switch branches, overwrite files, or alter
+remote configuration. If safe synchronization fails, preserve the checkout and
+report the blocker. Use a freshly fetched ref or current hosted state only for
+claims it supports; never present a cached remote-tracking ref as current
+without a successful fetch in the current attempt.
 
-- discard uncommitted changes or local commits;
-- reset a branch or rewrite history;
-- switch branches;
-- overwrite files to force synchronization; or
-- alter remote configuration.
+When material, distinguish:
 
-If safe synchronization cannot be completed, preserve the checkout and report
-the blocker. Fall back to a freshly fetched remote ref or current hosted GitHub
-state only for claims that source can support. A cached remote-tracking ref may
-still describe last-known local state, but it must not be presented as current
-without a successful fetch in the current recovery attempt.
+- **Checked-out working tree:** inspected local files and `HEAD`.
+- **Cached remote-tracking ref:** last locally recorded remote state before a
+  successful fetch in the current attempt.
+- **Freshly fetched remote ref:** remote state and commit identity recorded by
+  that fetch.
+- **Current hosted GitHub state:** directly inspected hosted state, including
+  default branch, pull requests, issues, checks, and reviews.
 
-Keep these evidence surfaces explicit when the distinction matters:
-
-- **Checked-out working tree:** the files and `HEAD` inspected in the local
-  worktree.
-- **Cached remote-tracking ref:** the last locally recorded remote state before
-  a successful fetch in the current recovery attempt.
-- **Freshly fetched remote ref:** the remote state and commit identity recorded
-  by a successful fetch in the current recovery attempt.
-- **Current hosted GitHub state:** state inspected directly from GitHub, which
-  may change after a fetch and owns hosted metadata such as the current default
-  branch, pull requests, issues, checks, and reviews.
-
-Successfully refreshing a checkout restores an inspection surface only. It
-does not independently authorize implementation, file edits, history changes,
-branch changes, or broader repository mutation. Repo-local `AGENTS.md` and
-other repo-local policy may narrow or replace these shared recovery defaults.
-
-When a material prompt is governed by the versioned semantics in
-[`prompt-contracts.md`](prompt-contracts.md), source-first retrieval still
-controls selection evidence. A fresh attempt selects exact compatible source
-identities once before hydration; replay resolves the recorded source manifest
-without rereading current mutable sources. Neither source selection nor a
-source-manifest digest grants authority.
-
-When a mandatory trigger is present, verification blocks:
-
-- statements about current PR, issue, branch, commit, CI, mergeability, review,
-  release, or validation state
-- merge, readiness, approval, closure, or implementation-scope
-  recommendations
-- claims about which files changed, which comments remain unresolved, or what
-  the branch currently contains
-- decisions that depend on current external API, SDK, CLI, provider, or hosted
-  platform behavior
-
-No evaluative commentary may come before live inspection. Evaluative
-commentary includes architecture assessment, correctness claims,
-implementation quality judgments, merge guidance, prioritization, risk
-analysis, validation confidence, workflow recommendations, and
-scope/completeness claims.
-
-Continuity may help interpret intent, constraints, tone, previous decisions,
-and desired output shape after retrieval. It must not substitute for direct
-repository, GitHub, CI, runtime, or provider evidence.
-
-## Repo-Aware Advisory
-
-For analysis, review, evaluation, architecture, suggestions, or prioritization
-about a named repository, inspect enough current source to ground the answer.
-Match depth to the question; do not broaden into an unrequested audit.
-Conceptual discussion needs retrieval only for state-dependent claims.
-
-If retrieval was missed, retrieve first, then correct, discard, or mark prior
-repo-specific advice unverified before explaining the failure.
+Refresh restores an inspection surface only; it does not authorize edits,
+implementation, history or branch changes, or broader mutation. Repo-local
+policy may narrow or replace these defaults.
 
 ## Verification Gate
 
@@ -313,14 +233,13 @@ If direct verification did not happen, say exactly:
 
 Acceptable authoritative sources depend on the claim:
 
-- Repository files, local `git` state, and checked-out refs are authoritative
-  for the inspected local worktree only.
-- GitHub PRs, issues, review threads, CI, mergeability, and branch metadata are
-  authoritative for current remote PR and issue state.
-- CI systems and validation command output are authoritative for the checks
-  they actually ran.
-- Official provider documentation, schemas, SDK docs, CLI docs, changelogs, or
-  release notes are authoritative for external public API behavior.
+- repository files, local `git`, and checked-out refs for the inspected local
+  worktree only;
+- GitHub PRs, issues, reviews, checks, mergeability, and branch metadata for
+  current hosted state;
+- CI and validation output for the checks they ran; and
+- official provider documentation, schemas, SDK or CLI docs, changelogs, or
+  release notes for external public API behavior.
 
 For pull requests and issues, do not infer implementation quality, scope, risk,
 merge readiness, or correctness from titles, summaries, commit messages,
@@ -328,99 +247,54 @@ reported check status, or conversational descriptions. Inspect changed files,
 validation or check state, scope boundaries, and overlap or conflict risk
 directly.
 
-If the required source is unavailable, blocked, or access is declined, stop the
-stateful workflow and report the blocker. Do not provide readiness,
-mergeability, approval, closure, or implementation-completeness conclusions
-from secondhand context.
+If the required source is unavailable, blocked, or declined, stop and report
+the blocker; do not conclude readiness, mergeability, approval, closure, or
+implementation completeness from secondhand context. For partial verification,
+separate verified facts from unknowns, avoid conclusions dependent on missing
+state, and identify the retrieval needed to complete the gate.
 
-If only part of the source can be verified, return a partial result. Separate
-verified facts from unknowns, avoid recommendations that depend on missing
-state, and say what retrieval would complete the gate.
-
-If local and remote state disagree, state which source supports each fact and
-which one controls the decision. For repository completion, GitHub PR and issue
-state usually controls remote readiness, while local `git` state controls only
-the current checkout.
-
-## State Language
-
-When source status could blur, add a few plain words to the claim itself:
-whether the state was directly verified, inferred from continuity, or unknown
-because retrieval did not happen. Use this only when it changes what the next
-action should trust. Preserve unknowns when retrieval did not happen. Do not
-add confidence scores, fixed tiers, required labels, templates, audit
-requirements, or governance process.
+When local and hosted state disagree, state which source supports each fact and
+which controls the decision; local `git` controls only the inspected checkout,
+while hosted PR and issue state usually controls hosted readiness. When source
+status could affect the next action, say whether the claim is directly verified,
+inferred, or unknown. Preserve unknowns without adding confidence scores,
+fixed tiers, templates, audits, or governance process.
 
 ## Recovery
 
-Recovery is required when source-first ordering has already been missed or a
-selected retrieval transport fails before a required fact is verified. This
-includes:
+Recover when source-first ordering was missed, continuity or inferred state
+outran verification, authoritative state conflicts with context, a human flags
+missing inspection, or a selected transport fails before the required fact is
+verified.
 
-- the assistant answered before opening the referenced PR, issue, repository,
-  branch, commit, path, or provider source
-- conversational continuity outran verification
-- inferred state was used before retrieval
-- a human explicitly calls out missing source inspection
-- conversational context conflicts with authoritative state
-- a repository, provider CLI, connector, or raw provider API transport fails
-  before the exact required fact is established
+Keep three states distinct: the selected transport failed; the required fact
+remains unverified; and the authoritative source is unavailable because no
+applicable permitted route can establish the fact without weakening evidence,
+authority, authentication, or safety.
 
-A transport failure is evidence about that mechanism only. It is not evidence
-that every route to the authoritative source is unavailable. Keep three states
-separate: the selected transport failed; the required fact remains unverified;
-and the authoritative source is unavailable because no materially applicable
-permitted route can establish that fact without weakening evidence, authority,
-authentication, or safety guarantees.
+When retrieval remains available:
 
-When retrieval remains available, recovery restores verified state before
-conversational repair:
+1. Halt continuity reasoning and identify each unresolved mandatory trigger and
+   exact missing fact.
+2. Select the narrowest normal surface for the fact's owner. Record a failed
+   transport as mechanism or capability evidence, not source unavailability.
+3. Use another permitted surface only when it preserves the required evidence
+   semantics, and stop when the exact claim is sufficiently verified.
+4. Discard, correct, or mark prior assumptions unverified; resume from verified
+   state and stated unknowns.
 
-1. Halt continuity reasoning.
-2. Identify every unresolved mandatory trigger and the exact fact still needed.
-3. Identify the source that owns the fact and select its narrowest normal
-   supported retrieval surface.
-4. If that transport fails, record the failure as transport or capability
-   evidence without classifying the authoritative source as unavailable.
-5. Use another permitted surface when it can establish the same fact with the
-   required evidence semantics; stop after the exact claim is sufficiently
-   verified rather than trying every tool.
-6. Discard, correct, or mark unverified any assumptions made before retrieval,
-   then resume from the restored verified state and stated unknowns.
+Fail closed when the fact remains materially unverified after applicable routes
+are unavailable, insufficient, or blocked. Report the missing fact and those
+routes. Hosted evidence cannot establish local checkout freshness, and fetched
+Git evidence cannot establish hosted-only metadata.
 
-Fail closed only when the required fact remains materially unverified after the
-applicable qualified routes are unavailable, insufficient, or blocked. Report
-the missing fact and the routes actually unavailable. Preserve the scope of each
-route: hosted evidence must not invent local checkout freshness, and freshly
-fetched Git evidence must not invent hosted-only metadata.
+Do not prompt, re-prompt, escalate, mutate authentication, or enter an
+authentication loop because a speculative lower-level transport failed. One
+surface's authentication failure does not establish that all qualified routes
+are unauthenticated; preserve any owning-workflow authentication preflight.
+Successful first-class retrieval needs no raw-API confirmation, except when
+provider API behavior is the subject or a specialized workflow requires that
+surface.
 
-Do not prompt, re-prompt, escalate, mutate authentication, or enter an auth loop
-merely because a speculative lower-level transport failed. Authentication
-failure on one surface is not evidence that every other qualified route is
-unauthenticated. Preserve any narrower authentication preflight explicitly
-required by the owning workflow.
-
-Ordinary successful first-class retrieval needs no speculative raw provider API
-call for confirmation. Direct low-level API inspection remains permitted when
-provider API behavior is itself the subject or a specialized workflow explicitly
-requires that evidence surface.
-
-Acknowledgment alone is not recovery. Explaining the violation is not
-remediation. Recovery must perform the missing retrieval or inspection when it
-is available, then explain only remaining blockers, uncertainty, or corrections
-that still matter after inspection.
-
-## Failure Modes
-
-Treat continuity-first answers, stale carry-forward, inferred state,
-summary-for-source substitution, local/hosted confusion, and acknowledgment or
-meta-analysis without retrieval as source-first drift. Apply [Recovery](#recovery)
-before continuing.
-
-## Rules
-
-Apply [Triggers](#triggers), [Ordering](#ordering), and the
-[Verification Gate](#verification-gate). Preserve partial/unknown results,
-separate local from hosted claims, and block dependent conclusions when required
-verification fails. After drift, perform [Recovery](#recovery); acknowledgment
-alone is insufficient.
+Acknowledgment or explanation alone is not recovery. Perform available missing
+retrieval, then report only remaining blockers, uncertainty, or corrections.
