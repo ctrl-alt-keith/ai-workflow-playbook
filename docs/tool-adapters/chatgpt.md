@@ -5,10 +5,6 @@ under one adapter; Codex is a distinct executor. Ordinary conceptual Chat does
 not activate repository startup. Shared rules remain owned by
 [`start-here.md`](../start-here.md) and [`core-model.md`](../core-model.md).
 
-Provider behavior was rechecked against official OpenAI documentation and
-task-local runtime evidence on 2026-09-23; provider sources belong in reviewed
-PR evidence, not this agent-read adapter.
-
 ## Bootstrap and continuity
 
 - Project instructions are routing input, not a second Playbook. Apply this
@@ -30,52 +26,33 @@ PR evidence, not this agent-read adapter.
 
 ## Chat-to-Work projection
 
-Chat is interactive; Work handles bounded general-purpose execution, including
-document and browser work, while Codex handles local repository, code, command,
-and test work. The available controls and
-eligible actions vary by plan, workspace, surface, and runtime; this mapping
-does not make every connected-app action in Chat ineligible. A transition from
-Chat to Work or Codex preserves repository mode unless a required source or
-boundary changes. Revalidate any materially changed source, working
-location, tools, credentials, acting identity, or mutation surface. Consequential
-execution results return to Chat for review and disposition unless another owner
-places that authority elsewhere.
+Chat is interactive; Work and Codex provide execution surfaces for their
+currently supported task classes. Exact controls and action eligibility depend
+on the current runtime. A transition preserves repository mode; revalidate
+materially changed sources, working location, tools, identity, and mutation
+surface. Consequential results return to Chat for review and disposition unless
+another owner places that authority elsewhere.
 
-At the action boundary, establish separately: task authority, action exposure,
-runtime eligibility for the exact action in Chat, authoritative-source
-sufficiency for the question, and consent to leave Chat. A visible connector
-action proves exposure only; a successful read proves only the scope it returned.
-Do not infer a complete inventory from a partial result. Check the result
-against the owning source's scope required by the question. Preserve unknowns;
-when a missing fact is material, use an eligible surface that can inspect that
-scope. A result from Work or Codex remains partial until the required owning
-scope is established. Qualify each action from current runtime evidence rather
-than treating historical Chat-local mutation or an entire connector as
-permanently eligible or ineligible.
+Before acting from Chat, distinguish task authority, action exposure, runtime
+eligibility, authoritative-source sufficiency for the required scope, and
+transition consent. An exposed action may be runtime-ineligible; a successful
+read proves only its returned scope. Use Chat when the task is authorized,
+Chat is eligible and sufficient, and no other surface was requested or accepted.
+Otherwise preserve material unknowns and report the boundary; offer an eligible
+Work or Codex surface when consent is absent. Its results still require
+qualification against the owning source's required scope.
 
-Apply the shared transition-consent boundary to both Work and Codex. Task
-authority, action exposure, runtime eligibility, source sufficiency, and
-surface fit do not grant transition consent. Do not instantiate or transition
-unless the operator explicitly requests that surface or accepts an offered
-transition. If Chat is eligible and sufficient, act there within task authority.
-If it is ineligible or insufficient, offer an appropriate execution surface and
-stop at the transition boundary until consent exists. Authoring or presenting
-a Codex prompt does not select Work or Codex.
+Apply the shared transition-consent boundary to Work and Codex: do not
+instantiate or transition unless the operator explicitly requests the surface
+or accepts an offered transition. Consent grants the transition, not new task
+authority; the existing bounded authority remains controlling. Authoring or
+presenting a Codex prompt does not select Work or Codex.
 
-| Qualification case | Chat action | Transition |
-| --- | --- | --- |
-| Authorized, exposed, runtime-eligible, sufficient read or action | Execute in Chat | Optional only with explicit consent |
-| Authorized, exposed, runtime-ineligible repository mutation | Do not execute in Chat | Offer Codex; execute there only after consent |
-| Relevant Chat read, required owning inventory scope incomplete | Report partial result and unknowns | Offer Work when it can inspect the missing scope; qualify its result and transition only after consent |
-| Work/Codex-only task, no consent | Remain in Chat and report the boundary | Ineligible until explicitly requested or accepted |
-| Explicit Work/Codex request | Recheck action eligibility, sources, and authority | Eligible for the requested bounded handoff |
-
-For execution handoffs, use the canonical prompt owner and name the bounded
-outcome, permitted sources/tools, output checks, and return boundary. Codex
-repository implementation handoffs also require locality, validation, PR
-delivery, and a stop-before-merge boundary unless the existing bounded task
-explicitly authorizes merging the exact reviewed PR. Transition consent alone
-does not authorize that merge. Verify a governed package's identity before
+For handoffs, use the canonical prompt owner and name the bounded outcome,
+permitted sources/tools, output checks, and return boundary. Codex repository
+implementation handoffs also require locality, validation, PR delivery, and
+stop-before-merge unless the existing bounded task explicitly authorizes
+merging the exact reviewed PR. Verify a governed package's identity before
 relying on it.
 
 ## Connected apps and consequential actions
