@@ -202,8 +202,8 @@ The default profile uses only a synthetic token and disables the socket
 transport unless an explicit loopback fixture is selected. The separate
 `live-qualification` profile requires a resolved `DROPBOX_ACCESS_TOKEN` in the
 process environment and an explicit caller-supplied token matching that value.
-It uses no ambient proxy, netrc, `.env`, keychain, refresh token, or 1Password
-SDK path. The application never invokes `op`; the operator's local `op run`
+It uses no ambient proxy, netrc, `.env`, keychain, or 1Password SDK path. The
+application never invokes `op`; the operator's local `op run`
 process injects the credential. The selected Mac-local request/readback route has one
 accepted bounded live qualification; broader operational use still requires
 its own applicable authority and host/profile evidence. Local fixture success
@@ -278,6 +278,50 @@ claim ceiling, invalidation triggers, case outcomes, and request count. No
 resolved credential or raw SDK exception is stored or printed. A partially
 completed folder/state blocks rerun; the operator reviews the retained evidence and
 remote objects rather than starting automatic cleanup or replay.
+
+## Explicit operator retention
+
+`python -m v2_retain.operator_live` is a separately authorized, non-default
+one-shot retention interface. It requires an exact Markdown input, an unexpired
+accepted decision, a fresh `/cak-301-v2-qual-...` folder, provenance, the exact
+reviewed head, and `--state-root ABSOLUTE_OPERATOR_DIRECTORY`. The state root
+must resolve outside Dropbox, any repository checkout, and disposable task
+storage; the operator owns that persistence property. The command creates an
+exclusive `.v2-operator-retention/<folder-name>/` child with non-secret fsync'd
+events, an installation note, a SQLite operation store, and a result receipt
+only when `run` returns. A blocked event is retained before any best-effort
+recovery projection. Holds preserve `may_have_submitted` and `reporting_gap`
+when the operation can report them; neither is retry permission. The command
+evidences one bounded retention only and grants no acceptance, promotion,
+default-v2, or release authority.
+
+### Local PKCE credential contract
+
+The Mac-local profile uses Dropbox OAuth code flow with PKCE and
+`token_access_type=offline`. After explicit enrollment, the operator's
+dedicated 1Password credential record holds the resolved `access_token`,
+`refresh_token`, and `client_id`; the access and refresh tokens are secret.
+Only the operator's `op run` process resolves them
+into `DROPBOX_ACCESS_TOKEN`, `DROPBOX_REFRESH_TOKEN`, and
+`DROPBOX_CLIENT_ID`. Application code never invokes `op`, writes a secret, or
+retains a resolved token.
+
+The access token is tried first through the read-only identity preflight. Only
+the specific expired-token refresh path may use the refresh token. On success,
+the process replaces only its in-memory access credential before constructing
+any content client. Renewal performs no content operation, creates no grant,
+and is followed by a fresh
+account/namespace/folder observation before normal confirmation and content
+admission. Renewal failure blocks before state creation or a provider content
+effect. Authentication failure after possible submission remains an I3
+hold/reconciliation case; renewal never retries or resumes it.
+
+Initial PKCE authorization and later reauthorization are operator actions; the
+existing access-token-only item is not enrollment. Missing, revoked, malformed, or
+scope-inadequate credentials block. Only non-secret facts may be retained:
+whether preflight renewed, observed identity facts, credential-reference label,
+result, and the route claim ceiling. Resolved credentials and expiry values are
+not durable operation evidence.
 
 Dropbox's [team-files guide](https://developers.dropbox.com/dbx-team-files-guide)
 says App Folder calls are rooted implicitly in that app's folder. The
