@@ -32,7 +32,7 @@ PR evidence, not this agent-read adapter.
 
 Chat is interactive; Work handles bounded general-purpose execution, including
 document and browser work, while Codex handles local repository, code, command,
-and test work. Codex is a separate desktop view. The available controls and
+and test work. The available controls and
 eligible actions vary by plan, workspace, surface, and runtime; this mapping
 does not make every connected-app action in Chat ineligible. A transition from
 Chat to Work or Codex preserves repository mode unless a required source or
@@ -45,13 +45,13 @@ At the action boundary, establish separately: task authority, action exposure,
 runtime eligibility for the exact action in Chat, authoritative-source
 sufficiency for the question, and consent to leave Chat. A visible connector
 action proves exposure only; a successful read proves only the scope it returned.
-Do not infer a complete inventory from a partial result. Preserve unknowns,
-and use a surface that can inspect the missing owning scope when available.
-Current runtime evidence includes a GitHub PR read eligible in Chat followed
-by a PR merge action exposed there but required to run in Codex, and an
-automation read that exposed less inventory in Chat than Work. Qualify each
-action from current runtime evidence rather than treating historical Chat-local
-mutation or an entire connector as permanently eligible or ineligible.
+Do not infer a complete inventory from a partial result. Check the result
+against the owning source's scope required by the question. Preserve unknowns;
+when a missing fact is material, use an eligible surface that can inspect that
+scope. A result from Work or Codex remains partial until the required owning
+scope is established. Qualify each action from current runtime evidence rather
+than treating historical Chat-local mutation or an entire connector as
+permanently eligible or ineligible.
 
 Apply the shared transition-consent boundary to both Work and Codex. Task
 authority, action exposure, runtime eligibility, source sufficiency, and
@@ -65,15 +65,18 @@ a Codex prompt does not select Work or Codex.
 | Qualification case | Chat action | Transition |
 | --- | --- | --- |
 | Authorized, exposed, runtime-eligible, sufficient read or action | Execute in Chat | Optional only with explicit consent |
-| Authorized, exposed, runtime-ineligible PR mutation | Do not execute in Chat | Offer Codex; execute there only after consent |
-| Relevant Chat read, authoritative inventory scope incomplete | Report partial result and unknowns | Offer Work when it can inspect the missing scope; transition only after consent |
+| Authorized, exposed, runtime-ineligible repository mutation | Do not execute in Chat | Offer Codex; execute there only after consent |
+| Relevant Chat read, required owning inventory scope incomplete | Report partial result and unknowns | Offer Work when it can inspect the missing scope; qualify its result and transition only after consent |
 | Work/Codex-only task, no consent | Remain in Chat and report the boundary | Ineligible until explicitly requested or accepted |
 | Explicit Work/Codex request | Recheck action eligibility, sources, and authority | Eligible for the requested bounded handoff |
 
 For execution handoffs, use the canonical prompt owner and name the bounded
-outcome, permitted sources/tools, output checks, and return boundary. Codex handoffs
-also require repository locality, validation, PR delivery, and stop-before-
-merge. Verify a governed package's identity before relying on it.
+outcome, permitted sources/tools, output checks, and return boundary. Codex
+repository implementation handoffs also require locality, validation, PR
+delivery, and a stop-before-merge boundary unless the existing bounded task
+explicitly authorizes merging the exact reviewed PR. Transition consent alone
+does not authorize that merge. Verify a governed package's identity before
+relying on it.
 
 ## Connected apps and consequential actions
 
