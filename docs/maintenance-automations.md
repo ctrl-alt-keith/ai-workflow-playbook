@@ -115,6 +115,16 @@ cleanup operations, not inherently reversible actions. The capability must stop
 when safety depends on interpretation, incomplete evidence, uncertain
 ownership, or a broader product decision.
 
+#### Documentation Drift And Volatile State
+
+When repairing documentation drift, state durable behavior directly and route
+volatile state to its owning or existing generated source instead of copying it.
+Retain a snapshot only when its point-in-time value materially helps the reader,
+with enough context to avoid implying that it is live.
+
+Prefer removing duplication over refreshing a stale copied value. This does not
+authorize changes outside the verified drift surface.
+
 ### Periodic Engineering Investment
 
 Investment capabilities look for one focused improvement rather than broad
