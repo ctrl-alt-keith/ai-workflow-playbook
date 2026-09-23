@@ -5,7 +5,7 @@ the repository floor and the task-activated canonical owners; this adapter
 contains only Codex-specific controls.
 
 Provider provenance: OpenAI Codex model and instruction-discovery guidance
-checked 2026-09-21. Official sources belong in reviewed change evidence.
+checked 2026-09-23. Official sources belong in reviewed change evidence.
 
 ## OpenAI Model And Reasoning Routing
 
@@ -13,22 +13,24 @@ Apply [model routing](../model-routing.md). Select model and reasoning effort
 separately for the bounded responsibility, and record requested and
 runtime-effective values separately. A runtime value that is not exposed is
 `unobservable`; requested configuration is not proof of the effective value.
+Start with GPT-6 Sol at Medium unless the bounded responsibility meets a
+different route below.
 
 | Task class | Default model | Reasoning class |
 | --- | --- | --- |
-| Mechanical retrieval, checks, formatting, or evidence packaging | GPT-5.6 Luna | Light |
-| Deterministic edits and routine PR delivery | GPT-5.6 Luna | Medium |
-| Normal implementation, CI diagnosis, or bounded evidence interpretation | GPT-5.6 Terra | Medium |
-| Bounded synthesis, difficult local debugging, or moderate reconciliation | GPT-5.6 Terra | High |
-| Architecture, authority, protocol, or adversarial-review work | GPT-5.6 Sol | High; consider higher only for observed need |
+| Mechanical retrieval, checks, formatting, or evidence packaging | GPT-6 Luna | Light |
+| Deterministic edits and routine PR delivery with clear acceptance criteria and independent validation | GPT-6 Luna | Medium |
+| Normal implementation, CI diagnosis, or bounded evidence interpretation | GPT-6 Sol | Medium |
+| Bounded synthesis, difficult local debugging, or moderate reconciliation | GPT-6 Sol | High |
+| Architecture, authority, protocol, or adversarial-review work | GPT-6 Astra | High; consider higher only for observed need |
 
-These defaults are routing hypotheses, not capability guarantees. Use GPT-6
-Astra only as a bounded quality-first escalation until representative
-qualification supports a default change; one successful run, benchmark launch,
-or assumed pricing does not qualify it. Escalate on unresolved ambiguity,
-conflicting evidence, unexplained invariants, repeated failure, or material
-error consequences. Delegate established deterministic work only with its
-inputs, validation, and authority boundary intact.
+These defaults are routing hypotheses, not capability guarantees. Escalate on
+unresolved ambiguity, conflicting evidence, unexplained invariants, repeated
+failure, or material error consequences. Use GPT-6 Astra for the unresolved
+bounded question when the Sol route no longer suffices; use GPT-6 Luna when
+deterministic work is independently checkable. Delegate established
+deterministic work only with its inputs, validation, and authority boundary
+intact.
 
 For a model comparison, preserve the prior effective effort as the baseline,
 change independently evaluable variables separately, and record any required
@@ -46,12 +48,15 @@ unapproved fallback.
 | Requested model | Exact selector |
 | --- | --- |
 | GPT-6 Astra | `gpt-6-astra` |
+| GPT-6 Sol | `gpt-6-sol` |
+| GPT-6 Luna | `gpt-6-luna` |
 | GPT-5.6 Luna | `gpt-5.6-luna` |
 | GPT-5.6 Terra | `gpt-5.6-terra` |
 | GPT-5.6 Sol | `gpt-5.6-sol` |
 
 Pass the accepted exact selector to the actual launch. Local preflight checks
 only independent prerequisites; they do not launch Codex or qualify a selector.
+The GPT-5.6 selectors remain for explicit requests, not default routing.
 
 For `SAME THREAD`, preserve the parent configuration. When work crosses a
 capability boundary, use an explicitly authorized fresh thread or child rather
