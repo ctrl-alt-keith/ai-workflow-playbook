@@ -50,13 +50,9 @@ unapproved fallback.
 | GPT-6 Astra | `gpt-6-astra` |
 | GPT-6 Sol | `gpt-6-sol` |
 | GPT-6 Luna | `gpt-6-luna` |
-| GPT-5.6 Luna | `gpt-5.6-luna` |
-| GPT-5.6 Terra | `gpt-5.6-terra` |
-| GPT-5.6 Sol | `gpt-5.6-sol` |
 
 Pass the accepted exact selector to the actual launch. Local preflight checks
 only independent prerequisites; they do not launch Codex or qualify a selector.
-The GPT-5.6 selectors remain for explicit requests, not default routing.
 
 For `SAME THREAD`, preserve the parent configuration. When work crosses a
 capability boundary, use an explicitly authorized fresh thread or child rather
