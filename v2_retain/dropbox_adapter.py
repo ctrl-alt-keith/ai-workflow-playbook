@@ -24,6 +24,31 @@ class NoRefreshDropbox(dropbox.Dropbox):
         raise Blocked("implicit credential refresh disabled")
 
 
+def renew_pkce_access_token(access_token, refresh_token, app_key):
+    """Renew authentication only; never submit or replay a content operation."""
+    if not all(isinstance(value, str) and value for value in (access_token, refresh_token, app_key)):
+        raise Blocked("resolved PKCE refresh credential required")
+    client = dropbox.Dropbox(oauth2_access_token=access_token,
+                             oauth2_refresh_token=refresh_token,
+                             app_key=app_key,
+                             max_retries_on_error=0,
+                             max_retries_on_rate_limit=0,
+                             timeout=10,
+                             session=SingleRequestSession(live=True))
+    try:
+        client.refresh_access_token()
+        renewed = client._oauth2_access_token
+        if not isinstance(renewed, str) or not renewed or renewed == access_token:
+            raise Blocked("credential renewal did not return a new access token")
+        return renewed
+    except Blocked:
+        raise
+    except BaseException as exc:
+        raise Blocked("credential renewal failed") from exc
+    finally:
+        client.close()
+
+
 class BoundedHTTPAdapter(HTTPAdapter):
     def __init__(self, fixture_origin=None, *, live=False):
         super().__init__(max_retries=0)

@@ -13,6 +13,30 @@ from v2_retain.operator_live import _decision, main
 
 
 class OperatorDecisionTests(unittest.TestCase):
+
+    def test_identity_uses_valid_access_token_without_renewal(self):
+        facts = {"account_id": "account", "home_namespace_id": "1", "root_namespace_id": "1", "folder_state": "absent"}
+        client = MagicMock()
+        with patch.object(operator_live, "_identity_client", return_value=client), \
+             patch.object(operator_live, "_identity", return_value=facts), \
+             patch.object(operator_live, "renew_pkce_access_token") as renew:
+            token, observed, renewed = operator_live._identity_with_renewal("access", "/cak-301-v2-qual-20260923-operator")
+        self.assertEqual((token, observed, renewed), ("access", facts, False))
+        renew.assert_not_called()
+
+    def test_identity_renews_only_before_content_admission_and_reobserves(self):
+        first = MagicMock()
+        second = MagicMock()
+        facts = {"account_id": "account", "home_namespace_id": "1", "root_namespace_id": "1", "folder_state": "absent"}
+        with patch.object(operator_live, "_identity_client", side_effect=[first, second]), \
+             patch.object(operator_live, "_identity", side_effect=[Blocked("implicit credential refresh disabled"), facts]), \
+             patch.object(operator_live, "renew_pkce_access_token", return_value="renewed") as renew:
+            with patch.dict("os.environ", {"DROPBOX_REFRESH_TOKEN": "refresh", "DROPBOX_CLIENT_ID": "client"}, clear=False):
+                token, observed, renewed = operator_live._identity_with_renewal("expired", "/cak-301-v2-qual-20260923-operator")
+        self.assertEqual((token, observed, renewed), ("renewed", facts, True))
+        renew.assert_called_once_with("expired", "refresh", "client")
+        first.close.assert_called_once()
+        second.close.assert_called_once()
     def test_requires_exact_accepted_owner_bound_decision(self):
         data = b"owned record\n"
         record = {"candidate": digest(data), "property": "retain", "contract_ref": "CAK-301/operator", "contract_hash": digest(b"contract"), "owner": "Keith Minnig", "verdict": "accepted", "expires": 2000000000, "provenance": "explicit bounded authorization"}

@@ -10,7 +10,7 @@ from pathlib import Path
 import dropbox
 
 from .admin import Admin
-from .dropbox_adapter import Config, DropboxWriter, NoRefreshDropbox, SingleRequestSession
+from .dropbox_adapter import Config, DropboxWriter, NoRefreshDropbox, SingleRequestSession, renew_pkce_access_token
 from .model import Blocked, Operation, Target, digest, encode
 from .operation import run
 from .reconcile import project
@@ -55,6 +55,25 @@ def _state_root(raw):
     return root / ".v2-operator-retention"
 
 
+def _identity_with_renewal(token, folder):
+    """Retry only the read-only identity observation after explicit PKCE renewal."""
+    client = _identity_client(token)
+    try:
+        return token, _identity(client, folder), False
+    except Blocked as exc:
+        if str(exc) != "implicit credential refresh disabled":
+            raise
+    finally:
+        client.close()
+    renewed = renew_pkce_access_token(token, os.environ.get("DROPBOX_REFRESH_TOKEN", ""),
+                                      os.environ.get("DROPBOX_CLIENT_ID", ""))
+    client = _identity_client(renewed)
+    try:
+        return renewed, _identity(client, folder), True
+    finally:
+        client.close()
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description="Explicit one-shot CAK-301 operator retention")
     p.add_argument("--input", required=True)
@@ -83,11 +102,7 @@ def main(argv=None):
         decision = _decision(args.decision, data, args.owner)
         Target("preflight-account", "0", "preflight-parent", args.folder + "/" + args.name).validate()
         token = _token()
-        client = _identity_client(token)
-        try:
-            facts = _identity(client, args.folder)
-        finally:
-            client.close()
+        token, facts, credential_renewed = _identity_with_renewal(token, args.folder)
         if facts["folder_state"] != "absent":
             raise Blocked("isolated operator folder already exists")
         print(encode({"status": "read-only-preflight", "facts": facts, "input_sha256": digest(data),
@@ -106,7 +121,8 @@ def main(argv=None):
         state = state_root / args.folder[1:]
         state.mkdir(mode=0o700)
         events = state / "events.jsonl"
-        _append(events, {"kind": "confirmed-preflight", "head": head, "facts": facts})
+        _append(events, {"kind": "confirmed-preflight", "head": head, "facts": facts,
+                         "credential_renewed": credential_renewed})
         store = Store.initialize(state / "store.sqlite", args.owner)
         _write(state / "installation.json", store.identity.json() + "\n")
         client = _identity_client(token)

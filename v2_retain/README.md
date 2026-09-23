@@ -295,6 +295,32 @@ when the operation can report them; neither is retry permission. The command
 evidences one bounded retention only and grants no acceptance, promotion,
 default-v2, or release authority.
 
+### Local PKCE credential contract
+
+The Mac-local profile uses Dropbox OAuth code flow with PKCE and
+`token_access_type=offline`. After explicit enrollment, the operator's
+dedicated 1Password credential record holds the resolved `access_token`,
+`refresh_token`, and `client_id`; the access and refresh tokens are secret.
+Only the operator's `op run` process resolves them
+into `DROPBOX_ACCESS_TOKEN`, `DROPBOX_REFRESH_TOKEN`, and
+`DROPBOX_CLIENT_ID`. Application code never invokes `op`, writes a secret, or
+retains a resolved token.
+
+The access token is tried first through the read-only identity preflight. Only
+the specific expired-token refresh path may use the refresh token. Renewal
+performs no content operation, creates no grant, and is followed by a fresh
+account/namespace/folder observation before normal confirmation and content
+admission. Renewal failure blocks before state creation or a provider content
+effect. Authentication failure after possible submission remains an I3
+hold/reconciliation case; renewal never retries or resumes it.
+
+Initial PKCE authorization and later reauthorization are operator actions; the
+existing access-token-only item is not enrollment. Missing, revoked, malformed, or
+scope-inadequate credentials block. Only non-secret facts may be retained:
+whether preflight renewed, observed identity facts, credential-reference label,
+result, and the route claim ceiling. Resolved credentials and expiry values are
+not durable operation evidence.
+
 Dropbox's [team-files guide](https://developers.dropbox.com/dbx-team-files-guide)
 says App Folder calls are rooted implicitly in that app's folder. The
 [SDK metadata route](https://dropbox-sdk-python.readthedocs.io/en/latest/api/dropbox.html)
