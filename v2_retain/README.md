@@ -202,8 +202,8 @@ The default profile uses only a synthetic token and disables the socket
 transport unless an explicit loopback fixture is selected. The separate
 `live-qualification` profile requires a resolved `DROPBOX_ACCESS_TOKEN` in the
 process environment and an explicit caller-supplied token matching that value.
-It uses no ambient proxy, netrc, `.env`, keychain, refresh token, or 1Password
-SDK path. The application never invokes `op`; the operator's local `op run`
+It uses no ambient proxy, netrc, `.env`, keychain, or 1Password SDK path. The
+application never invokes `op`; the operator's local `op run`
 process injects the credential. The selected Mac-local request/readback route has one
 accepted bounded live qualification; broader operational use still requires
 its own applicable authority and host/profile evidence. Local fixture success
@@ -307,8 +307,10 @@ into `DROPBOX_ACCESS_TOKEN`, `DROPBOX_REFRESH_TOKEN`, and
 retains a resolved token.
 
 The access token is tried first through the read-only identity preflight. Only
-the specific expired-token refresh path may use the refresh token. Renewal
-performs no content operation, creates no grant, and is followed by a fresh
+the specific expired-token refresh path may use the refresh token. On success,
+the process replaces only its in-memory access credential before constructing
+any content client. Renewal performs no content operation, creates no grant,
+and is followed by a fresh
 account/namespace/folder observation before normal confirmation and content
 admission. Renewal failure blocks before state creation or a provider content
 effect. Authentication failure after possible submission remains an I3

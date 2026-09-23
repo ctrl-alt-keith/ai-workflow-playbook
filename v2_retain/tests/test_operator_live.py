@@ -31,12 +31,24 @@ class OperatorDecisionTests(unittest.TestCase):
         with patch.object(operator_live, "_identity_client", side_effect=[first, second]), \
              patch.object(operator_live, "_identity", side_effect=[Blocked("implicit credential refresh disabled"), facts]), \
              patch.object(operator_live, "renew_pkce_access_token", return_value="renewed") as renew:
-            with patch.dict("os.environ", {"DROPBOX_REFRESH_TOKEN": "refresh", "DROPBOX_CLIENT_ID": "client"}, clear=False):
+            with patch.dict("os.environ", {"DROPBOX_ACCESS_TOKEN": "expired", "DROPBOX_REFRESH_TOKEN": "refresh", "DROPBOX_CLIENT_ID": "client"}, clear=False):
                 token, observed, renewed = operator_live._identity_with_renewal("expired", "/cak-301-v2-qual-20260923-operator")
+                self.assertEqual(operator_live.os.environ["DROPBOX_ACCESS_TOKEN"], "renewed")
         self.assertEqual((token, observed, renewed), ("renewed", facts, True))
         renew.assert_called_once_with("expired", "refresh", "client")
         first.close.assert_called_once()
         second.close.assert_called_once()
+
+    def test_renewal_failure_stops_before_identity_retry(self):
+        first = MagicMock()
+        with patch.object(operator_live, "_identity_client", return_value=first) as clients, \
+             patch.object(operator_live, "_identity", side_effect=Blocked("implicit credential refresh disabled")), \
+             patch.object(operator_live, "renew_pkce_access_token", side_effect=Blocked("credential renewal failed")):
+            with patch.dict("os.environ", {"DROPBOX_ACCESS_TOKEN": "expired", "DROPBOX_REFRESH_TOKEN": "refresh", "DROPBOX_CLIENT_ID": "client"}, clear=False):
+                with self.assertRaisesRegex(Blocked, "credential renewal failed"):
+                    operator_live._identity_with_renewal("expired", "/cak-301-v2-qual-20260923-operator")
+        self.assertEqual(clients.call_count, 1)
+        first.close.assert_called_once()
     def test_requires_exact_accepted_owner_bound_decision(self):
         data = b"owned record\n"
         record = {"candidate": digest(data), "property": "retain", "contract_ref": "CAK-301/operator", "contract_hash": digest(b"contract"), "owner": "Keith Minnig", "verdict": "accepted", "expires": 2000000000, "provenance": "explicit bounded authorization"}
@@ -121,7 +133,8 @@ class OperatorDecisionTests(unittest.TestCase):
                  patch.object(operator_live, "_identity", return_value=facts), \
                  patch.object(operator_live, "Config"), \
                  patch.object(operator_live, "NoRefreshDropbox", return_value=creator), \
-                 patch.object(operator_live, "DropboxWriter", return_value=writer), \
+                 patch.object(operator_live, "DropboxWriter", return_value=writer) as writers, \
+                 patch.object(operator_live, "renew_pkce_access_token") as renew, \
                  patch.object(operator_live, "Store") as stores, \
                  patch.object(operator_live, "Admin"), \
                  patch.object(operator_live, "run", side_effect=RuntimeError(secret)) as run, \
@@ -132,6 +145,8 @@ class OperatorDecisionTests(unittest.TestCase):
                 stores.initialize.return_value = store
                 self.assertEqual(main(args), 2)
                 run.assert_called_once()
+                self.assertEqual(writers.call_args.kwargs["access_token"], "token")
+                renew.assert_not_called()
 
             events = (root / "state" / ".v2-operator-retention" / folder.path_lower[1:] / "events.jsonl").read_text(encoding="utf-8")
             records = [json.loads(line) for line in events.splitlines()]

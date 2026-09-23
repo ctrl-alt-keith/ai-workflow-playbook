@@ -24,31 +24,6 @@ class NoRefreshDropbox(dropbox.Dropbox):
         raise Blocked("implicit credential refresh disabled")
 
 
-def renew_pkce_access_token(access_token, refresh_token, app_key):
-    """Renew authentication only; never submit or replay a content operation."""
-    if not all(isinstance(value, str) and value for value in (access_token, refresh_token, app_key)):
-        raise Blocked("resolved PKCE refresh credential required")
-    client = dropbox.Dropbox(oauth2_access_token=access_token,
-                             oauth2_refresh_token=refresh_token,
-                             app_key=app_key,
-                             max_retries_on_error=0,
-                             max_retries_on_rate_limit=0,
-                             timeout=10,
-                             session=SingleRequestSession(live=True))
-    try:
-        client.refresh_access_token()
-        renewed = client._oauth2_access_token
-        if not isinstance(renewed, str) or not renewed or renewed == access_token:
-            raise Blocked("credential renewal did not return a new access token")
-        return renewed
-    except Blocked:
-        raise
-    except BaseException as exc:
-        raise Blocked("credential renewal failed") from exc
-    finally:
-        client.close()
-
-
 class BoundedHTTPAdapter(HTTPAdapter):
     def __init__(self, fixture_origin=None, *, live=False):
         super().__init__(max_retries=0)
@@ -94,6 +69,40 @@ class ReadOnlySession(SingleRequestSession):
         if urlsplit(url).path not in {"/2/users/get_current_account", "/2/files/get_metadata", "/2/files/download", "/2/files/list_folder"}:
             raise Blocked("reader transport refuses non-read route")
         return super().request(method, url, **kwargs)
+
+
+class RenewalSession(SingleRequestSession):
+    """Permit only the single OAuth token-refresh endpoint."""
+    def request(self, method, url, **kwargs):
+        parsed = urlsplit(url)
+        if method != "POST" or parsed.hostname != "api.dropboxapi.com" or parsed.path != "/oauth2/token":
+            raise Blocked("renewal transport refuses non-token route")
+        return super().request(method, url, **kwargs)
+
+
+def renew_pkce_access_token(access_token, refresh_token, app_key):
+    """Renew authentication only; never submit or replay a content operation."""
+    if not all(isinstance(value, str) and value for value in (access_token, refresh_token, app_key)):
+        raise Blocked("resolved PKCE refresh credential required")
+    client = dropbox.Dropbox(oauth2_access_token=access_token,
+                             oauth2_refresh_token=refresh_token,
+                             app_key=app_key,
+                             max_retries_on_error=0,
+                             max_retries_on_rate_limit=0,
+                             timeout=10,
+                             session=RenewalSession(live=True))
+    try:
+        client.refresh_access_token()
+        renewed = client._oauth2_access_token
+        if not isinstance(renewed, str) or not renewed or renewed == access_token:
+            raise Blocked("credential renewal did not return a new access token")
+        return renewed
+    except Blocked:
+        raise
+    except Exception:
+        raise Blocked("credential renewal failed") from None
+    finally:
+        client.close()
 
 
 @dataclass(frozen=True)

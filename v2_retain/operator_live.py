@@ -67,6 +67,9 @@ def _identity_with_renewal(token, folder):
         client.close()
     renewed = renew_pkce_access_token(token, os.environ.get("DROPBOX_REFRESH_TOKEN", ""),
                                       os.environ.get("DROPBOX_CLIENT_ID", ""))
+    # The renewed token is the authenticated continuation of this process's
+    # explicit credential route; content clients remain bound to it below.
+    os.environ["DROPBOX_ACCESS_TOKEN"] = renewed
     client = _identity_client(renewed)
     try:
         return renewed, _identity(client, folder), True

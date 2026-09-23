@@ -6,13 +6,13 @@ import tempfile
 import threading
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import requests
 import dropbox
 from requests.adapters import HTTPAdapter
 
-from v2_retain.dropbox_adapter import BoundedHTTPAdapter, Config, DropboxWriter, strict_create
+from v2_retain.dropbox_adapter import BoundedHTTPAdapter, Config, DropboxWriter, RenewalSession, renew_pkce_access_token, strict_create
 from v2_retain.model import Blocked, digest
 from v2_retain.operation import run
 from v2_retain.qualify_live import _counted
@@ -20,6 +20,37 @@ from v2_retain.reconcile import reconcile
 import test_operation as local_tests
 
 ACCOUNT = "dbid:" + "a" * 35
+
+
+class PKCERenewalTests(unittest.TestCase):
+
+    def test_renewal_uses_only_a_no_retry_token_client_and_closes_it(self):
+        client = MagicMock()
+        client._oauth2_access_token = "renewed"
+        with patch("v2_retain.dropbox_adapter.dropbox.Dropbox", return_value=client) as construct:
+            self.assertEqual(renew_pkce_access_token("expired", "refresh", "client"), "renewed")
+        kwargs = construct.call_args.kwargs
+        self.assertEqual((kwargs["max_retries_on_error"], kwargs["max_retries_on_rate_limit"]), (0, 0))
+        self.assertIsInstance(kwargs["session"], RenewalSession)
+        client.refresh_access_token.assert_called_once_with()
+        client.close.assert_called_once_with()
+
+    def test_renewal_rejects_missing_or_secret_bearing_failure_without_cause(self):
+        with self.assertRaisesRegex(Blocked, "resolved PKCE refresh credential required"):
+            renew_pkce_access_token("expired", "", "client")
+        client = MagicMock()
+        client.refresh_access_token.side_effect = RuntimeError("refresh_token=secret")
+        with patch("v2_retain.dropbox_adapter.dropbox.Dropbox", return_value=client):
+            with self.assertRaisesRegex(Blocked, "credential renewal failed") as raised:
+                renew_pkce_access_token("expired", "refresh", "client")
+        self.assertIsNone(raised.exception.__cause__)
+        client.close.assert_called_once_with()
+
+    def test_renewal_session_refuses_every_non_token_route(self):
+        session = RenewalSession(live=True)
+        self.addCleanup(session.close)
+        with self.assertRaisesRegex(Blocked, "renewal transport refuses non-token route"):
+            session.request("GET", "https://api.dropboxapi.com/2/files/upload")
 
 
 class FixtureServer(ThreadingHTTPServer):
