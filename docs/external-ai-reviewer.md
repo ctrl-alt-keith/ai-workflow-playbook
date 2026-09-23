@@ -32,6 +32,22 @@ Use this optional, non-blocking mode as a second set of eyes on an implementatio
 or pull request. The reviewer may spot edge cases, completeness gaps, or risky
 assumptions before merge. Keep the input and output narrow.
 
+### Solution-shape review
+
+When [successive corrections expose an unstable approach](core-model.md#operating-principles),
+consider a fresh, independent design review before another local fix. Brief the
+reviewer on the stable requirement, demonstrated failures, correction sequence,
+current approach, and acceptance criteria. Ask whether the abstraction should
+be kept, simplified, or removed, rather than only how to resolve the latest
+finding. Request the smallest solution that satisfies the demonstrated failures
+and acceptance criteria, with speculative cases identified separately.
+
+Select lightweight or governed review according to the existing review and
+authority boundaries. A fresh reviewer is useful when it adds an independent
+view of the solution shape; neither a fixed number of rounds nor a particular
+model or provider makes it mandatory. Disposition its findings under the
+ordinary review contract.
+
 ### Governed independent artifact review
 
 Use this mode when the human or task explicitly requires independent review, or
