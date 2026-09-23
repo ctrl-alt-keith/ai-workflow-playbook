@@ -109,6 +109,7 @@ class OperatorDecisionTests(unittest.TestCase):
         head = "a" * 40
         facts = {"account_id": "account", "home_namespace_id": "1", "root_namespace_id": "1", "folder_state": "absent"}
         folder = FolderMetadata("folder-id", "/cak-301-v2-qual-20260922-operator")
+        first, second, third = MagicMock(), MagicMock(), MagicMock()
         creator = MagicMock()
         creator.files_create_folder_v2.return_value = SimpleNamespace(metadata=folder)
         creator.files_get_metadata.return_value = folder
@@ -128,25 +129,28 @@ class OperatorDecisionTests(unittest.TestCase):
             stdout, stderr = io.StringIO(), io.StringIO()
             with patch.object(operator_live, "_head", return_value=head), \
                  patch.object(operator_live, "_versions"), \
-                 patch.object(operator_live, "_token", return_value="token"), \
-                 patch.object(operator_live, "_identity_client", return_value=MagicMock()), \
-                 patch.object(operator_live, "_identity", return_value=facts), \
+                 patch.object(operator_live, "_token", return_value="expired"), \
+                 patch.object(operator_live, "_identity_client", side_effect=[first, second, third]), \
+                 patch.object(operator_live, "_identity", side_effect=[Blocked("implicit credential refresh disabled"), facts, facts]), \
                  patch.object(operator_live, "Config"), \
-                 patch.object(operator_live, "NoRefreshDropbox", return_value=creator), \
+                 patch.object(operator_live, "NoRefreshDropbox", return_value=creator) as creators, \
                  patch.object(operator_live, "DropboxWriter", return_value=writer) as writers, \
-                 patch.object(operator_live, "renew_pkce_access_token") as renew, \
+                 patch.object(operator_live, "renew_pkce_access_token", return_value="renewed") as renew, \
                  patch.object(operator_live, "Store") as stores, \
                  patch.object(operator_live, "Admin"), \
                  patch.object(operator_live, "run", side_effect=RuntimeError(secret)) as run, \
                  patch.object(operator_live, "project", return_value={"status": "hold"}), \
                  patch.object(operator_live.dropbox.files, "FolderMetadata", FolderMetadata), \
                  patch("builtins.input", side_effect=[facts["account_id"], facts["home_namespace_id"], facts["root_namespace_id"], "APP FOLDER"]), \
-                 redirect_stdout(stdout), redirect_stderr(stderr):
+                 redirect_stdout(stdout), redirect_stderr(stderr), \
+                 patch.dict("os.environ", {"DROPBOX_ACCESS_TOKEN": "expired", "DROPBOX_REFRESH_TOKEN": "refresh", "DROPBOX_CLIENT_ID": "client"}, clear=False):
                 stores.initialize.return_value = store
                 self.assertEqual(main(args), 2)
                 run.assert_called_once()
-                self.assertEqual(writers.call_args.kwargs["access_token"], "token")
-                renew.assert_not_called()
+                renew.assert_called_once_with("expired", "refresh", "client")
+                self.assertEqual(operator_live.os.environ["DROPBOX_ACCESS_TOKEN"], "renewed")
+                self.assertEqual(creators.call_args.kwargs["oauth2_access_token"], "renewed")
+                self.assertEqual(writers.call_args.kwargs["access_token"], "renewed")
 
             events = (root / "state" / ".v2-operator-retention" / folder.path_lower[1:] / "events.jsonl").read_text(encoding="utf-8")
             records = [json.loads(line) for line in events.splitlines()]
