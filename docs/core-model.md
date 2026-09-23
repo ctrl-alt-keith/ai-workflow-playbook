@@ -54,6 +54,16 @@ procedural; discussion of the principles themselves activates
 - **Validate or verify before relying on consequential conclusions.** Choose
   checks that match the claim and risk. Passing validation is evidence about
   what was checked; it is not acceptance, approval, or broader authority.
+- **Re-evaluate an unstable solution shape.** When the requirement stays stable
+  but successive corrections add exceptions, special cases, or increasingly
+  narrow tests for the same approach, pause local patching and reconsider the
+  abstraction. Corrections that resolve demonstrated defects without such
+  growth are ordinary convergence; review count alone is not a trigger.
+  Compare simplification or removal with further repair. Resume only with a
+  solution bounded by demonstrated failures and acceptance criteria;
+  speculative edge cases do not extend completion on their own. Use
+  [independent design review](external-ai-reviewer.md#solution-shape-review)
+  when a fresh perspective would materially help.
 - **Re-observe resulting reality after consequential change.** Retrieve the
   actual outcome instead of assuming the planned effect occurred, then
   reconcile separately owned systems only when their workflows require it.

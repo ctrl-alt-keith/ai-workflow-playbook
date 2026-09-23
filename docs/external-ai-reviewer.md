@@ -145,6 +145,22 @@ After a successful result, disposition findings and any need for re-review
 under the review-packet contract. Reviewer output grants no implementation,
 promotion, merge, release, or other consequential authority.
 
+## Solution-Shape Review
+
+When [successive corrections expose an unstable approach](core-model.md#operating-principles),
+consider a fresh, independent design review before another local fix. Brief the
+reviewer on the stable requirement, demonstrated failures, correction sequence,
+current approach, and acceptance criteria. Ask whether the abstraction should
+be kept, simplified, or removed, rather than only how to resolve the latest
+finding. Comparing these options is within the stable requirement; the
+redesign and scope limits elsewhere in this document still bar widening that
+requirement or its acceptance criteria. Request the smallest solution that
+satisfies the demonstrated failures and acceptance criteria, with speculative
+cases identified separately.
+
+Select lightweight or governed review according to the existing review and
+authority boundaries.
+
 ## When To Use an External AI Reviewer
 
 Use an external AI reviewer when:
