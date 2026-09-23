@@ -88,7 +88,7 @@ ssh_output="$(
 ssh_status="$?"
 
 case "$ssh_output" in
-    *"successfully authenticated"*)
+    "Hi "*"! You've successfully authenticated, but GitHub does not provide shell access.")
         if [ "$ssh_status" -eq 0 ] || [ "$ssh_status" -eq 1 ]; then
             pass_check "GitHub SSH connectivity works via ssh -T $SSH_TARGET"
         else
