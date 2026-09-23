@@ -49,9 +49,8 @@ existing bounded authority remains controlling. Authoring or presenting a
 Codex prompt does not select Work or Codex.
 
 For handoffs, apply the canonical prompt owner's
-[target-shaped projections](../prompts.md#target-shaped-projections). A Codex
-repository implementation handoff stops before merge unless the existing
-bounded task explicitly authorizes merging the exact reviewed PR.
+[target-shaped projections](../prompts.md#target-shaped-projections) and the
+repository workflow's [merge-authorization rules](../repo-readiness.md#pr-readiness).
 
 ## Connected apps and consequential actions
 
