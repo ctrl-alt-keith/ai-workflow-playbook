@@ -49,7 +49,7 @@ existing bounded authority remains controlling. Authoring or presenting a
 Codex prompt does not select Work or Codex.
 
 For handoffs, apply the canonical prompt owner's
-[target-shaped projections](../prompts.md#target-shaped-projections) and the
+[target-shaped projections](../prompts.md#target-shaped-projections), subject to the
 repository workflow's [merge-authorization rules](../repo-readiness.md#pr-readiness).
 
 ## Connected apps and consequential actions
