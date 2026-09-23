@@ -38,22 +38,20 @@ eligibility, authoritative-source sufficiency for the required scope, and
 transition consent. An exposed action may be runtime-ineligible; a successful
 read proves only its returned scope. Use Chat when the task is authorized,
 Chat is eligible and sufficient, and no other surface was requested or accepted.
-Otherwise preserve material unknowns and report the boundary; offer an eligible
-Work or Codex surface when consent is absent. Its results still require
-qualification against the owning source's required scope.
+When Chat is ineligible or insufficient, preserve material unknowns and report
+the boundary; offer an eligible Work or Codex surface when consent is absent.
+Its results still require qualification against the owning source's required
+scope.
 
-Apply the shared transition-consent boundary to Work and Codex: do not
-instantiate or transition unless the operator explicitly requests the surface
-or accepts an offered transition. Consent grants the transition, not new task
-authority; the existing bounded authority remains controlling. Authoring or
-presenting a Codex prompt does not select Work or Codex.
+Apply the shared [transition-consent boundary](../core-model.md#interactive-to-execution-transition-consent)
+to Work and Codex. Consent grants the transition, not new task authority; the
+existing bounded authority remains controlling. Authoring or presenting a
+Codex prompt does not select Work or Codex.
 
-For handoffs, use the canonical prompt owner and name the bounded outcome,
-permitted sources/tools, output checks, and return boundary. Codex repository
-implementation handoffs also require locality, validation, PR delivery, and
-stop-before-merge unless the existing bounded task explicitly authorizes
-merging the exact reviewed PR. Verify a governed package's identity before
-relying on it.
+For handoffs, apply the canonical prompt owner's
+[target-shaped projections](../prompts.md#target-shaped-projections). A Codex
+repository implementation handoff stops before merge unless the existing
+bounded task explicitly authorizes merging the exact reviewed PR.
 
 ## Connected apps and consequential actions
 
