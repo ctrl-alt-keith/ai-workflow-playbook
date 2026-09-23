@@ -117,17 +117,13 @@ ownership, or a broader product decision.
 
 #### Documentation Drift And Volatile State
 
-When repairing documentation drift, distinguish the durable semantic claim from
-the mutable state used to illustrate it. State durable behavior directly; route
-inventories, counts, generated lists, current versions, and similar snapshots
-to their owning source or existing generation path instead of copying them.
+When repairing documentation drift, state durable behavior directly and route
+volatile state to its owning or existing generated source instead of copying it.
+Retain a snapshot only when its point-in-time value materially helps the reader,
+with enough context to avoid implying that it is live.
 
-Retain a snapshot only when its point-in-time value materially helps the reader;
-identify its context or freshness rather than implying that it is live. Prefer
-restoring the durable claim, then routing or deriving the mutable state, and
-refresh a copied value only when keeping that snapshot has that reader value.
-This repair choice does not authorize broader documentation redesign or changes
-outside the verified drift surface.
+Prefer removing duplication over refreshing a stale copied value. This does not
+authorize changes outside the verified drift surface.
 
 ### Periodic Engineering Investment
 
