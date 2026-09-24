@@ -134,14 +134,22 @@ reviewed artifact?** Record one of three outcomes and the reason:
   meaningfully the same reviewed work.
 
 Do not require another review merely because bytes changed, and do not skip one
-merely because the filename or headline stayed the same. Continued
-applicability is the governing question. The human-owned approval identity and
-validity rules above still control after the review decision.
+merely because the filename or headline stayed the same. The human-owned
+approval identity and validity rules above still control after the review
+decision.
 
 When a substantive correction changes a shared evidence, failure, authority, or
 isolation path, selected re-review should challenge the original finding and
 materially interacting invariants, rather than only confirm that the requested
 edit is present.
+
+In an automated review-and-fix cycle, compare substantive findings by class
+across rounds. Stop automatic correction and re-review for a class when it
+persists after correction (including through a new instance) or its
+[solution shape is unstable](core-model.md#operating-principles). Bring its
+history to a human decision. Distinct classes may receive bounded correction.
+Further diagnosis or correction of the stopped class requires separate scope
+and authority.
 
 ## Measured Evidence
 
