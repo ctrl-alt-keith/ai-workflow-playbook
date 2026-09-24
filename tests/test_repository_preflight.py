@@ -367,20 +367,20 @@ class RepositoryPreflightTest(unittest.TestCase):
 
     def test_executor_failure_is_not_part_of_repository_preflight(self) -> None:
         commands = self.fake_success_commands()
-        commands["codex"] = """
-            touch "$CODEX_TEST_MARKER"
+        commands["executor"] = """
+            touch "$EXECUTOR_TEST_MARKER"
             exit 1
         """
 
         with tempfile.TemporaryDirectory() as tmp:
-            marker = Path(tmp) / "codex-invoked"
+            marker = Path(tmp) / "executor-invoked"
             # Executor hints must not trigger a launch or qualification.
             result = self.run_preflight(
                 commands,
                 {
-                    "PREFLIGHT_TEST_REQUESTED_MODEL": "GPT-6 Astra",
+                    "PREFLIGHT_TEST_REQUESTED_MODEL": "Example Model",
                     "PREFLIGHT_TEST_THREAD_ROUTING": "FRESH THREAD",
-                    "CODEX_TEST_MARKER": str(marker),
+                    "EXECUTOR_TEST_MARKER": str(marker),
                 },
             )
 
