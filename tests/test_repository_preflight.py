@@ -367,10 +367,11 @@ class RepositoryPreflightTest(unittest.TestCase):
 
     def test_executor_failure_is_not_part_of_repository_preflight(self) -> None:
         commands = self.fake_success_commands()
-        commands["executor"] = """
-            touch "$EXECUTOR_TEST_MARKER"
-            exit 1
-        """
+        for executor_name in ("codex", "claude"):
+            commands[executor_name] = """
+                touch "$EXECUTOR_TEST_MARKER"
+                exit 1
+            """
 
         with tempfile.TemporaryDirectory() as tmp:
             marker = Path(tmp) / "executor-invoked"
