@@ -286,8 +286,11 @@ unavailable.
 ## Environment Preflight
 
 Before driving repository automation or worker fan-out, run
-`./scripts/codex-preflight` from the Playbook checkout (GitHub SSH, `gh`
-auth, repository reachability) and stop on a non-zero exit.
+[`./scripts/repository-preflight`](../../scripts/repository-preflight) from the
+Playbook checkout (GitHub SSH, `gh` auth, repository reachability) and stop on a
+non-zero exit. This establishes only the
+[shared repository prerequisites](../repository-preflight.md); Claude provider
+authentication remains with the applicable provider-specific launcher.
 
 ## Delivery
 

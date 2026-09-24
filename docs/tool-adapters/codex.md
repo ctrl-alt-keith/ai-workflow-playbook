@@ -102,6 +102,12 @@ guidance actually available to the run. Ambiguous repository work is review or
 orchestration unless the human explicitly authorizes implementation, commit,
 push, or PR delivery.
 
+Before repository automation or worker fan-out, run
+[`scripts/repository-preflight`](../../scripts/repository-preflight) from the
+Playbook checkout and stop on a non-zero exit. This establishes only the
+[shared repository prerequisites](../repository-preflight.md); Codex launch and
+model qualification remain separate.
+
 ### Worktrees
 
 Use the repository's one-repository, one-branch, one-dedicated-worktree, one-PR

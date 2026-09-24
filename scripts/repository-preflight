@@ -3,8 +3,8 @@
 
 set -u
 
-REPO_URL="${CODEX_PREFLIGHT_REPO_URL:-git@github.com:ctrl-alt-keith/ai-workflow-playbook.git}"
-SSH_TARGET="${CODEX_PREFLIGHT_GITHUB_SSH_TARGET:-git@github.com}"
+REPO_URL="${REPOSITORY_PREFLIGHT_REPO_URL:-git@github.com:ctrl-alt-keith/ai-workflow-playbook.git}"
+SSH_TARGET="${REPOSITORY_PREFLIGHT_GITHUB_SSH_TARGET:-git@github.com}"
 
 pass_check() {
     printf 'PASS %s\n' "$1"
@@ -52,7 +52,7 @@ esac
 if [ -z "$ssh_host" ] || [ -z "$repo_host" ] || [ "$ssh_host" != "$repo_host" ]; then
     fail_check \
         "GitHub SSH target and repository URL use the same host" \
-        "Set CODEX_PREFLIGHT_GITHUB_SSH_TARGET and CODEX_PREFLIGHT_REPO_URL to matching git@host values, then rerun this preflight."
+        "Set REPOSITORY_PREFLIGHT_GITHUB_SSH_TARGET and REPOSITORY_PREFLIGHT_REPO_URL to matching git@host values, then rerun this preflight."
 fi
 
 pass_check "GitHub SSH target and repository URL use the same host"
@@ -121,4 +121,4 @@ else
         "Confirm GitHub SSH access and repository permission, then rerun git ls-remote $REPO_URL HEAD."
 fi
 
-printf 'PASS Codex local automation preflight complete\n'
+printf 'PASS Repository preflight complete\n'
