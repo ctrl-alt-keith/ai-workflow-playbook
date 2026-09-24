@@ -131,7 +131,7 @@ for that component's payload and reconciliation contract.
 - [`docs/maintenance-automations.md`](docs/maintenance-automations.md):
   autonomous maintenance layer responsibilities, capability classes, authority
   and evidence boundaries, and local-configuration separation
-- [`docs/codex-preflight.md`](docs/codex-preflight.md): read-only local prerequisite check for Codex automation startup
+- [`docs/repository-preflight.md`](docs/repository-preflight.md): read-only workstation and repository prerequisite check for automation startup
 - [`docs/workstation-maintenance.md`](docs/workstation-maintenance.md): manual-only local workstation maintenance procedures, including Codex log cleanup
 - [`docs/prompts.md`](docs/prompts.md): reusable prompt templates, including the standard Codex task prompt format
 

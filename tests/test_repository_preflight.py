@@ -10,10 +10,10 @@ import textwrap
 import unittest
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "codex-preflight"
+SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "repository-preflight"
 
 
-class CodexPreflightTest(unittest.TestCase):
+class RepositoryPreflightTest(unittest.TestCase):
     def run_preflight(
         self,
         commands: dict[str, str],
@@ -97,7 +97,7 @@ class CodexPreflightTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("PASS ssh-add -l listed identities for diagnostic context", result.stdout)
         self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
-        self.assertIn("PASS Codex local automation preflight complete", result.stdout)
+        self.assertIn("PASS Repository preflight complete", result.stdout)
         self.assertEqual(result.stderr, "")
 
     def test_missing_required_commands_fail_fast_with_install_remediation(self) -> None:
@@ -153,7 +153,7 @@ class CodexPreflightTest(unittest.TestCase):
             result.stdout,
         )
         self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
-        self.assertIn("PASS Codex local automation preflight complete", result.stdout)
+        self.assertIn("PASS Repository preflight complete", result.stdout)
 
     def test_missing_optional_ssh_add_still_succeeds_with_github_ssh_auth(self) -> None:
         commands = self.fake_success_commands()
@@ -167,7 +167,7 @@ class CodexPreflightTest(unittest.TestCase):
             result.stdout,
         )
         self.assertIn("PASS GitHub SSH connectivity works", result.stdout)
-        self.assertIn("PASS Codex local automation preflight complete", result.stdout)
+        self.assertIn("PASS Repository preflight complete", result.stdout)
 
     def test_github_ssh_failure_stops_before_gh_checks(self) -> None:
         commands = self.fake_success_commands()
@@ -267,8 +267,8 @@ class CodexPreflightTest(unittest.TestCase):
         result = self.run_preflight(
             commands,
             {
-                "CODEX_PREFLIGHT_GITHUB_SSH_TARGET": "git@ssh.github.example",
-                "CODEX_PREFLIGHT_REPO_URL": "git@ssh.github.example:org/repo.git",
+                "REPOSITORY_PREFLIGHT_GITHUB_SSH_TARGET": "git@ssh.github.example",
+                "REPOSITORY_PREFLIGHT_REPO_URL": "git@ssh.github.example:org/repo.git",
             },
         )
 
@@ -303,8 +303,8 @@ class CodexPreflightTest(unittest.TestCase):
         result = self.run_preflight(
             commands,
             {
-                "CODEX_PREFLIGHT_GITHUB_SSH_TARGET": ssh_target,
-                "CODEX_PREFLIGHT_REPO_URL": repo_url,
+                "REPOSITORY_PREFLIGHT_GITHUB_SSH_TARGET": ssh_target,
+                "REPOSITORY_PREFLIGHT_REPO_URL": repo_url,
             },
         )
 
@@ -321,8 +321,8 @@ class CodexPreflightTest(unittest.TestCase):
         result = self.run_preflight(
             commands,
             {
-                "CODEX_PREFLIGHT_GITHUB_SSH_TARGET": "git@ssh.github.example",
-                "CODEX_PREFLIGHT_REPO_URL": "git@github.example:org/repo.git",
+                "REPOSITORY_PREFLIGHT_GITHUB_SSH_TARGET": "git@ssh.github.example",
+                "REPOSITORY_PREFLIGHT_REPO_URL": "git@github.example:org/repo.git",
             },
         )
 
@@ -340,15 +340,15 @@ class CodexPreflightTest(unittest.TestCase):
             (
                 "ssh target omits git user",
                 {
-                    "CODEX_PREFLIGHT_GITHUB_SSH_TARGET": "ssh.github.example",
-                    "CODEX_PREFLIGHT_REPO_URL": "git@ssh.github.example:org/repo.git",
+                    "REPOSITORY_PREFLIGHT_GITHUB_SSH_TARGET": "ssh.github.example",
+                    "REPOSITORY_PREFLIGHT_REPO_URL": "git@ssh.github.example:org/repo.git",
                 },
             ),
             (
                 "repository URL omits git user",
                 {
-                    "CODEX_PREFLIGHT_GITHUB_SSH_TARGET": "git@ssh.github.example",
-                    "CODEX_PREFLIGHT_REPO_URL": "ssh.github.example:org/repo.git",
+                    "REPOSITORY_PREFLIGHT_GITHUB_SSH_TARGET": "git@ssh.github.example",
+                    "REPOSITORY_PREFLIGHT_REPO_URL": "ssh.github.example:org/repo.git",
                 },
             ),
         ]
@@ -365,7 +365,7 @@ class CodexPreflightTest(unittest.TestCase):
                 self.assertNotIn("ssh-add -l", result.stdout)
                 self.assertNotIn("GitHub SSH connectivity works", result.stdout)
 
-    def test_managed_parent_codex_failure_is_not_part_of_preflight(self) -> None:
+    def test_executor_failure_is_not_part_of_repository_preflight(self) -> None:
         commands = self.fake_success_commands()
         commands["codex"] = """
             touch "$CODEX_TEST_MARKER"
@@ -374,12 +374,12 @@ class CodexPreflightTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             marker = Path(tmp) / "codex-invoked"
-            # These removed inputs are deliberately supplied to prove they are inert.
+            # Executor hints must not trigger a launch or qualification.
             result = self.run_preflight(
                 commands,
                 {
-                    "CODEX_PREFLIGHT_REQUESTED_MODEL": "GPT-6 Astra",
-                    "CODEX_PREFLIGHT_THREAD_ROUTING": "FRESH THREAD",
+                    "PREFLIGHT_TEST_REQUESTED_MODEL": "GPT-6 Astra",
+                    "PREFLIGHT_TEST_THREAD_ROUTING": "FRESH THREAD",
                     "CODEX_TEST_MARKER": str(marker),
                 },
             )

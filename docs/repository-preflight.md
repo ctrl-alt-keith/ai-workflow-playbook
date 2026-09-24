@@ -1,9 +1,9 @@
-# Codex Preflight
+# Repository Preflight
 
 ## Purpose
 
-`scripts/codex-preflight` is a small read-only check for stale local/session
-prerequisites before Codex automation fan-out or real repository work begins.
+`scripts/repository-preflight` is a small read-only check for workstation and
+repository prerequisites before repository automation or worker fan-out begins.
 
 It verifies:
 
@@ -25,18 +25,21 @@ commit, or update SSH configuration. SSH checks use batch mode and strict host
 key checking so a missing `known_hosts` entry fails instead of being added by
 the preflight.
 
-It does not launch Codex or qualify model selectors.
+Passing repository preflight establishes repository and workstation
+prerequisites. It does not establish executor availability, model
+qualification, or provider authentication. Executor and provider checks stay
+with their respective adapters and launchers.
 
 ## Usage
 
-At the start of a Codex automation prompt, add a short preflight step before
-delegating workers or touching repositories:
+Before repository automation or worker fan-out, run the shared preflight from
+the Playbook checkout:
 
 ```text
 Before starting repository work, run:
 
 cd /ABSOLUTE/PATH/TO/ai-workflow-playbook
-./scripts/codex-preflight
+./scripts/repository-preflight
 
 If it exits non-zero, stop and report the failing check and remediation.
 ```
@@ -50,9 +53,9 @@ to restart.
 Use overrides only when checking a different GitHub repository or GitHub SSH
 endpoint with the same read-only pattern:
 
-- `CODEX_PREFLIGHT_REPO_URL`: repository URL used for the final
+- `REPOSITORY_PREFLIGHT_REPO_URL`: repository URL used for the final
   `git ls-remote` reachability check.
-- `CODEX_PREFLIGHT_GITHUB_SSH_TARGET`: SSH target used for the direct
+- `REPOSITORY_PREFLIGHT_GITHUB_SSH_TARGET`: SSH target used for the direct
   `ssh -T` GitHub authentication check (default: `git@github.com`).
 
 Keep both overrides pointed at the same GitHub account or host context. The
