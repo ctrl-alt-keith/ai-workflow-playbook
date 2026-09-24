@@ -143,18 +143,13 @@ isolation path, selected re-review should challenge the original finding and
 materially interacting invariants, rather than only confirm that the requested
 edit is present.
 
-For an automated review-and-fix cycle, retain the substantive finding classes
-and correction history across rounds. Before continuing, record the
-re-review applicability decision above and whether a prior finding class was
-resolved, persists (including a new instance), or a distinct class emerged. If
-a class persists
-after its correction, or successive corrections keep reformulating the same
-unstable approach, stop automatic correction and re-review for that class and
-bring the history to a human decision on the approach. Distinct new findings
-may still receive bounded correction. Diagnosis or correction after a stop
-requires separate scope and authority; its evidence informs the human
-decision. Neither a round count nor reviewer acceptance alone is the loop's
-exit rule.
+In an automated review-and-fix cycle, compare substantive findings by class
+across rounds. A new instance of the same class is recurrence. Stop automatic
+correction and re-review for a class when it persists after correction or the
+[solution shape is unstable](core-model.md#operating-principles), and bring its
+history to a human decision. Distinct classes may receive bounded correction.
+Further diagnosis or correction of the stopped class requires separate scope
+and authority.
 
 ## Measured Evidence
 
