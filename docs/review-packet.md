@@ -146,13 +146,15 @@ edit is present.
 For an automated review-and-fix cycle, retain the substantive finding classes
 and correction history across rounds. Before continuing, record the
 re-review applicability decision above and whether a prior finding class was
-resolved, persists, or has exposed a different defect. If a class persists
+resolved, persists (including a new instance), or a distinct class emerged. If
+a class persists
 after its correction, or successive corrections keep reformulating the same
 unstable approach, stop automatic correction and re-review for that class and
 bring the history to a human decision on the approach. Distinct new findings
-may still receive bounded correction; a separately scoped diagnosis may also
-establish a concrete remaining gap. Neither a round count nor reviewer
-acceptance alone is the loop's exit rule.
+may still receive bounded correction. Diagnosis or correction after a stop
+requires separate scope and authority; its evidence informs the human
+decision. Neither a round count nor reviewer acceptance alone is the loop's
+exit rule.
 
 ## Measured Evidence
 
