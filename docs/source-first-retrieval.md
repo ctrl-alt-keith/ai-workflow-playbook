@@ -111,6 +111,9 @@ stateful reasoning or recommendations:
 For repository workflows, select the applicable interaction mode from
 [`repo-readiness.md`](repo-readiness.md#interaction-mode-preflight).
 
+Before designing a new cross-repository mechanism, check whether a relevant
+existing capability or contract already exists.
+
 Optional triggers may guide retrieval when the next action depends on current
 state, but they do not require source inspection for purely conversational
 answers:
