@@ -125,10 +125,12 @@ attempt. Apply [`external-ai-reviewer.md`](../external-ai-reviewer.md) and
 owns records, diagnostics, redaction, runtime qualification, and incident
 interpretation.
 
-- Use the active Playbook checkout's launcher with its explicit absolute
-  provider binary, invoked from the checkout under review, bound to the exact
-  `--candidate-commit`; a mismatch stops before review. Keep the launch behind
-  per-action approval, never an auto-approving mode.
+- Use the Playbook checkout's launcher with its explicit absolute provider
+  binary. For repository review, invoke it from the checkout under review,
+  bound to the exact `--candidate-commit`; a mismatch stops before review.
+  For standalone artifact review, use explicit artifact and review-request
+  files with their SHA-256 identities from any working directory. Keep the
+  launch behind per-action approval, never an auto-approving mode.
 - Run the launcher's required preflight before an expensive review.
 - Claude: a qualified authentication failure (exit 78) requires the operator
   to log in again through the Claude CLI in their own interactive session,

@@ -8,11 +8,21 @@ authority, and finding-disposition rules remain in
 
 ## Shared launcher boundary
 
-Use the active checkout's repository-owned launcher and an explicit absolute
-provider binary. It binds the checkout to the requested exact candidate before
-review; a mismatch stops the launch. Review prompts arrive on standard input;
-canaries and probes use fixed prompts. Empty or failed provider output is
-launcher failure, never a review verdict.
+Use the Playbook's repository-owned launcher and an explicit absolute provider
+binary. Select exactly one target. `--candidate-commit <exact HEAD>` binds the
+active checkout, with or without a PR; its review request arrives on standard
+input. Standalone review from any working directory uses
+`--candidate-artifact <absolute UTF-8 file> --candidate-sha256 <digest>` and
+`--review-request-file <absolute UTF-8 file> --review-request-sha256 <digest>`;
+standard input must be empty. Both files must be regular, nonempty, and at most
+1,000,000 bytes. The launcher verifies their bytes, includes them in the
+reviewer prompt, and records their paths, lengths, and digests. Missing,
+conflicting, or mismatched identity stops the launch. A review question does
+not substitute for an artifact candidate. The launcher working directory is
+execution context, not candidate identity. Preserve both files under the
+owning review's input retention contract when governed recovery is required;
+target type does not select review mode. Canaries and probes use fixed prompts.
+Empty or failed provider output is launcher failure, never a verdict.
 
 Before substantive review, retain one persistent session and deliver the prompt
 through an EOF-producing route. Presentation timeout, quiet output, or a lost
@@ -29,8 +39,8 @@ configuration remain outside launcher control.
 
 ## Substantive health probe
 
-Run `--health-probe` from the exact candidate checkout with the same absolute
-binary, selection, fresh absolute `--diagnostics-file`, and exact
+Run the repository-only `--health-probe` from the exact candidate checkout with
+the same absolute binary, selection, fresh absolute `--diagnostics-file`, and exact
 `--candidate-commit`. It ignores standard input, verifies
 `scripts/reviewer-health-probe.txt`, and returns its contents exactly. Codex
 runs selector acceptance before the probe; that canary sees neither fixture nor
@@ -105,12 +115,14 @@ failures exit 70.
 For controller-supplied evidence, pass `--evidence-bundle` with the absolute path
 of a fresh private attempt-local bundle staged under the
 [`review-evidence.md`](review-evidence.md) contract. This is the shared Claude/Codex
-review-execution contract; it is never accepted for an auth preflight. The launcher verifies local structure, permissions,
+review-execution contract; it is never accepted for an auth preflight or
+standalone artifact target. The launcher verifies local structure, permissions,
 bytes, and the manifest before invoking the provider executable, including its
 version probe. It requires an `applicable` repository-commit candidate matching
 the observed HEAD and the locally configured GitHub origin (`https`, SSH, or
 SCP-style URL). Other origins and immutable-artifact review candidates are not
-supported by this repository-review launcher.
+supported by this evidence-bundle option; standalone artifact review uses the
+target options above.
 
 The existing local read-only tool set receives one additional directory via
 the documented [`--add-dir` option](https://docs.anthropic.com/en/docs/claude-code/cli-usage)
