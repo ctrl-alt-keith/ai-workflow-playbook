@@ -16,7 +16,9 @@ input. Standalone review from any working directory uses
 `--review-request-file <absolute UTF-8 file> --review-request-sha256 <digest>`;
 standard input must be empty. Both files must be regular, nonempty, and at most
 1,000,000 bytes. The launcher verifies their bytes, includes them in the
-reviewer prompt, and records their paths, lengths, and digests. Missing,
+reviewer prompt, and records their paths, lengths, and digests. The artifact
+review runs in private scratch; the caller's directory is not a reviewer source.
+The prompt boundary token is recorded and absent from both supplied files. Missing,
 conflicting, or mismatched identity stops the launch. A review question does
 not substitute for an artifact candidate. The launcher working directory is
 execution context, not candidate identity. Preserve both files under the
@@ -66,7 +68,7 @@ the terminal record establishes `written`. A qualified post-execution observer
 may instead use `verify_diagnostics_readback()` after independently observing
 zero launcher exit and retaining the exact fresh requested path; it binds file
 identity, raw-byte digest, provider, attempt kind, successful result, candidate,
-and requested selection. Any other state fails the attempt and leaves the
+requested selection, and artifact review request where applicable. Any other state fails the attempt and leaves the
 destination untouched.
 
 Failures retain ordered causes: provider exit, unacceptable output,

@@ -4,10 +4,11 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
 
-from launcher_support import ROOT, current_commit
+from launcher_support import ROOT, current_commit, load_launcher
 import test_claude_review_launcher as claude_tests
 import test_codex_review_launcher as codex_tests
 
@@ -15,10 +16,13 @@ import test_codex_review_launcher as codex_tests
 class StandaloneReviewLauncherTests(unittest.TestCase):
     def run_case(self, provider, root, *args, prompt=b""):
         if provider == "claude":
-            binary = claude_tests.ClaudeReviewLauncherTests().make_fake_claude(root, "cat\n")
+            binary = claude_tests.ClaudeReviewLauncherTests().make_fake_claude(
+                root, f"pwd > {root / 'provider-cwd'}\ncat\n")
             command = [str(ROOT / "scripts/claude-review"), "--claude-bin", str(binary)]
         else:
-            binary = codex_tests.CodexReviewLauncherTests().make_fake_codex(root, 'cat > "$out"\n')
+            binary = codex_tests.CodexReviewLauncherTests().make_fake_codex(
+                root, f"pwd > {root / 'provider-cwd'}\nprintf '%s\\n' \"$@\" > {root / 'provider-args'}\n"
+                      'cat > "$out"\n')
             command = [str(ROOT / "scripts/codex-review"), "--codex-bin", str(binary)]
         command.extend(args)
         if provider == "codex":
@@ -48,12 +52,36 @@ class StandaloneReviewLauncherTests(unittest.TestCase):
                 self.assertEqual(record["candidate"], {"kind": "immutable_artifact", "path": str(artifact),
                                                        "byte_length": len(content), "sha256": digest})
                 self.assertEqual(record["target_kind"], "immutable_artifact")
+                provider_cwd = Path((root / "provider-cwd").read_text().strip()).resolve()
+                self.assertNotEqual(provider_cwd, root.resolve())
+                self.assertEqual(Path(record["execution_directory"]).resolve(), provider_cwd)
+                if provider == "codex":
+                    self.assertFalse(record["configured_envelope"]["git_repo_check"])
+                    self.assertIn("--skip-git-repo-check", (root / "provider-args").read_text())
                 self.assertEqual(record["review_request"], {"path": str(request),
                                                             "byte_length": len(request.read_bytes()),
                                                             "sha256": request_digest})
                 self.assertIn(content, output.read_bytes())
+                self.assertIn(record["prompt_boundary"].encode(), output.read_bytes())
+                self.assertEqual(output.read_bytes().count(record["prompt_boundary"].encode()), 2)
                 self.assertIn(b"Review question:\nReview this proposal.", output.read_bytes())
                 self.assertNotIn(b"HEAD commit at launch", output.read_bytes())
+                if provider == "claude":
+                    load_launcher(ROOT / "scripts/claude-review", "artifact_readback")
+                    shared = sys.modules["review_launcher"]
+                    with self.assertRaisesRegex(ValueError, "review request"):
+                        shared.verify_diagnostics_readback(
+                            diagnostics, provider="claude", attempt_kind="review", process_exit=0,
+                            candidate=record["candidate"], selection={"model": None, "effort": None})
+                    shared.verify_diagnostics_readback(
+                        diagnostics, provider="claude", attempt_kind="review", process_exit=0,
+                        candidate=record["candidate"], selection={"model": None, "effort": None},
+                        review_request=record["review_request"])
+                    with self.assertRaisesRegex(ValueError, "review request"):
+                        shared.verify_diagnostics_readback(
+                            diagnostics, provider="claude", attempt_kind="review", process_exit=0,
+                            candidate=record["candidate"], selection={"model": None, "effort": None},
+                            review_request={**record["review_request"], "sha256": "0" * 64})
 
     def test_missing_conflicting_and_mismatched_target_fail(self):
         for provider in ("claude", "codex"):
