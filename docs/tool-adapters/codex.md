@@ -153,9 +153,12 @@ mutations, and stop condition. A reviewer verdict is evidence, never approval;
 keep any reviewer source-access gap visible until an authorized actor verifies
 it.
 
-When launching a local `claude-review` or `codex-review`, use the active
-checkout's repository-owned launcher with its exact candidate commit and
-required preflight; apply [launcher outcome handling](../../scripts/review-launchers.md).
+When launching a local `claude-review` or `codex-review`, use the Playbook's
+repository-owned launcher and select an exact repository commit or standalone
+artifact target under [launcher outcome handling](../../scripts/review-launchers.md).
+Repository review uses the active checkout and its exact candidate commit;
+artifact review binds supplied artifact and review-request files by SHA-256
+and may run outside Git. Run the required preflight.
 A launch mismatch stops before review; failed launch or review is not a verdict
 and does not authorize substitution. Treat diagnostics as evidence only when
 the terminal record says they were written or a qualified post-execution

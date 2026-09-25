@@ -999,7 +999,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(too_long.returncode, 70)
         self.assertIn(b"exceeds 128 characters", too_long.stderr)
 
-    def test_review_requires_candidate_commit(self):
+    def test_review_requires_explicit_target(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             executable = self.make_fake_claude(Path(temporary_directory), "printf 'review\n'\n")
             completed = self.run_launcher(
@@ -1008,7 +1008,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 candidate_commit=None,
             )
         self.assertEqual(completed.returncode, 70)
-        self.assertIn(b"candidate-commit is required", completed.stderr)
+        self.assertIn(b"review target required", completed.stderr)
 
     def test_candidate_commit_mismatch_fails_before_review_invocation(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
