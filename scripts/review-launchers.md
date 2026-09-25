@@ -17,7 +17,7 @@ input. Standalone review from any working directory uses
 standard input must be empty. Both files must be regular, nonempty, and at most
 1,000,000 bytes. The launcher verifies their bytes, includes them in the
 reviewer prompt, and records their paths, lengths, and digests. The artifact
-review runs in private scratch; the caller's directory is not a reviewer source.
+review runs in private scratch; this does not confine all possible file reads.
 The prompt boundary token is recorded and absent from both supplied files. Missing,
 conflicting, or mismatched identity stops the launch. A review question does
 not substitute for an artifact candidate. The launcher working directory is

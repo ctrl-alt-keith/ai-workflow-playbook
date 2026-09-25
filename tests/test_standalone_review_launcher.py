@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 from launcher_support import ROOT, current_commit, load_launcher
 import test_claude_review_launcher as claude_tests
@@ -14,6 +15,17 @@ import test_codex_review_launcher as codex_tests
 
 
 class StandaloneReviewLauncherTests(unittest.TestCase):
+    def test_artifact_boundary_regenerates_on_content_collision(self):
+        load_launcher(ROOT / "scripts/claude-review", "artifact_boundary")
+        shared = sys.modules["review_launcher"]
+        candidate = {"path": "/proposal.md", "byte_length": 8, "sha256": "a" * 64}
+        request = {"sha256": "b" * 64}
+        with mock.patch.object(shared.secrets, "token_hex", side_effect=["deadbeef", "cafebabe"]):
+            prompt, boundary = shared.artifact_review_prompt(
+                b"Review the proposal", candidate, b"deadbeef", request)
+        self.assertEqual(boundary, "cafebabe")
+        self.assertEqual(prompt.count(b"cafebabe"), 2)
+
     def run_case(self, provider, root, *args, prompt=b""):
         if provider == "claude":
             binary = claude_tests.ClaudeReviewLauncherTests().make_fake_claude(
