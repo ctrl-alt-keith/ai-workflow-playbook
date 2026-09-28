@@ -19,6 +19,7 @@ from typing import Any
 
 BUNDLE_SCHEMA = "governed-review-evidence-bundle/v1"
 MANIFEST_NAME = "manifest.json"
+READ_CHUNK_BYTES = 64 * 1024
 
 
 class EvidenceError(ValueError):
@@ -162,6 +163,26 @@ def _read_file(directory, name):
         return stream.read()
 
 
+def _check_file(directory, source):
+    """Verify selected evidence without retaining its full content in memory."""
+    descriptor = os.open(source["id"], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                         dir_fd=directory)
+    with os.fdopen(descriptor, "rb") as stream:
+        info = os.fstat(stream.fileno())
+        _check_stat(info, directory=False)
+        if info.st_size != source["byte_length"]:
+            raise EvidenceError("source byte length or SHA-256 mismatch")
+        digest = hashlib.sha256()
+        length = 0
+        while chunk := stream.read(READ_CHUNK_BYTES):
+            length += len(chunk)
+            if length > source["byte_length"]:
+                raise EvidenceError("source byte length or SHA-256 mismatch")
+            digest.update(chunk)
+        if length != source["byte_length"] or digest.hexdigest() != source["sha256"]:
+            raise EvidenceError("source byte length or SHA-256 mismatch")
+
+
 def _write_file(directory, name, content):
     descriptor = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
                          0o400, dir_fd=directory)
@@ -237,7 +258,7 @@ def verify_bundle(bundle_dir: Path) -> dict[str, Any]:
             if set(os.listdir(evidence)) != {source["id"] for source in manifest["sources"]}:
                 raise EvidenceError("unexpected or missing evidence files")
             for source in manifest["sources"]:
-                _check_content(source, _read_file(evidence, source["id"]))
+                _check_file(evidence, source)
         finally:
             os.close(evidence)
     return manifest

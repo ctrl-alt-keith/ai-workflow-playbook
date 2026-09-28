@@ -160,6 +160,18 @@ class EvidenceBundleTests(unittest.TestCase):
         with self.assertRaises(evidence.EvidenceError):
             evidence.verify_bundle(self.bundle)
 
+    def test_late_content_tamper_is_detected_in_large_source(self):
+        self.content = b"a" * 150_000
+        self.source["byte_length"] = len(self.content)
+        self.source["sha256"] = hashlib.sha256(self.content).hexdigest()
+        self.bytes[self.source["id"]] = self.content
+        self.stage()
+
+        path = self.bundle / self.source["content_path"]
+        self.rewrite(path, self.content[:-1] + b"b")
+        with self.assertRaises(evidence.EvidenceError):
+            evidence.verify_bundle(self.bundle)
+
     def test_rejects_duplicate_json_keys_and_manifest_path_escape(self):
         self.stage()
         path = self.bundle / "manifest.json"
