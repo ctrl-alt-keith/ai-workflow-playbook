@@ -10,6 +10,7 @@ import stat
 import tempfile
 from types import MappingProxyType
 import unittest
+from unittest import mock
 
 
 SPEC = importlib.util.spec_from_file_location(
@@ -171,6 +172,42 @@ class EvidenceBundleTests(unittest.TestCase):
         self.rewrite(path, self.content[:-1] + b"b")
         with self.assertRaises(evidence.EvidenceError):
             evidence.verify_bundle(self.bundle)
+
+    def test_large_source_verification_never_requests_an_unbounded_read(self):
+        self.content = b"a" * 150_000
+        self.source["byte_length"] = len(self.content)
+        self.source["sha256"] = hashlib.sha256(self.content).hexdigest()
+        self.bytes[self.source["id"]] = self.content
+        self.stage()
+
+        read_sizes = []
+        original_fdopen = evidence.os.fdopen
+
+        class BoundedStream:
+            def __init__(self, stream):
+                self.stream = stream
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return self.stream.__exit__(*args)
+
+            def fileno(self):
+                return self.stream.fileno()
+
+            def read(self, size=-1):
+                read_sizes.append(size)
+                if not 0 < size <= evidence.READ_CHUNK_BYTES:
+                    raise AssertionError("source verification requested an unbounded read")
+                return self.stream.read(size)
+
+        with evidence._directory(self.bundle / "evidence") as directory:
+            with mock.patch.object(evidence.os, "fdopen", side_effect=lambda fd, mode: BoundedStream(
+                    original_fdopen(fd, mode))):
+                evidence._check_file(directory, self.source)
+
+        self.assertGreater(len(read_sizes), 2)
 
     def test_rejects_duplicate_json_keys_and_manifest_path_escape(self):
         self.stage()
