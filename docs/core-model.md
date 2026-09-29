@@ -183,17 +183,17 @@ owning workflow explicitly places that authority elsewhere. The interactive
 surface is not canonical or a required intermediary; human direction and each
 fact or decision's owning source retain authority.
 
-Among currently eligible execution routes, prefer fewer unnecessary handoffs
-only when each route preserves required capabilities, locality, authority,
-isolation, evidence identity, and validation semantics. Execution-local state,
-such as an authenticated `op`/1Password session, kubeconfig or provider CLI
-state, authoritative local Terraform state, or an exact checkout or worktree,
-is a required capability when correctness depends on it. An intermediate
-surface remains appropriate when it uniquely supplies or preserves a required
-launcher, browser or computer-use evidence, acting account or credential
-boundary, sandbox, CI or provider provenance, exact checkout or replay input,
-or other required semantic boundary. It can preserve existing authority but
-cannot create it.
+Among currently eligible execution routes that preserve required capabilities,
+locality, authority, isolation, evidence identity, and validation semantics,
+prefer fewer unnecessary execution handoffs. Authenticated command-line or
+provider state, authoritative local infrastructure state, and an exact checkout
+or worktree are required capabilities when correctness depends on them. This
+preference governs execution-surface routing, not model or worker selection.
+An intermediate surface remains appropriate when it uniquely supplies or
+preserves a required launcher, browser or computer-use evidence, acting account
+or credential boundary, sandbox, CI or provider provenance, exact checkout or
+replay input, or other required semantic boundary. It can preserve existing
+authority but cannot create it.
 
 A semantic handoff declares the current bounded action, the existing human
 authority and its owning reference, the sources and constraints that apply,
