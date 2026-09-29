@@ -186,13 +186,14 @@ fact or decision's owning source retain authority.
 Among currently eligible execution routes preserving required capabilities,
 locality, authority, isolation, evidence identity, and validation semantics,
 prefer fewer unnecessary execution handoffs. Treat execution-local
-authenticated, authoritative, or identity-bound state as a required capability
-when the task depends on it. This preference concerns surface routing, not
-model or worker selection. An intermediate surface remains eligible when it
-supplies a required launcher, browser or computer-use evidence, acting account
-or sandbox, CI or provider provenance, exact checkout or replay input, or other
-boundary absent from a more direct route. It can preserve authority but cannot
-create it.
+authenticated, authoritative infrastructure, or other identity-bound state as
+a required capability when the task depends on it. This preference governs
+execution-surface routing, not model or worker selection. An intermediate
+surface remains eligible when a more direct route lacks a required capability
+or boundary it supplies or preserves, such as a launcher, browser or
+computer-use evidence, acting account or credential boundary, sandbox, CI or
+provider provenance, or exact checkout or replay input. It can preserve
+authority but cannot create it.
 
 A semantic handoff declares the current bounded action, the existing human
 authority and its owning reference, the sources and constraints that apply,
