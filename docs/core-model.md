@@ -183,6 +183,18 @@ owning workflow explicitly places that authority elsewhere. The interactive
 surface is not canonical or a required intermediary; human direction and each
 fact or decision's owning source retain authority.
 
+Among currently eligible execution routes preserving required capabilities,
+locality, authority, isolation, evidence identity, and validation semantics,
+prefer fewer unnecessary execution handoffs. Treat execution-local
+authenticated, authoritative infrastructure, or other identity-bound state as
+a required capability when the task depends on it. This preference governs
+execution-surface routing, not model or worker selection. An intermediate
+surface remains eligible when a more direct route lacks a required capability
+or boundary it supplies or preserves, such as a launcher, browser or
+computer-use evidence, acting account or credential boundary, sandbox, CI or
+provider provenance, or exact checkout or replay input. It can preserve
+authority but cannot create it.
+
 A semantic handoff declares the current bounded action, the existing human
 authority and its owning reference, the sources and constraints that apply,
 and the completion boundary. It may point to exact durable recoverable state
