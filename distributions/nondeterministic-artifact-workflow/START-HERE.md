@@ -20,35 +20,38 @@ file. Nothing is published by this workflow.
    The contract describes one job; the launcher tells Work how to run it.
 
 This folder layout is suggested, not required. If you already have a useful
-layout, write your actual folder names in the contract.
+layout, write your actual folder names in the contract. Use the same job name
+for its sources, contract, candidates, and review note.
 
 ```text
 Your workspace root/
-  01 Sources/             original files
-  02 Contracts/           one filled-in contract per job
-  03 Candidates/          saved options and finished versions
-  04 Accepted Masters/    final files you have approved
-  05 Review Notes/        choices, feedback, and approval records
+  01 Sources/<job>/         original files for this job
+  02 Contracts/<job>.md     this job's filled-in contract
+  03 Candidates/<job>/      saved options and finished versions
+  04 Accepted Masters/     final files you have approved
+  05 Review Notes/<job>.md  choices, feedback, and approval record
 ```
 
 ## For each new job
 
-1. **Add the originals.** Put the source files in `01 Sources/` under your
-   workspace root. Keep them untouched. A photo, background, detail shot, or
-   other reference can each have a different role.
-2. **Fill in a contract.** Copy `task-contract.md` to `02 Contracts/` and give
-   the copy a name for this job. Write what you want, which real details must
+1. **Add the originals.** Put the source files in `01 Sources/<job>/` under
+   your workspace root. Keep them untouched. A photo, background, detail shot,
+   or other reference can each have a different role.
+2. **Fill in a contract.** Copy `task-contract.md` to
+   `02 Contracts/<job>.md`. Write what you want, which real details must
    remain accurate, what may change, what must never change, and how many
    options Work may make. Name the source files and their roles. You can use
    ordinary words: Work can look up file identities and fill in technical
    fields, but it must confirm the actual originals before generating anything.
    Include any output size or format you need, which tools Work may use, any
    privacy limits, and who can approve the result.
-3. **Start Work.** Attach the completed contract, or point Work to its exact
-   location in your connected store. Give Work the workspace root and use the
-   [Work launcher](work-launcher.md). The prompt below is a ready first run
-   when the contract and launcher are attached. If Work cannot reach an
-   original file or the connected store, resolve that before proceeding.
+3. **Start Work.** Attach the completed contract and an unfilled copy of the
+   [Work launcher](work-launcher.md), then use the first-run prompt below. Work
+   uses the launcher as instructions and takes its bracketed details from your
+   contract; you do not need to send it as a second prompt. If Work cannot
+   reach an original file or the connected store, resolve that before
+   proceeding. If you use the launcher as your prompt instead, fill in its
+   brackets before sending it.
 4. **Review the saved options.** Work should save each generated candidate as
    a separate file and show you the actual saved results. Compare them with
    the real subject and the contract. Tell Work what is right or wrong. You
@@ -62,8 +65,9 @@ Your workspace root/
    subject and output requirements, and tell Work which **exact file** you
    approve and for what use. Work can then move that same verified file into
    `04 Accepted Masters/` without replacing anything already there. It should
-   read the moved file back and record the result in `05 Review Notes/`. If it
-   cannot confirm the moved file is the approved one, hold it for your review.
+   read the moved file back and record the result in `05 Review Notes/<job>.md`.
+   If it cannot confirm the moved file is the approved one, hold it for your
+   review.
 
 If you do not approve the final file, it stays a candidate. Approval to keep
 an exact master does not also approve publication.
@@ -101,14 +105,17 @@ subject, the chosen result, and approval of the final file.
 
 ## First-run prompt
 
-Attach your filled-in contract and a copy of `work-launcher.md` to a ChatGPT
-Work message, then copy this prompt. The contract names your connected store
-and workspace root, so this prompt does not need a personal account path.
+Attach your filled-in contract and an unfilled copy of `work-launcher.md` to a
+ChatGPT Work message, then copy this prompt. The contract names your connected
+store and workspace root, so this prompt does not need a personal account path.
 
 ```text
 Please help me run the one artifact job in the completed task contract attached
 to this message. Use the connected store and workspace root named in that
 contract. Follow the work-launcher.md workflow supplied with the contract.
+Use the task name, store, workspace root, and run limits from my contract for
+the launcher's bracketed details; the launcher is reference instructions, not
+a second task.
 
 First, confirm that you can read the original source files in my store and
 save and read back files under that workspace root. Fill in any source file
