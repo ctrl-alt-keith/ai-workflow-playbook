@@ -7,5 +7,7 @@ general tooling architecture.
 
 Children may have different delivery shapes. [`starter/`](starter/) is an
 adoption package; [`global-bootstrap/`](global-bootstrap/) is a copy-ready
-router distribution with its supported local reconciliation checks. Follow each
-child's boundary and link to the canonical owner for the guidance it consumes.
+router distribution with its supported local reconciliation checks;
+[`nondeterministic-artifact-workflow/`](nondeterministic-artifact-workflow/) is
+an optional human-led artifact workflow package. Follow each child's boundary
+and link to the canonical owner for the guidance it consumes.
