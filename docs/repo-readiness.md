@@ -603,6 +603,11 @@ semantics are necessary. If not, use the direct command. If needed, keep the
 wrapped operation narrow and inspectable. Do not add `zsh`, `bash`, `sh`,
 login-shell, `-c`, or alias wrappers for convenience.
 
+When authorization is terminal-scoped and separate invocations repeatedly
+prompt during one bounded phase, retain one terminal session for the related
+commands when supported. Limit credential exposure to commands that need it;
+clear injected credentials and close the session at the phase boundary.
+
 Invoke canonical executable owners instead of duplicating their behavior in
 wrappers, parsers, validators, aggregators, or orchestration. Helpers may cache
 raw output, collate results, or format reports; they may not independently
