@@ -2,7 +2,7 @@
 
 An optional package for a person who uses AI to make visual or other binary
 artifacts from their own source files, then decides which exact result to keep.
-**New to this workflow? [Start here](START-HERE.md).** The guide walks through
+**New to this workflow? [Start here](start-here.md).** The guide walks through
 setup, a first job, review, and approval in ChatGPT Work. The reusable pieces
 are the [task contract](task-contract.md) and [Work launcher](work-launcher.md).
 The [Dowsing Rod example](examples/dowsing-rod.md) shows one photo pilot; its

@@ -127,3 +127,12 @@ separate file, show me the saved results, and stop for my review. Wait for me
 to choose any finishing steps and, later, to approve one exact final file
 before moving it into Accepted Masters. Do not publish anything.
 ```
+
+## Share feedback
+
+If this workflow is confusing, breaks, or gives you an idea others could use,
+you can [open a GitHub issue](https://github.com/ctrl-alt-keith/ai-workflow-playbook/issues/new).
+It helps to include what you were trying to do, where you got stuck or what
+behaved unexpectedly, which step or file was involved, and any non-sensitive
+screenshots or example text that would make the problem clearer. You do not
+need to know how the Playbook works internally.
