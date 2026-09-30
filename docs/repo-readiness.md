@@ -606,8 +606,9 @@ login-shell, `-c`, or alias wrappers for convenience.
 When credential authorization is terminal-scoped and separate invocations
 repeatedly prompt during one bounded phase, retain one terminal session only
 for that phase's related commands when supported; open a shell only if needed
-to preserve the session. Limit credential exposure to commands that need it;
-clear injected credentials and close the session when the phase ends or stops.
+to preserve the session. Inject credentials only into commands that need them;
+if injected into the shell, run only those commands there. Clear injected
+credentials and close the session when the phase ends or stops.
 
 Invoke canonical executable owners instead of duplicating their behavior in
 wrappers, parsers, validators, aggregators, or orchestration. Helpers may cache
