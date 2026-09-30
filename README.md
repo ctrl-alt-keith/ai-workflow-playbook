@@ -83,6 +83,13 @@ behavior to each component; rerun `check-local` afterward to verify the result.
 See the [global-bootstrap distribution](distributions/global-bootstrap/README.md)
 for that component's payload and reconciliation contract.
 
+## Make And Approve An Artifact
+
+The optional [artifact workflow start guide](distributions/nondeterministic-artifact-workflow/start-here.md)
+walks through a first visual-artifact job in ChatGPT Work using your own source
+files. Its package includes a task contract and Work launcher; a person reviews
+the saved candidates and approves the exact final file.
+
 ## Initial Map
 
 - [`docs/start-here.md`](docs/start-here.md): task-neutral startup routing and
