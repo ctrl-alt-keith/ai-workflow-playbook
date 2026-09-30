@@ -44,8 +44,8 @@ a new candidate and return to review.
 Stop again for my approval of the exact final derivative or candidate and its
 intended use. Only after that approval, move that same verified file to
 the contract's Accepted Masters folder without replacing an existing file.
-Read it back, confirm byte continuity or report that continuity is unverified,
-and update
+Read it back, confirm byte continuity or report that continuity is unverified
+and hold the moved file for my review without treating it as accepted. Update
 the contract's Review Notes file for this task with the approval, old and new
 locators/identities, and any unresolved status. Do not publish or infer
 publication permission.
