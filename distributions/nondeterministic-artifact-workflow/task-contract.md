@@ -6,6 +6,11 @@
 
 **Who owns the source material and may authorize this run?**
 
+**Folders relative to that root:** Sources: `01 Sources/`; Contracts:
+`02 Contracts/`; Candidates: `03 Candidates/`; Accepted Masters:
+`04 Accepted Masters/`; Review Notes: `05 Review Notes/`. Replace these with
+your existing folder names where needed.
+
 ## Source files
 
 List each file's path relative to the workspace root and its provider identity

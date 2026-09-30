@@ -3,7 +3,8 @@
 An optional package for a person who uses AI to make visual or other binary
 artifacts from their own source files, then decides which exact result to keep.
 Start with the [task contract](task-contract.md), then give the completed
-contract and [Work launcher](work-launcher.md) to a tool-capable Work session.
+contract and [Work launcher](work-launcher.md) to a tool-capable ChatGPT Work
+session with access to your connected store.
 The [Dowsing Rod example](examples/dowsing-rod.md) shows one photo pilot; its
 editing choices are examples, not general rules.
 
@@ -37,9 +38,9 @@ Suggested paths are relative to that chosen root:
 ```
 
 The numbers only keep the folders easy to scan. An existing folder layout is
-fine if the same states remain distinguishable. Store identity should include
-the provider's file identity or version plus a byte digest when the route can
-verify one; names and paths are useful locators, not sufficient identity. Keep
+fine if the contract maps each state to its actual folder. Store identity
+should include the provider's file identity or version plus a byte digest when
+the route can verify one; names and paths are useful locators, not sufficient identity. Keep
 the source and approved master recoverable under your storage policy.
 
 ## Run boundary
