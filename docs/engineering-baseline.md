@@ -115,9 +115,11 @@ examples/cases only for materially distinct behavior not already clear from the
 rule. Put human rationale, history, and change explanations on human-facing
 surfaces. Add no taxonomy, scoring, checklist, or ceremony.
 
-On a material edit to an agent-read canonical owner, proportionally audit the
-whole owner and its currently affected surfaces for accumulated
-non-consequential prose and duplicate semantics. Remove high-confidence
+Before the first substantive edit in a material change to an agent-read
+canonical owner, retrieve the complete affected owner and its currently
+overlapping surfaces, then apply the retention/minimality rule above to them
+in a proportional audit for accumulated non-consequential prose and duplicate
+semantics. Remove high-confidence
 redundancy directly; treat compression requiring semantic judgment as a
 separate review question. For material pruning, review the before/after owner
 against the retention rule above to confirm that its consequential semantics
