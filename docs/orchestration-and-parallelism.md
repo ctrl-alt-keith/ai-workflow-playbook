@@ -27,11 +27,11 @@ without source verification and human judgment.
 
 ## Keep Coherent Work With One Worker
 
-Use one worker for one coherent review surface when one agent can retain the
-needed context, the work shares a semantic decision or tightly coupled files,
-or splitting would not reduce validation/review cost. Availability of agents is
-not a reason to split. Keep work with one worker when coordination would
-exceed the task; apply [iteration economics](repo-readiness.md#solo-operator-iteration-economics)
+Use one worker for a coherent review surface when one agent can retain context,
+the work shares a semantic decision or tightly coupled files, or splitting
+would not reduce validation/review cost. Agent availability alone does not
+justify a split; apply
+[iteration economics](repo-readiness.md#solo-operator-iteration-economics)
 for PR packaging.
 
 ## Fan Out Deliberately
@@ -55,11 +55,9 @@ Parallel work is a good fit when:
 Use concern-oriented lanes only when they add independent failure coverage:
 fixing one concern can plausibly regress another coupled invariant without a
 strong local signal. Select a lane for the invariant or concern it protects,
-not to fill a role taxonomy, meet a lane count, or maximize throughput. When
-one coherent worker can protect the relevant invariants more cheaply, keep the
-work with one worker. Once a lane is bounded, choose its model and reasoning
-configuration through [`model-routing.md`](model-routing.md); lane selection
-precedes configuration selection.
+not to fill a role taxonomy, meet a lane count, or maximize throughput. After
+bounding a lane, choose its model and reasoning configuration through
+[`model-routing.md`](model-routing.md).
 
 For same-repository Codex implementation fan-out, use repo-local `.worktrees/`
 and keep each worker on its own branch. One issue, one branch, one worktree,
@@ -187,23 +185,20 @@ create authority.
 
 ## Orchestrator Responsibilities
 
-When several bounded child lanes contribute to one decision, deliverable, or
-integrated result, default to one top-level orchestration thread as the
-human-facing coordination surface. Its controller owns fan-out, direct
-collection and verification of lane evidence, reconciliation, synthesis, and
-one consolidated response that retains material source attribution, capability
-gaps, and unresolved divergence. Child tasks or subagents return their results
-to that controller; the human need not relay them when the orchestration
-surface can collect them directly.
+When bounded child lanes contribute to one result, default to one top-level
+orchestration thread as the human-facing controller. It owns fan-out, directly
+collects and verifies lane evidence, reconciles and synthesizes it, and returns
+one response retaining material source attribution, capability gaps, and
+unresolved divergence. Child results return to that controller without human
+relay when the surface can collect them.
 
-Use separate top-level threads when the human requests separately coordinated
-work, outcomes or decision boundaries have different owners, or required
-locality, isolation, mutable state, authority, evidence identity, or runtime
-capability cannot be preserved in a child lane. Apply the
+Use separate top-level threads for a human request for separate coordination,
+separately owned outcomes or decisions, or required locality, isolation,
+mutable state, authority, evidence identity, or runtime capability unavailable
+to child lanes. Apply the
 [surface transition and handoff boundaries](core-model.md#interactive-and-execution-surfaces).
-Ordinary child work and independent review remain distinct: a qualifying
-reviewer uses the [external-review contract](external-ai-reviewer.md), which
-does not itself require another human-facing top-level thread.
+Independent review follows the [external-review contract](external-ai-reviewer.md)
+and does not itself require another human-facing top-level thread.
 
 Before fan-out, the orchestrator should:
 

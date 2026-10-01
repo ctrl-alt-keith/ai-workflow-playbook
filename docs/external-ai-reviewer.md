@@ -12,19 +12,15 @@ A reviewer verdict is evidence, not execution authority. It does not grant
 implementation, approval, merge, release, or another transition. Human and
 repo-local authority boundaries continue to control.
 
-External-review independence is a review-run boundary, not a model, vendor,
-effort, thread, invoker, or process-ancestry property. A qualifying reviewer
-runs in an isolated review context with intentionally bounded inputs and
-read-only capabilities; it does not inherit the reviewed party's mutable
-execution state, authority, hidden context, unbounded connectors, or write
-capability. A controller-invoked reviewer may qualify when those
-boundaries hold. An ordinary child or subagent sharing orchestration context
-does not qualify merely by receiving a review assignment or using another
-model or provider.
+Review independence depends on the run, not its invoker, thread, process
+ancestry, model, provider, or effort. A controller-invoked reviewer may qualify
+only with isolated review context, selected inputs, bounded read-only
+capabilities, and no inherited mutable execution state, authority, hidden
+context, unbounded connectors, or write access. An ordinary child or subagent
+sharing orchestration context does not qualify merely by review assignment.
 
-Provider or model diversity may be deliberately selected when correlated
-reasoning risk is materially worth challenging. It adds epistemic signal; it
-does not make a review independent or become a universal prerequisite.
+Provider or model diversity may add signal when correlated reasoning risk
+matters; it is not a universal prerequisite.
 
 ## Review Modes
 
