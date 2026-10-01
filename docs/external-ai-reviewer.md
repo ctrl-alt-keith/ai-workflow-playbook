@@ -13,11 +13,12 @@ implementation, approval, merge, release, or another transition. Human and
 repo-local authority boundaries continue to control.
 
 Review independence depends on the run, not its invoker, thread, process
-ancestry, model, provider, or effort. A controller-invoked reviewer may qualify
-only with isolated review context, selected inputs, bounded read-only
-capabilities, and no inherited mutable execution state, authority, hidden
-context, unbounded connectors, or write access. An ordinary child or subagent
-sharing orchestration context does not qualify merely by review assignment.
+ancestry, model, provider, or effort. A reviewer, including one invoked by the
+controller, may qualify only with isolated review context, intentionally
+bounded inputs and read-only capabilities, and no inherited mutable execution
+state, authority, hidden context, unbounded connectors, or write access. An
+ordinary child or subagent sharing orchestration context does not qualify merely
+by review assignment.
 
 Provider or model diversity may add signal when correlated reasoning risk
 matters; it is not a universal prerequisite.

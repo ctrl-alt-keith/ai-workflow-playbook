@@ -185,10 +185,10 @@ create authority.
 
 ## Orchestrator Responsibilities
 
-When bounded child lanes contribute to one result, default to one top-level
-orchestration thread as the human-facing controller. It owns fan-out, directly
-collects and verifies lane evidence, reconciles and synthesizes it, and returns
-one response retaining material source attribution, capability gaps, and
+When bounded child lanes contribute to one result or decision, default to one
+top-level orchestration thread as the human-facing controller. It owns fan-out,
+directly collects and verifies lane evidence, reconciles and synthesizes it,
+and returns one response retaining material source attribution, capability gaps, and
 unresolved divergence. Child results return to that controller without human
 relay when the surface can collect them.
 
