@@ -17,7 +17,7 @@ effort, thread, invoker, or process-ancestry property. A qualifying reviewer
 runs in an isolated review context with intentionally bounded inputs and
 read-only capabilities; it does not inherit the reviewed party's mutable
 execution state, authority, hidden context, unbounded connectors, or write
-capability. A controller-invoked remote reviewer may qualify when those
+capability. A controller-invoked reviewer may qualify when those
 boundaries hold. An ordinary child or subagent sharing orchestration context
 does not qualify merely by receiving a review assignment or using another
 model or provider.

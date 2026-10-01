@@ -190,18 +190,19 @@ create authority.
 When several bounded child lanes contribute to one decision or deliverable,
 default to one top-level orchestration thread as the human-facing coordination
 surface. Its controller owns fan-out, direct collection and verification of lane
-evidence, reconciliation, synthesis, and one consolidated response. Child tasks
-or subagents return their results to that controller; the human need not relay
-them when the orchestration surface can collect them directly.
+evidence, reconciliation, synthesis, and one consolidated response that retains
+material source attribution, capability gaps, and unresolved divergence. Child
+tasks or subagents return their results to that controller; the human need not
+relay them when the orchestration surface can collect them directly.
 
 Use separate top-level threads when the human requests separately coordinated
 work, outcomes or decision boundaries have different owners, or required
 locality, isolation, mutable state, authority, evidence identity, or runtime
-capability cannot be preserved in a child lane. Apply the existing surface
-transition and handoff boundaries. Ordinary child work and independent review
-remain distinct: a qualifying reviewer uses the
-[external-review contract](external-ai-reviewer.md), which does not itself
-require another human-facing top-level thread.
+capability cannot be preserved in a child lane. Apply the
+[surface transition and handoff boundaries](core-model.md#interactive-and-execution-surfaces).
+Ordinary child work and independent review remain distinct: a qualifying
+reviewer uses the [external-review contract](external-ai-reviewer.md), which
+does not itself require another human-facing top-level thread.
 
 Before fan-out, the orchestrator should:
 
