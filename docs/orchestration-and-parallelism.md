@@ -187,13 +187,14 @@ create authority.
 
 ## Orchestrator Responsibilities
 
-When several bounded child lanes contribute to one decision or deliverable,
-default to one top-level orchestration thread as the human-facing coordination
-surface. Its controller owns fan-out, direct collection and verification of lane
-evidence, reconciliation, synthesis, and one consolidated response that retains
-material source attribution, capability gaps, and unresolved divergence. Child
-tasks or subagents return their results to that controller; the human need not
-relay them when the orchestration surface can collect them directly.
+When several bounded child lanes contribute to one decision, deliverable, or
+integrated result, default to one top-level orchestration thread as the
+human-facing coordination surface. Its controller owns fan-out, direct
+collection and verification of lane evidence, reconciliation, synthesis, and
+one consolidated response that retains material source attribution, capability
+gaps, and unresolved divergence. Child tasks or subagents return their results
+to that controller; the human need not relay them when the orchestration
+surface can collect them directly.
 
 Use separate top-level threads when the human requests separately coordinated
 work, outcomes or decision boundaries have different owners, or required

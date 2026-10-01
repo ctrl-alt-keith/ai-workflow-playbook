@@ -120,7 +120,9 @@ Use the narrowest provider tool set that can read the required sources. Disable
 write tools, inherited connectors, session persistence, and unneeded startup
 configuration when the provider supports those controls. If required source
 access is unavailable, the reviewer reports the gap and limits its verdict
-instead of receiving broader authority.
+instead of receiving broader authority. If available controls cannot maintain
+the required read-only or isolation boundary, report the gap; that run cannot
+satisfy governed independent review.
 
 When a launcher configures those controls, it emits the configured envelope
 with the attempt record: the controls, the requested model and effort, and
