@@ -233,7 +233,6 @@ establish sufficiency.
 
 ### Required Repository Invariants
 
-- `ai-workflow-playbook` is the canonical source for reusable workflow rules.
 - Successful repository hydration is a mode transition, not only an
   information-retrieval event. After the required repository startup contract
   succeeds, repository operating mode remains active for the rest of the
@@ -267,14 +266,6 @@ establish sufficiency.
 - Repo-local `AGENTS.md` is the repository execution layer. Playbook changes
   and `AGENTS.md` edits are separate work types; edit `AGENTS.md` only with
   explicit authorization or when that update is the task's primary purpose.
-- Deterministic repository triggers run before conversational interpretation.
-  Apply `docs/source-first-retrieval.md`; summaries, snapshots, memory, pasted
-  descriptions, and generated notes are navigation rather than proof of
-  current repository state.
-- When referenced repository state was not directly verified, state
-  `unknown → referenced repo state was not verified`. If retrieval was missed
-  and remains available, recover by performing it and correcting or marking
-  prior assumptions as unverified.
 - If the human asks for a concrete operational action and the required tools,
   authority, and context are available, perform it before discussing
   speculative workflow improvements.
