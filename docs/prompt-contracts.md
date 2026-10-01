@@ -435,7 +435,7 @@ identities when the governing workflow requires them. None supplies authority.
 Record the delivery operation, executor attempt, attempt receipt, output, and
 human disposition separately when the governing workflow requires them.
 
-### Recovery and fresh execution
+### Recovery
 
 Recovery follows the owning planning decision to the exact record and envelope,
 delivery evidence, executor attempt receipt, and executor output, then freshly

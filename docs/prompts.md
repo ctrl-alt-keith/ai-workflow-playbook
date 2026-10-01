@@ -641,7 +641,7 @@ External issue-owned durable prompt delivery envelope:
 - Governing issue and authority reference: [planning identity and current human authority]
 - Airtable identity: base [base ID]; table [table ID]; record [exact returned record ID]
 - Expected handoff key: [key]
-- Canonical payload: UTF-8; no BOM; LF line endings; final newline [present | absent]
+- Canonical payload: UTF-8; no BOM; LF line endings; final newline absent
 - Expected payload bytes: [byte count]
 - Expected SHA-256: [lowercase digest]
 - Producer attempt: [executor and attempt identity]
