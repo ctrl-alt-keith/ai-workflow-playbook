@@ -7,11 +7,6 @@ must be reviewable, recoverable, or replayable. It separates meaning from
 attempt selection, derived evidence, executor representation, delivery, and
 live authority.
 
-These semantics do not require an operational workflow engine, prompt
-generator, state store, schema implementation, or lifecycle orchestrator. An
-owning repository may implement those mechanics under its local contract, but
-the implementation must preserve the boundaries defined here.
-
 ## Semantic Layers
 
 Keep these layers distinct:
@@ -423,17 +418,13 @@ generic container.
 
 ### Airtable projection
 
-Apply the shared Airtable record and envelope exactly as defined in
-[`prompts.md`](prompts.md#airtable-canonical-text-handoff). The owning storage
-contract selects the permitted base and table; reusable doctrine and adapters
-do not embed account-specific IDs. This profile adds no second prompt object,
-delivery route, or verification procedure.
-
-For an admitted material prompt, the producer retrieves the newly returned
-exact record ID and applies the shared field, canonical-text, byte-length, and
-SHA-256 checks against the frozen payload before claiming retention or emitting
-the envelope. The consumer independently repeats those checks before accepting
-the handoff.
+For an admitted material prompt, apply the shared Airtable record, readback,
+consumer verification, and envelope contract in
+[`prompts.md`](prompts.md#airtable-canonical-text-handoff). Claim retention only
+after producer verification succeeds. The owning storage contract selects the
+permitted base and table; reusable doctrine and adapters do not embed
+account-specific IDs. This profile adds no second prompt object, delivery
+route, or verification procedure.
 
 Keep the semantic prompt contract, rendered prompt, Airtable record, external
 envelope, producing receipt, delivery evidence, and attempt receipt as separate
@@ -442,8 +433,7 @@ identities when the governing workflow requires them. None supplies authority.
 ### Delivery and evidence
 
 Record the delivery operation, executor attempt, attempt receipt, output, and
-human disposition separately when the governing workflow requires them. A
-successful delivery or verification grants no authority.
+human disposition separately when the governing workflow requires them.
 
 ### Recovery and fresh execution
 
@@ -452,14 +442,6 @@ delivery evidence, executor attempt receipt, and executor output, then freshly
 retrieves current repository, provider, planning, and authority state from
 their owners. Historical records and receipts remain historical evidence; they
 never become current authority or current mutable state.
-
-Fresh execution selects current inputs under current authority.
-Replay uses the recorded contract and exact historical inputs under the replay
-rules above. Do not present a new execution as replay when any required
-historical identity is missing or mismatched.
-
-Preservation, delivery, acknowledgement, hashes, provider state, validation,
-receipts, and execution transfer zero authority.
 
 ## Mandatory Failure Boundary
 
