@@ -183,25 +183,6 @@ Do not use an external AI reviewer when:
 - tests and CI already cover the meaningful risk
 - review would be habitual ceremony rather than useful independent evidence
 
-## Workflow Integration
-
-Keep the default loop simple:
-
-```text
-Codex -> PR -> human skim -> merge
-```
-
-Use an external AI reviewer only when a targeted review would add signal:
-
-```text
-Codex -> PR -> external AI reviewer (targeted review) -> human skim -> merge
-```
-
-This lightweight path is optional and never required for merge. Governed review
-is a distinct pre-transition mode: when explicitly selected, completing it and
-dispositioning its findings may be a prerequisite to implementation or another
-named boundary. The review verdict itself still grants no authority.
-
 ## Input Guidelines
 
 For lightweight review, give the reviewer only the context needed to review
@@ -363,10 +344,3 @@ Watch for these failure modes:
 - treating an ACCEPT verdict as approval or transition authority
 - repeating a full review without deciding whether the original review remains
   applicable
-
-## Guiding Principle
-
-Use lightweight review when targeted second-opinion signal is worth its cost.
-Use governed independent review only when explicit authority or proportional
-risk selects it. In either mode, preserve provider neutrality, evidence limits,
-and human decision ownership.
