@@ -14,8 +14,6 @@ Use this pattern when bootstrapping a brand-new repository from a fresh project 
    automation use begins.
 8. Open a PR for the bootstrap content rather than merging directly.
 
-This keeps the actual bootstrap reviewable while avoiding ambiguity about where the repository starts.
-
 ## Bootstrap Posture Checklist
 
 For public, infrastructure-adjacent, or externally dependent repositories,
