@@ -12,13 +12,15 @@ A reviewer verdict is evidence, not execution authority. It does not grant
 implementation, approval, merge, release, or another transition. Human and
 repo-local authority boundaries continue to control.
 
-External-review independence is a role boundary, not a model, vendor, effort,
-or thread property. A child task spawned by the reviewed party does not satisfy
-the external-review role, even when it uses a different provider or isolated
-context. A qualifying external reviewer is separately invoked under the review
-contract and does not inherit the reviewed party's execution context or
-authority. This rule does not make child work generally invalid; it only limits
-what can satisfy the external-review prerequisite.
+External-review independence is a review-run boundary, not a model, vendor,
+effort, thread, invoker, or process-ancestry property. A qualifying reviewer
+runs in an isolated review context with intentionally bounded inputs and
+read-only capabilities; it does not inherit the reviewed party's mutable
+execution state, authority, hidden context, unbounded connectors, or write
+capability. A controller-invoked remote reviewer may qualify when those
+boundaries hold. An ordinary child or subagent sharing orchestration context
+does not qualify merely by receiving a review assignment or using another
+model or provider.
 
 Provider or model diversity may be deliberately selected when correlated
 reasoning risk is materially worth challenging. It adds epistemic signal; it
@@ -99,7 +101,7 @@ completion.
 
 ### Exact-candidate review contract
 
-A governed review is a separate invocation of the selected reviewer against
+A governed review is an isolated invocation of the selected reviewer against
 one exact candidate. Supply the repository or artifact identity, exact commit
 or immutable version, review question, relevant authoritative sources, and the
 read-only access needed to inspect them. The reviewer must report sources

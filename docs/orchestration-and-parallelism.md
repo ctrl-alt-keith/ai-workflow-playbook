@@ -1,7 +1,7 @@
 # Orchestration And Parallelism
 
-Use this page when deciding whether a repo task should stay in one Codex
-thread, split into multiple worker lanes, or pause for sequencing. The goal is
+Use this page when deciding whether a repo task needs one worker, child lanes
+under one orchestration thread, or separate coordination. The goal is
 solo-operator leverage, not ceremony: parallelism is useful only when it keeps
 work easier to review, validate, and merge.
 
@@ -25,13 +25,13 @@ apply [multi-agent-synthesis.md](multi-agent-synthesis.md); agreement or
 disagreement guides inspection, not doctrine, planning, or implementation
 without source verification and human judgment.
 
-## Default To One Thread
+## Keep Coherent Work With One Worker
 
-Use one thread for one coherent review surface when one agent can retain the
+Use one worker for one coherent review surface when one agent can retain the
 needed context, the work shares a semantic decision or tightly coupled files,
 or splitting would not reduce validation/review cost. Availability of agents is
-not a reason to split. Keep work together when coordination would exceed the
-task; apply [iteration economics](repo-readiness.md#solo-operator-iteration-economics)
+not a reason to split. Keep work with one worker when coordination would
+exceed the task; apply [iteration economics](repo-readiness.md#solo-operator-iteration-economics)
 for PR packaging.
 
 ## Fan Out Deliberately
@@ -57,13 +57,14 @@ fixing one concern can plausibly regress another coupled invariant without a
 strong local signal. Select a lane for the invariant or concern it protects,
 not to fill a role taxonomy, meet a lane count, or maximize throughput. When
 one coherent worker can protect the relevant invariants more cheaply, keep the
-work in one thread. Once a lane is bounded, choose its model and reasoning
+work with one worker. Once a lane is bounded, choose its model and reasoning
 configuration through [`model-routing.md`](model-routing.md); lane selection
 precedes configuration selection.
 
-For same-repository Codex fan-out, use repo-local `.worktrees/` and keep each
-worker on its own branch. One issue, one branch, one worktree, and one PR per
-worker is the preferred shape when issues already describe the work cleanly.
+For same-repository Codex implementation fan-out, use repo-local `.worktrees/`
+and keep each worker on its own branch. One issue, one branch, one worktree,
+and one PR per worker is the preferred shape when issues describe the work
+cleanly.
 When several lanes belong to one batch, a short lane prefix can make the local
 state easier to scan, for example `.worktrees/lane-a-fixtures` and
 `.worktrees/lane-b-provider-normalization`. Treat lane prefixes as a worked
@@ -186,8 +187,21 @@ create authority.
 
 ## Orchestrator Responsibilities
 
-The orchestrator owns the batch-level view. In a solo-operator workflow this is
-often the human plus one top-level Codex thread.
+When several bounded child lanes contribute to one decision or deliverable,
+default to one top-level orchestration thread as the human-facing coordination
+surface. Its controller owns fan-out, direct collection and verification of lane
+evidence, reconciliation, synthesis, and one consolidated response. Child tasks
+or subagents return their results to that controller; the human need not relay
+them when the orchestration surface can collect them directly.
+
+Use separate top-level threads when the human requests separately coordinated
+work, outcomes or decision boundaries have different owners, or required
+locality, isolation, mutable state, authority, evidence identity, or runtime
+capability cannot be preserved in a child lane. Apply the existing surface
+transition and handoff boundaries. Ordinary child work and independent review
+remain distinct: a qualifying reviewer uses the
+[external-review contract](external-ai-reviewer.md), which does not itself
+require another human-facing top-level thread.
 
 Before fan-out, the orchestrator should:
 
@@ -292,7 +306,7 @@ ready to merge. Select ready status through
 
 ## When Not To Parallelize
 
-Keep the work single-threaded or staged sequentially when:
+Keep the work with one worker or stage it sequentially when:
 
 - lanes share mutation paths, safety-critical behavior, release state, schema
   contracts, generated artifacts, or fragile overlapping files
