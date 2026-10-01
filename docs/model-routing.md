@@ -35,8 +35,8 @@ whole workflow at a stronger setting when the topology supports it.
 Delegate established, deterministic, independently checkable work downward
 when it is worthwhile. Preserve its bounded inputs, validation, execution
 identity, result, and authority boundary where the governing workflow requires
-them. Model capability does not create authority, and a child of the reviewed
-party is not an independent reviewer.
+them. Model capability does not create authority. Reviewer independence is
+governed by [`external-ai-reviewer.md`](external-ai-reviewer.md).
 
 Requested configuration and runtime-effective configuration are separate
 facts. Where the runtime exposes effective configuration, record any

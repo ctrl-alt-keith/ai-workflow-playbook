@@ -12,17 +12,16 @@ A reviewer verdict is evidence, not execution authority. It does not grant
 implementation, approval, merge, release, or another transition. Human and
 repo-local authority boundaries continue to control.
 
-External-review independence is a role boundary, not a model, vendor, effort,
-or thread property. A child task spawned by the reviewed party does not satisfy
-the external-review role, even when it uses a different provider or isolated
-context. A qualifying external reviewer is separately invoked under the review
-contract and does not inherit the reviewed party's execution context or
-authority. This rule does not make child work generally invalid; it only limits
-what can satisfy the external-review prerequisite.
+Review independence depends on the run, not its invoker, thread, process
+ancestry, model, provider, or effort. A reviewer, including one invoked by the
+controller, may qualify only with isolated review context, intentionally
+bounded inputs and read-only capabilities, and no inherited mutable execution
+state, authority, hidden context, unbounded connectors, or write access. An
+ordinary child or subagent sharing orchestration context does not qualify merely
+by review assignment.
 
-Provider or model diversity may be deliberately selected when correlated
-reasoning risk is materially worth challenging. It adds epistemic signal; it
-does not make a review independent or become a universal prerequisite.
+Provider or model diversity may add signal when correlated reasoning risk
+matters; it is not a universal prerequisite.
 
 ## Review Modes
 
@@ -99,7 +98,7 @@ completion.
 
 ### Exact-candidate review contract
 
-A governed review is a separate invocation of the selected reviewer against
+A governed review is an isolated invocation of the selected reviewer against
 one exact candidate. Supply the repository or artifact identity, exact commit
 or immutable version, review question, relevant authoritative sources, and the
 read-only access needed to inspect them. The reviewer must report sources
@@ -118,7 +117,9 @@ Use the narrowest provider tool set that can read the required sources. Disable
 write tools, inherited connectors, session persistence, and unneeded startup
 configuration when the provider supports those controls. If required source
 access is unavailable, the reviewer reports the gap and limits its verdict
-instead of receiving broader authority.
+instead of receiving broader authority. If available controls cannot maintain
+the required read-only or isolation boundary, report the gap; that run cannot
+satisfy governed independent review.
 
 When a launcher configures those controls, it emits the configured envelope
 with the attempt record: the controls, the requested model and effort, and
