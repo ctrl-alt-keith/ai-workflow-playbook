@@ -161,9 +161,7 @@ observation. Without those three it is reported as unverified.
 ## What Codex Should Summarize
 
 Project the [Packet Format](#packet-format) into a concise decision index, not a
-line-by-line diff. State the requested decision, exact identity, objective,
-scope, invariants, exceptions, authority, validation, main risks, next action,
-and `ready to merge`, `needs decision`, or `blocked` recommendation.
+line-by-line diff.
 
 Apply [evidence-lifecycle.md](evidence-lifecycle.md) when the decision depends on
 integrated/synthesized evidence. If formal validation is absent, say so and
