@@ -242,6 +242,14 @@ If two PRs overlap unexpectedly, pause and re-establish the order before merging
 - inspect the PR surfaces directly
 - do not merge based only on local cleanliness
 
+Parallelism must not weaken:
+
+- one repository, one branch, one worktree, one PR scope integrity
+- required repo-local `.worktrees/` isolation for implementation changes
+- canonical validation
+- direct PR inspection
+- authoritative source requirements
+
 ## Public API Baselines
 
 Before changing code, tests, docs, risks, or user-facing claims dependent on
