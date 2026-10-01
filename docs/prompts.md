@@ -9,8 +9,7 @@ Apply the canonical
 when authoring prompt content.
 
 Prompts should remain routing and execution envelopes, not duplicated workflow
-doctrine. For the rationale, see
-[`sparse-rehydration-and-source-grounding.md`](sparse-rehydration-and-source-grounding.md).
+doctrine.
 
 For repository-scoped prompts, apply the
 [complete-prompt rule](repo-readiness.md#interaction-mode-preflight): carry the
