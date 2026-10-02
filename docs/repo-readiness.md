@@ -610,6 +610,15 @@ to preserve the session. Inject credentials only into commands that need them;
 if injected into the shell, run only those commands there. Clear injected
 credentials and close the session when the phase ends or stops.
 
+For local 1Password desktop-app integration, `op whoami` checks existing
+session state; it is not the authentication step. In the retained terminal,
+use `op signin --account <account>` for the intended account before related
+`op` reads. Keep those reads in that terminal and end the bounded phase with
+`op signout`. If sign-in would expose a session token or require manual token
+handling, stop rather than capture, evaluate, or relay it.
+
+Provider provenance: 1Password CLI documentation checked 2026-10-02.
+
 Invoke canonical executable owners instead of duplicating their behavior in
 wrappers, parsers, validators, aggregators, or orchestration. Helpers may cache
 raw output, collate results, or format reports; they may not independently
