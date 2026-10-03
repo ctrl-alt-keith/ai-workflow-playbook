@@ -569,15 +569,17 @@ to preserve the session. Inject credentials only into commands that need them;
 if injected into the shell, run only those commands there. Clear injected
 credentials and close the session when the phase ends or stops.
 
-On macOS or Linux, when local 1Password desktop-app authorization is
-terminal-scoped and the retained-session conditions above hold, `op whoami`
-reports the signed-in account observed by that invocation. It does not by
-itself establish authentication for the intended bounded phase. Use
+For a bounded local 1Password CLI phase, `op whoami` reports the signed-in
+account observed by that invocation; it does not by itself establish
+authentication for the intended phase. Do not use `op signin --raw`,
+evaluate sign-in output, or capture, relay, or manually handle a session
+token. If sign-in requires token output or manual handling, stop.
+
+On macOS or Linux, when 1Password desktop-app authorization is
+terminal-scoped and the retained-session conditions above hold, use
 `op signin --account <account>` in the retained terminal for the intended
-account before related `op` commands. Do not use `--raw` or evaluate sign-in
-output. If sign-in would emit a session token or require manual token
-handling, stop without capturing or relaying it. Keep related commands in
-that terminal; run `op signout` and close it when the phase ends or stops.
+account before related `op` commands. Keep those commands in that terminal;
+run `op signout` and close it when the phase ends or stops.
 
 Provider provenance: 1Password CLI documentation checked 2026-10-03.
 
