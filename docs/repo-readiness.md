@@ -519,10 +519,21 @@ The platform projections currently implemented by this Playbook are:
 Each projection validates its own platform root rather than trusting `$TMPDIR`,
 uses a fresh private unique child with mode `0700`, binds parent and child
 device/inode identity, and rejects path escape, symlinks, special objects,
-residue reuse, ownership or mode drift, and unsafe cleanup. Linux requires
-host-execution qualification; deterministic fixtures do not establish it.
-These projections are platform-specific, not a generic environment-variable
-rule. Windows
+residue reuse, ownership or mode drift, and unsafe cleanup. The Linux design
+additionally treats its shared parent as admissible only with the exact
+root-owned `01777` shape; this does not make it equivalent to Darwin's private
+per-user parent. Linux `/tmp` is appropriate only for disposable
+attempt mechanics: the
+[Filesystem Hierarchy Standard](https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s18.html)
+requires it for temporary files and says programs must not assume preservation
+between invocations, while the Linux
+[`mkdtemp(3)` interface](https://man7.org/linux/man-pages/man3/mkdtemp.3.html)
+creates the unique child as `0700`. These projections are
+platform-specific designs, not a generic environment-variable rule. The Linux
+parent-shape predicate has deterministic host-independent fixtures for its
+accepted and rejected ownership, mode, object-type, and symlink cases; an
+actual Linux invocation must still pass the same runtime checks before it is
+platform evidence. Windows
 and other mappings remain unqualified until their own qualified platform
 projections exist. Without a qualified mapping, the downstream repository or
 tool contract must select another explicitly authorized design or stop the
