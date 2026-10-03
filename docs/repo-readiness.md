@@ -6,20 +6,12 @@ Define the smallest reusable baseline a repository should have before normal AI-
 
 ## Scope
 
-- This is a practical baseline, not a full policy or checklist.
-- It covers pull request flow, readiness state, validation, branch protection
-  expectations, the role of `AGENTS.md`, and workflow-state ownership and
-  lifecycle classification.
 - Repo-specific security, compliance, release, or approval rules should be defined only when needed by that repository.
 
 ## Baseline Expectations
 
-- All changes go through pull requests.
-- Validation must pass before a pull request is considered complete.
-- Pull requests should stay small, scoped, and single-purpose.
 - Public repositories include a root `LICENSE` file, defaulting to Apache License
   2.0 unless the repository documents another choice.
-- Repositories with a Makefile include `make help` for local target discovery.
 - Defaults should favor safe, explicit behavior over implied shortcuts.
 
 ## Governance Operating Model
@@ -80,9 +72,7 @@ documented:
 
 This profile does not relax caution for security-sensitive changes, destructive
 automation, data-loss risks, irreversible migrations, credentialed workflows,
-public release behavior, or high-blast-radius operational changes. It preserves
-explicit policy and auditability while avoiding operational drag that exists
-only to coordinate a larger team.
+public release behavior, or high-blast-radius operational changes.
 
 ### Automation And Orchestration
 
@@ -94,13 +84,6 @@ Before widening governance or process, compare repo-family precedent and the
 documented operating model. Prefer the narrowest rule that preserves safety,
 integrity, recoverability, auditability, and operational clarity without
 creating unnecessary drag for solo-maintainer repositories.
-
-When governance behavior already has an authoritative tool, module, workflow,
-or CLI, invoke that executable source directly. Orchestration layers may
-enumerate targets, invoke canonical commands, collect outputs, and summarize
-or report results, but they should not partially reimplement the canonical
-logic, fork parser behavior, duplicate validation semantics, or create a
-competing audit engine.
 
 ### Enforcement Relationship
 
@@ -266,15 +249,12 @@ release behavior, or high-blast-radius operational changes. In those cases,
 reviewers should apply the normal conservative review posture.
 
 When using this posture, distinguish blocking issues from non-blocking
-experiments, risks, and follow-on opportunities. The goal is faster
-operational learning without hiding real safety or maintainability concerns.
+experiments, risks, and follow-on opportunities.
 
 ## Makefile Discoverability
 
-Any repository with a Makefile should include a `make help` target. `make help`
-lists available repo-local Makefile targets with short descriptions so a fresh
-worker can discover setup, validation, generation, and maintenance commands
-without reading the whole file first.
+Any repository with a Makefile should include a discoverable `make help`
+target.
 
 Before the first canonical validation attempt in a fresh implementation
 worktree, use the repository's startup guidance and `make help` to identify
@@ -363,19 +343,12 @@ or workflow step. Sequential workflows that depend on merges must pause for
 explicit human confirmation before merge and before continuing to downstream
 steps.
 
-When working in a multi-repo workspace, treat each repository as an independent
-unit of change. Even if multiple repositories are visible, commits, branches,
-worktrees, and PRs must be created and managed per repository. Do not create
-cross-repo commits or PRs.
-
-Before opening a PR, ensure that all staged changes belong to a single
-repository. If changes span multiple repositories, split them into separate
-branches, worktrees, and PRs, one per repository.
-
-Every implementation change must use a dedicated repo-local git worktree: one
-repository, one branch, one worktree, and one PR per change. The only
-exceptions are read-only inspection or explicit human instruction not to modify
-files.
+Treat each repository in a multi-repo workspace as an independent change
+unit. Before opening a PR, ensure all staged changes belong to one repository;
+split cross-repository changes into separate branches, worktrees, and PRs.
+Each implementation change uses one dedicated repo-local worktree, branch,
+and PR. The only exceptions are read-only inspection or explicit human
+instruction not to modify files.
 
 ## Workspace Boundary Discovery
 
@@ -390,9 +363,6 @@ overrides or narrowed inputs. Reconcile those sources before treating local
 checkouts as part of the active workspace scope.
 
 Do not treat raw local filesystem layout as authoritative workspace scope.
-Local checkout trees may contain stale repositories, archived repositories,
-detached worktrees, experiments, incomplete clones, temporary operational
-state, or local-only scratch repositories.
 
 Reconcile local workspace state against the owning inventory source before
 cross-repo audits, `AGENTS.md` alignment, enforcement scans, or broad workflow
@@ -549,21 +519,10 @@ The platform projections currently implemented by this Playbook are:
 Each projection validates its own platform root rather than trusting `$TMPDIR`,
 uses a fresh private unique child with mode `0700`, binds parent and child
 device/inode identity, and rejects path escape, symlinks, special objects,
-residue reuse, ownership or mode drift, and unsafe cleanup. The Linux design
-additionally treats its shared parent as admissible only with the exact
-root-owned `01777` shape; this does not make it equivalent to Darwin's private
-per-user parent. Linux `/tmp` is appropriate only for disposable
-attempt mechanics: the
-[Filesystem Hierarchy Standard](https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s18.html)
-requires it for temporary files and says programs must not assume preservation
-between invocations, while the Linux
-[`mkdtemp(3)` interface](https://man7.org/linux/man-pages/man3/mkdtemp.3.html)
-creates the unique child as `0700`. These projections are
-platform-specific designs, not a generic environment-variable rule. The Linux
-parent-shape predicate has deterministic host-independent fixtures for its
-accepted and rejected ownership, mode, object-type, and symlink cases; an
-actual Linux invocation must still pass the same runtime checks before it is
-platform evidence. Windows
+residue reuse, ownership or mode drift, and unsafe cleanup. Linux requires
+host-execution qualification; deterministic fixtures do not establish it.
+These projections are platform-specific, not a generic environment-variable
+rule. Windows
 and other mappings remain unqualified until their own qualified platform
 projections exist. Without a qualified mapping, the downstream repository or
 tool contract must select another explicitly authorized design or stop the
@@ -610,10 +569,20 @@ to preserve the session. Inject credentials only into commands that need them;
 if injected into the shell, run only those commands there. Clear injected
 credentials and close the session when the phase ends or stops.
 
-Invoke canonical executable owners instead of duplicating their behavior in
-wrappers, parsers, validators, aggregators, or orchestration. Helpers may cache
-raw output, collate results, or format reports; they may not independently
-reinterpret core semantics.
+For local 1Password desktop-app integration, an `op whoami` result describes
+the account and session observed by that invocation; it does not by itself
+establish authentication for the intended bounded phase. In the retained
+terminal, use `op signin --account <account>` to authenticate the intended
+account before related `op` commands. Do not use `--raw` or evaluate
+sign-in output. If sign-in would emit a session token or require manual
+token handling, stop without capturing or relaying it. Keep related
+commands in that terminal; run `op signout` and close it when the phase
+ends or stops.
+
+Provider provenance: 1Password CLI documentation checked 2026-10-03.
+
+For orchestration and automation, apply
+[canonical executable truth](engineering-baseline.md#core-principles).
 
 ## Branch Protection
 
@@ -641,6 +610,9 @@ This document defines expectations, not exact GitHub settings.
   the local blocking path, including whether they block merge or release
 - branch or commit conventions that are specific to the repository
 - repo-specific constraints, boundaries, or file placement rules
+
+Explain justified local validation exclusions without weakening `make check`
+as the canonical entrypoint.
 
 Reusable workflow rules belong in the playbook, not duplicated into each
 repository's `AGENTS.md`. Canonical playbook updates and `AGENTS.md` edits are
@@ -782,16 +754,3 @@ surface:
 - Mixed repositories should include the applicable local checks for each
   changed surface, with `AGENTS.md` documenting which surfaces are covered by
   `make check`.
-
-Repo-local `AGENTS.md` should document what `make check` includes, any
-justified exclusions, and any CI-only or advisory checks such as live provider
-integration, credentialed workflows, slow release checks, or source-evidence
-scans that are intentionally outside the local blocking path. Those deviations
-should explain why the check is excluded locally without weakening `make check`
-as the canonical local validation entrypoint.
-
-## Notes
-
-- Repositories can add stricter rules, but they should start from a small default baseline.
-- Keep this baseline easy to apply and easy to explain.
-- Use more specific playbook docs only when the repository needs guidance beyond these primitives.
