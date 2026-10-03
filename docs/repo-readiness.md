@@ -253,8 +253,8 @@ experiments, risks, and follow-on opportunities.
 
 ## Makefile Discoverability
 
-Any repository with a Makefile should include a discoverable `make help`
-target.
+Any repository with a Makefile should include a `make help` target that
+lists repo-local targets with short descriptions.
 
 Before the first canonical validation attempt in a fresh implementation
 worktree, use the repository's startup guidance and `make help` to identify
@@ -569,15 +569,15 @@ to preserve the session. Inject credentials only into commands that need them;
 if injected into the shell, run only those commands there. Clear injected
 credentials and close the session when the phase ends or stops.
 
-For local 1Password desktop-app integration, an `op whoami` result describes
-the account and session observed by that invocation; it does not by itself
-establish authentication for the intended bounded phase. In the retained
-terminal, use `op signin --account <account>` to authenticate the intended
-account before related `op` commands. Do not use `--raw` or evaluate
-sign-in output. If sign-in would emit a session token or require manual
-token handling, stop without capturing or relaying it. Keep related
-commands in that terminal; run `op signout` and close it when the phase
-ends or stops.
+On macOS or Linux, when local 1Password desktop-app authorization is
+terminal-scoped and the retained-session conditions above hold, `op whoami`
+reports the signed-in account observed by that invocation. It does not by
+itself establish authentication for the intended bounded phase. Use
+`op signin --account <account>` in the retained terminal for the intended
+account before related `op` commands. Do not use `--raw` or evaluate sign-in
+output. If sign-in would emit a session token or require manual token
+handling, stop without capturing or relaying it. Keep related commands in
+that terminal; run `op signout` and close it when the phase ends or stops.
 
 Provider provenance: 1Password CLI documentation checked 2026-10-03.
 
