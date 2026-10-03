@@ -120,17 +120,9 @@ Promotion should move the durable guidance, not copy the entire notes history.
 
 ## Cleanup Expectation
 
-After promotion lands, clean up the notes repository so it converges on the
-playbook as the source of truth.
-
-- remove notes that are fully superseded by the promoted playbook guidance
-- trim notes that still need to retain local context, examples, or history
-- add or keep links that point readers to the canonical playbook location
-- rerun the alignment pass until the remaining notes serve only a staging-layer
-  purpose
-
-Use the notes cleanup workflow in
-[`notes-cleanup-workflow.md`](notes-cleanup-workflow.md) for the cleanup pass.
+After promotion lands, apply
+[`notes-cleanup-workflow.md`](notes-cleanup-workflow.md) to remove or trim
+superseded notes and re-audit until survivors serve only a staging purpose.
 
 ## Guardrails
 
