@@ -127,7 +127,8 @@ supported by this evidence-bundle option; standalone artifact review uses the
 target options above.
 
 The existing local read-only tool set receives one additional directory via
-the documented `--add-dir` option; the bundle remains controller-owned and
+the documented [`--add-dir` option](https://code.claude.com/docs/en/cli-usage);
+the bundle remains controller-owned and
 is neither copied nor deleted by the launcher. Bundle verification repeats
 before and after review; a failure suppresses the review result. The
 controller must preserve required evidence before disposing of its attempt

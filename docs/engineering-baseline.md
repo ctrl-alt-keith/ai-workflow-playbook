@@ -126,9 +126,11 @@ its consequential semantics were not lost, weakened, made ambiguous, or moved.
 Justified growth is allowed; do not use compression quotas or text-presence tests.
 
 For provider-dependent agent-read guidance, apply [Public API Baselines](#public-api-baselines).
-Keep historical check dates and verification sources in reviewed change evidence,
-not operative agent-read text. Retain a date in an instruction only when the date
-changes required behavior, such as a compatibility or deprecation boundary.
+Keep historical check dates and source lists that document past verification in
+reviewed change evidence, not operative agent-read text. Direct authoritative
+links may remain where they support a current instruction. Retain a date in an
+instruction only when it changes required behavior, such as a compatibility or
+deprecation boundary.
 
 ## Config And CLI Default Changes
 
