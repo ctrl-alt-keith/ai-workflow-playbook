@@ -130,7 +130,9 @@ class PromptRecipientRoutingTests(unittest.TestCase):
             {row["Selected delivery"] for row in failures},
             {"blocked"},
         )
-        self.assertEqual(len(failures), 4)
+        for case in ("native-create-uncertain", "native-readback-truncated"):
+            with self.subTest(case=case):
+                self.assertEqual(self.cases[case]["Selected delivery"], "blocked")
 
     def test_human_recipient_and_fragment_keep_lightweight_routes(self) -> None:
         human = self.cases["human-personal-use"]
