@@ -619,8 +619,6 @@ and the retained-session conditions above hold, run
 terminal before related `op` commands, and `op signout` there when the phase
 ends or stops.
 
-Provider provenance: 1Password CLI documentation checked 2026-10-03.
-
 Invoke canonical executable owners instead of duplicating their behavior in
 wrappers, parsers, validators, aggregators, or orchestration. Helpers may cache
 raw output, collate results, or format reports; they may not independently
