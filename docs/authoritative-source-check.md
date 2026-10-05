@@ -102,7 +102,9 @@ Source justification: official docs do not cover this API edge case; this link i
 The scanner recognizes `Source justification:`, `Source exception:`,
 `non-authoritative-source-ok:`, and `third-party-source-ok:` only when the
 marker includes text after the colon and appears near the URL. Bare markers or
-distant blanket exceptions are not suppressions. Keep the source claim
+distant blanket exceptions are not suppressions. A marker with multiple nearby
+links is ambiguous and suppresses none of them; put each exception next to its
+link with enough separation to identify its scope. Keep the source claim
 conservative, prefer replacing the link with official docs when possible, and
 leave the exception visible in the reviewed Markdown or PR body.
 

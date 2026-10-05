@@ -132,8 +132,16 @@ def reason_for(url: str) -> tuple[str, str]:
 
 
 def justified(lines: list[str], index: int) -> bool:
-    nearby = " ".join(lines[max(0, index - 1) : min(len(lines), index + 2)]).lower()
-    return JUSTIFICATION_RE.search(nearby) is not None
+    for marker_index in range(max(0, index - 1), min(len(lines), index + 2)):
+        if JUSTIFICATION_RE.search(lines[marker_index]) is None:
+            continue
+        marker_neighborhood = lines[
+            max(0, marker_index - 1) : min(len(lines), marker_index + 2)
+        ]
+        # A marker with multiple nearby links cannot identify which it excuses.
+        if sum(len(URL_RE.findall(line)) for line in marker_neighborhood) == 1:
+            return True
+    return False
 
 
 def public_api_context(lines: list[str], index: int) -> str | None:
