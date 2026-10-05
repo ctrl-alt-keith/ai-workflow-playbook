@@ -125,12 +125,12 @@ review the before/after owner against the retention rule above to confirm that
 its consequential semantics were not lost, weakened, made ambiguous, or moved.
 Justified growth is allowed; do not use compression quotas or text-presence tests.
 
-For provider-dependent agent-read guidance, apply [Public API Baselines](#public-api-baselines).
-Keep historical check dates and source lists that document past verification in
-reviewed change evidence, not operative agent-read text. Direct authoritative
-links may remain where they support a current instruction. Retain a date in an
-instruction only when it changes required behavior, such as a compatibility or
-deprecation boundary.
+For provider-dependent agent-read guidance, apply
+[Public API Baselines](#public-api-baselines). Keep historical check dates and
+source lists that document past verification in reviewed change evidence, not
+operative agent-read text. Direct authoritative links may remain where they
+support a current instruction. Retain a date in an instruction only when it
+changes required behavior, such as a compatibility or deprecation boundary.
 
 ## Config And CLI Default Changes
 
@@ -283,9 +283,8 @@ officially documented guarantees, observations, and local assumptions in code
 comments, docs, tests, risks, and PR notes. Record the checked date in reviewed
 change evidence when behavior is operationally important, time-sensitive, or
 likely to change. Prefer conservative workflows when docs are incomplete,
-ambiguous, or silent; never
-encode unverified assumptions as architecture, public guarantees, or destructive
-defaults.
+ambiguous, or silent; never encode unverified assumptions as architecture,
+public guarantees, or destructive defaults.
 
 Keep credentials in the environment or approved secret stores, and
 account-specific state, private topology, and local paths out of reusable docs.

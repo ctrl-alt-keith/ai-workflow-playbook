@@ -332,15 +332,13 @@ but cannot independently return a numeric App Folder root ID or prove the
 credential's app access type. The authorized human's out-of-band App Folder
 confirmation is part of the qualification evidence. A Full Dropbox token
 pointed at a fresh same-named folder would not be distinguishable by these
-reads alone; that
-residual identity limitation must stay visible in review and prevents a
-stronger machine-verified App Folder claim.
+reads alone; that residual identity limitation must stay visible in review
+and prevents a stronger machine-verified App Folder claim.
 
 Documentation supports the selected calls/configuration. Local socket/process
 tests establish observed client behavior. Neither establishes real provider
-atomicity,
-negative-read consistency, global cardinality, exactly-once commits,
-host physical durability, or authority through remote commitment.
+atomicity, negative-read consistency, global cardinality, exactly-once
+commits, host physical durability, or authority through remote commitment.
 
 ## Planning and review context
 
