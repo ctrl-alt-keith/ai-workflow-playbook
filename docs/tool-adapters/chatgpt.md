@@ -49,12 +49,13 @@ existing bounded authority remains controlling. Authoring or presenting a
 Codex prompt does not select Work or Codex.
 
 Honor an operator's explicit selection or acceptance of an execution surface.
-If that surface becomes ineligible or a required capability or boundary calls
-for another route, report the mismatch and offer the change; do not silently
-switch surfaces. Do not turn a controller's cloud/local preference into a
-required locality unless the task or operator requires it. Qualify both an
-explicit Work selection that would otherwise launch local Codex and a
-locality-neutral task already on an eligible execution surface.
+If that surface is or becomes ineligible, or a required capability or boundary
+calls for another route, hold affected work, report why, and offer only an
+eligible route the task permits; do not silently switch surfaces. Do not turn
+a controller's execution-host (cloud/local) preference into a required
+locality unless the task or operator requires it. An explicit Work selection
+stays in Work while eligible; a locality-neutral task already on an eligible
+surface proceeds there without a handoff driven by controller preference.
 
 For handoffs, apply the canonical prompt owner's
 [target-shaped projections](../prompts.md#target-shaped-projections), subject to the
