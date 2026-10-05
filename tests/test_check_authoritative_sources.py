@@ -123,6 +123,22 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
 
         self.assertEqual(findings, [])
 
+    def test_one_marker_does_not_suppress_multiple_nearby_sources(self) -> None:
+        findings = scanner.scan_text(
+            "docs/example.md",
+            "\n".join(
+                [
+                    "REST retry source: https://medium.com/example/first",
+                    "Source justification: official docs unavailable for this API edge case.",
+                    "SDK retry source: https://dev.to/example/second",
+                ]
+            ),
+        )
+
+        self.assertEqual(
+            [finding["domain"] for finding in findings], ["medium.com", "dev.to"]
+        )
+
     def test_suppression_marker_without_reason_does_not_suppress_warning(self) -> None:
         findings = scanner.scan_text(
             "docs/example.md",
