@@ -6,12 +6,20 @@ Define the smallest reusable baseline a repository should have before normal AI-
 
 ## Scope
 
+- This is a practical baseline, not a full policy or checklist.
+- It covers pull request flow, readiness state, validation, branch protection
+  expectations, the role of `AGENTS.md`, and workflow-state ownership and
+  lifecycle classification.
 - Repo-specific security, compliance, release, or approval rules should be defined only when needed by that repository.
 
 ## Baseline Expectations
 
+- All changes go through pull requests.
+- Validation must pass before a pull request is considered complete.
+- Pull requests should stay small, scoped, and single-purpose.
 - Public repositories include a root `LICENSE` file, defaulting to Apache License
   2.0 unless the repository documents another choice.
+- Repositories with a Makefile include `make help` for local target discovery.
 - Defaults should favor safe, explicit behavior over implied shortcuts.
 
 ## Governance Operating Model
@@ -72,7 +80,9 @@ documented:
 
 This profile does not relax caution for security-sensitive changes, destructive
 automation, data-loss risks, irreversible migrations, credentialed workflows,
-public release behavior, or high-blast-radius operational changes.
+public release behavior, or high-blast-radius operational changes. It preserves
+explicit policy and auditability while avoiding operational drag that exists
+only to coordinate a larger team.
 
 ### Automation And Orchestration
 
@@ -84,6 +94,13 @@ Before widening governance or process, compare repo-family precedent and the
 documented operating model. Prefer the narrowest rule that preserves safety,
 integrity, recoverability, auditability, and operational clarity without
 creating unnecessary drag for solo-maintainer repositories.
+
+When governance behavior already has an authoritative tool, module, workflow,
+or CLI, invoke that executable source directly. Orchestration layers may
+enumerate targets, invoke canonical commands, collect outputs, and summarize
+or report results, but they should not partially reimplement the canonical
+logic, fork parser behavior, duplicate validation semantics, or create a
+competing audit engine.
 
 ### Enforcement Relationship
 
@@ -249,12 +266,15 @@ release behavior, or high-blast-radius operational changes. In those cases,
 reviewers should apply the normal conservative review posture.
 
 When using this posture, distinguish blocking issues from non-blocking
-experiments, risks, and follow-on opportunities.
+experiments, risks, and follow-on opportunities. The goal is faster
+operational learning without hiding real safety or maintainability concerns.
 
 ## Makefile Discoverability
 
-Any repository with a Makefile should include a `make help` target that
-lists repo-local targets with short descriptions.
+Any repository with a Makefile should include a `make help` target. `make help`
+lists available repo-local Makefile targets with short descriptions so a fresh
+worker can discover setup, validation, generation, and maintenance commands
+without reading the whole file first.
 
 Before the first canonical validation attempt in a fresh implementation
 worktree, use the repository's startup guidance and `make help` to identify
@@ -343,12 +363,19 @@ or workflow step. Sequential workflows that depend on merges must pause for
 explicit human confirmation before merge and before continuing to downstream
 steps.
 
-Treat each repository in a multi-repo workspace as an independent change
-unit. Before opening a PR, ensure all staged changes belong to one repository;
-split cross-repository changes into separate branches, worktrees, and PRs.
-Each implementation change uses one dedicated repo-local worktree, branch,
-and PR. The only exceptions are read-only inspection or explicit human
-instruction not to modify files.
+When working in a multi-repo workspace, treat each repository as an independent
+unit of change. Even if multiple repositories are visible, commits, branches,
+worktrees, and PRs must be created and managed per repository. Do not create
+cross-repo commits or PRs.
+
+Before opening a PR, ensure that all staged changes belong to a single
+repository. If changes span multiple repositories, split them into separate
+branches, worktrees, and PRs, one per repository.
+
+Every implementation change must use a dedicated repo-local git worktree: one
+repository, one branch, one worktree, and one PR per change. The only
+exceptions are read-only inspection or explicit human instruction not to modify
+files.
 
 ## Workspace Boundary Discovery
 
@@ -363,6 +390,9 @@ overrides or narrowed inputs. Reconcile those sources before treating local
 checkouts as part of the active workspace scope.
 
 Do not treat raw local filesystem layout as authoritative workspace scope.
+Local checkout trees may contain stale repositories, archived repositories,
+detached worktrees, experiments, incomplete clones, temporary operational
+state, or local-only scratch repositories.
 
 Reconcile local workspace state against the owning inventory source before
 cross-repo audits, `AGENTS.md` alignment, enforcement scans, or broad workflow
@@ -594,8 +624,10 @@ run `op signout` and close it when the phase ends or stops.
 
 Provider provenance: 1Password CLI documentation checked 2026-10-03.
 
-For orchestration and automation, apply
-[canonical executable truth](engineering-baseline.md#core-principles).
+Invoke canonical executable owners instead of duplicating their behavior in
+wrappers, parsers, validators, aggregators, or orchestration. Helpers may cache
+raw output, collate results, or format reports; they may not independently
+reinterpret core semantics.
 
 ## Branch Protection
 
@@ -623,9 +655,6 @@ This document defines expectations, not exact GitHub settings.
   the local blocking path, including whether they block merge or release
 - branch or commit conventions that are specific to the repository
 - repo-specific constraints, boundaries, or file placement rules
-
-Explain justified local validation exclusions without weakening `make check`
-as the canonical entrypoint.
 
 Reusable workflow rules belong in the playbook, not duplicated into each
 repository's `AGENTS.md`. Canonical playbook updates and `AGENTS.md` edits are
@@ -767,3 +796,16 @@ surface:
 - Mixed repositories should include the applicable local checks for each
   changed surface, with `AGENTS.md` documenting which surfaces are covered by
   `make check`.
+
+Repo-local `AGENTS.md` should document what `make check` includes, any
+justified exclusions, and any CI-only or advisory checks such as live provider
+integration, credentialed workflows, slow release checks, or source-evidence
+scans that are intentionally outside the local blocking path. Those deviations
+should explain why the check is excluded locally without weakening `make check`
+as the canonical local validation entrypoint.
+
+## Notes
+
+- Repositories can add stricter rules, but they should start from a small default baseline.
+- Keep this baseline easy to apply and easy to explain.
+- Use more specific playbook docs only when the repository needs guidance beyond these primitives.
