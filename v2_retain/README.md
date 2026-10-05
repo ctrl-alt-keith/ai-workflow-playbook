@@ -323,13 +323,16 @@ whether preflight renewed, observed identity facts, credential-reference label,
 result, and the route claim ceiling. Resolved credentials and expiry values are
 not durable operation evidence.
 
-Dropbox's team-files guide says App Folder calls are rooted implicitly in
-that app's folder. The SDK metadata route does not return root-folder
-metadata. Thus the SDK reads can verify the account root/home IDs,
-readable implicit root, and exact child folder ID/path, but cannot independently return a numeric App Folder root ID or prove the
-credential's app access type. The authorized human's out-of-band App Folder confirmation is
-part of the qualification evidence. A Full Dropbox token pointed at a fresh
-same-named folder would not be distinguishable by these reads alone; that
+Dropbox's [team-files guide](https://developers.dropbox.com/dbx-team-files-guide)
+says App Folder calls are rooted implicitly in that app's folder. The
+[SDK metadata route](https://dropbox-sdk-python.readthedocs.io/en/latest/api/dropbox.html)
+does not return root-folder metadata. Thus the SDK reads can verify the
+account root/home IDs, readable implicit root, and exact child folder ID/path,
+but cannot independently return a numeric App Folder root ID or prove the
+credential's app access type. The authorized human's out-of-band App Folder
+confirmation is part of the qualification evidence. A Full Dropbox token
+pointed at a fresh same-named folder would not be distinguishable by these
+reads alone; that
 residual identity limitation must stay visible in review and prevents a
 stronger machine-verified App Folder claim.
 
