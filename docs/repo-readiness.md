@@ -363,6 +363,10 @@ or workflow step. Sequential workflows that depend on merges must pause for
 explicit human confirmation before merge and before continuing to downstream
 steps.
 
+Before an authorized merge action, establish the repository's currently allowed
+merge methods from its settings or another authoritative current source, then
+explicitly select an allowed method instead of relying on the tool's default.
+
 When working in a multi-repo workspace, treat each repository as an independent
 unit of change. Even if multiple repositories are visible, commits, branches,
 worktrees, and PRs must be created and managed per repository. Do not create
