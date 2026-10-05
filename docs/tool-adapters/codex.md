@@ -4,9 +4,6 @@ Codex maps the shared Playbook to a bounded repository execution surface. Apply
 the repository floor and the task-activated canonical owners; this adapter
 contains only Codex-specific controls.
 
-Provider provenance: OpenAI Codex model and instruction-discovery guidance
-checked 2026-09-23. Official sources belong in reviewed change evidence.
-
 ## OpenAI Model And Reasoning Routing
 
 Apply [model routing](../model-routing.md). Select model and reasoning effort

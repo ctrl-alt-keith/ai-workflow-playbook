@@ -1,6 +1,6 @@
 """Official SDK seam. Default transport is loopback-only; live is explicit.
 
-Current sources, checked 2026-09-12, and all claim ceilings are in README.md.
+Claim ceilings are documented in README.md.
 No error string from the historical connector is classified here.
 """
 

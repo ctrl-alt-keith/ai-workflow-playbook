@@ -302,9 +302,3 @@ Follow [`repo-readiness.md`](../repo-readiness.md) and repo-local
 PR and status, validation and review summary, exact head when useful, stop
 boundary; add file, blocker, risk, or forensic detail only when it changes
 operator action.
-
-## References
-
-Runtime claims were checked against official Anthropic documentation on
-2026-09-19 (Claude Code and platform) and 2026-09-21 (Claude Chat and
-Cowork); the sources are recorded in the PR that last changed each claim.

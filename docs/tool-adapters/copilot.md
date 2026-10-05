@@ -4,9 +4,8 @@ This adapter covers GitHub Copilot used for a localized editor suggestion or
 continuation. It does not select or define other Copilot products, agents, or
 workflow paths. Shared rules remain owned by the Playbook.
 
-Provider behavior was rechecked against official GitHub documentation on
-2026-09-21; provider sources belong in reviewed PR evidence, not this
-agent-read adapter.
+For provider-dependent claims, apply
+[Public API Baselines](../engineering-baseline.md#public-api-baselines).
 
 ## Eligible use
 
