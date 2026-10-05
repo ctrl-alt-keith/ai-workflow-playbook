@@ -392,8 +392,7 @@ preserves the handoff.
 
 ### Recipient-routing qualification cases
 
-These cases exercise the decision model above. Tests validate their routing
-relationships rather than the surrounding prose.
+These cases exercise the decision model above.
 
 | Case | Produced artifact | Operator/viewer | Execution recipient | Downstream execution surface | Execution/handoff boundary | Route capability | Selected delivery |
 | --- | --- | --- | --- | --- | --- | --- | --- |
