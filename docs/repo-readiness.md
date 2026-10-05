@@ -610,6 +610,15 @@ to preserve the session. Inject credentials only into commands that need them;
 if injected into the shell, run only those commands there. Clear injected
 credentials and close the session when the phase ends or stops.
 
+For a bounded local 1Password CLI phase, stop if sign-in requires
+emitting or handling a session token.
+
+On macOS or Linux, when 1Password desktop-app authorization is terminal-scoped
+and the retained-session conditions above hold, run
+`op signin --account <account>` for the intended account in the retained
+terminal before related `op` commands, and `op signout` there when the phase
+ends or stops.
+
 Invoke canonical executable owners instead of duplicating their behavior in
 wrappers, parsers, validators, aggregators, or orchestration. Helpers may cache
 raw output, collate results, or format reports; they may not independently
