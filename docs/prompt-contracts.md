@@ -392,7 +392,8 @@ are affirmative:
    personal, employer, or client content; and
 6. the governing issue and natural durable owner are unambiguous.
 
-Routine prompts remain non-durable by default. Missing or uncertain permission,
+Routine prompts remain non-durable by default, including when delivered to a
+fresh worker through a native task action. Missing or uncertain permission,
 visibility, retention, ownership, or exact-byte preservation fails closed.
 Redaction produces a different rendered-prompt identity and must never be
 represented as the original exact prompt.
@@ -408,10 +409,11 @@ introduce a new durable root merely for naming symmetry.
 
 When no existing owner qualifies, a routine prompt follows the ordinary
 delivery decision model and does not gain material-prompt retention merely
-because Airtable carries it. A prompt whose exact durable identity is required
-for an authorized downstream dependency fails storage admission until a
-natural durable owner is established; importance does not authorize an
-improvised destination. Another owner may define a narrower profile,
+because Airtable or a native task action carries it. A prompt whose exact
+durable identity is required for an authorized downstream dependency fails
+storage admission until a natural durable owner is established; importance
+does not authorize an improvised destination. Another owner may define a
+narrower profile,
 but it must preserve the semantic, identity, authority, verification, and
 fail-closed boundaries here rather than treating this issue-owned profile as a
 generic container.

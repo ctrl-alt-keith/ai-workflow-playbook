@@ -85,38 +85,52 @@ class PromptRecipientRoutingTests(unittest.TestCase):
             {row["Selected delivery"] for row in steering}, {"inline-two-block"}
         )
 
-    def test_permitted_complete_machine_handoffs_use_airtable(self) -> None:
-        qualifying = [
-            row
-            for row in self.cases.values()
-            if row["Produced artifact"] == "complete"
-            and row["Execution recipient"] not in {"human", "none"}
-            and row["Execution/handoff boundary"]
-            in {"fresh-execution", "revised-contract-review"}
-            and row["Route capability"] == "permitted"
-        ]
+    def test_native_fresh_handoff_requires_qualification(self) -> None:
+        native = self.cases["native-worker-qualified"]
+        self.assertEqual(native["Execution/handoff boundary"], "fresh-execution")
+        self.assertEqual(native["Route capability"], "native-qualified")
+        self.assertEqual(native["Selected delivery"], "native-task-handoff")
+
+        unqualified = self.cases["native-unqualified-airtable-permitted"]
+        self.assertEqual(unqualified["Route capability"], "airtable-permitted")
+        self.assertEqual(unqualified["Selected delivery"], "airtable-thin-handoff")
+
+    def test_manual_and_material_handoffs_use_airtable(self) -> None:
+        for case in (
+            "cak-228-prompt-me-codex",
+            "claude-executes",
+            "chatgpt-executes",
+            "issue-owned-material-prompt",
+            "reused-thread-revised-contract",
+        ):
+            with self.subTest(case=case):
+                self.assertEqual(
+                    self.cases[case]["Selected delivery"], "airtable-thin-handoff"
+                )
         self.assertEqual(
-            {row["Execution/handoff boundary"] for row in qualifying},
-            {"fresh-execution", "revised-contract-review"},
-        )
-        self.assertEqual(
-            {row["Selected delivery"] for row in qualifying},
-            {"airtable-thin-handoff"},
+            self.cases["issue-owned-material-prompt"]["Route capability"],
+            "independent-storage-required",
         )
 
-    def test_machine_handoff_route_failure_never_falls_back_inline(self) -> None:
+    def test_machine_handoff_failure_never_falls_back_inline(self) -> None:
         failures = [
             row
             for row in self.cases.values()
             if row["Execution/handoff boundary"]
             in {"fresh-execution", "revised-contract-review"}
             and row["Route capability"]
-            in {"unavailable", "identity-unresolved-after-inspection"}
+            in {
+                "unavailable",
+                "identity-unresolved-after-inspection",
+                "native-identity-uncertain",
+                "native-readback-incomplete",
+            }
         ]
         self.assertEqual(
             {row["Selected delivery"] for row in failures},
             {"blocked"},
         )
+        self.assertEqual(len(failures), 4)
 
     def test_human_recipient_and_fragment_keep_lightweight_routes(self) -> None:
         human = self.cases["human-personal-use"]

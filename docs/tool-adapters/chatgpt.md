@@ -79,19 +79,20 @@ requirement, workspace/provider restriction, or safety protection.
 ### Prompt transport
 
 Use the canonical prompt-delivery decision model and preserve its terminal
-failure reason. For a qualifying machine recipient with a permitted Airtable
+failure reason. For a qualified native controller-to-worker route, use its
+supported task action and exact-identity readback. For a selected Airtable
 route, apply the canonical Airtable handoff before selecting presentation; do
 not add file-preview, download-link, or attempt-local retrieval steps. For a
-human execution recipient, use the inline two-block presentation. If machine
-recipient Airtable capability is unknown, inspect or attempt it before routing.
-Routine prompts do not inherit the material-prompt profile merely from
-transport.
+human execution recipient, use the inline two-block presentation. Inspect
+unknown required route capability before selection. Routine prompts do not
+inherit the material-prompt profile merely from transport.
 
 For Airtable production and consumption, resolve the permitted base, table, and
 field IDs through current actions and use the returned record ID with the exact
 `recordIds` constraint. Apply the canonical handoff's verification, correction,
-and transport rules, plus the issue-owned durable-capture profile; do not add
-any record or transport beyond what those owners require.
+and transport rules; apply the issue-owned durable-capture profile only when
+its admission conditions hold. Do not add any record or transport beyond what
+those owners require.
 
 When an inline prompt is selected, emit the shared operator metadata and the
 complete executable prompt as consecutive fenced blocks with no assistant prose
