@@ -110,6 +110,49 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
             "authoritative-source-check: changed Markdown detection unavailable; scanning PR body only"
         )
 
+    def test_cli_scans_changed_markdown_without_reporting_unchanged_sources(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            docs_dir = root / "docs"
+            docs_dir.mkdir()
+            changed = docs_dir / "changed.md"
+            unchanged = docs_dir / "unchanged.md"
+            changed.write_text("No API source yet.\n", encoding="utf-8")
+            unchanged.write_text(
+                "REST retry source: https://medium.com/unchanged\n", encoding="utf-8"
+            )
+            subprocess.run(["git", "add", "docs"], cwd=root, check=True)
+            subprocess.run(
+                [
+                    "git", "-c", "commit.gpgsign=false", "-c", "user.name=Test",
+                    "-c", "user.email=test@example.com", "commit", "-qm", "base",
+                ],
+                cwd=root,
+                check=True,
+            )
+            changed.write_text(
+                "REST retry source: https://dev.to/changed\n", encoding="utf-8"
+            )
+            subprocess.run(["git", "add", "docs/changed.md"], cwd=root, check=True)
+            subprocess.run(
+                [
+                    "git", "-c", "commit.gpgsign=false", "-c", "user.name=Test",
+                    "-c", "user.email=test@example.com", "commit", "-qm", "change source",
+                ],
+                cwd=root,
+                check=True,
+            )
+
+            result = self.run_scanner_cli(
+                ["--base-ref", "HEAD~1", "--head-ref", "HEAD"], cwd=root
+            )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("https://dev.to/changed", result.stdout)
+        self.assertIn("location: docs/changed.md:1", result.stdout)
+        self.assertNotIn("https://medium.com/unchanged", result.stdout)
+
     def test_nearby_source_justification_suppresses_warning(self) -> None:
         findings = scanner.scan_text(
             "docs/example.md",
