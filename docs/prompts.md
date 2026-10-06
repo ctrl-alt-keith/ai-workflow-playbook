@@ -325,7 +325,9 @@ Keep prompt delivery small and deterministic. Resolve these decisions in order:
 2. Resolve the human operator or viewer and execution recipient independently.
 3. Resolve the execution/handoff boundary under the existing
    [material-attempt and conversational-steering boundary](prompt-contracts.md#material-attempts-and-conversational-steering).
-4. Qualify and select the applicable transport. For Airtable, satisfy the
+4. Qualify and select a permitted transport against this handoff's required
+   completeness, identity, recovery, retention, and replay guarantees. For
+   Airtable, satisfy the
    [envelope eligibility prerequisite](#airtable-canonical-text-handoff)
    before selecting presentation or constructing an envelope.
 
@@ -346,10 +348,13 @@ human recipient.
   two-block presentation when complete; no new durable handoff;
 - complete prompt for a human recipient: the canonical inline two-block
   presentation;
+- ordinary complete prompt for a machine recipient crossing an execution or
+  handoff boundary, with a qualified native controller-to-worker route: direct
+  task delivery under the checks below;
 - qualifying small canonical-text prompt for a ChatGPT, Claude, or Codex
-  machine recipient crossing an execution or handoff boundary, or rejected by
-  the inline policy, with a permitted Airtable route: the Airtable record
-  handoff below;
+  machine recipient crossing an execution or handoff boundary, without a
+  qualified direct route or with an independent-storage requirement, and with
+  a permitted Airtable route: the Airtable record handoff below;
   or
 - missing, unresolved, or mismatched required recipient, boundary, route,
   destination, or identity for a genuine handoff: a clear blocked result with
@@ -361,38 +366,64 @@ for a qualifying small canonical-text handoff. A separately authorized workflow
 may select file-backed delivery only when its payload actually requires
 arbitrary bytes or provider file identity, revision, or checksum behavior.
 
+Qualify a native route from its supported create/send and read actions, not
+from thread creation alone. Before dispatch, inspect its applicable size and
+structure limits and establish that it returns an exact task identity and can
+read the instruction and result by that identity. After dispatch, compare the
+full, untruncated instruction read by that identity with the frozen text;
+verify the linked result when produced. Per-attempt readback does not establish
+a general payload limit or future retention duration. An unverified limit,
+retention horizon, or raw-byte property cannot satisfy a requirement that
+depends on it. Native task history is not an issue-owned material-prompt store
+under
+[`prompt-contracts.md`](prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile).
+If creation or readback has an uncertain result, reconcile the original task
+identity and live execution before retry or fallback; never launch a duplicate
+to resolve uncertainty. Missing required identity or recovery blocks delivery.
+
 Before selecting inline transport for a complete machine-directed prompt,
 mechanically measure the frozen rendered UTF-8 payload. The canonical
 `inline_prompt_transport_byte_limit = 4096`; inline requires fewer bytes and a
-structurally safe representation. A known narrower constraint controls. At or
-above the limit, or below it when structure cannot be preserved safely, use the
-permitted Airtable route before command-line, argument, quoting, wrapper,
-truncation, or operator-copy failure; block if that route cannot preserve the
-handoff.
+structurally safe representation. A known narrower constraint controls. This
+inline limit does not qualify or disqualify a native task API. When inline is
+ineligible, qualify the permitted handoff route before command-line, argument,
+quoting, wrapper, truncation, or operator-copy failure; block if no route
+preserves the handoff.
 
 ### Recipient-routing qualification cases
 
-These cases exercise the decision model above. Tests validate their routing
-relationships rather than the surrounding prose.
+These cases exercise the decision model above.
 
 | Case | Produced artifact | Operator/viewer | Execution recipient | Downstream execution surface | Execution/handoff boundary | Route capability | Selected delivery |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `human-personal-use` | `complete` | `human` | `human` | `human` | `not-applicable` | `not-required` | `inline-two-block` |
-| `cak-228-prompt-me-codex` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `permitted` | `airtable-thin-handoff` |
-| `claude-executes` | `complete` | `human` | `claude` | `claude` | `fresh-execution` | `permitted` | `airtable-thin-handoff` |
-| `chatgpt-executes` | `complete` | `human` | `chatgpt` | `chatgpt` | `fresh-execution` | `permitted` | `airtable-thin-handoff` |
+| `cak-228-prompt-me-codex` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `airtable-only` | `airtable-thin-handoff` |
+| `claude-executes` | `complete` | `human` | `claude` | `claude` | `fresh-execution` | `airtable-only` | `airtable-thin-handoff` |
+| `chatgpt-executes` | `complete` | `human` | `chatgpt` | `chatgpt` | `fresh-execution` | `airtable-only` | `airtable-thin-handoff` |
+| `native-worker-qualified` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `native-qualified` | `native-task-handoff` |
+| `native-unqualified-airtable-permitted` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `airtable-permitted` | `airtable-thin-handoff` |
+| `issue-owned-material-prompt` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `independent-storage-required` | `airtable-thin-handoff` |
 | `cak-242-codex-correction` | `complete` | `human` | `codex` | `codex` | `in-run-steering` | `permitted` | `inline-two-block` |
 | `cak-241-codex-correction` | `complete` | `human` | `codex` | `codex` | `in-run-steering` | `permitted` | `inline-two-block` |
 | `claude-steering` | `complete` | `human` | `claude` | `claude` | `in-run-steering` | `unavailable` | `inline-two-block` |
 | `chatgpt-steering` | `complete` | `human` | `chatgpt` | `chatgpt` | `in-run-steering` | `not-inspected` | `inline-two-block` |
-| `reused-thread-revised-contract` | `complete` | `human` | `codex` | `codex` | `revised-contract-review` | `permitted` | `airtable-thin-handoff` |
+| `reused-thread-revised-contract` | `complete` | `human` | `codex` | `codex` | `revised-contract-review` | `independent-storage-required` | `airtable-thin-handoff` |
 | `machine-route-unavailable` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `unavailable` | `blocked` |
 | `machine-identity-unresolved` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `identity-unresolved-after-inspection` | `blocked` |
+| `native-create-uncertain` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `native-identity-uncertain` | `blocked` |
+| `native-readback-truncated` | `complete` | `human` | `codex` | `codex` | `fresh-execution` | `native-readback-incomplete` | `blocked` |
 | `conceptual-fragment` | `fragment` | `human` | `none` | `none` | `not-applicable` | `not-applicable` | `lightweight` |
 
 `cak-228-prompt-me-codex` represents “Prompt me to have Codex do X,” including
 manual thread creation: the human is the viewer or launcher, while Codex
 receives and executes the complete prompt.
+
+`claude-executes` and `chatgpt-executes` represent manual cross-product
+handoffs without a supported direct route. `native-worker-qualified`
+represents an ordinary controller-created worker whose required instruction
+and result recovery is verified. The material and revised-contract cases
+require the separately admitted issue-owned durable profile. The uncertain
+native cases stop without an overlapping replacement worker.
 
 `identity-unresolved-after-inspection` means the required route or identity
 remains unverified after the applicable capability inspection; an unknown route
@@ -400,9 +431,9 @@ that has not yet been inspected does not qualify for terminal blocking.
 
 ### Airtable canonical-text handoff
 
-This section owns the shared handoff contract for the eligible machine
-recipients named above. Adapters map its operations to concrete connector
-actions without redefining it.
+This section owns the shared handoff contract when Airtable is selected for
+an eligible machine recipient. Adapters map its operations to concrete
+connector actions without redefining it.
 
 A handoff qualifies as small canonical text when the frozen payload fits
 unchanged in one `Payload` long-text field and within the current connector's
@@ -470,16 +501,18 @@ This section applies the decision model symmetrically when one executor
 produces a complete prompt for another: each direction is governed by the same
 shared presentation and handoff contract.
 
-For a qualifying small canonical-text handoff to an eligible machine recipient,
-apply the [Airtable contract](#airtable-canonical-text-handoff) and provide the
-target-shaped thin envelope without reproducing the complete prompt in chat.
-On success, return only the matching adapter's launch or configuration guidance
-and required external envelope; do not replay the stored payload or routine
-transport mechanics. For a human execution recipient, use the matching
-adapter's canonical inline presentation. Inspect unknown connector capability
-before selection; if the required Airtable route or identity is unavailable,
-fail clearly rather than switching to file-backed delivery or reconstructing
-the prompt in chat.
+For a qualified native controller-to-worker handoff, deliver the complete
+instruction through the supported task action and return its exact task
+identity after the required readback. For a selected small canonical-text
+Airtable handoff, apply the [Airtable contract](#airtable-canonical-text-handoff)
+and provide the target-shaped thin envelope without reproducing the complete
+prompt in chat. Return only the matching adapter's launch or configuration
+guidance and required delivery identity; do not replay stored payload or
+routine transport mechanics. For a human execution recipient, use the matching
+adapter's canonical inline presentation. Inspect unknown route capability
+before selection; if the required route or identity is unavailable, fail
+clearly rather than switching to file-backed delivery or reconstructing the
+prompt in chat.
 
 Prompt governance remains a separate selection. A material prompt that passes
 its admission test additionally applies the
