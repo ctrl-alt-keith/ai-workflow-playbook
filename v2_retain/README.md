@@ -3,10 +3,12 @@
 This is the opt-in CAK-301 exact-retention implementation. Start with the
 repository's [current bootstrap](../docs/start-here.md), the
 [accepted v2 architecture foundation](../docs/v2-architecture-foundation.md),
-then this contract. The default bootstrap remains v1. A bounded Mac-local
-Dropbox route has [accepted qualification evidence](https://www.dropbox.com/scl/fi/avq1lwwuakgtlnpnr25ll)
-for its reviewed runtime semantics at pre-rebase head
+then this contract. The default bootstrap remains v1. The bounded Mac-local
+Dropbox route has [historical accepted qualification evidence](https://www.dropbox.com/scl/fi/avq1lwwuakgtlnpnr25ll)
+for dropbox 12.2.1 / requests 2.34.2 / urllib3 2.7.0 at pre-rebase head
 `e6cebe4f6ee1891b56697a71b4846608a9034f66`, with two outcomes still held.
+The current urllib3 2.8.0 candidate has local/loopback acceptance only;
+the earlier evidence does not qualify it for operator-live use.
 This package is not an operational
 installation, general provider qualification, release, or Product promotion.
 
@@ -135,6 +137,16 @@ make check
 ```
 
 Setup is explicit and installs the pinned SDK/HTTP dependency set into `.venv`.
+[`transport.py`](transport.py) owns the candidate transport tuple and build
+identity used by drift guards, route fingerprints, and qualification reports;
+acceptance tests require every runtime identity pin to match the install pins.
+It covers dropbox, requests, urllib3, certifi (CA trust), idna (host encoding),
+charset-normalizer (response decoding), and stone (SDK serialization/validation).
+The pinned Jinja2, MarkupSafe, and packaging packages support Stone generation
+tooling and are outside the inspected runtime path. Changes to the runtime
+dependency set or its versions must update the identity and invalidate applicable
+live evidence. Host/Python/TLS configuration changes still require separate
+qualification assessment; the package identity is not a complete host fingerprint.
 `make check` includes existing repository checks and `make v2-check`. The latter
 runs actual operation/store tests, child process crash tests, and SDK requests
 against a loopback HTTP fixture. `.v2-test-state/` is repository-owned synthetic
@@ -204,17 +216,18 @@ transport unless an explicit loopback fixture is selected. The separate
 process environment and an explicit caller-supplied token matching that value.
 It uses no ambient proxy, netrc, `.env`, keychain, or 1Password SDK path. The
 application never invokes `op`; the operator's local `op run`
-process injects the credential. The selected Mac-local request/readback route has one
-accepted bounded live qualification; broader operational use still requires
-its own applicable authority and host/profile evidence. Local fixture success
-is not a Dropbox guarantee.
+process injects the credential. This profile is for a candidate being qualified,
+not an already accepted operator transport. The 2.8.0 candidate has no accepted
+live qualification. Local fixture success is not a Dropbox guarantee.
 
 `Qualification` records build/config identity, target scope, evidence, checked
 date, create/retry intent, admission boundary, collision request/response
 references, invalidation triggers, and claim ceiling. The live profile also
 binds the actor account, account root/home namespace IDs, implicit App Folder
 root, verified folder ID/path, credential-reference label, SDK version, and
-exact head. Defaults explicitly mark collision evidence unqualified. There is
+exact head. Its `checked_at` marker is `current-invocation`, not the date of a
+historical provider run; the harness report records the actual run timestamp.
+Defaults explicitly mark collision evidence unqualified. There is
 no free-standing qualification Boolean or route registry. Material
 configuration/dependency changes invalidate use. Live qualification tests
 identical- and distinct-content collision requests and responses on the
@@ -226,7 +239,9 @@ not its classifier or evidence.
 Keith completed the bounded `cak-301-v2-qual-20260912-01` run on the pre-rebase
 reviewed head; its [post-run review](https://www.dropbox.com/scl/fi/avq1lwwuakgtlnpnr25ll)
 accepted six retained files, two typed same-target conflicts, and two uncertain
-outcomes correctly held. Reboot/power-loss durability and broader provider
+outcomes correctly held. That run used urllib3 2.7.0 and remains historical;
+it supplies no live qualification for the 2.8.0 candidate.
+Reboot/power-loss durability and broader provider
 guarantees remain unqualified. Its folder, objects, and local evidence are
 retained; do not rerun or clean them up during repository reconciliation.
 
@@ -272,7 +287,7 @@ or identity drift stops the one-shot run; it never retries an ambiguous write.
 `.v2-live-qualification/<folder-name>/` is private repository-owned
 qualification working state. It retains the installation/store, non-secret
 preflight and request events, and on success `qualification.json` with exact
-head, SDK version, actor/account, account root/home IDs, folder ID/path,
+head, SDK version, full transport build, actor/account, account root/home IDs, folder ID/path,
 credential-reference label, date, strict-create/retry/admission configuration,
 claim ceiling, invalidation triggers, case outcomes, and request count. No
 resolved credential or raw SDK exception is stored or printed. A partially
@@ -282,7 +297,16 @@ remote objects rather than starting automatic cleanup or replay.
 ## Explicit operator retention
 
 `python -m v2_retain.operator_live` is a separately authorized, non-default
-one-shot retention interface. It requires an exact Markdown input, an unexpired
+one-shot retention interface. It currently fails closed before credential
+access, identity requests, renewal, or state creation because the 2.8.0
+transport has no accepted applicable live evidence. The `operator-live`
+configuration is also blocked at client construction; it cannot reuse the
+`live-qualification` candidate profile as proof of acceptance. There is no
+CLI bypass or automatic activation from a qualification report. A separately
+authorized live run, acceptance of its exact evidence and scope, and a reviewed
+change binding that evidence are required before enabling operator use.
+
+The retained operator interface requires an exact Markdown input, an unexpired
 accepted decision, a fresh `/cak-301-v2-qual-...` folder, provenance, the exact
 reviewed head, and `--state-root ABSOLUTE_OPERATOR_DIRECTORY`. The state root
 must resolve outside Dropbox, any repository checkout, and disposable task

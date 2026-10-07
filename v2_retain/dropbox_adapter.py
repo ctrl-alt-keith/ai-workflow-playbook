@@ -5,7 +5,6 @@ No error string from the historical connector is classified here.
 """
 
 from dataclasses import asdict, dataclass
-from importlib.metadata import version
 import os
 import posixpath
 import re
@@ -16,6 +15,7 @@ import requests
 from requests.adapters import HTTPAdapter
 
 from .model import Blocked, MAX_BYTES, Object, Observation, Qualification, digest, encode
+from .transport import BUILD, SDK_VERSION, require_operator_qualification, require_transport
 
 
 class NoRefreshDropbox(dropbox.Dropbox):
@@ -82,6 +82,7 @@ class RenewalSession(SingleRequestSession):
 
 def renew_pkce_access_token(access_token, refresh_token, app_key):
     """Renew authentication only; never submit or replay a content operation."""
+    require_transport()
     if not all(isinstance(value, str) and value for value in (access_token, refresh_token, app_key)):
         raise Blocked("resolved PKCE refresh credential required")
     client = dropbox.Dropbox(oauth2_access_token=access_token,
@@ -124,6 +125,8 @@ class Config:
         return digest(encode(asdict(self)).encode())
 
     def validate(self):
+        if self.profile == "operator-live":
+            require_operator_qualification()
         if not all((self.account, self.parent, self.actor, self.credential_ref)) or not self.namespace.isdecimal() or not 0 < self.timeout <= 30:
             raise Blocked("explicit account/namespace/parent/actor/credential binding required")
         if self.profile not in {"local", "live-qualification"}:
@@ -135,8 +138,7 @@ class Config:
 
 def make_client(config, *, fixture_origin=None, read_only=False, access_token=None):
     config.validate()
-    if version("dropbox") != "12.2.1" or version("requests") != "2.34.2" or version("urllib3") != "2.7.0":
-        raise Blocked("transport dependency drift")
+    require_transport()
     live = config.profile == "live-qualification"
     if live:
         if (fixture_origin is not None or not access_token or access_token.startswith("op://")
@@ -154,6 +156,7 @@ def make_client(config, *, fixture_origin=None, read_only=False, access_token=No
 
 
 def check_config(client, config, op):
+    config.validate()
     if (config.account, config.namespace, config.parent) != (op.target.account, op.target.namespace, op.target.parent) or posixpath.dirname(op.target.path) != config.parent_path or config.actor != op.actor:
         raise Blocked("Dropbox account/namespace/parent/actor scope mismatch")
     if (client._max_retries_on_error != 0 or client._max_retries_on_rate_limit != 0
@@ -174,7 +177,7 @@ def transport_fingerprint(client, config):
     adapter = client._session.get_adapter("https://content.dropboxapi.com")
     if type(adapter) is not BoundedHTTPAdapter:
         raise Blocked("transport implementation drift")
-    return digest(encode([config.fingerprint, adapter.fixture_origin, adapter.live]).encode())
+    return digest(encode([BUILD, config.fingerprint, adapter.fixture_origin, adapter.live]).encode())
 
 
 def read_identity(client, config, op):
@@ -204,6 +207,7 @@ class DropboxReader:
         self.__client, self.config, self.qualification = client, config, qualification
 
     def observe(self, op, known=()):
+        require_transport(self.qualification.build)
         self.qualification.require_active(op)
         if self.qualification.config_hash != transport_fingerprint(self.__client, self.config):
             raise Blocked("reader configuration drift")
@@ -245,9 +249,9 @@ class DropboxWriter:
         self.config = config
         self._client = make_client(config, fixture_origin=fixture_origin, access_token=access_token)
         self._read_client = make_client(config, fixture_origin=fixture_origin, read_only=True, access_token=access_token)
-        self.qualification = Qualification("dropbox-sdk", "12.2.1/requests-2.34.2/urllib3-2.7.0", transport_fingerprint(self._client, config),
+        self.qualification = Qualification("dropbox-sdk", BUILD, transport_fingerprint(self._client, config),
                                            target, "repository-loopback-acceptance" if fixture_origin else "live-identity-and-scope-preflight",
-                                           "2026-09-12", "local" if fixture_origin else "live-qualification" if config.profile == "live-qualification" else "unqualified",
+                                           "current-invocation", "local" if fixture_origin else "live-qualification" if config.profile == "live-qualification" else "unqualified",
                                            ceiling="bounded-live-qualification-only" if config.profile == "live-qualification" else "local-test-only",
                                            actor_account=config.account if config.profile == "live-qualification" else "",
                                            root_namespace=config.root_namespace, home_namespace=config.home_namespace,
@@ -255,7 +259,7 @@ class DropboxWriter:
                                            parent_id=config.parent if config.profile == "live-qualification" else "",
                                            parent_path=config.parent_path if config.profile == "live-qualification" else "",
                                            credential_label=config.credential_ref if config.profile == "live-qualification" else "",
-                                           sdk_version="12.2.1" if config.profile == "live-qualification" else "",
+                                           sdk_version=SDK_VERSION if config.profile == "live-qualification" else "",
                                            head=config.head)
 
     def reader(self):
@@ -266,6 +270,7 @@ class DropboxWriter:
         self._read_client.close()
 
     def check_binding(self, op, actor):
+        require_transport(self.qualification.build)
         check_config(self._client, self.config, op)
         if actor != self.config.actor or self.qualification.config_hash != transport_fingerprint(self._client, self.config):
             raise Blocked("acting identity mismatch")

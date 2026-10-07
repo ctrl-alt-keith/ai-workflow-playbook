@@ -16,6 +16,7 @@ from .operation import run
 from .reconcile import project
 from .qualify_live import FOLDER_PATTERN, LABEL, _head, _identity, _identity_client, _token, _versions
 from .store import Store
+from .transport import require_operator_qualification
 
 
 def _write(path, data):
@@ -99,6 +100,7 @@ def main(argv=None):
         if head != args.expected_head:
             raise Blocked("checkout head differs from reviewed operator command head")
         _versions()
+        require_operator_qualification()
         data = Path(args.input).read_bytes()
         if not data or len(data) > 16 * 1024 * 1024:
             raise Blocked("bounded nonempty input required")
@@ -118,7 +120,7 @@ def main(argv=None):
             raise Blocked("root namespace confirmation mismatch")
         if input("Type APP FOLDER: ").strip() != "APP FOLDER":
             raise Blocked("App Folder access type not confirmed")
-        Config(facts["account_id"], facts["home_namespace_id"], "preflight-parent", args.folder, args.actor, LABEL, profile="live-qualification", root_namespace=facts["root_namespace_id"], home_namespace=facts["home_namespace_id"], head=head).validate()
+        Config(facts["account_id"], facts["home_namespace_id"], "preflight-parent", args.folder, args.actor, LABEL, profile="operator-live", root_namespace=facts["root_namespace_id"], home_namespace=facts["home_namespace_id"], head=head).validate()
         state_root.mkdir(mode=0o700, parents=True, exist_ok=True)
         os.chmod(state_root, 0o700)
         state = state_root / args.folder[1:]
@@ -146,7 +148,7 @@ def main(argv=None):
             creator.close()
         target = Target(facts["account_id"], facts["home_namespace_id"], observed.id, args.folder + "/" + args.name)
         config = Config(target.account, target.namespace, target.parent, args.folder, args.actor, LABEL,
-                        profile="live-qualification", root_namespace=facts["root_namespace_id"], home_namespace=facts["home_namespace_id"], head=head)
+                        profile="operator-live", root_namespace=facts["root_namespace_id"], home_namespace=facts["home_namespace_id"], head=head)
         writer = DropboxWriter(config, target, access_token=token)
         try:
             now = datetime.now(timezone.utc).timestamp()
