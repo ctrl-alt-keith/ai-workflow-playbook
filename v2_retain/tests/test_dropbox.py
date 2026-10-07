@@ -19,7 +19,7 @@ from v2_retain.qualify_live import _counted
 from v2_retain.reconcile import reconcile
 import test_operation as local_tests
 from v2_retain.transport import BUILD, DEPENDENCIES, require_transport
-from v2_retain.qualify_live import _versions
+from v2_retain.qualify_live import _identity_client, _versions
 
 ACCOUNT = "dbid:" + "a" * 35
 
@@ -29,7 +29,8 @@ class TransportIdentityTests(unittest.TestCase):
         pins = (Path(__file__).parents[1] / "requirements.txt").read_text().splitlines()
         for name, pin in DEPENDENCIES:
             self.assertEqual([line for line in pins if line.startswith(name + "==")], [f"{name}=={pin}"])
-        self.assertEqual(BUILD, "12.2.1/requests-2.34.2/urllib3-2.8.0")
+        self.assertEqual(BUILD, "dropbox-12.2.1/requests-2.34.2/urllib3-2.8.0/"
+                               "certifi-2026.7.22/idna-3.19/charset-normalizer-3.5.1/stone-3.5.4")
         require_transport()
         _versions()
 
@@ -40,12 +41,20 @@ class TransportIdentityTests(unittest.TestCase):
             installed = dict(DEPENDENCIES, **{dependency: "unexpected"})
             with self.subTest(dependency=dependency), \
                  patch("v2_retain.transport.version", side_effect=installed.__getitem__), \
-                 patch("v2_retain.dropbox_adapter.NoRefreshDropbox") as client:
+                 patch("v2_retain.dropbox_adapter.NoRefreshDropbox") as client, \
+                 patch("v2_retain.qualify_live.NoRefreshDropbox") as identity_client, \
+                 patch("v2_retain.dropbox_adapter.dropbox.Dropbox") as renewal_client:
                 with self.assertRaisesRegex(Blocked, "transport dependency drift"):
                     make_client(config)
                 with self.assertRaisesRegex(Blocked, "transport dependency drift"):
                     _versions()
+                with self.assertRaisesRegex(Blocked, "transport dependency drift"):
+                    _identity_client("fixture-only")
+                with self.assertRaisesRegex(Blocked, "transport dependency drift"):
+                    renew_pkce_access_token("expired-fixture", "refresh-fixture", "client-fixture")
                 client.assert_not_called()
+                identity_client.assert_not_called()
+                renewal_client.assert_not_called()
 
 
 class PKCERenewalTests(unittest.TestCase):
@@ -290,17 +299,19 @@ class DropboxTests(unittest.TestCase):
         current = writer.qualification
         # Even a matching operation fingerprint and copied current config must
         # not make predecessor evidence usable by this transport.
-        historical = replace(current, build="12.2.1/requests-2.34.2/urllib3-2.7.0",
-                             checked_at="2026-09-12", evidence_ref="historical-live-evidence")
-        self.assertNotEqual(historical.fingerprint, current.fingerprint)
-        with self.assertRaises(Blocked):
-            historical.require_active(op)
-        writer.qualification = historical
-        old_op = replace(op, route_hash=historical.fingerprint)
-        with self.assertRaisesRegex(Blocked, "transport dependency drift"):
-            writer.submit(old_op, b"hello\n")
-        with self.assertRaisesRegex(Blocked, "transport dependency drift"):
-            writer.reader().observe(old_op)
+        for build in ("12.2.1/requests-2.34.2/urllib3-2.7.0", "12.2.1/requests-2.34.2/urllib3-2.8.0"):
+            with self.subTest(build=build):
+                historical = replace(current, build=build, checked_at="2026-09-12",
+                                     evidence_ref="historical-evidence")
+                self.assertNotEqual(historical.fingerprint, current.fingerprint)
+                with self.assertRaises(Blocked):
+                    historical.require_active(op)
+                writer.qualification = historical
+                old_op = replace(op, route_hash=historical.fingerprint)
+                with self.assertRaisesRegex(Blocked, "transport dependency drift"):
+                    writer.submit(old_op, b"hello\n")
+                with self.assertRaisesRegex(Blocked, "transport dependency drift"):
+                    writer.reader().observe(old_op)
         self.assertEqual(self.server.requests, [])
 
     def test_reader_mismatch_unavailable_folder_and_multiple_versions(self):

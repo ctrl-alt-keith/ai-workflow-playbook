@@ -82,6 +82,7 @@ class RenewalSession(SingleRequestSession):
 
 def renew_pkce_access_token(access_token, refresh_token, app_key):
     """Renew authentication only; never submit or replay a content operation."""
+    require_transport()
     if not all(isinstance(value, str) and value for value in (access_token, refresh_token, app_key)):
         raise Blocked("resolved PKCE refresh credential required")
     client = dropbox.Dropbox(oauth2_access_token=access_token,

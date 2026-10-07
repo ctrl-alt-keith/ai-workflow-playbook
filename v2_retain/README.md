@@ -139,8 +139,14 @@ make check
 Setup is explicit and installs the pinned SDK/HTTP dependency set into `.venv`.
 [`transport.py`](transport.py) owns the candidate transport tuple and build
 identity used by drift guards, route fingerprints, and qualification reports;
-acceptance tests require the install pins to match it. A dependency update
-must deliberately update that identity and invalidate applicable live evidence.
+acceptance tests require every runtime identity pin to match the install pins.
+It covers dropbox, requests, urllib3, certifi (CA trust), idna (host encoding),
+charset-normalizer (response decoding), and stone (SDK serialization/validation).
+The pinned Jinja2, MarkupSafe, and packaging packages support Stone generation
+tooling and are outside the inspected runtime path. Changes to the runtime
+dependency set or its versions must update the identity and invalidate applicable
+live evidence. Host/Python/TLS configuration changes still require separate
+qualification assessment; the package identity is not a complete host fingerprint.
 `make check` includes existing repository checks and `make v2-check`. The latter
 runs actual operation/store tests, child process crash tests, and SDK requests
 against a loopback HTTP fixture. `.v2-test-state/` is repository-owned synthetic
