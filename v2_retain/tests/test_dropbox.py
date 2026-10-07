@@ -18,8 +18,34 @@ from v2_retain.operation import run
 from v2_retain.qualify_live import _counted
 from v2_retain.reconcile import reconcile
 import test_operation as local_tests
+from v2_retain.transport import BUILD, DEPENDENCIES, require_transport
+from v2_retain.qualify_live import _versions
 
 ACCOUNT = "dbid:" + "a" * 35
+
+
+class TransportIdentityTests(unittest.TestCase):
+    def test_install_pins_and_both_entrypoints_use_the_candidate_tuple(self):
+        pins = (Path(__file__).parents[1] / "requirements.txt").read_text().splitlines()
+        for name, pin in DEPENDENCIES:
+            self.assertEqual([line for line in pins if line.startswith(name + "==")], [f"{name}=={pin}"])
+        self.assertEqual(BUILD, "12.2.1/requests-2.34.2/urllib3-2.8.0")
+        require_transport()
+        _versions()
+
+    def test_each_dependency_drift_blocks_before_client_construction(self):
+        config = Config(ACCOUNT, "123", "id:parent", "/pilot", "executor", "fixture")
+        from v2_retain.dropbox_adapter import make_client
+        for dependency, _ in DEPENDENCIES:
+            installed = dict(DEPENDENCIES, **{dependency: "unexpected"})
+            with self.subTest(dependency=dependency), \
+                 patch("v2_retain.transport.version", side_effect=installed.__getitem__), \
+                 patch("v2_retain.dropbox_adapter.NoRefreshDropbox") as client:
+                with self.assertRaisesRegex(Blocked, "transport dependency drift"):
+                    make_client(config)
+                with self.assertRaisesRegex(Blocked, "transport dependency drift"):
+                    _versions()
+                client.assert_not_called()
 
 
 class PKCERenewalTests(unittest.TestCase):
@@ -183,6 +209,7 @@ class DropboxTests(unittest.TestCase):
 
     def test_effective_sdk_strict_create_namespace_and_exact_revision_readback(self):
         op, writer = self.prepare()
+        self.assertEqual(writer.qualification.build, BUILD)
         result = run(self.store, op.op_id, writer, "executor")
         self.assertEqual(result["status"], "retained_verified", result)
         requests = self.server.requests
@@ -258,6 +285,24 @@ class DropboxTests(unittest.TestCase):
         self.assertEqual(self.server.objects[op.target.path], b"hello\n")
         self.assertEqual(writer.qualification.collision_response_ref, "unqualified")
 
+    def test_historical_build_cannot_be_rebound_to_current_writer_or_reader(self):
+        op, writer = self.prepare()
+        current = writer.qualification
+        # Even a matching operation fingerprint and copied current config must
+        # not make predecessor evidence usable by this transport.
+        historical = replace(current, build="12.2.1/requests-2.34.2/urllib3-2.7.0",
+                             checked_at="2026-09-12", evidence_ref="historical-live-evidence")
+        self.assertNotEqual(historical.fingerprint, current.fingerprint)
+        with self.assertRaises(Blocked):
+            historical.require_active(op)
+        writer.qualification = historical
+        old_op = replace(op, route_hash=historical.fingerprint)
+        with self.assertRaisesRegex(Blocked, "transport dependency drift"):
+            writer.submit(old_op, b"hello\n")
+        with self.assertRaisesRegex(Blocked, "transport dependency drift"):
+            writer.reader().observe(old_op)
+        self.assertEqual(self.server.requests, [])
+
     def test_reader_mismatch_unavailable_folder_and_multiple_versions(self):
         op, writer = self.prepare()
         writer.submit(op, b"hello\n")
@@ -297,6 +342,8 @@ class DropboxTests(unittest.TestCase):
             DropboxWriter(config, target, access_token="op://unresolved")
         with self.assertRaises(Blocked):
             DropboxWriter(replace(config, profile="local"), target, access_token="ambient-token")
+        with self.assertRaisesRegex(Blocked, "operator-live requires accepted qualification"):
+            DropboxWriter(replace(config, profile="operator-live"), target, access_token="resolved-fixture-token")
 
         def fixture_send(adapter, request, **kwargs):
             self.assertEqual(request.url.split(":", 1)[0], "https")
@@ -308,6 +355,8 @@ class DropboxTests(unittest.TestCase):
              patch.object(BoundedHTTPAdapter, "send", fixture_send):
             writer = DropboxWriter(config, target, access_token="resolved-fixture-token")
             self.addCleanup(writer.close)
+            self.assertEqual(writer.qualification.build, BUILD)
+            self.assertNotEqual(writer.qualification.checked_at, "2026-09-12")
             counter_dir = tempfile.TemporaryDirectory()
             self.addCleanup(counter_dir.cleanup)
             count_path = Path(counter_dir.name) / "requests.jsonl"

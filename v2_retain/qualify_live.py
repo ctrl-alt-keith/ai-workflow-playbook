@@ -7,7 +7,6 @@ serializes it or includes provider exception text in output or evidence.
 import argparse
 from datetime import datetime, timezone
 import fcntl
-from importlib.metadata import version
 import json
 import multiprocessing
 import os
@@ -25,6 +24,7 @@ from .model import Blocked, Operation, Target, digest, encode
 from .operation import run
 from .reconcile import reconcile
 from .store import Identity, Store
+from .transport import BUILD, SDK_VERSION, require_transport
 
 MAX_DESTINATIONS = 8
 MAX_UPLOADS = 12
@@ -56,11 +56,11 @@ def _token():
 
 
 def _versions():
-    if (version("dropbox"), version("requests"), version("urllib3")) != ("12.2.1", "2.34.2", "2.7.0"):
-        raise Blocked("qualification dependency drift")
+    require_transport()
 
 
 def _identity_client(token):
+    require_transport()
     session = ReadOnlySession(live=True)
     return NoRefreshDropbox(oauth2_access_token=token, max_retries_on_error=0,
                             max_retries_on_rate_limit=0, timeout=10, session=session)
@@ -357,13 +357,13 @@ def _execute(facts, folder, token, head, state_root):
 
     if len(destinations) > MAX_DESTINATIONS or _count(count_path) > MAX_UPLOADS:
         raise Blocked("qualification budget violated")
-    record = {"profile": "live-qualification", "head": head, "sdk_version": "12.2.1",
+    record = {"profile": "live-qualification", "head": head, "sdk_version": SDK_VERSION, "transport_build": BUILD,
               "checked_at": datetime.now(timezone.utc).isoformat(), "actor_account": facts["account_id"],
               "root_namespace": facts["root_namespace_id"], "home_namespace": facts["home_namespace_id"],
               "app_root": facts["app_root"], "parent_id": facts["folder_id"], "parent_path": folder,
               "credential_label": LABEL, "create": "strict-create-no-autorename", "retries": 0,
               "admission": "local-synchronous-call", "ceiling": "bounded-live-qualification-only",
-              "invalidation": "head/SDK/config/account/namespace/parent/app-access/credential/readback/retry drift",
+              "invalidation": "head/dependencies/config/account/namespace/parent/app-access/credential/readback/retry drift",
               "destinations": sorted(destinations), "upload_requests": _count(count_path),
               "cases": cases, "retention": "created objects retained; no cleanup",
               "limitations": "App Folder root ID and token access type are not returned by these SDK reads; operator attestation binds access type. Post-response interruption does not prove an on-wire kill or remote exactly-once."}
@@ -395,7 +395,7 @@ def main(argv=None):
         finally:
             client.close()
         if args.mode == "preflight":
-            print(encode({"status": "read-only-preflight", "head": head, "sdk_version": dropbox.__version__,
+            print(encode({"status": "read-only-preflight", "head": head, "sdk_version": SDK_VERSION, "transport_build": BUILD,
                           "credential_label": LABEL, "facts": facts,
                           "limitation": "App Folder root ID and token access type are not exposed by these SDK reads"}))
             return 0

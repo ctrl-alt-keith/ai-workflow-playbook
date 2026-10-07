@@ -7,4 +7,4 @@ MarkupSafe==3.0.3
 packaging==26.3
 requests==2.34.2
 stone==3.5.4
-urllib3==2.7.0
+urllib3==2.8.0

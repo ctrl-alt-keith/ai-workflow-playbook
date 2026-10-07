@@ -4,12 +4,14 @@ This is the arc-level map for CAK-301. It does not define "v2 complete" or
 authorize an implementation, default, Product, release, or retirement change.
 For the accepted semantic foundation, see
 [v2-architecture-foundation.md](v2-architecture-foundation.md); for the
-qualified opt-in slice, see [v2_retain/README.md](../v2_retain/README.md).
+opt-in slice and its qualification status, see [v2_retain/README.md](../v2_retain/README.md).
 
 ## Current state
 
-The v2 semantic foundation is accepted, and one qualified integrated,
-opt-in implementation slice exists. The v1/default bootstrap remains current.
+The v2 semantic foundation is accepted, and one integrated opt-in implementation
+slice exists. CAK-361 adopts urllib3 2.8.0 for local/loopback acceptance;
+operator-live use is blocked pending applicable qualification. The September
+2.7.0 live evidence remains historical. The v1/default bootstrap remains current.
 
 ## Active arc
 

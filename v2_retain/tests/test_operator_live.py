@@ -90,6 +90,22 @@ class OperatorDecisionTests(unittest.TestCase):
             self.assertEqual(main(args), 2)
         head.assert_not_called()
 
+    def test_unqualified_candidate_blocks_before_credentials_network_or_state(self):
+        with tempfile.TemporaryDirectory() as root:
+            args = ["--input", __file__, "--decision", __file__, "--folder", "/cak-301-v2-qual-20261007-operator", "--name", "record.md", "--source-ref", "source", "--owner", "Keith", "--actor", "actor", "--grant-provenance", "grant", "--expected-head", "a" * 40, "--state-root", root]
+            output = io.StringIO()
+            with patch.object(operator_live, "_head", return_value="a" * 40), \
+                 patch.object(operator_live, "_token") as token, \
+                 patch.object(operator_live, "_identity_with_renewal") as identity, \
+                 patch.object(operator_live, "NoRefreshDropbox") as creator, \
+                 patch.object(operator_live, "DropboxWriter") as writer, \
+                 redirect_stdout(output):
+                self.assertEqual(main(args), 2)
+            self.assertIn("operator-live requires accepted qualification", json.loads(output.getvalue())["reason"])
+            for forbidden in (token, identity, creator, writer):
+                forbidden.assert_not_called()
+            self.assertEqual(list(Path(root).iterdir()), [])
+
     def test_post_state_failure_redacts_and_records_block_before_recovery(self):
         class FolderMetadata:
             def __init__(self, folder_id, path_lower):
@@ -127,8 +143,11 @@ class OperatorDecisionTests(unittest.TestCase):
                     "--name", "record.md", "--source-ref", "source", "--owner", "Keith", "--actor", "actor",
                     "--grant-provenance", "grant", "--expected-head", head, "--state-root", str(root / "state")]
             stdout, stderr = io.StringIO(), io.StringIO()
+            # Exercise the retained failure-reporting path under a hypothetical
+            # future qualification; this is not evidence of current eligibility.
             with patch.object(operator_live, "_head", return_value=head), \
                  patch.object(operator_live, "_versions"), \
+                 patch.object(operator_live, "require_operator_qualification"), \
                  patch.object(operator_live, "_token", return_value="expired"), \
                  patch.object(operator_live, "_identity_client", side_effect=[first, second, third]), \
                  patch.object(operator_live, "_identity", side_effect=[Blocked("implicit credential refresh disabled"), facts, facts]), \

@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from v2_retain.model import Blocked
 from v2_retain.qualify_live import _counted, _head, main
+from v2_retain.transport import BUILD, require_operator_qualification
 
 
 class FakeAdapter:
@@ -40,6 +41,19 @@ class Request:
 
 
 class QualifyLiveTests(unittest.TestCase):
+    def test_candidate_preflight_reports_transport_without_enabling_operator_use(self):
+        output = StringIO()
+        with patch("v2_retain.qualify_live._head", return_value="a" * 40), \
+             patch("v2_retain.qualify_live._identity_client"), \
+             patch("v2_retain.qualify_live._identity", return_value={"folder_state": "absent"}), \
+             patch.dict(os.environ, {"DROPBOX_ACCESS_TOKEN": "fixture-only"}), redirect_stdout(output):
+            status = main(["--mode", "preflight", "--folder", "/cak-301-v2-qual-20261007-01",
+                           "--expected-head", "a" * 40])
+        self.assertEqual(status, 0)
+        self.assertEqual(json.loads(output.getvalue())["transport_build"], BUILD)
+        with self.assertRaisesRegex(Blocked, "operator-live requires accepted qualification"):
+            require_operator_qualification()
+
     def test_reviewed_head_requires_clean_worktree(self):
         root = SimpleNamespace(stdout=str(Path.cwd()) + "\n")
         dirty = SimpleNamespace(stdout=" M v2_retain/qualify_live.py\n")
