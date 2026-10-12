@@ -63,7 +63,9 @@ and substantive reviews have separate envelopes; a failed Codex canary retains
 only its acceptance record.
 
 For `--diagnostics-file`, terminal state is `written`, `not_created`,
-`incomplete`, or `unknown`. The file says `diagnostics_file: unverified`; only
+`incomplete`, or `unknown`. Exclusive creation restores private owner read/write
+permissions (`0600`) regardless of caller umask; a mode-setting failure leaves
+incomplete residue and fails the attempt. The file says `diagnostics_file: unverified`; only
 the terminal record establishes `written`. A qualified post-execution observer
 may instead use `verify_diagnostics_readback()` after independently observing
 zero launcher exit and retaining the exact fresh requested path; it binds file

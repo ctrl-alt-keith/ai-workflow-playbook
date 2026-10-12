@@ -333,6 +333,9 @@ def write_record(record: dict[str, Any], destination: Path) -> tuple[str | None,
         identity = (created.st_dev, created.st_ino)
         payload = json.dumps({**record, "diagnostics_file": "unverified"}, sort_keys=True) + "\n"
         try:
+            # Preserve the private readback mode even when the caller's umask
+            # removed owner permissions during exclusive creation.
+            os.fchmod(descriptor, 0o600)
             write_bytes(descriptor, payload.encode("utf-8"))
         except OSError as error:
             matches = names_identity(destination, identity)
