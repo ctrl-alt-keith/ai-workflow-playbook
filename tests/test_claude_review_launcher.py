@@ -298,6 +298,26 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "malformed"):
                 shared.verify_diagnostics_readback(diagnostics, **kwargs)
 
+    def test_diagnostics_remain_readable_and_private_under_restrictive_umask(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            diagnostics = root / "diagnostics.json"
+            executable = self.make_fake_claude(root, "printf 'CLAUDE_AUTH_OK\\n'\n")
+            completed = subprocess.run(
+                [str(LAUNCHER), "--claude-bin", str(executable), "--auth-preflight",
+                 "--diagnostics-file", str(diagnostics)],
+                input=b"", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                check=False, cwd=ROOT, umask=0o777,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr.decode())
+            self.assertEqual(stat.S_IMODE(diagnostics.stat().st_mode), 0o600)
+            load_launcher(LAUNCHER, "claude_restrictive_umask")
+            receipt = sys.modules["review_launcher"].verify_diagnostics_readback(
+                diagnostics, provider="claude", attempt_kind="auth_preflight",
+                process_exit=completed.returncode, selection={"model": None, "effort": None},
+            )
+            self.assertEqual(receipt["record"]["status"], "ok")
+
     def test_health_probe_uses_the_substantive_path_and_requires_its_exact_answer(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
@@ -799,6 +819,17 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         retained = json.loads(after)
         self.assertEqual(retained["diagnostics_file"], "unverified")
         self.assertEqual(retained["status"], "ok")  # the provider did succeed; retention did not, and the file says so
+
+    def test_diagnostics_permission_failure_preserves_incomplete_residue(self):
+        load_launcher(LAUNCHER, "claude_diagnostics_permission_failure")
+        shared = sys.modules["review_launcher"]
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "diagnostics.json"
+            with mock.patch.object(shared.os, "fchmod", side_effect=OSError("fixture: mode refused")):
+                cause, state = shared.write_record({"status": "ok"}, destination)
+            self.assertEqual(state, "incomplete")
+            self.assertIn("mode refused", cause)
+            self.assertEqual(destination.read_bytes(), b"")
 
     def test_retained_file_never_certifies_its_own_retention(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
