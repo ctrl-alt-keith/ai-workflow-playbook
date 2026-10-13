@@ -59,6 +59,28 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
 
         self.assertEqual(findings, [])
 
+    def test_github_source_origin_requires_an_exact_host_and_repository(self) -> None:
+        official = (
+            "https://docs.github.com/en/rest",
+            "https://github.com/github/docs/blob/main/content/rest.md",
+            "https://github.com/github/rest-api-description",
+            "https://github.com/ctrl-alt-keith/ai-workflow-playbook",
+        )
+        untrusted = (
+            "https://docs.github.com.evil.example/en/rest",
+            "https://github.com.evil.example/github/docs",
+            "https://github.com/github/docs-fork",
+            "https://github.com/another-owner/rest-api-description",
+        )
+
+        for url in official:
+            with self.subTest(url=url):
+                self.assertEqual(scanner.scan_text("PR body", f"REST API source: {url}"), [])
+        for url in untrusted:
+            with self.subTest(url=url):
+                findings = scanner.scan_text("PR body", f"REST API source: {url}")
+                self.assertEqual([finding["url"] for finding in findings], [url])
+
     def test_cli_configured_domains_suppress_matching_api_warnings(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
