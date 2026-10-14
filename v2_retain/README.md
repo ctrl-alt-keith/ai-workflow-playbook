@@ -402,7 +402,7 @@ Focused post-rebase controller review covered the delivered exact head
 `3d4285acff69d210038e1f57e5bc38ff1d991817` (PR #460), confirming
 architecture fidelity and the earlier qualification's applicability.
 
-This remains one cohesive branch/worktree/PR. Live Dropbox requests are outside
+Live Dropbox requests are outside
 repository validation; the completed bounded run is evidenced separately.
 No bootstrap cutover, merge, auto-merge, release, or CAK-301 closure is
 authorized by this implementation, its validation, or provider qualification.
