@@ -218,6 +218,7 @@ def changed_markdown_files(base_ref: str | None, head_ref: str | None) -> list[P
             "git",
             "diff",
             "--name-only",
+            "-z",
             "--diff-filter=ACMRT",
             base_ref,
             head_ref,
@@ -233,7 +234,7 @@ def changed_markdown_files(base_ref: str | None, head_ref: str | None) -> list[P
         print("authoritative-source-check: changed Markdown detection unavailable; scanning PR body only")
         return []
 
-    return [Path(line) for line in result.stdout.splitlines() if line.strip()]
+    return [Path(name) for name in result.stdout.split("\0") if name]
 
 
 def markdown_sources(paths: list[Path]) -> list[tuple[str, str]]:
@@ -289,7 +290,14 @@ def warning_line(finding: dict[str, object]) -> str:
     title = "Non-authoritative public API source"
     label = str(finding["label"])
     if label.endswith(".md"):
-        return f"::warning file={label},line={finding['line']},title={title}::{message}"
+        safe_label = (
+            label.replace("%", "%25")
+            .replace("\r", "%0D")
+            .replace("\n", "%0A")
+            .replace(":", "%3A")
+            .replace(",", "%2C")
+        )
+        return f"::warning file={safe_label},line={finding['line']},title={title}::{message}"
     return f"::warning title={title}::{message}"
 
 
@@ -303,6 +311,7 @@ def report(findings: list[dict[str, object]]) -> None:
         location = str(finding["label"])
         if location.endswith(".md"):
             location = f"{location}:{finding['line']}"
+        location = location.replace("\r", "\\r").replace("\n", "\\n")
 
         print(warning_line(finding))
         print(f"- {finding['domain']}: {finding['url']}")
