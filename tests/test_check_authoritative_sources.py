@@ -104,17 +104,56 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("no non-authoritative source URLs found", result.stdout)
 
-    def test_changed_markdown_files_returns_only_nonempty_git_output_lines(self) -> None:
+    def test_changed_markdown_files_parses_nul_delimited_git_output(self) -> None:
         completed = subprocess.CompletedProcess(
             args=["git", "diff"],
             returncode=0,
-            stdout="docs/guide.md\n\nREADME.md\n",
+            stdout="docs/guide.md\0README.md\0",
         )
 
         with mock.patch.object(scanner.subprocess, "run", return_value=completed):
             paths = scanner.changed_markdown_files("base", "head")
 
         self.assertEqual(paths, [Path("docs/guide.md"), Path("README.md")])
+
+    def test_cli_scans_changed_markdown_with_newline_in_filename(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            docs_dir = root / "docs"
+            docs_dir.mkdir()
+            changed = docs_dir / "line\nbreak.md"
+            changed.write_text("No API source yet.\n", encoding="utf-8")
+            subprocess.run(["git", "add", "docs"], cwd=root, check=True)
+            subprocess.run(
+                [
+                    "git", "-c", "commit.gpgsign=false", "-c", "user.name=Test",
+                    "-c", "user.email=test@example.com", "commit", "-qm", "base",
+                ],
+                cwd=root,
+                check=True,
+            )
+            changed.write_text(
+                "REST retry source: https://dev.to/changed\n", encoding="utf-8"
+            )
+            subprocess.run(["git", "add", "docs"], cwd=root, check=True)
+            subprocess.run(
+                [
+                    "git", "-c", "commit.gpgsign=false", "-c", "user.name=Test",
+                    "-c", "user.email=test@example.com", "commit", "-qm", "change source",
+                ],
+                cwd=root,
+                check=True,
+            )
+
+            result = self.run_scanner_cli(
+                ["--base-ref", "HEAD~1", "--head-ref", "HEAD"], cwd=root
+            )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("https://dev.to/changed", result.stdout)
+        self.assertIn("::warning file=docs/line%0Abreak.md,line=1,", result.stdout)
+        self.assertEqual(result.stdout.count("::warning "), 1)
 
     def test_changed_markdown_files_fails_closed_when_git_detection_fails(self) -> None:
         completed = subprocess.CompletedProcess(
