@@ -14,7 +14,7 @@ from .dropbox_adapter import Config, DropboxWriter, NoRefreshDropbox, SingleRequ
 from .model import Blocked, Operation, Target, digest, encode
 from .operation import run
 from .reconcile import project
-from .qualify_live import FOLDER_PATTERN, LABEL, _head, _identity, _identity_client, _token, _versions
+from .qualify_live import FOLDER_PATTERN, credential_label, _head, _identity, _identity_client, _token, _versions
 from .store import Store
 from .transport import require_operator_qualification
 
@@ -90,9 +90,11 @@ def main(argv=None):
     p.add_argument("--grant-provenance", required=True)
     p.add_argument("--expected-head", required=True)
     p.add_argument("--state-root", required=True)
+    p.add_argument("--credential-label", required=True, help="non-secret vault/item/field label without the op:// prefix")
     args = p.parse_args(argv)
     state = events = None
     try:
+        credential_ref = credential_label(args.credential_label)
         if not FOLDER_PATTERN.fullmatch(args.folder) or not args.name.endswith(".md") or "/" in args.name:
             raise Blocked("isolated folder and markdown name required")
         state_root = _state_root(args.state_root)
@@ -120,7 +122,7 @@ def main(argv=None):
             raise Blocked("root namespace confirmation mismatch")
         if input("Type APP FOLDER: ").strip() != "APP FOLDER":
             raise Blocked("App Folder access type not confirmed")
-        Config(facts["account_id"], facts["home_namespace_id"], "preflight-parent", args.folder, args.actor, LABEL, profile="operator-live", root_namespace=facts["root_namespace_id"], home_namespace=facts["home_namespace_id"], head=head).validate()
+        Config(facts["account_id"], facts["home_namespace_id"], "preflight-parent", args.folder, args.actor, credential_ref, profile="operator-live", root_namespace=facts["root_namespace_id"], home_namespace=facts["home_namespace_id"], head=head).validate()
         state_root.mkdir(mode=0o700, parents=True, exist_ok=True)
         os.chmod(state_root, 0o700)
         state = state_root / args.folder[1:]
@@ -147,7 +149,7 @@ def main(argv=None):
         finally:
             creator.close()
         target = Target(facts["account_id"], facts["home_namespace_id"], observed.id, args.folder + "/" + args.name)
-        config = Config(target.account, target.namespace, target.parent, args.folder, args.actor, LABEL,
+        config = Config(target.account, target.namespace, target.parent, args.folder, args.actor, credential_ref,
                         profile="operator-live", root_namespace=facts["root_namespace_id"], home_namespace=facts["home_namespace_id"], head=head)
         writer = DropboxWriter(config, target, access_token=token)
         try:

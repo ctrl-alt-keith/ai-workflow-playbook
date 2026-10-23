@@ -249,6 +249,15 @@ The commands below describe the interface for a separately authorized future
 session on a fresh folder, with `REVIEWED_HEAD` replaced by that session's exact
 40-character reviewed head and `FRESH_FOLDER` by a fresh single child of the
 app's implicit root. The folder is created only during `--mode execute`.
+The old `CAK v2 Dropbox Qualification` access-token-only item is slated for
+retirement and must not be used for future runs. Select a separately approved
+current credential and set `ACCESS_LABEL` to the unprefixed
+`vault/item/access_token` path of its non-secret 1Password field reference.
+Supply that path as `--credential-label`. The application reconstructs and records the
+operator-declared reference; it cannot independently prove the label matches
+the value resolved by `op run`. The installed `op run --help` describes
+reference resolution in environment variables and files. No `op://` reference
+is passed as a command argument.
 The command requires the checkout to be at its worktree root with no tracked or
 untracked changes before any credentialed request; ignored qualification state
 cannot substitute for a clean source tree.
@@ -257,7 +266,8 @@ acting account and root/home namespace IDs, lists the implicit app root, and
 checks that the selected folder is absent. It performs no write:
 
 ```console
-DROPBOX_ACCESS_TOKEN='op://Private/CAK v2 Dropbox Qualification/access_token' op run -- .venv/bin/python -m v2_retain.qualify_live --mode preflight --folder /FRESH_FOLDER --expected-head REVIEWED_HEAD
+ACCESS_LABEL='APPROVED_VAULT/APPROVED_ITEM/access_token'
+DROPBOX_ACCESS_TOKEN="op://$ACCESS_LABEL" op run -- .venv/bin/python -m v2_retain.qualify_live --mode preflight --folder /FRESH_FOLDER --expected-head REVIEWED_HEAD --credential-label "$ACCESS_LABEL"
 ```
 
 After checking the non-secret account and namespace facts and confirming in
@@ -270,7 +280,7 @@ creates one fresh folder with `autorename=false`, reads back its exact ID/path,
 and then runs the fixed qualification cases:
 
 ```console
-DROPBOX_ACCESS_TOKEN='op://Private/CAK v2 Dropbox Qualification/access_token' op run -- .venv/bin/python -m v2_retain.qualify_live --mode execute --folder /FRESH_FOLDER --expected-head REVIEWED_HEAD
+DROPBOX_ACCESS_TOKEN="op://$ACCESS_LABEL" op run -- .venv/bin/python -m v2_retain.qualify_live --mode execute --folder /FRESH_FOLDER --expected-head REVIEWED_HEAD --credential-label "$ACCESS_LABEL"
 ```
 
 The harness fixes six unique file destinations, at most eight planned upload
@@ -308,7 +318,8 @@ change binding that evidence are required before enabling operator use.
 
 The retained operator interface requires an exact Markdown input, an unexpired
 accepted decision, a fresh `/cak-301-v2-qual-...` folder, provenance, the exact
-reviewed head, and `--state-root ABSOLUTE_OPERATOR_DIRECTORY`. The state root
+reviewed head, `--credential-label` for the selected current access-token field,
+and `--state-root ABSOLUTE_OPERATOR_DIRECTORY`. The state root
 must resolve outside Dropbox, any repository checkout, and disposable task
 storage; the operator owns that persistence property. The command creates an
 exclusive `.v2-operator-retention/<folder-name>/` child with non-secret fsync'd

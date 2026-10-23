@@ -30,7 +30,12 @@ MAX_DESTINATIONS = 8
 MAX_UPLOADS = 12
 MAX_OBJECT_BYTES = 1024 * 1024
 FOLDER_PATTERN = re.compile(r"/cak-301-v2-qual-[a-z0-9-]{8,40}\Z")
-LABEL = "op://Private/CAK v2 Dropbox Qualification/access_token"
+
+
+def credential_label(raw):
+    if not re.fullmatch(r"[^/\r\n]+/[^/\r\n]+/[^/\r\n]+(?:/[^/\r\n]+)?", raw) or len(raw) > 251:
+        raise Blocked("a non-secret 1Password credential label is required")
+    return "op://" + raw
 
 
 def _head():
@@ -135,12 +140,12 @@ def _count(count_path):
     return sum(1 for line in count_path.read_text().splitlines() if json.loads(line)["kind"] == "upload-request")
 
 
-def _operation(store, facts, folder, name, data, head, token, count_path):
+def _operation(store, facts, folder, name, data, head, token, count_path, credential_ref):
     if len(data) > MAX_OBJECT_BYTES:
         raise Blocked("qualification object exceeds 1 MiB")
     target = Target(facts["account_id"], facts["home_namespace_id"], facts["folder_id"], folder + "/" + name)
     config = Config(target.account, target.namespace, target.parent, folder,
-                    "qualification-executor", LABEL, profile="live-qualification",
+                    "qualification-executor", credential_ref, profile="live-qualification",
                     root_namespace=facts["root_namespace_id"], home_namespace=facts["home_namespace_id"], head=head)
     writer = DropboxWriter(config, target, access_token=token)
     _counted(writer, count_path)
@@ -167,7 +172,7 @@ def _worker(store_path, identity_path, config, target, op_id, count_path, result
         result_queue.put("blocked")
 
 
-def _execute(facts, folder, token, head, state_root):
+def _execute(facts, folder, token, head, state_root, credential_ref):
     if facts["folder_state"] != "absent":
         raise Blocked("isolated qualification folder already exists")
     print("Read-only preflight:")
@@ -187,7 +192,7 @@ def _execute(facts, folder, token, head, state_root):
     events = state / "events.jsonl"
     count_path = state / "requests.jsonl"
     count_path.touch(mode=0o600)
-    _append(events, {"kind": "confirmed-preflight", "head": head, "facts": facts, "credential_label": LABEL})
+    _append(events, {"kind": "confirmed-preflight", "head": head, "facts": facts, "credential_label": credential_ref})
     store_path, identity_path = state / "store.sqlite", state / "installation.json"
     store = Store.initialize(store_path, "qualification-operator")
     with open(identity_path, "x", encoding="utf-8") as f:
@@ -223,7 +228,7 @@ def _execute(facts, folder, token, head, state_root):
     def add(name, data):
         if len(destinations) >= MAX_DESTINATIONS or _count(count_path) >= MAX_UPLOADS:
             raise Blocked("qualification budget exhausted")
-        op, writer = _operation(store, facts, folder, name, data, head, token, count_path)
+        op, writer = _operation(store, facts, folder, name, data, head, token, count_path, credential_ref)
         destinations.add(op.target.path)
         return op, writer
 
@@ -361,7 +366,7 @@ def _execute(facts, folder, token, head, state_root):
               "checked_at": datetime.now(timezone.utc).isoformat(), "actor_account": facts["account_id"],
               "root_namespace": facts["root_namespace_id"], "home_namespace": facts["home_namespace_id"],
               "app_root": facts["app_root"], "parent_id": facts["folder_id"], "parent_path": folder,
-              "credential_label": LABEL, "create": "strict-create-no-autorename", "retries": 0,
+              "credential_label": credential_ref, "create": "strict-create-no-autorename", "retries": 0,
               "admission": "local-synchronous-call", "ceiling": "bounded-live-qualification-only",
               "invalidation": "head/dependencies/config/account/namespace/parent/app-access/credential/readback/retry drift",
               "destinations": sorted(destinations), "upload_requests": _count(count_path),
@@ -380,8 +385,10 @@ def main(argv=None):
     parser.add_argument("--mode", required=True, choices=("preflight", "execute"))
     parser.add_argument("--folder", required=True, help="one fresh /cak-301-v2-qual-* folder inside the app's implicit root")
     parser.add_argument("--expected-head", required=True)
+    parser.add_argument("--credential-label", required=True, help="non-secret vault/item/field label without the op:// prefix")
     args = parser.parse_args(argv)
     try:
+        credential_ref = credential_label(args.credential_label)
         if not FOLDER_PATTERN.fullmatch(args.folder) or not re.fullmatch(r"[0-9a-f]{40}", args.expected_head):
             raise Blocked("invalid isolated folder or expected head")
         head = _head()
@@ -396,10 +403,10 @@ def main(argv=None):
             client.close()
         if args.mode == "preflight":
             print(encode({"status": "read-only-preflight", "head": head, "sdk_version": SDK_VERSION, "transport_build": BUILD,
-                          "credential_label": LABEL, "facts": facts,
+                          "credential_label": credential_ref, "facts": facts,
                           "limitation": "App Folder root ID and token access type are not exposed by these SDK reads"}))
             return 0
-        record = _execute(facts, args.folder, token, head, Path(".v2-live-qualification").absolute())
+        record = _execute(facts, args.folder, token, head, Path(".v2-live-qualification").absolute(), credential_ref)
         print(encode({"status": "qualification-complete", "record": record}))
         return 0
     except BaseException as exc:
