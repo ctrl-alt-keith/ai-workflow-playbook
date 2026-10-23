@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from v2_retain.model import Blocked
-from v2_retain.qualify_live import _counted, _head, main
+from v2_retain.qualify_live import _counted, _head, credential_label, main
 from v2_retain.transport import BUILD, require_operator_qualification
 
 
@@ -41,6 +41,8 @@ class Request:
 
 
 class QualifyLiveTests(unittest.TestCase):
+    CREDENTIAL_LABEL = "approved-vault/current-item/access_token"
+
     def test_candidate_preflight_reports_transport_without_enabling_operator_use(self):
         output = StringIO()
         with patch("v2_retain.qualify_live._head", return_value="a" * 40), \
@@ -48,9 +50,10 @@ class QualifyLiveTests(unittest.TestCase):
              patch("v2_retain.qualify_live._identity", return_value={"folder_state": "absent"}), \
              patch.dict(os.environ, {"DROPBOX_ACCESS_TOKEN": "fixture-only"}), redirect_stdout(output):
             status = main(["--mode", "preflight", "--folder", "/cak-301-v2-qual-20261007-01",
-                           "--expected-head", "a" * 40])
+                           "--expected-head", "a" * 40, "--credential-label", self.CREDENTIAL_LABEL])
         self.assertEqual(status, 0)
         self.assertEqual(json.loads(output.getvalue())["transport_build"], BUILD)
+        self.assertEqual(json.loads(output.getvalue())["credential_label"], "op://" + self.CREDENTIAL_LABEL)
         with self.assertRaisesRegex(Blocked, "operator-live requires accepted qualification"):
             require_operator_qualification()
 
@@ -69,7 +72,7 @@ class QualifyLiveTests(unittest.TestCase):
              patch("v2_retain.qualify_live._identity_client") as client, \
              patch.dict(os.environ, {"DROPBOX_ACCESS_TOKEN": "op://unresolved"}), redirect_stdout(output):
             status = main(["--mode", "execute", "--folder", "/cak-301-v2-qual-20260912-01",
-                           "--expected-head", "a" * 40])
+                           "--expected-head", "a" * 40, "--credential-label", self.CREDENTIAL_LABEL])
         self.assertEqual(status, 2)
         client.assert_not_called()
         self.assertNotIn("op://unresolved", output.getvalue())
@@ -98,9 +101,15 @@ class QualifyLiveTests(unittest.TestCase):
              patch("v2_retain.qualify_live._identity_client", side_effect=RuntimeError("secret-sentinel")), \
              patch.dict(os.environ, {"DROPBOX_ACCESS_TOKEN": "secret-sentinel"}), redirect_stdout(output):
             status = main(["--mode", "preflight", "--folder", "/cak-301-v2-qual-20260912-01",
-                           "--expected-head", "a" * 40])
+                           "--expected-head", "a" * 40, "--credential-label", self.CREDENTIAL_LABEL])
         self.assertEqual(status, 2)
         self.assertNotIn("secret-sentinel", output.getvalue())
+
+    def test_credential_label_requires_unprefixed_field_path(self):
+        self.assertEqual(credential_label(self.CREDENTIAL_LABEL), "op://" + self.CREDENTIAL_LABEL)
+        for invalid in ("", "vault/item", "op://vault/item/access_token", "vault/item/access_token/extra/segment"):
+            with self.subTest(invalid=invalid), self.assertRaises(Blocked):
+                credential_label(invalid)
 
 
 if __name__ == "__main__":

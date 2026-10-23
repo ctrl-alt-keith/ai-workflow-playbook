@@ -85,14 +85,14 @@ class OperatorDecisionTests(unittest.TestCase):
                 _decision(path, data, "Keith Minnig")
 
     def test_state_root_rejected_before_identity_network(self):
-        args = ["--input", __file__, "--decision", __file__, "--folder", "/cak-301-v2-qual-20260922-operator", "--name", "record.md", "--source-ref", "source", "--owner", "Keith", "--actor", "actor", "--grant-provenance", "grant", "--expected-head", "a" * 40, "--state-root", str(Path.cwd())]
+        args = ["--input", __file__, "--decision", __file__, "--folder", "/cak-301-v2-qual-20260922-operator", "--name", "record.md", "--source-ref", "source", "--owner", "fixture-owner", "--actor", "actor", "--grant-provenance", "grant", "--expected-head", "a" * 40, "--state-root", str(Path.cwd()), "--credential-label", "approved-vault/current-item/access_token"]
         with patch("v2_retain.operator_live._head") as head:
             self.assertEqual(main(args), 2)
         head.assert_not_called()
 
     def test_unqualified_candidate_blocks_before_credentials_network_or_state(self):
         with tempfile.TemporaryDirectory() as root:
-            args = ["--input", __file__, "--decision", __file__, "--folder", "/cak-301-v2-qual-20261007-operator", "--name", "record.md", "--source-ref", "source", "--owner", "Keith", "--actor", "actor", "--grant-provenance", "grant", "--expected-head", "a" * 40, "--state-root", root]
+            args = ["--input", __file__, "--decision", __file__, "--folder", "/cak-301-v2-qual-20261007-operator", "--name", "record.md", "--source-ref", "source", "--owner", "fixture-owner", "--actor", "actor", "--grant-provenance", "grant", "--expected-head", "a" * 40, "--state-root", root, "--credential-label", "approved-vault/current-item/access_token"]
             output = io.StringIO()
             with patch.object(operator_live, "_head", return_value="a" * 40), \
                  patch.object(operator_live, "_token") as token, \
@@ -138,10 +138,11 @@ class OperatorDecisionTests(unittest.TestCase):
             source = root / "record.md"
             source.write_text("record\n", encoding="utf-8")
             decision = root / "decision.json"
-            decision.write_text(json.dumps({"candidate": digest(source.read_bytes()), "property": "retain", "contract_ref": "CAK-301/operator", "contract_hash": "c" * 64, "owner": "Keith", "verdict": "accepted", "expires": 2000000000, "provenance": "explicit authorization"}), encoding="utf-8")
+            decision.write_text(json.dumps({"candidate": digest(source.read_bytes()), "property": "retain", "contract_ref": "CAK-301/operator", "contract_hash": "c" * 64, "owner": "fixture-owner", "verdict": "accepted", "expires": 2000000000, "provenance": "explicit authorization"}), encoding="utf-8")
             args = ["--input", str(source), "--decision", str(decision), "--folder", folder.path_lower,
-                    "--name", "record.md", "--source-ref", "source", "--owner", "Keith", "--actor", "actor",
-                    "--grant-provenance", "grant", "--expected-head", head, "--state-root", str(root / "state")]
+                    "--name", "record.md", "--source-ref", "source", "--owner", "fixture-owner", "--actor", "actor",
+                    "--grant-provenance", "grant", "--expected-head", head, "--state-root", str(root / "state"),
+                    "--credential-label", "approved-vault/current-item/access_token"]
             stdout, stderr = io.StringIO(), io.StringIO()
             # Exercise the retained failure-reporting path under a hypothetical
             # future qualification; this is not evidence of current eligibility.
