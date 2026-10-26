@@ -7,7 +7,7 @@ then this contract. The default bootstrap remains v1. The bounded Mac-local
 Dropbox route has [historical accepted qualification evidence](https://www.dropbox.com/scl/fi/avq1lwwuakgtlnpnr25ll)
 for dropbox 12.2.1 / requests 2.34.2 / urllib3 2.7.0 at pre-rebase head
 `e6cebe4f6ee1891b56697a71b4846608a9034f66`, with two outcomes still held.
-The current urllib3 2.8.0 candidate has local/loopback acceptance only;
+The current transport candidate (urllib3 2.8.0 / certifi 2026.10.19) has local/loopback acceptance only;
 the earlier evidence does not qualify it for operator-live use.
 This package is not an operational
 installation, general provider qualification, release, or Product promotion.
@@ -217,7 +217,7 @@ process environment and an explicit caller-supplied token matching that value.
 It uses no ambient proxy, netrc, `.env`, keychain, or 1Password SDK path. The
 application never invokes `op`; the operator's local `op run`
 process injects the credential. This profile is for a candidate being qualified,
-not an already accepted operator transport. The 2.8.0 candidate has no accepted
+not an already accepted operator transport. The current transport candidate has no accepted
 live qualification. Local fixture success is not a Dropbox guarantee.
 
 `Qualification` records build/config identity, target scope, evidence, checked
@@ -240,7 +240,7 @@ Keith completed the bounded `cak-301-v2-qual-20260912-01` run on the pre-rebase
 reviewed head; its [post-run review](https://www.dropbox.com/scl/fi/avq1lwwuakgtlnpnr25ll)
 accepted six retained files, two typed same-target conflicts, and two uncertain
 outcomes correctly held. That run used urllib3 2.7.0 and remains historical;
-it supplies no live qualification for the 2.8.0 candidate.
+it supplies no live qualification for the current transport candidate.
 Reboot/power-loss durability and broader provider
 guarantees remain unqualified. Its folder, objects, and local evidence are
 retained; do not rerun or clean them up during repository reconciliation.
@@ -308,7 +308,7 @@ remote objects rather than starting automatic cleanup or replay.
 
 `python -m v2_retain.operator_live` is a separately authorized, non-default
 one-shot retention interface. It currently fails closed before credential
-access, identity requests, renewal, or state creation because the 2.8.0
+access, identity requests, renewal, or state creation because the current
 transport has no accepted applicable live evidence. The `operator-live`
 configuration is also blocked at client construction; it cannot reuse the
 `live-qualification` candidate profile as proof of acceptance. There is no

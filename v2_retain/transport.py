@@ -11,7 +11,7 @@ DEPENDENCIES = (
     ("dropbox", "12.2.1"),
     ("requests", "2.34.2"),
     ("urllib3", "2.8.0"),
-    ("certifi", "2026.7.22"),
+    ("certifi", "2026.10.19"),
     ("idna", "3.19"),
     ("charset-normalizer", "3.5.1"),
     ("stone", "3.5.4"),
