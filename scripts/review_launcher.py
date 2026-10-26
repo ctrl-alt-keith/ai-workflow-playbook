@@ -515,7 +515,7 @@ def directory_identity(path: Path) -> tuple[int, int]:
 
 
 def qualified_scratch_root() -> Path:
-    """Select and validate the documented Darwin or Linux scratch projection."""
+    """Select a documented scratch root, including this launcher's cloud-task route."""
     system = platform.system()
     if system == "Darwin":
         result = subprocess.run(
@@ -537,12 +537,35 @@ def qualified_scratch_root() -> Path:
         return root
     if system == "Linux":
         root = Path("/tmp")
-        info = os.lstat(root)
-        if not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode):
-            raise OSError("/tmp is not a real directory")
-        if info.st_uid != 0 or stat.S_IMODE(info.st_mode) != 0o1777:
-            raise OSError("/tmp is not a root-owned 01777 directory")
-        return root
+        try:
+            info = os.lstat(root)
+        except OSError:
+            info = None
+        real_directory = info is not None and stat.S_ISDIR(info.st_mode) and not stat.S_ISLNK(info.st_mode)
+        if real_directory and info.st_uid == 0 and stat.S_IMODE(info.st_mode) == 0o1777:
+            return root
+        rejected_root = "/tmp is not a root-owned 01777 directory" if real_directory else "/tmp is not a real directory"
+        # Codex Cloud gives each task a separate workspace. Its root is a
+        # launcher-owned temporary parent only when both it and its ancestry
+        # have the exact protected shape below; this is not a TMPDIR fallback.
+        workspace = Path("/workspace")
+        try:
+            ancestor = os.lstat(workspace.parent)
+            candidate = os.lstat(workspace)
+        except OSError:
+            raise OSError(f"{rejected_root}; protected task /workspace is unavailable") from None
+        if (
+            stat.S_ISDIR(ancestor.st_mode)
+            and not stat.S_ISLNK(ancestor.st_mode)
+            and ancestor.st_uid != os.geteuid()
+            and not stat.S_IMODE(ancestor.st_mode) & 0o022
+            and stat.S_ISDIR(candidate.st_mode)
+            and not stat.S_ISLNK(candidate.st_mode)
+            and candidate.st_uid == os.geteuid()
+            and stat.S_IMODE(candidate.st_mode) == 0o755
+        ):
+            return workspace
+        raise OSError(f"{rejected_root}; protected task /workspace is unavailable")
     raise OSError(f"no qualified scratch projection for {system}")
 
 
@@ -869,6 +892,7 @@ def run_attempt(
         scratch = allocate_scratch(provider.name)
     except OSError as error:
         return Attempt([f"could not allocate a scratch directory: {error}"], False, evidence, b"")
+    evidence["scratch_root"] = str(scratch.root)
     bundle_error = None
     try:
         if bundle is not None:

@@ -597,6 +597,50 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                     with self.assertRaisesRegex(OSError, "real directory"):
                         shared.qualified_scratch_root()
 
+    def test_linux_projection_uses_only_a_protected_fixed_task_workspace(self):
+        load_launcher(LAUNCHER, "claude_review_linux_workspace_fixture")
+        shared = sys.modules["review_launcher"]
+
+        def fake_directory(mode, uid, gid=0):
+            return os.stat_result((mode, 0, 0, 0, uid, gid, 0, 0, 0, 0))
+
+        shared_tmp = fake_directory(stat.S_IFDIR | 0o1777, 65534)
+        ancestor = fake_directory(stat.S_IFDIR | 0o755, 65534)
+        workspace = fake_directory(stat.S_IFDIR | 0o755, 1000)
+
+        def inspected(path):
+            return {Path("/tmp"): shared_tmp, Path("/"): ancestor, Path("/workspace"): workspace}[path]
+
+        with (
+            mock.patch.object(shared.platform, "system", return_value="Linux"),
+            mock.patch.object(shared.os, "geteuid", return_value=1000),
+            mock.patch.object(shared.os, "lstat", side_effect=inspected),
+        ):
+            self.assertEqual(shared.qualified_scratch_root(), Path("/workspace"))
+
+        rejected = (
+            ("wrong owner", ancestor, fake_directory(stat.S_IFDIR | 0o755, 501)),
+            ("writable workspace", ancestor, fake_directory(stat.S_IFDIR | 0o777, 1000)),
+            ("workspace mode drift", ancestor, fake_directory(stat.S_IFDIR | 0o700, 1000)),
+            ("linked workspace", ancestor, fake_directory(stat.S_IFLNK | 0o777, 1000)),
+            ("writable ancestor", fake_directory(stat.S_IFDIR | 0o777, 65534), workspace),
+            ("linked ancestor", fake_directory(stat.S_IFLNK | 0o755, 65534), workspace),
+            ("owned ancestor", fake_directory(stat.S_IFDIR | 0o755, 1000), workspace),
+        )
+        for label, candidate_ancestor, candidate_workspace in rejected:
+            with self.subTest(label=label):
+                def unsafe_inspected(path):
+                    return {Path("/tmp"): shared_tmp, Path("/"): candidate_ancestor,
+                            Path("/workspace"): candidate_workspace}[path]
+
+                with (
+                    mock.patch.object(shared.platform, "system", return_value="Linux"),
+                    mock.patch.object(shared.os, "geteuid", return_value=1000),
+                    mock.patch.object(shared.os, "lstat", side_effect=unsafe_inspected),
+                ):
+                    with self.assertRaisesRegex(OSError, "protected task /workspace is unavailable"):
+                        shared.qualified_scratch_root()
+
     def test_scratch_allocation_sets_private_mode_and_successful_cleanup_removes_regular_output(self):
         launcher = load_launcher(LAUNCHER, "claude_review_scratch_success_fixture")
         shared = sys.modules["review_launcher"]
@@ -644,6 +688,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(stdout.getvalue(), "CLAUDE_AUTH_OK\n")
         self.assertEqual(record["status"], "ok")
+        self.assertEqual(record["scratch_root"], str(sys.modules["review_launcher"].qualified_scratch_root()))
 
     def test_scratch_cleanup_refuses_mode_drift_and_symlink_members(self):
         launcher = load_launcher(LAUNCHER, "claude_review_scratch_cleanup_fixture")

@@ -26,6 +26,25 @@ owning review's input retention contract when governed recovery is required;
 target type does not select review mode. Canaries and probes use fixed prompts.
 Empty or failed provider output is launcher failure, never a verdict.
 
+### Attempt scratch in an isolated cloud task
+
+On Linux, the launcher first requires the Playbook's real, root-owned `01777`
+`/tmp`. When that check fails, this launcher has one explicit tool-owned route
+for an isolated Codex Cloud task: fixed `/workspace`. It accepts that route
+only when `/workspace` is a real directory owned by the effective user with
+exact mode `0755`, and its real `/` parent is owned by a different user
+and is not group- or world-writable. No environment variable, caller-supplied
+path, repository directory, or home directory selects scratch. The selected
+root appears as `scratch_root` in the attempt record.
+
+The cloud task must have its own workspace; directory metadata alone cannot
+prove task isolation. This route does not qualify `/workspace` as generic
+Playbook scratch. Each attempt still creates a fresh random `0700` child,
+rechecks root and child identities before cleanup, and leaves unexpected
+residue for the owning attempt. If neither fixed route qualifies, stop before
+launching the reviewer. Same-user concurrent mutation remains outside the
+launcher's isolation guarantee.
+
 Before substantive review, retain one persistent session and deliver the prompt
 through an EOF-producing route. Presentation timeout, quiet output, or a lost
 session handle requires re-observation of the recorded launcher command,
