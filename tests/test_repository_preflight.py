@@ -17,8 +17,10 @@ class RepositoryPreflightTest(unittest.TestCase):
     def run_preflight(
         self,
         commands: dict[str, str],
-        env_overrides: dict[str, str] | None = None,
+        env_overrides: dict[str, str | None] | None = None,
         isolated_path: bool = False,
+        arguments: tuple[str, ...] = (),
+        injected_module_location: str | None = None,
     ) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory() as tmp:
             bin_dir = Path(tmp)
@@ -26,6 +28,9 @@ class RepositoryPreflightTest(unittest.TestCase):
                 sh_path = shutil.which("sh")
                 self.assertIsNotNone(sh_path)
                 (bin_dir / "sh").symlink_to(sh_path)
+                python_path = shutil.which("python3")
+                self.assertIsNotNone(python_path)
+                (bin_dir / "python3").symlink_to(python_path)
 
             for name, body in commands.items():
                 path = bin_dir / name
@@ -38,11 +43,27 @@ class RepositoryPreflightTest(unittest.TestCase):
             else:
                 env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
             if env_overrides:
-                env.update(env_overrides)
+                for name, value in env_overrides.items():
+                    if value is None:
+                        env.pop(name, None)
+                    else:
+                        env[name] = value
+            caller_dir = None
+            if injected_module_location is not None:
+                module_dir = bin_dir / injected_module_location
+                module_dir.mkdir()
+                (module_dir / "subprocess.py").write_text("raise SystemExit(71)\n", encoding="utf-8")
+                if injected_module_location == "caller":
+                    caller_dir = module_dir
+                elif injected_module_location == "pythonpath":
+                    env["PYTHONPATH"] = str(module_dir)
+                else:
+                    raise ValueError("unknown injection location")
             return subprocess.run(
-                [str(SCRIPT_PATH)],
+                [str(SCRIPT_PATH), *arguments],
                 check=False,
                 env=env,
+                cwd=caller_dir,
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -100,6 +121,109 @@ class RepositoryPreflightTest(unittest.TestCase):
         self.assertIn("PASS Repository preflight complete", result.stdout)
         self.assertEqual(result.stderr, "")
 
+    def test_https_git_read_profile_uses_only_isolated_noninteractive_git(self) -> None:
+        git = """
+            [ "$PWD" = "/" ] || exit 2
+            [ "$1" = "-c" ] && [ "$2" = "credential.helper=" ] || exit 3
+            [ "$3" = "ls-remote" ] && [ "$4" = "--exit-code" ] || exit 4
+            [ "$5" = "https://github.com/ctrl-alt-keith/ai-workflow-playbook.git" ] || exit 5
+            [ "$6" = "HEAD" ] || exit 6
+            [ "$GIT_TERMINAL_PROMPT" = "0" ] && [ "$GIT_ASKPASS" = "/bin/false" ] || exit 7
+            [ "$GIT_CONFIG_GLOBAL" = "/dev/null" ] && [ "$GIT_CONFIG_NOSYSTEM" = "1" ] || exit 8
+            [ -z "${GH_TOKEN-}" ] && [ -z "${OP_SERVICE_ACCOUNT_TOKEN-}" ] || exit 9
+            [ -z "${HOME+x}" ] && [ -z "${GIT_CONFIG_COUNT+x}" ] || exit 10
+            [ "$HTTPS_PROXY" = "http://proxy.example:8080" ] || exit 11
+            [ "$SSL_CERT_FILE" = "/tmp/synthetic-ca.pem" ] || exit 12
+            [ "$SSL_CERT_DIR" = "/tmp/synthetic-certs" ] || exit 13
+            [ "$GIT_SSL_CAINFO" = "/tmp/git-ca.pem" ] || exit 14
+            [ -z "${GIT_SSL_CAPATH+x}" ] && [ -z "${CURL_CA_BUNDLE+x}" ] || exit 15
+            exit 0
+        """
+        result = self.run_preflight(
+            {"git": git}, isolated_path=True,
+            env_overrides={"GH_TOKEN": "synthetic", "OP_SERVICE_ACCOUNT_TOKEN": "synthetic",
+                           "GIT_CONFIG_COUNT": "1", "HTTPS_PROXY": "http://proxy.example:8080",
+                           "SSL_CERT_FILE": "/tmp/synthetic-ca.pem",
+                           "SSL_CERT_DIR": "/tmp/synthetic-certs",
+                           "GIT_SSL_CAINFO": "/tmp/git-ca.pem", "GIT_SSL_CAPATH": None,
+                           "CURL_CA_BUNDLE": "synthetic-not-forwarded"},
+            arguments=("--https-git-read", "https://github.com/ctrl-alt-keith/ai-workflow-playbook.git"),
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("anonymous or proxy-routed read only", result.stdout)
+        self.assertNotIn("GitHub SSH", result.stdout)
+        self.assertNotIn("gh auth", result.stdout)
+
+    def test_https_git_read_profile_does_not_create_empty_proxy_or_ca_variables(self) -> None:
+        absent = ("HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY", "http_proxy", "https_proxy",
+                  "no_proxy", "SSL_CERT_FILE", "SSL_CERT_DIR", "GIT_SSL_CAINFO",
+                  "GIT_SSL_CAPATH")
+        checks = "\n".join(f'[ -z "${{{name}+x}}" ] || exit 2' for name in absent)
+        result = self.run_preflight(
+            {"git": checks + "\nexit 0\n"}, isolated_path=True,
+            env_overrides={name: None for name in absent},
+            arguments=("--https-git-read", "https://github.com/owner/repo"),
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_https_git_read_profile_ignores_caller_and_pythonpath_modules(self) -> None:
+        for location in ("caller", "pythonpath"):
+            with self.subTest(location=location):
+                result = self.run_preflight(
+                    {"git": "exit 0\n"}, isolated_path=True,
+                    arguments=("--https-git-read", "https://github.com/owner/repo"),
+                    injected_module_location=location,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn("Isolated HTTPS Git-read preflight complete", result.stdout)
+
+    def test_https_git_read_profile_accepts_documented_url_forms(self) -> None:
+        for url in ("https://github.com/owner/repo",
+                    "https://github.com/owner.name/repo_name.git",
+                    "https://github.com/owner/repo.git.git"):
+            with self.subTest(url=url):
+                result = self.run_preflight(
+                    {"git": "exit 0\n"}, isolated_path=True,
+                    arguments=("--https-git-read", url),
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_https_git_read_profile_rejects_nonexact_urls_before_git(self) -> None:
+        urls = (
+            "https://user:token@github.com/owner/repo.git",
+            "https://github.com.evil/owner/repo.git",
+            "https://github.com/owner/repo.git?token=x",
+            "https://github.com/owner/repo.git#fragment",
+            "https://github.com/owner/repo/extra",
+            "https://github.com/owner/",
+            "git@github.com:owner/repo.git",
+        )
+        for url in urls:
+            with self.subTest(url=url):
+                result = self.run_preflight(
+                    {"git": "exit 99\n"}, isolated_path=True,
+                    arguments=("--https-git-read", url),
+                )
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("exact credential-free GitHub repository URL", result.stdout)
+                self.assertNotIn("git ls-remote", result.stdout)
+
+    def test_https_git_read_profile_reports_transport_failure_without_push_claim(self) -> None:
+        result = self.run_preflight(
+            {"git": "exit 1\n"}, isolated_path=True,
+            arguments=("--https-git-read", "https://github.com/owner/repo.git"),
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("isolated HTTPS Git repository read", result.stdout)
+        self.assertIn("does not test task Git credentials, push, or GitHub API", result.stdout)
+
+    def test_preflight_rejects_unsupported_profile_arguments(self) -> None:
+        for arguments in (("--unknown", "value"), ("--https-git-read",), ("--https-git-read", "https://github.com/owner/repo.git", "extra")):
+            with self.subTest(arguments=arguments):
+                result = self.run_preflight({"git": "exit 99\n"}, isolated_path=True, arguments=arguments)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("supported profile", result.stdout)
+
     def test_missing_required_commands_fail_fast_with_install_remediation(self) -> None:
         cases = [
             (
@@ -111,7 +235,7 @@ class RepositoryPreflightTest(unittest.TestCase):
             (
                 "gh",
                 "FAIL gh is installed",
-                "Install GitHub CLI",
+                "GitHub CLI",
                 "git is installed",
             ),
             (
@@ -134,6 +258,18 @@ class RepositoryPreflightTest(unittest.TestCase):
                 self.assertIn(remediation, result.stdout)
                 self.assertNotIn(unexpected_next_check, result.stdout)
                 self.assertEqual(result.stderr, "")
+
+    def test_gh_missing_from_path_reports_path_remediation(self) -> None:
+        commands = self.fake_success_commands()
+        del commands["gh"]
+
+        result = self.run_preflight(commands, isolated_path=True)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("FAIL gh is installed", result.stdout)
+        self.assertIn("Add GitHub CLI to PATH if already installed", result.stdout)
+        self.assertIn("https://cli.github.com/", result.stdout)
+        self.assertNotIn("git is installed", result.stdout)
 
     def test_onepassword_style_empty_ssh_add_still_succeeds_with_github_ssh_auth(self) -> None:
         commands = self.fake_success_commands()

@@ -505,6 +505,7 @@ class ScratchDirectory:
     root_identity: tuple[int, int]
     path: Path
     identity: tuple[int, int]
+    requested_root: Path | None = None
 
 
 def directory_identity(path: Path) -> tuple[int, int]:
@@ -514,8 +515,35 @@ def directory_identity(path: Path) -> tuple[int, int]:
     return info.st_dev, info.st_ino
 
 
-def qualified_scratch_root() -> Path:
-    """Select a documented scratch root, including this launcher's cloud-task route."""
+def qualified_scratch_root(private_root: Path | None = None) -> Path:
+    """Validate an explicit private root or the documented platform projection."""
+    if private_root is not None:
+        if not private_root.is_absolute():
+            raise OSError("--scratch-root must be an absolute path")
+        info = os.lstat(private_root)
+        if not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode):
+            raise OSError("--scratch-root must be a real directory")
+        if private_root.resolve(strict=True) != private_root:
+            raise OSError("--scratch-root must have no symlink or noncanonical path component")
+        ancestor = private_root.parent
+        while True:
+            parent = os.lstat(ancestor)
+            mode = stat.S_IMODE(parent.st_mode)
+            if not stat.S_ISDIR(parent.st_mode) or stat.S_ISLNK(parent.st_mode):
+                raise OSError("--scratch-root ancestry must contain only real directories")
+            if mode & 0o022 and not (parent.st_uid == 0 and mode == 0o1777):
+                raise OSError("--scratch-root ancestry is writable by another user")
+            if ancestor == private_root.parent and parent.st_uid not in (0, os.geteuid()):
+                raise OSError("--scratch-root parent must be root- or current-user-owned")
+            if ancestor == ancestor.parent:
+                break
+            ancestor = ancestor.parent
+        verified = os.lstat(private_root)
+        if (verified.st_dev, verified.st_ino) != (info.st_dev, info.st_ino):
+            raise OSError("--scratch-root identity changed during validation")
+        if verified.st_uid != os.geteuid() or stat.S_IMODE(verified.st_mode) != 0o700:
+            raise OSError("--scratch-root must be current-user-owned with exact mode 0700")
+        return private_root
     system = platform.system()
     if system == "Darwin":
         result = subprocess.run(
@@ -545,9 +573,7 @@ def qualified_scratch_root() -> Path:
         if real_directory and info.st_uid == 0 and stat.S_IMODE(info.st_mode) == 0o1777:
             return root
         rejected_root = "/tmp is not a root-owned 01777 directory" if real_directory else "/tmp is not a real directory"
-        # Codex Cloud gives each task a separate workspace. Its root is a
-        # launcher-owned temporary parent only when both it and its ancestry
-        # have the exact protected shape below; this is not a TMPDIR fallback.
+        # A fixed route for the isolated Codex Cloud task, not a TMPDIR fallback.
         workspace = Path("/workspace")
         try:
             ancestor = os.lstat(workspace.parent)
@@ -569,9 +595,9 @@ def qualified_scratch_root() -> Path:
     raise OSError(f"no qualified scratch projection for {system}")
 
 
-def allocate_scratch(provider_name: str) -> ScratchDirectory:
+def allocate_scratch(provider_name: str, private_root: Path | None = None) -> ScratchDirectory:
     """Allocate a fresh private child and bind both it and its parent by identity."""
-    root = qualified_scratch_root()
+    root = qualified_scratch_root(private_root)
     root_identity = directory_identity(root)
     for _ in range(32):
         path = root / f"{provider_name}-review-{secrets.token_hex(16)}"
@@ -592,7 +618,9 @@ def allocate_scratch(provider_name: str) -> ScratchDirectory:
             or stat.S_IMODE(child.st_mode) != 0o700
         ):
             raise OSError("new scratch directory failed private identity validation")
-        return ScratchDirectory(root, root_identity, path, (child.st_dev, child.st_ino))
+        if qualified_scratch_root(private_root) != root or directory_identity(root) != root_identity:
+            raise OSError("scratch root changed during allocation")
+        return ScratchDirectory(root, root_identity, path, (child.st_dev, child.st_ino), private_root)
     raise OSError("could not allocate a fresh scratch directory")
 
 
@@ -616,7 +644,7 @@ def remove_scratch_members(path: Path) -> None:
 def cleanup_scratch(directory: ScratchDirectory) -> str | None:
     """Fail closed unless the qualified root and exact child still name this attempt."""
     try:
-        if qualified_scratch_root() != directory.root:
+        if qualified_scratch_root(directory.requested_root) != directory.root:
             raise OSError("scratch root path drift")
         if directory_identity(directory.root) != directory.root_identity:
             raise OSError("scratch root identity drift")
@@ -816,6 +844,7 @@ def parse_arguments(provider: Provider, argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--auth-preflight", action="store_true")
     parser.add_argument("--health-probe", action="store_true")
     parser.add_argument("--diagnostics-file", type=Path)
+    parser.add_argument("--scratch-root", type=Path)
     parser.add_argument("--review-output-file", type=Path)
     parser.add_argument("--candidate-commit")
     parser.add_argument("--candidate-artifact", type=Path)
@@ -830,7 +859,7 @@ def parse_arguments(provider: Provider, argv: list[str]) -> argparse.Namespace:
     args.undelimited = undelimited + ([] if args.provider_args[:1] == ["--"] else args.provider_args)
     args.provider_args = args.provider_args[1:] if args.provider_args[:1] == ["--"] else []
     target_options = {"--candidate-commit", "--candidate-artifact", "--candidate-sha256",
-                      "--review-request-file", "--review-request-sha256"}
+                      "--review-request-file", "--review-request-sha256", "--scratch-root"}
     seen: set[str] = set()
     args.duplicate_target = None
     for argument in argv:
@@ -872,6 +901,7 @@ def run_attempt(
     bundle: Path | None = None,
     manifest: dict[str, Any] | None = None,
     artifact_target: bool = False,
+    scratch_root: Path | None = None,
 ) -> Attempt:
     """Launch the provider once and classify the result; the only launch path for every attempt kind.
 
@@ -889,12 +919,18 @@ def run_attempt(
                                          "grants_live_provider_capability": False}
         evidence["supplied_evidence"] = evidence_record(bundle, manifest)
     try:
-        scratch = allocate_scratch(provider.name)
+        scratch = allocate_scratch(provider.name) if scratch_root is None else allocate_scratch(provider.name, scratch_root)
     except OSError as error:
         return Attempt([f"could not allocate a scratch directory: {error}"], False, evidence, b"")
     evidence["scratch_root"] = str(scratch.root)
     bundle_error = None
     try:
+        if (
+            qualified_scratch_root(scratch_root) != scratch.root
+            or directory_identity(scratch.root) != scratch.root_identity
+            or directory_identity(scratch.path) != scratch.identity
+        ):
+            raise OSError("scratch path changed before provider launch")
         if bundle is not None:
             if verify_bundle(bundle) != manifest:
                 raise ValueError("evidence bundle changed before review")
@@ -993,6 +1029,8 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
         "kind": f"{provider.name}_review",
         "attempt_kind": attempt_kind,
     }
+    if args.scratch_root is not None:
+        record["requested_scratch_root"] = str(args.scratch_root)
 
     def fail(failure: str, destination: Path | None) -> int:
         return finish(provider, record, causes=[failure], destination=destination)
@@ -1047,6 +1085,8 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
                 raise ValueError("--candidate-commit is required for review execution")
             repository, commit = resolve_candidate(args.candidate_commit, environment)
             bundle_manifest = supplied_bundle(args.evidence_bundle, repository, commit, environment)
+        if args.scratch_root is not None:
+            qualified_scratch_root(args.scratch_root)
         executable, version = resolve_executable(provider, args.binary, environment)
         record[f"{provider.name}_version"] = version
         if args.undelimited:
@@ -1069,7 +1109,8 @@ def main(provider: Provider, argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as error:
         return fail(str(error), args.diagnostics_file)
 
-    launch = dict(executable=executable, environment=environment, selection=selection)
+    launch = dict(executable=executable, environment=environment, selection=selection,
+                  scratch_root=args.scratch_root)
     if preflight:
         attempt = run_attempt(provider, attempt_kind="auth_preflight", prompt=provider.auth_prompt, repository=None, **launch)
         record.update(attempt.evidence)

@@ -30,6 +30,18 @@ prerequisites. It does not establish executor availability, model
 qualification, or provider authentication. Executor and provider checks stay
 with their respective adapters and launchers.
 
+For isolated HTTPS Git read, use
+`scripts/repository-preflight --https-git-read https://github.com/OWNER/REPO.git`.
+The `.git` suffix is optional. Each path segment accepts ASCII letters,
+digits, `.`, `_`, and `-`, except `.` or `..`; userinfo, query, fragment, and
+extra path are rejected. This profile runs a 30-second noninteractive
+`git ls-remote HEAD` without task Git credentials or inherited Git configuration.
+It forwards `PATH` and only set HTTP(S) proxy, `NO_PROXY`, `SSL_CERT_FILE`,
+`SSL_CERT_DIR`, `GIT_SSL_CAINFO`, and `GIT_SSL_CAPATH` variables. Success proves
+anonymous or proxy-routed read for that URL only; credentialed Git access,
+push, GitHub API, and reviewer access require separate checks. No arguments
+retain the SSH and `gh` profile.
+
 ## Usage
 
 Before repository automation or worker fan-out, run the shared preflight from
