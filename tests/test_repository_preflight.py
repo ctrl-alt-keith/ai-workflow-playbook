@@ -111,7 +111,7 @@ class RepositoryPreflightTest(unittest.TestCase):
             (
                 "gh",
                 "FAIL gh is installed",
-                "Install GitHub CLI",
+                "GitHub CLI",
                 "git is installed",
             ),
             (
@@ -134,6 +134,18 @@ class RepositoryPreflightTest(unittest.TestCase):
                 self.assertIn(remediation, result.stdout)
                 self.assertNotIn(unexpected_next_check, result.stdout)
                 self.assertEqual(result.stderr, "")
+
+    def test_gh_missing_from_path_reports_path_remediation(self) -> None:
+        commands = self.fake_success_commands()
+        del commands["gh"]
+
+        result = self.run_preflight(commands, isolated_path=True)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("FAIL gh is installed", result.stdout)
+        self.assertIn("Add GitHub CLI to PATH if already installed", result.stdout)
+        self.assertIn("https://cli.github.com/", result.stdout)
+        self.assertNotIn("git is installed", result.stdout)
 
     def test_onepassword_style_empty_ssh_add_still_succeeds_with_github_ssh_auth(self) -> None:
         commands = self.fake_success_commands()

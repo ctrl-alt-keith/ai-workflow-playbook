@@ -33,7 +33,7 @@ require_command() {
 }
 
 require_command "ssh" "Install OpenSSH client tools, then rerun this preflight."
-require_command "gh" "Install GitHub CLI from https://cli.github.com/, then rerun this preflight."
+require_command "gh" "Add GitHub CLI to PATH if already installed, or install it from https://cli.github.com/, then rerun this preflight."
 require_command "git" "Install Git, then rerun this preflight."
 
 case "$SSH_TARGET" in
