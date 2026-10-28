@@ -32,6 +32,7 @@ with their respective adapters and launchers.
 
 For isolated HTTPS Git read, use
 `scripts/repository-preflight --https-git-read https://github.com/OWNER/REPO.git`.
+This profile requires Git and Python 3 on `PATH`.
 The `.git` suffix is optional. Each path segment accepts ASCII letters,
 digits, `.`, `_`, and `-`, except `.` or `..`; userinfo, query, fragment, and
 extra path are rejected. This profile runs a 30-second noninteractive
