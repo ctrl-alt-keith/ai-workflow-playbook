@@ -246,6 +246,7 @@ class EvidenceBundleTests(unittest.TestCase):
 
     def test_rejects_nonprivate_root_and_symlinked_parent_before_writes(self):
         self.bundle.mkdir(mode=0o755)
+        self.bundle.chmod(0o755)
         with self.assertRaises(evidence.EvidenceError):
             self.stage()
         self.assertEqual(list(self.bundle.iterdir()), [])

@@ -576,6 +576,9 @@ tool contract must select another explicitly authorized design or stop the
 dependent operation; a generic attempt-local example does not itself qualify
 that platform.
 
+Review launcher-specific scratch routes are in
+[`scripts/review-launchers.md`](../scripts/review-launchers.md#shared-launcher-boundary).
+
 For Codex specifically, configured
 `[sandbox_workspace_write].writable_roots` may not be the full effective
 writable root set. The active project root and platform temp directories can be

@@ -596,6 +596,239 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
                 with self.subTest(mode=malformed.st_mode), mock.patch.object(shared.os, "lstat", return_value=malformed):
                     with self.assertRaisesRegex(OSError, "real directory"):
                         shared.qualified_scratch_root()
+            with mock.patch.object(shared.os, "lstat", return_value=accepted), \
+                 mock.patch.dict(os.environ, {"TMPDIR": "/untrusted/other-root"}):
+                self.assertEqual(shared.qualified_scratch_root(), Path("/tmp"))
+
+    def test_linux_projection_uses_only_a_protected_fixed_task_workspace(self):
+        load_launcher(LAUNCHER, "claude_review_linux_workspace_fixture")
+        shared = sys.modules["review_launcher"]
+
+        def fake_directory(mode, uid, gid=0):
+            return os.stat_result((mode, 0, 0, 0, uid, gid, 0, 0, 0, 0))
+
+        shared_tmp = fake_directory(stat.S_IFDIR | 0o1777, 65534)
+        ancestor = fake_directory(stat.S_IFDIR | 0o755, 65534)
+        workspace = fake_directory(stat.S_IFDIR | 0o755, 1000)
+
+        def inspected(path):
+            return {Path("/tmp"): shared_tmp, Path("/"): ancestor, Path("/workspace"): workspace}[path]
+
+        with (
+            mock.patch.object(shared.platform, "system", return_value="Linux"),
+            mock.patch.object(shared.os, "geteuid", return_value=1000),
+            mock.patch.object(shared.os, "lstat", side_effect=inspected),
+        ):
+            self.assertEqual(shared.qualified_scratch_root(), Path("/workspace"))
+
+        rejected = (
+            ("wrong owner", ancestor, fake_directory(stat.S_IFDIR | 0o755, 501)),
+            ("writable workspace", ancestor, fake_directory(stat.S_IFDIR | 0o777, 1000)),
+            ("workspace mode drift", ancestor, fake_directory(stat.S_IFDIR | 0o700, 1000)),
+            ("linked workspace", ancestor, fake_directory(stat.S_IFLNK | 0o777, 1000)),
+            ("writable ancestor", fake_directory(stat.S_IFDIR | 0o777, 65534), workspace),
+            ("linked ancestor", fake_directory(stat.S_IFLNK | 0o755, 65534), workspace),
+            ("owned ancestor", fake_directory(stat.S_IFDIR | 0o755, 1000), workspace),
+        )
+        for label, candidate_ancestor, candidate_workspace in rejected:
+            with self.subTest(label=label):
+                def unsafe_inspected(path):
+                    return {Path("/tmp"): shared_tmp, Path("/"): candidate_ancestor,
+                            Path("/workspace"): candidate_workspace}[path]
+
+                with (
+                    mock.patch.object(shared.platform, "system", return_value="Linux"),
+                    mock.patch.object(shared.os, "geteuid", return_value=1000),
+                    mock.patch.object(shared.os, "lstat", side_effect=unsafe_inspected),
+                ):
+                    with self.assertRaisesRegex(OSError, "protected task /workspace is unavailable"):
+                        shared.qualified_scratch_root()
+
+    def test_explicit_private_root_succeeds_on_linux_and_darwin_and_cleans_up(self):
+        load_launcher(LAUNCHER, "claude_review_explicit_root_fixture")
+        shared = sys.modules["review_launcher"]
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temporary_directory:
+            root = Path(temporary_directory).resolve() / "private"
+            root.mkdir(mode=0o700)
+            for system in ("Linux", "Darwin"):
+                with self.subTest(system=system), mock.patch.object(shared.platform, "system", return_value=system):
+                    self.assertEqual(shared.qualified_scratch_root(root), root)
+                    scratch = shared.allocate_scratch("claude", root)
+                    self.assertEqual(scratch.path.parent, root)
+                    self.assertEqual(stat.S_IMODE(os.lstat(scratch.path).st_mode), 0o700)
+                    self.assertIsNone(shared.cleanup_scratch(scratch))
+                    self.assertFalse(scratch.path.exists())
+
+    def test_darwin_default_still_requires_private_getconf_root(self):
+        load_launcher(LAUNCHER, "claude_review_darwin_default_fixture")
+        shared = sys.modules["review_launcher"]
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            root.chmod(0o700)
+            completed = subprocess.CompletedProcess(
+                ["/usr/bin/getconf", "DARWIN_USER_TEMP_DIR"], 0, str(root) + "\n", ""
+            )
+            with (mock.patch.object(shared.platform, "system", return_value="Darwin"),
+                  mock.patch.object(shared.subprocess, "run", return_value=completed)):
+                self.assertEqual(shared.qualified_scratch_root(), root)
+                root.chmod(0o755)
+                with self.assertRaisesRegex(OSError, "private user-owned 0700"):
+                    shared.qualified_scratch_root()
+
+    def test_explicit_private_root_rejects_unsafe_paths(self):
+        load_launcher(LAUNCHER, "claude_review_explicit_root_rejection_fixture")
+        shared = sys.modules["review_launcher"]
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temporary_directory:
+            base = Path(temporary_directory).resolve()
+            root = base / "private"
+            root.mkdir(mode=0o700)
+            (base / "link").symlink_to(root, target_is_directory=True)
+            with self.assertRaisesRegex(OSError, "absolute"):
+                shared.qualified_scratch_root(Path("private"))
+            with self.assertRaisesRegex(OSError, "real directory"):
+                shared.qualified_scratch_root(base / "link")
+            with self.assertRaisesRegex(OSError, "noncanonical"):
+                shared.qualified_scratch_root(root / ".." / "private")
+            base.chmod(0o777)
+            with self.assertRaisesRegex(OSError, "ancestry is writable"):
+                shared.qualified_scratch_root(root)
+            base.chmod(0o700)
+            root.chmod(0o750)
+            with self.assertRaisesRegex(OSError, "exact mode 0700"):
+                shared.qualified_scratch_root(root)
+            root.chmod(0o700)
+            original_uid = os.lstat(root).st_uid
+            original_lstat = shared.os.lstat
+            def wrong_owner(path):
+                info = original_lstat(path)
+                if path in (root, base):
+                    return os.stat_result((info.st_mode, info.st_ino, info.st_dev,
+                                           info.st_nlink, original_uid + 1, info.st_gid,
+                                           info.st_size, info.st_atime, info.st_mtime, info.st_ctime))
+                return info
+            with mock.patch.object(shared.os, "lstat", side_effect=wrong_owner):
+                with self.assertRaisesRegex(OSError, "parent must be"):
+                    shared.qualified_scratch_root(root)
+            def wrong_root_owner(path):
+                info = original_lstat(path)
+                if path == root:
+                    return os.stat_result((info.st_mode, info.st_ino, info.st_dev,
+                                           info.st_nlink, original_uid + 1, info.st_gid,
+                                           info.st_size, info.st_atime, info.st_mtime, info.st_ctime))
+                return info
+            with mock.patch.object(shared.os, "lstat", side_effect=wrong_root_owner):
+                with self.assertRaisesRegex(OSError, "must be current-user-owned"):
+                    shared.qualified_scratch_root(root)
+
+    def test_explicit_root_replacement_prevents_cleanup(self):
+        load_launcher(LAUNCHER, "claude_review_explicit_root_drift_fixture")
+        shared = sys.modules["review_launcher"]
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temporary_directory:
+            base = Path(temporary_directory).resolve()
+            root = base / "private"
+            root.mkdir(mode=0o700)
+            scratch = shared.allocate_scratch("claude", root)
+            moved = base / "moved"
+            root.rename(moved)
+            root.mkdir(mode=0o700)
+            self.assertIn("scratch root identity drift", shared.cleanup_scratch(scratch))
+            self.assertTrue((moved / scratch.path.name).exists())
+
+    def test_explicit_root_cleanup_refuses_mode_and_symlink_drift(self):
+        load_launcher(LAUNCHER, "claude_review_explicit_root_cleanup_drift_fixture")
+        shared = sys.modules["review_launcher"]
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temporary_directory:
+            base = Path(temporary_directory).resolve()
+            root = base / "private"
+            root.mkdir(mode=0o700)
+            scratch = shared.allocate_scratch("claude", root)
+            root.chmod(0o755)
+            self.assertIn("exact mode 0700", shared.cleanup_scratch(scratch))
+            self.assertTrue(scratch.path.exists())
+            root.chmod(0o700)
+            moved = base / "moved"
+            root.rename(moved)
+            root.symlink_to(moved, target_is_directory=True)
+            self.assertIn("real directory", shared.cleanup_scratch(scratch))
+            root.unlink()
+            moved.rename(root)
+            self.assertIsNone(shared.cleanup_scratch(scratch))
+
+    def test_explicit_root_rejects_identity_swap_during_validation(self):
+        load_launcher(LAUNCHER, "claude_review_explicit_root_swap_fixture")
+        shared = sys.modules["review_launcher"]
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temporary_directory:
+            root = Path(temporary_directory).resolve() / "private"
+            root.mkdir(mode=0o700)
+            original = shared.os.lstat
+            calls = 0
+
+            def replaced(path):
+                nonlocal calls
+                info = original(path)
+                if path == root:
+                    calls += 1
+                    if calls == 2:
+                        return os.stat_result((info.st_mode, info.st_ino + 1, info.st_dev,
+                                               info.st_nlink, info.st_uid, info.st_gid,
+                                               info.st_size, info.st_atime, info.st_mtime, info.st_ctime))
+                return info
+
+            with mock.patch.object(shared.os, "lstat", side_effect=replaced):
+                with self.assertRaisesRegex(OSError, "identity changed"):
+                    shared.qualified_scratch_root(root)
+
+    def test_preflight_accepts_explicit_root_without_changing_provider_controls(self):
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temporary_directory:
+            base = Path(temporary_directory).resolve()
+            root = base / "private"
+            root.mkdir(mode=0o700)
+            executable = self.make_fake_claude(base, "printf 'CLAUDE_AUTH_OK\\n'\n")
+            result = self.run_launcher(executable, "--auth-preflight", "--scratch-root", str(root))
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        self.assertEqual(result.stdout, b"CLAUDE_AUTH_OK\n")
+        self.assertIn(str(root).encode(), result.stderr)
+
+    def test_invalid_explicit_root_stops_before_provider_version_probe(self):
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temporary_directory:
+            base = Path(temporary_directory).resolve()
+            root = base / "private"
+            root.mkdir(mode=0o755)
+            root.chmod(0o755)
+            launched = base / "provider-launched"
+            executable = self.make_fake_claude(base, f"touch {launched}\n")
+            result = self.run_launcher(executable, "--auth-preflight", "--scratch-root", str(root))
+            self.assertEqual(result.returncode, 70)
+            self.assertIn(b"exact mode 0700", result.stderr)
+            self.assertFalse(launched.exists())
+
+    def test_artifact_review_uses_explicit_root_and_rejects_duplicate_root(self):
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temporary_directory:
+            base = Path(temporary_directory).resolve()
+            root = base / "private"
+            root.mkdir(mode=0o700)
+            artifact = base / "source.txt"
+            request = base / "request.txt"
+            artifact.write_text("Synthetic source only.\n", encoding="utf-8")
+            request.write_text("Review synthetic source.\n", encoding="utf-8")
+            executable = self.make_fake_claude(base, "cat\n")
+            args = (
+                "--scratch-root", str(root),
+                "--candidate-artifact", str(artifact),
+                "--candidate-sha256", hashlib.sha256(artifact.read_bytes()).hexdigest(),
+                "--review-request-file", str(request),
+                "--review-request-sha256", hashlib.sha256(request.read_bytes()).hexdigest(),
+            )
+            result = self.run_launcher(executable, *args, candidate_commit=None)
+            self.assertEqual(result.returncode, 0, result.stderr.decode())
+            self.assertIn(b"Synthetic source only.", result.stdout)
+            self.assertEqual(list(root.iterdir()), [])
+            duplicate = self.run_launcher(
+                executable, "--auth-preflight", "--scratch-root", str(root),
+                "--scratch-root", str(root),
+            )
+            self.assertEqual(duplicate.returncode, 70)
+            self.assertIn(b"--scratch-root may be provided only once", duplicate.stderr)
 
     def test_scratch_allocation_sets_private_mode_and_successful_cleanup_removes_regular_output(self):
         launcher = load_launcher(LAUNCHER, "claude_review_scratch_success_fixture")
@@ -644,6 +877,7 @@ class ClaudeReviewLauncherTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(stdout.getvalue(), "CLAUDE_AUTH_OK\n")
         self.assertEqual(record["status"], "ok")
+        self.assertEqual(record["scratch_root"], str(sys.modules["review_launcher"].qualified_scratch_root()))
 
     def test_scratch_cleanup_refuses_mode_drift_and_symlink_members(self):
         launcher = load_launcher(LAUNCHER, "claude_review_scratch_cleanup_fixture")

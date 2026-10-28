@@ -26,6 +26,25 @@ owning review's input retention contract when governed recovery is required;
 target type does not select review mode. Canaries and probes use fixed prompts.
 Empty or failed provider output is launcher failure, never a verdict.
 
+On Linux, the default is a real root-owned `01777` `/tmp`. If it fails, the
+launcher automatically tries fixed `/workspace` for an isolated Codex Cloud
+task. That route requires a real, current-user-owned `0755` `/workspace` and a
+real, different-owner `/` parent that is not group/world writable. Metadata
+does not establish task isolation. If neither route qualifies, stop. The
+selected root is recorded as `scratch_root`.
+
+Pass `--scratch-root <absolute private directory>` to both preflight and review
+to select an existing, canonical, real, current-user-owned `0700` directory.
+Its parent must be root- or current-user-owned; ancestors must be real,
+non-symlink, and not group/world writable except root-owned `01777` directories.
+Use canonical `/private/...` paths on macOS. Keep the root outside the candidate
+repository and retained inputs/outputs; the caller creates and disposes of it.
+The launcher uses a fresh private child, revalidates the root and child identity
+before launch, and applies the shared cleanup contract. Path checks cannot
+exclude same-user or ancestor-owner concurrent replacement. Omitting the option
+retains the platform default; `TMPDIR` does not select scratch. Apply the shared
+[scratch lifecycle](../docs/repo-readiness.md#repo-local-workflow-state).
+
 Before substantive review, retain one persistent session and deliver the prompt
 through an EOF-producing route. Presentation timeout, quiet output, or a lost
 session handle requires re-observation of the recorded launcher command,

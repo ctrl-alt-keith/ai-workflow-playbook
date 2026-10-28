@@ -32,6 +32,59 @@ require_command() {
     fail_check "$command_name is installed" "$remediation"
 }
 
+if [ "$#" -gt 0 ]; then
+    if [ "$#" -ne 2 ] || [ "$1" != "--https-git-read" ]; then
+        fail_check "preflight arguments select a supported profile" "Use no arguments for SSH and GitHub CLI readiness, or --https-git-read with an exact GitHub HTTPS repository URL."
+    fi
+
+    https_repo="$2"
+    case "$https_repo" in
+        https://github.com/*) repo_path="${https_repo#https://github.com/}" ;;
+        *) repo_path="" ;;
+    esac
+    case "$repo_path" in
+        */*) repo_owner="${repo_path%%/*}"; repo_name="${repo_path#*/}" ;;
+        *) repo_owner=""; repo_name="" ;;
+    esac
+    repo_name="${repo_name%.git}"
+    case "$repo_owner" in
+        ""|"."|".."|*[!A-Za-z0-9._-]*) repo_owner="" ;;
+    esac
+    case "$repo_name" in
+        ""|"."|".."|*[!A-Za-z0-9._-]*) repo_name="" ;;
+    esac
+    if [ -z "$repo_owner" ] || [ -z "$repo_name" ]; then
+        fail_check "HTTPS Git-read URL is an exact credential-free GitHub repository URL" "Pass https://github.com/OWNER/REPO with optional .git suffix and no user info, query, fragment, or extra path."
+    fi
+    require_command "git" "Install Git, then rerun this preflight."
+    require_command "python3" "Install Python 3, then rerun this preflight."
+    if python3 -I -c '
+import os
+import subprocess
+import sys
+
+allowed = ("PATH", "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY",
+           "http_proxy", "https_proxy", "no_proxy",
+           "SSL_CERT_FILE", "SSL_CERT_DIR", "GIT_SSL_CAINFO", "GIT_SSL_CAPATH")
+child = {name: os.environ[name] for name in allowed if name in os.environ}
+child.update(GIT_TERMINAL_PROMPT="0", GIT_ASKPASS="/bin/false",
+             GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL="/dev/null")
+try:
+    result = subprocess.run(
+        ["git", "-c", "credential.helper=", "ls-remote", "--exit-code", sys.argv[1], "HEAD"],
+        cwd="/", env=child, stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
+except (OSError, subprocess.TimeoutExpired):
+    sys.exit(1)
+sys.exit(result.returncode)
+' "$https_repo" >/dev/null 2>&1; then
+        pass_check "isolated HTTPS Git repository read works with git ls-remote"
+        printf 'PASS Isolated HTTPS Git-read preflight complete; anonymous or proxy-routed read only\n'
+        exit 0
+    fi
+    fail_check "isolated HTTPS Git repository read works with git ls-remote" "Resolve anonymous or proxy-routed HTTPS read for the exact repository; this does not test task Git credentials, push, or GitHub API access."
+fi
+
 require_command "ssh" "Install OpenSSH client tools, then rerun this preflight."
 require_command "gh" "Add GitHub CLI to PATH if already installed, or install it from https://cli.github.com/, then rerun this preflight."
 require_command "git" "Install Git, then rerun this preflight."
