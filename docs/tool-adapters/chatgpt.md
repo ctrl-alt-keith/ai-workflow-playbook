@@ -133,7 +133,8 @@ uncertain or repeated launch under
 state is unobservable. Do not fall back to desktop execution.
 
 Follow managed startup in the verified isolated checkout; add no worktree
-unless explicitly requested. Handoff starts at the hosted draft. Apply
+unless explicitly requested. For PR-producing tasks, handoff starts at the
+hosted draft. Apply
 [PR Readiness](../repo-readiness.md#pr-readiness),
 [independent review](../external-ai-reviewer.md), and
 [Codex selector routing](codex.md#codex-selector-routing-and-acceptance);
