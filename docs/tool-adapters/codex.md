@@ -105,6 +105,13 @@ Playbook checkout and stop on a non-zero exit. This establishes only the
 [shared repository prerequisites](../repository-preflight.md); Codex launch and
 model qualification remain separate.
 
+For an explicitly authorized isolated cloud task using HTTPS Git rather than
+the workstation SSH route, use the preflight's `--https-git-read` profile for
+the exact repository. Its success establishes read access only. Verify the
+task's credentialed GitHub API and Git push capabilities separately before
+relying on them; use the established runtime credential and signing paths
+without treating the read profile as write readiness.
+
 ### Worktrees
 
 Use the repository's one-repository, one-branch, one-dedicated-worktree, one-PR
