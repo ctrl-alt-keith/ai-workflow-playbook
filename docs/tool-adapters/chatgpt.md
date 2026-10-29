@@ -125,24 +125,19 @@ they do not make a source current or replace post-write re-observation.
 
 ## Scheduled Codex Cloud handoff
 
-A ChatGPT Scheduled occurrence is a coordinator wake, not proof that its project
-selection runs in Codex Cloud. For a qualified `cloud_threads` handoff, pass the
-explicit published environment selector as `environmentConfigId`; verify the
-child run and selected environment. Do not infer cloud execution from a project
-name or substitute a desktop project. On a repeated wake or uncertain launch,
-inspect the existing child and hosted proposal before dispatching again; hold
-when their identity cannot be reconciled.
+A ChatGPT Scheduled task wakes a coordinator, not Codex Cloud. For qualified
+`cloud_threads`, pass saved `environmentConfigId` and read back child identity
+and published version used; the selector is not a version pin. Reconcile an
+uncertain or repeated launch under
+[prompt delivery](../prompts.md#prompt-delivery-decision-model); hold if child
+state is unobservable. Do not fall back to desktop execution.
 
-The child follows its managed environment's startup instructions and uses its
-already isolated checkout unless another worktree is explicitly requested. It
-hands back the hosted draft PR with remote head and changed-file readback before
-coordinator inspection.
-The coordinator reviews that exact hosted candidate before applicable
-[independent review](../external-ai-reviewer.md); apply
-[PR Readiness](../repo-readiness.md#pr-readiness) for the later transition.
-Use [Codex selector routing](codex.md#codex-selector-routing-and-acceptance) for
-model evidence, including `unobservable` runtime-effective values. Keep
-environment IDs, cadence, job prompts, and output retention in
+Follow managed startup in the verified isolated checkout; add no worktree
+unless explicitly requested. Handoff starts at the hosted draft. Apply
+[PR Readiness](../repo-readiness.md#pr-readiness),
+[independent review](../external-ai-reviewer.md), and
+[Codex selector routing](codex.md#codex-selector-routing-and-acceptance);
+mutable IDs, schedules, prompts, and retention belong to
 [operational configuration](../maintenance-automations.md#architecture-versus-local-configuration).
 
 ## Recovery and unattended work
