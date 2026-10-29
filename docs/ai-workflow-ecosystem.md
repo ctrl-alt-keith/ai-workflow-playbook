@@ -51,9 +51,6 @@ Product, Capabilities, Subsystems, Surfaces, or governance evidence.
 | `knowledge-vault` | Currently hosts reviewed retained knowledge, its supporting implementation, research workflows, and governance evidence. |
 | `knowledge-adapters` | Currently implements acquisition and normalization of external sources, plus a separately invoked Google Docs publication path. Acquisition prepares untrusted candidate material for review; publication requires an explicit action and returns a receipt. |
 
-`ka-destinations` is archived; its Google Docs publication path moved to
-`knowledge-adapters`.
-
 In short: adapters perform acquisition and normalization; the current vault
 implementation records reviewed retained knowledge and hosts additional
 workflow evidence; `knowledge-adapters publish` performs separately authorized
