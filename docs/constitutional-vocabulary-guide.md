@@ -163,8 +163,8 @@ or supporting Capabilities that are not Products.
 
 **Example:**
 
-> `ka-destinations` currently implements Publication destination drivers and
-> records publication receipts.
+> `knowledge-adapters` currently implements a Google Docs Publication
+> destination driver and records publication receipts.
 
 ### Semantic Contract Producer
 
@@ -515,13 +515,13 @@ Constitutional:
 
 Repository-first:
 
-> `ka-destinations` owns publication.
+> `knowledge-adapters` owns publication.
 
 Constitutional:
 
 > Publication owns the authorized external-delivery transaction and
-> publication-receipt semantics. `ka-destinations` currently implements
-> destination-specific publication behavior.
+> publication-receipt semantics. `knowledge-adapters` currently implements
+> separately invoked Google Docs publication behavior.
 
 ### Contract Ownership
 

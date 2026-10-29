@@ -49,13 +49,13 @@ Product, Capabilities, Subsystems, Surfaces, or governance evidence.
 | `ai-workflow-enforcement` | Mechanical verification, advisory and validation tooling, drift reporting, and reusable automation for selected playbook guidance. It implements checkable doctrine without independently establishing workflow policy. |
 | `ai-workflow-incubator` | Exploration and staging for emerging patterns before they are promoted into durable playbook guidance or split into their own repository. |
 | `knowledge-vault` | Currently hosts reviewed retained knowledge, its supporting implementation, research workflows, and governance evidence. |
-| `knowledge-adapters` | Currently implements acquisition and normalization of external sources. Adapters treat incoming material as untrusted input and prepare it for review without declaring it retained knowledge by default. |
-| `ka-destinations` | Currently implements publishing, export, and rendering paths for caller-supplied knowledge artifacts. Destinations adapt material for use elsewhere without becoming the source of truth. |
+| `knowledge-adapters` | Currently implements acquisition and normalization of external sources, plus a separately invoked Google Docs publication path. Acquisition prepares untrusted candidate material for review; publication requires an explicit action and returns a receipt. |
 
 In short: adapters perform acquisition and normalization; the current vault
 implementation records reviewed retained knowledge and hosts additional
-workflow evidence; destinations perform publication or rendering; the Playbook
-contains reusable patterns; Enforcement implements selected Playbook doctrine
+workflow evidence; `knowledge-adapters publish` performs separately authorized
+Google Docs delivery; the Playbook contains reusable patterns; Enforcement
+implements selected Playbook doctrine
 mechanically; and the Incubator gives unsettled ideas a place to mature before
 promotion. If Playbook doctrine and Enforcement behavior diverge, the Playbook
 is authoritative for reusable workflow guidance and Enforcement should be
