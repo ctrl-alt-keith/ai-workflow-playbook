@@ -123,6 +123,24 @@ instructions, or effects is material. Completion logs, memory, conversation
 keys, generated artifacts, and prior results remain continuity/history/evidence;
 they do not make a source current or replace post-write re-observation.
 
+## Scheduled Codex Cloud handoff
+
+A ChatGPT Scheduled task wakes a coordinator, not Codex Cloud. For qualified
+`cloud_threads`, pass saved `environmentConfigId` and read back child identity
+and published version used; the selector is not a version pin. Reconcile an
+uncertain or repeated launch under
+[prompt delivery](../prompts.md#prompt-delivery-decision-model); hold if child
+state is unobservable. Do not fall back to desktop execution.
+
+Follow managed startup in the verified isolated checkout; add no worktree
+unless explicitly requested. For PR-producing tasks, handoff starts at the
+hosted draft. Apply
+[PR Readiness](../repo-readiness.md#pr-readiness),
+[independent review](../external-ai-reviewer.md), and
+[Codex selector routing](codex.md#codex-selector-routing-and-acceptance);
+mutable IDs, schedules, prompts, and retention belong to
+[operational configuration](../maintenance-automations.md#architecture-versus-local-configuration).
+
 ## Recovery and unattended work
 
 Prompt authoring, generated artifacts, scheduled/unattended work, and recovery
