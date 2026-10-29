@@ -123,6 +123,28 @@ instructions, or effects is material. Completion logs, memory, conversation
 keys, generated artifacts, and prior results remain continuity/history/evidence;
 they do not make a source current or replace post-write re-observation.
 
+## Scheduled Codex Cloud handoff
+
+A ChatGPT Scheduled occurrence is a coordinator wake, not proof that its project
+selection runs in Codex Cloud. For a qualified `cloud_threads` handoff, pass the
+explicit published environment selector as `environmentConfigId`; verify the
+child run and selected environment. Do not infer cloud execution from a project
+name or substitute a desktop project. On a repeated wake or uncertain launch,
+inspect the existing child and hosted proposal before dispatching again; hold
+when their identity cannot be reconciled.
+
+The child follows its managed environment's startup instructions and uses its
+already isolated checkout unless another worktree is explicitly requested. It
+hands back the hosted draft PR with remote head and changed-file readback before
+coordinator inspection.
+The coordinator reviews that exact hosted candidate before applicable
+[independent review](../external-ai-reviewer.md); apply
+[PR Readiness](../repo-readiness.md#pr-readiness) for the later transition.
+Use [Codex selector routing](codex.md#codex-selector-routing-and-acceptance) for
+model evidence, including `unobservable` runtime-effective values. Keep
+environment IDs, cadence, job prompts, and output retention in
+[operational configuration](../maintenance-automations.md#architecture-versus-local-configuration).
+
 ## Recovery and unattended work
 
 Prompt authoring, generated artifacts, scheduled/unattended work, and recovery
