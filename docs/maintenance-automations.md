@@ -307,22 +307,23 @@ Canonical playbook doctrine owns:
   approval
 - its self-review and drift expectations
 
-Local operational configuration owns unless a later, explicit contract promotes
-a detail:
+Operational configuration, whether local or hosted, owns unless a later,
+explicit contract promotes a detail:
 
 - exact execution times and weekdays
 - scheduler product and execution runtime
-- workstation paths and machine-specific credentials
+- workstation paths and machine-specific credentials when the capability runs
+  locally
 - the concrete durable operational-record locator and its retention window
-- local automation identifiers
+- local automation identifiers when the capability runs locally
 - notification routing
 - per-machine concurrency settings
 - the enabled job inventory, exact prompt content, and runtime history
 
-Active local configuration is authoritative for live inventory, schedules,
-enablement, runtime prompts, paths, and operator-controlled fields. It is not
-canonical doctrine. Canonical docs should describe capability purposes and
-safety contracts rather than mirror runtime configuration.
+Active local or hosted configuration is authoritative for its live inventory,
+schedules, enablement, runtime prompts, paths, and operator-controlled fields.
+It is not canonical doctrine. Canonical docs should describe capability
+purposes and safety contracts rather than mirror runtime configuration.
 
 ## Maintenance-Layer Health
 
