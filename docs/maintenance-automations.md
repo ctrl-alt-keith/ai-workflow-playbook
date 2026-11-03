@@ -184,9 +184,8 @@ issue-bounded work into the operational-record location.
 An automation whose declared destination is unavailable fails closed and reports
 the blocker. It does not fall back to a repository, a workspace root, a retired
 storage root, or the current working directory. Concrete locators, runtime
-output paths, retention windows, and notification routing remain local
-configuration; see
-[Architecture Versus Local Configuration](#architecture-versus-local-configuration).
+output paths, retention windows, and notification routing follow the
+[local or hosted operational configuration](#architecture-versus-local-configuration).
 
 ## Execution Locality
 
@@ -307,22 +306,20 @@ Canonical playbook doctrine owns:
   approval
 - its self-review and drift expectations
 
-Local operational configuration owns unless a later, explicit contract promotes
-a detail:
+Operational configuration (local or hosted) owns unless an explicit contract
+says otherwise:
 
 - exact execution times and weekdays
 - scheduler product and execution runtime
-- workstation paths and machine-specific credentials
+- workstation paths and machine-specific credentials for local execution
 - the concrete durable operational-record locator and its retention window
-- local automation identifiers
+- automation and job identifiers
 - notification routing
 - per-machine concurrency settings
 - the enabled job inventory, exact prompt content, and runtime history
 
-Active local configuration is authoritative for live inventory, schedules,
-enablement, runtime prompts, paths, and operator-controlled fields. It is not
-canonical doctrine. Canonical docs should describe capability purposes and
-safety contracts rather than mirror runtime configuration.
+Active local or hosted configuration owns live values. Canonical docs describe
+capability purposes and safety contracts, not runtime configuration.
 
 ## Maintenance-Layer Health
 
@@ -366,6 +363,28 @@ normal review paths.
   [`repo-awareness-onboarding-refresh.md`](repo-awareness-onboarding-refresh.md).
 - Do not let recurring automation replace canonical validation, pull-request
   review, explicit interface contracts, or repository-local authority.
+
+## Selected-Model Availability Recovery
+
+Retry only terminal failures explicitly reporting transient selected-model
+capacity or unavailability. Default: three additional attempts after successive
+5/15/30-minute waits; none may start more than 60 minutes after the initial
+qualifying failure. [Operational configuration](#architecture-versus-local-configuration)
+may specify only needed, authorized timing or limit overrides.
+
+Keep the same occurrence, exact requested model and effort, and cloud
+environment. For Scheduled Cloud, preserve saved `environmentConfigId` and
+verify the published version under the [ChatGPT adapter](tool-adapters/chatgpt.md#scheduled-codex-cloud-handoff);
+stop if either changes or cannot be verified. Never substitute models or fall
+back to desktop.
+
+Apply current [Playbook bootstrap](start-here.md), [Prompt Delivery](prompts.md#prompt-delivery-decision-model),
+and [Live Process Lifecycle](orchestration-and-parallelism.md#live-process-lifecycle).
+Live or uncertain attempts are ineligible; do not terminate live attempts to fit
+the window. Preserve prior effects and review, approval, and publication gates.
+
+At exhaustion, report incomplete scope and available evidence, including
+[requested and effective configuration](model-routing.md).
 
 ## Relationship To Other Guidance
 
