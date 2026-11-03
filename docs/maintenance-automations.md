@@ -366,28 +366,25 @@ normal review paths.
 
 ## Selected-Model Availability Recovery
 
-Apply current [Playbook bootstrap](start-here.md); unavailable required sources
-stop recovery without stale copies or guessed defaults. Retry only terminal
-results explicitly reporting transient selected-model capacity/unavailability;
-other failures and uncertain/live attempts are ineligible. Reconcile uncertainty
-under [Prompt Delivery](prompts.md#prompt-delivery-decision-model); follow [Live
-Process Lifecycle](orchestration-and-parallelism.md#live-process-lifecycle) for
-overlap and cancellation. Never terminate a live attempt to meet the window.
+Retry only terminal failures explicitly reporting transient selected-model
+capacity or unavailability. Default: three additional attempts after successive
+5/15/30-minute waits; none may start more than 60 minutes after the initial
+qualifying failure. [Operational configuration](#architecture-versus-local-configuration)
+may specify only needed, authorized timing or limit overrides.
 
-Resume the same occurrence and cloud environment with the exact model/effort.
-Scheduled Cloud must retain the same saved `environmentConfigId` and published
-version; stop if changed or unverifiable ([ChatGPT adapter](tool-adapters/chatgpt.md#scheduled-codex-cloud-handoff)).
-No model substitution or desktop fallback. Preserve prior effects and review,
-approval, and publication gates.
+Keep the same occurrence, exact requested model and effort, and cloud
+environment. For Scheduled Cloud, preserve saved `environmentConfigId` and
+verify the published version under the [ChatGPT adapter](tool-adapters/chatgpt.md#scheduled-codex-cloud-handoff);
+stop if either changes or cannot be verified. Never substitute models or fall
+back to desktop.
 
-Allow three additional attempts after successive 5/15/30-minute waits (50
-minutes total); start none after 60 minutes from the initial qualifying failure
-or past the retry limit. At exhaustion, report bounded failure, partial scope,
-unattempted repositories, and evidence per [evidence classes](#authority-and-evidence-classes).
-Report requested/effective model and effort per [model routing](model-routing.md),
-marking unobservable values. Keep identifiers, schedules, run values, and only
-explicitly needed and authorized overrides in
-[operational configuration](#architecture-versus-local-configuration).
+Apply current [Playbook bootstrap](start-here.md), [Prompt Delivery](prompts.md#prompt-delivery-decision-model),
+and [Live Process Lifecycle](orchestration-and-parallelism.md#live-process-lifecycle).
+Live or uncertain attempts are ineligible; do not terminate live attempts to fit
+the window. Preserve prior effects and review, approval, and publication gates.
+
+At exhaustion, report incomplete scope and available evidence, including
+[requested and effective configuration](model-routing.md).
 
 ## Relationship To Other Guidance
 
