@@ -314,7 +314,7 @@ explicit contract promotes a detail:
 - workstation paths and machine-specific credentials when the capability runs
   locally
 - the concrete durable operational-record locator and its retention window
-- local automation identifiers when the capability runs locally
+- automation and job identifiers
 - notification routing
 - per-machine concurrency settings
 - the enabled job inventory, exact prompt content, and runtime history
@@ -376,8 +376,11 @@ Apply the current [Playbook bootstrap](start-here.md); if it cannot be retrieved
 and applied, fail closed without a stale copy or guessed default.
 
 Resume the same occurrence in the same selected cloud environment with the exact
-requested model and effort. Do not substitute a model or fall back to desktop.
-Reconcile uncertain launches under the
+requested model and effort. For Scheduled Cloud, keep the saved
+`environmentConfigId` and verify the same published version under the
+[ChatGPT adapter](tool-adapters/chatgpt.md#scheduled-codex-cloud-handoff); stop
+if the version changed or cannot be verified. Do not substitute a model or fall
+back to desktop. Reconcile uncertain launches under the
 [prompt-delivery decision model](prompts.md#prompt-delivery-decision-model) and
 follow the [live-process lifecycle](orchestration-and-parallelism.md#live-process-lifecycle)
 before retrying. Preserve prior effects and review/publication gates; do not
@@ -388,7 +391,8 @@ The shared default allows three additional attempts after successive waits of
 qualifying failure. Every retry requires another terminal qualifying failure.
 Start no attempt past the retry or time limit. At exhaustion, report the bounded
 failure, partial scope and unattempted repositories, requested and effective
-model, and available execution evidence.
+model and effort (mark unobservable effective values), and available execution
+evidence.
 
 These are shared defaults. Job identifiers, schedules, per-run values, and any
 explicitly needed and authorized job-specific override belong to
