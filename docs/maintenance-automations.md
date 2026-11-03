@@ -367,6 +367,33 @@ normal review paths.
 - Do not let recurring automation replace canonical validation, pull-request
   review, explicit interface contracts, or repository-local authority.
 
+## Selected-Model Availability Recovery
+
+Retry only after a terminal attempt explicitly reports transient capacity or
+unavailability for its selected model. Authentication, permissions, unmet
+prerequisites, generic failures, and uncertain or live attempts do not qualify.
+Apply the current [Playbook bootstrap](start-here.md); if it cannot be retrieved
+and applied, fail closed without a stale copy or guessed default.
+
+Resume the same occurrence in the same selected cloud environment with the exact
+requested model and effort. Do not substitute a model or fall back to desktop.
+Reconcile uncertain launches under the
+[prompt-delivery decision model](prompts.md#prompt-delivery-decision-model) and
+follow the [live-process lifecycle](orchestration-and-parallelism.md#live-process-lifecycle)
+before retrying. Preserve prior effects and review/publication gates; do not
+overlap attempts or terminate a live attempt to meet the recovery window.
+
+The shared default allows three additional attempts after successive waits of
+5, 15, and 30 minutes (50 minutes total), within 60 minutes from the initial
+qualifying failure. Every retry requires another terminal qualifying failure.
+Start no attempt past the retry or time limit. At exhaustion, report the bounded
+failure, partial scope and unattempted repositories, requested and effective
+model, and available execution evidence.
+
+These are shared defaults. Job identifiers, schedules, per-run values, and any
+explicitly needed and authorized job-specific override belong to
+[operational configuration](#architecture-versus-local-configuration).
+
 ## Relationship To Other Guidance
 
 - [`ai-workflow-ecosystem.md`](ai-workflow-ecosystem.md) places the layer in the

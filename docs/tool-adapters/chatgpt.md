@@ -130,7 +130,8 @@ A ChatGPT Scheduled task wakes a coordinator, not Codex Cloud. For qualified
 and published version used; the selector is not a version pin. Reconcile an
 uncertain or repeated launch under
 [prompt delivery](../prompts.md#prompt-delivery-decision-model); hold if child
-state is unobservable. Do not fall back to desktop execution.
+state is unobservable. Do not fall back to desktop execution. Apply the shared
+[selected-model availability recovery contract](../maintenance-automations.md#selected-model-availability-recovery).
 
 Follow managed startup in the verified isolated checkout; add no worktree
 unless explicitly requested. For PR-producing tasks, handoff starts at the
