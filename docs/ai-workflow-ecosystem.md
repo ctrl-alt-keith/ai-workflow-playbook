@@ -102,10 +102,9 @@ implementation, validation, review, and merge facts; explicit
 producer/consumer contracts; and human approval boundaries continue to
 control.
 
-Exact schedules, automation identifiers, workstation paths, credentials,
-notification routes, and scheduler implementations are local operational
-configuration. The architectural responsibilities, authority classes,
-evidence contract, and self-review expectations live in
+The [operational-configuration boundary](maintenance-automations.md#architecture-versus-local-configuration)
+owns live execution details. The architectural responsibilities, authority
+classes, evidence contract, and self-review expectations live in
 [`maintenance-automations.md`](maintenance-automations.md).
 
 ## State Boundaries

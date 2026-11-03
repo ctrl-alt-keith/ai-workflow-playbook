@@ -169,8 +169,9 @@ separate human-authorized action.
 Evidence should live in the owning repository's normal review surface when a
 repository change is proposed. Report-only and cross-repository runs have no
 such surface, so they use a **durable operational-record location** declared in
-advance by the owning workspace or local operational contract. An automation
-does not select or invent that location per run.
+advance by the owning workspace under its
+[operational configuration](#architecture-versus-local-configuration). An
+automation does not select or invent that location per run.
 
 A durable operational-record location must provide immutable dated or versioned
 artifact identities, exclusive no-overwrite creation, a producing receipt, and a
