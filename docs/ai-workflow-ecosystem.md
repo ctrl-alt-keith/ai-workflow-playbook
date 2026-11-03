@@ -102,10 +102,8 @@ implementation, validation, review, and merge facts; explicit
 producer/consumer contracts; and human approval boundaries continue to
 control.
 
-The [operational-configuration boundary](maintenance-automations.md#architecture-versus-local-configuration)
-owns live execution details. The architectural responsibilities, authority
-classes, evidence contract, and self-review expectations live in
-[`maintenance-automations.md`](maintenance-automations.md).
+See [`maintenance-automations.md`](maintenance-automations.md) for the
+architecture and operational-configuration boundary.
 
 ## State Boundaries
 

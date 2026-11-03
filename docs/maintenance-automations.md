@@ -306,23 +306,20 @@ Canonical playbook doctrine owns:
   approval
 - its self-review and drift expectations
 
-Operational configuration, whether local or hosted, owns unless a later,
-explicit contract promotes a detail:
+Operational configuration (local or hosted) owns unless an explicit contract
+says otherwise:
 
 - exact execution times and weekdays
 - scheduler product and execution runtime
-- workstation paths and machine-specific credentials when the capability runs
-  locally
+- workstation paths and machine-specific credentials for local execution
 - the concrete durable operational-record locator and its retention window
 - automation and job identifiers
 - notification routing
 - per-machine concurrency settings
 - the enabled job inventory, exact prompt content, and runtime history
 
-Active local or hosted configuration is authoritative for its live inventory,
-schedules, enablement, runtime prompts, paths, and operator-controlled fields.
-It is not canonical doctrine. Canonical docs should describe capability
-purposes and safety contracts rather than mirror runtime configuration.
+Active local or hosted configuration owns live values. Canonical docs describe
+capability purposes and safety contracts, not runtime configuration.
 
 ## Maintenance-Layer Health
 
@@ -369,33 +366,27 @@ normal review paths.
 
 ## Selected-Model Availability Recovery
 
-Retry only after a terminal attempt explicitly reports transient capacity or
-unavailability for its selected model. Authentication, permissions, unmet
-prerequisites, generic failures, and uncertain or live attempts do not qualify.
-Apply the current [Playbook bootstrap](start-here.md); if it cannot be retrieved
-and applied, fail closed without a stale copy or guessed default.
+Apply current [Playbook bootstrap](start-here.md); unavailable required sources
+stop recovery without stale copies or guessed defaults. Retry only terminal
+results explicitly reporting transient selected-model capacity/unavailability;
+other failures and uncertain/live attempts are ineligible. Reconcile uncertainty
+under [Prompt Delivery](prompts.md#prompt-delivery-decision-model); follow [Live
+Process Lifecycle](orchestration-and-parallelism.md#live-process-lifecycle) for
+overlap and cancellation. Never terminate a live attempt to meet the window.
 
-Resume the same occurrence in the same selected cloud environment with the exact
-requested model and effort. For Scheduled Cloud, keep the saved
-`environmentConfigId` and verify the same published version under the
-[ChatGPT adapter](tool-adapters/chatgpt.md#scheduled-codex-cloud-handoff); stop
-if the version changed or cannot be verified. Do not substitute a model or fall
-back to desktop. Reconcile uncertain launches under the
-[prompt-delivery decision model](prompts.md#prompt-delivery-decision-model) and
-follow the [live-process lifecycle](orchestration-and-parallelism.md#live-process-lifecycle)
-before retrying. Preserve prior effects and review/publication gates; do not
-overlap attempts or terminate a live attempt to meet the recovery window.
+Resume the same occurrence and cloud environment with the exact model/effort.
+Scheduled Cloud must retain the same saved `environmentConfigId` and published
+version; stop if changed or unverifiable ([ChatGPT adapter](tool-adapters/chatgpt.md#scheduled-codex-cloud-handoff)).
+No model substitution or desktop fallback. Preserve prior effects and review,
+approval, and publication gates.
 
-The shared default allows three additional attempts after successive waits of
-5, 15, and 30 minutes (50 minutes total), within 60 minutes from the initial
-qualifying failure. Every retry requires another terminal qualifying failure.
-Start no attempt past the retry or time limit. At exhaustion, report the bounded
-failure, partial scope and unattempted repositories, requested and effective
-model and effort (mark unobservable effective values), and available execution
-evidence.
-
-These are shared defaults. Job identifiers, schedules, per-run values, and any
-explicitly needed and authorized job-specific override belong to
+Allow three additional attempts after successive 5/15/30-minute waits (50
+minutes total); start none after 60 minutes from the initial qualifying failure
+or past the retry limit. At exhaustion, report bounded failure, partial scope,
+unattempted repositories, and evidence per [evidence classes](#authority-and-evidence-classes).
+Report requested/effective model and effort per [model routing](model-routing.md),
+marking unobservable values. Keep identifiers, schedules, run values, and only
+explicitly needed and authorized overrides in
 [operational configuration](#architecture-versus-local-configuration).
 
 ## Relationship To Other Guidance
