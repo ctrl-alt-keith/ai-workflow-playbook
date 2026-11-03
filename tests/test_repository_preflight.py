@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import shlex
 import shutil
 import stat
 import subprocess
@@ -187,6 +188,35 @@ class RepositoryPreflightTest(unittest.TestCase):
                     arguments=("--https-git-read", url),
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_https_git_read_profile_normalizes_repository_url_for_git(self) -> None:
+        cases = (
+            ("https://github.com/owner/repo", "https://github.com/owner/repo.git"),
+            ("https://github.com/owner/repo.git", "https://github.com/owner/repo.git"),
+            ("https://github.com/owner.name/repo_name.git",
+             "https://github.com/owner.name/repo_name.git"),
+            ("https://github.com/owner/repo.git.git",
+             "https://github.com/owner/repo.git.git"),
+        )
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            captured_arguments = Path(temporary_directory) / "git-arguments"
+            git = f"""
+                printf '%s\\n' "$@" > {shlex.quote(str(captured_arguments))}
+                exit 0
+            """
+            arguments_by_url = []
+            for url, _ in cases:
+                with self.subTest(url=url):
+                    result = self.run_preflight(
+                        {"git": git}, isolated_path=True,
+                        arguments=("--https-git-read", url),
+                    )
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    arguments_by_url.append(captured_arguments.read_text(encoding="utf-8").splitlines())
+
+        self.assertEqual(arguments_by_url[0], arguments_by_url[1])
+        for arguments, (_, expected_url) in zip(arguments_by_url, cases, strict=True):
+            self.assertEqual(arguments[4], expected_url)
 
     def test_https_git_read_profile_rejects_nonexact_urls_before_git(self) -> None:
         urls = (
