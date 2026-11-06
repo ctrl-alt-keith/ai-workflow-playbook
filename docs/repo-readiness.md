@@ -132,7 +132,7 @@ intent under [core roles](core-model.md#roles):
 
 | Mode | Eligible deliverable/actions |
 | --- | --- |
-| Implementation | Explicit repo changes, canonical validation, commit, push, and PR delivery from a dedicated repo-local worktree when required. |
+| Implementation | Explicit repo changes, canonical validation, commit, push, and PR delivery from an isolated checkout. |
 | Review/audit | Inspect and report findings, evidence, risks, and recommendations without repository mutation. |
 | Orchestration/prompt-authoring | Inspect needed context and produce a complete downstream prompt/handoff; implementation requires explicit authority. |
 
@@ -219,11 +219,11 @@ records intent and scope; its existence supplies no execution authority.
 
 Resolve the current requested deliverable and mutation authority before
 creating repository topology. A direct request to implement and open a pull
-request selects normal implementation delivery: one focused worktree, branch,
-and pull request by default. Ambiguity, risk, authority sensitivity, or
-irreversibility may still require a design, review, or approval boundary before
-consequential implementation, but that semantic boundary does not create a
-separate document, branch, or pull request.
+request selects normal implementation delivery: one focused branch and pull
+request in an isolated checkout by default. Ambiguity, risk, authority
+sensitivity, or irreversibility may still require a design, review, or approval
+boundary before consequential implementation, but that semantic boundary does
+not create a separate document, branch, or pull request.
 
 Place the boundary on the smallest suitable surface: the active interaction,
 the owning issue or decision record, an existing review surface, or the exact
@@ -277,7 +277,7 @@ worker can discover setup, validation, generation, and maintenance commands
 without reading the whole file first.
 
 Before the first canonical validation attempt in a fresh implementation
-worktree, use the repository's startup guidance and `make help` to identify
+checkout, use the repository's startup guidance and `make help` to identify
 required repo-local tooling. Run any documented explicit setup target before
 validation. The canonical validation target must remain non-mutating: it should
 fail clearly when a required prerequisite is unavailable instead of silently
@@ -376,12 +376,17 @@ cross-repo commits or PRs.
 
 Before opening a PR, ensure that all staged changes belong to a single
 repository. If changes span multiple repositories, split them into separate
-branches, worktrees, and PRs, one per repository.
+branches and PRs, one per repository, with the required checkout isolation.
 
-Every implementation change must use a dedicated repo-local git worktree: one
-repository, one branch, one worktree, and one PR per change. The only
-exceptions are read-only inspection or explicit human instruction not to modify
-files.
+Each implementation change uses one repository, one change-specific branch, and
+one PR.
+In shared local checkouts, use a dedicated repo-local Git worktree under
+`.worktrees/` per change. A single worker in an isolated Cloud task may use its
+provided checkout. For concurrent mutating workers within one Cloud task, use
+that checkout for at most one worker and separate worktrees for the others, or
+use separate Cloud tasks. Repo-local policy may require a worktree even in an
+isolated task. Before publishing, verify that the remote branch is not owned by
+another change; separate local checkouts do not isolate remote refs.
 
 ## Workspace Boundary Discovery
 
@@ -442,8 +447,8 @@ posture.
 
 ## Repo-Local Workflow State
 
-For implementation changes, run commands from inside the target repository's
-dedicated worktree. Classify workflow material by natural owner and lifecycle:
+For implementation changes, run commands from the assigned repository checkout
+or worktree. Classify workflow material by natural owner and lifecycle:
 repository-owned working state stays in the repository; tool-owned working
 state stays under its tool's contract; durable review, evidence, recovery,
 replay, planning, and execution-identity material belongs with its natural
@@ -452,12 +457,12 @@ repository-owned merely because they are local. Use **attempt-local disposable
 scratch** only for private mechanics whose loss cannot impair recovery. Locality
 does not transfer ownership or make evidence disposable.
 
-Keep the execution surface isolated from unrelated operator state and primary
-checkouts. Unscoped local files, prior-run artifacts, implicit prompts,
+Keep the execution surface isolated from unrelated operator state and shared
+primary checkouts. Unscoped local files, prior-run artifacts, implicit prompts,
 unrelated environment state, or another task's working tree must not become
 inputs or authority merely because they are available. Name and revalidate any
 operator-managed state that the operational contract intentionally requires,
-and keep mutation inside the assigned repository and worktree boundaries.
+and keep mutation inside the assigned repository and checkout boundaries.
 
 Preserve completed run artifacts and receipts as historical evidence rather
 than rewriting them to appear current. Corrections, recovery, replay, and later
@@ -594,7 +599,7 @@ repo-local state is insufficient.
 
 ## Command Form And Intent Visibility
 
-Run ordinary operations directly from the target worktree: `git`, high-level
+Run ordinary operations directly from the target checkout: `git`, high-level
 `gh`, `make`, `python`, repo-local scripts, and owning tools. Prefer native argv
 execution; disable implicit shell/login-shell behavior where supported.
 

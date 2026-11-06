@@ -497,15 +497,13 @@ made it. AI-agent branches should use concise, non-tool-branded names such as
 broad tool-name prefixes such as `codex/`, `claude/`, or `copilot/` should be
 avoided unless a repository intentionally requires them.
 
-Use the canonical implementation-isolation rule in
-[`repo-readiness.md`](repo-readiness.md#pr-readiness): one repository, one
-branch, one dedicated repo-local worktree, and one PR per change. Keep the main
-checkout clean, fetch before creating task worktrees so `origin/main` is
-current, and do issue work only inside the task worktree unless the work is
-read-only or the human explicitly says not to modify files.
+Use the canonical [implementation-isolation rule](repo-readiness.md#pr-readiness).
+Keep shared primary checkouts clean, fetch current `origin/main` before
+branching, and do issue work only inside the assigned isolated checkout or
+worktree.
 
 For Codex-specific worktree creation, reuse, cleanup, parallel-batch handling,
-and blocked cleanup reporting, follow
+and blocked cleanup reporting when worktrees are used, follow
 [`tool-adapters/codex.md`](tool-adapters/codex.md#worktrees). For
 other executors, follow the matching adapter when one documents stricter
 worktree handling.

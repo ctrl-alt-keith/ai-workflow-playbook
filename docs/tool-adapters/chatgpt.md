@@ -134,10 +134,11 @@ state is unobservable. Do not fall back to desktop execution. Apply the shared
 [selected-model availability recovery contract](../maintenance-automations.md#selected-model-availability-recovery).
 
 Follow managed startup in the verified isolated checkout; add no worktree
-unless explicitly requested. For PR-producing tasks, handoff starts at the
-hosted draft. Apply
-[PR Readiness](../repo-readiness.md#pr-readiness),
-[independent review](../external-ai-reviewer.md), and
+unless explicitly requested. When concurrent mutating workers share one task,
+explicitly assign separate working trees under
+[PR Readiness](../repo-readiness.md#pr-readiness). For PR-producing tasks,
+handoff starts at the hosted draft. Apply
+[independent review](../external-ai-reviewer.md) and
 [Codex selector routing](codex.md#codex-selector-routing-and-acceptance);
 mutable IDs, schedules, prompts, and retention belong to
 [operational configuration](../maintenance-automations.md#architecture-versus-local-configuration).

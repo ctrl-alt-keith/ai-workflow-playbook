@@ -39,9 +39,8 @@ Repo-local rules take precedence only for repo-specific behavior.
 ## Local Execution
 
 - Run commands from this repository working directory by default.
-- For implementation changes, use one repository, one branch, one dedicated
-  repo-local worktree under `.worktrees/`, and one pull request per change; see
-  `docs/repo-readiness.md#pr-readiness`.
+- For implementation changes, follow the branch, checkout isolation, and PR
+  rules in `docs/repo-readiness.md#pr-readiness`.
 - Keep repository-owned working state repo-local and tool-owned working state
   under its tool's contract. Use attempt-local disposable scratch only for
   private mechanics that have no required post-attempt role; see
@@ -60,10 +59,10 @@ Repo-local rules take precedence only for repo-specific behavior.
 
 - Use `make check` as the canonical local validation entrypoint.
 - Run `make check` before opening or updating a PR.
-- Run `make v2-setup` once in a fresh worktree. `make check` runs Markdown
-  lint, existing unit tests, and experimental v2 local/loopback acceptance
-  tests. Live provider qualification is excluded from validation and requires
-  a separately authorized Mac-local session.
+- Run `make v2-setup` once in a fresh implementation checkout. `make check`
+  runs Markdown lint, existing unit tests, and experimental v2 local/loopback
+  acceptance tests. Live provider qualification is excluded from validation
+  and requires a separately authorized Mac-local session.
 - Treat direct validation tool calls as implementation details of the Makefile
   target.
 - `make authoritative-source-check` runs advisory authoritative-source scanning;

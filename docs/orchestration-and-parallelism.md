@@ -44,8 +44,8 @@ Parallel work is a good fit when:
 
 - lanes can be separated by repository, issue, file family, behavior surface,
   or risk surface
-- each lane can produce one branch, one worktree, one validation result, and
-  one pull request or review artifact
+- each lane can produce one branch, one isolated checkout, one validation
+  result, and one pull request or review artifact
 - expected overlap is named before launch
 - a merge or review order is declared before branch state changes
 - workers can stop at PR readiness without needing to inspect or update other
@@ -59,14 +59,11 @@ not to fill a role taxonomy, meet a lane count, or maximize throughput. After
 bounding a lane, choose its model and reasoning configuration through
 [`model-routing.md`](model-routing.md).
 
-For same-repository Codex implementation fan-out, use repo-local `.worktrees/`
-and keep each worker on its own branch. One issue, one branch, one worktree,
-and one PR per worker is the preferred shape when issues describe the work
-cleanly.
-When several lanes belong to one batch, a short lane prefix can make the local
-state easier to scan, for example `.worktrees/lane-a-fixtures` and
-`.worktrees/lane-b-provider-normalization`. Treat lane prefixes as a worked
-example, not a required naming taxonomy.
+For same-repository Codex implementation fan-out within one workspace, keep
+each worker on its own branch and working tree; put additional worktrees under
+repo-local `.worktrees/`. Separately isolated Cloud tasks can use their own
+checkouts. One issue, one branch, one isolated checkout, and one PR per worker
+is the preferred shape when issues describe the work cleanly.
 
 ## Optional Stacked Pull Requests
 
@@ -112,7 +109,7 @@ Include:
 
 - repository and working directory
 - interaction mode and expected deliverable
-- assigned issue, branch, worktree, and file or behavior surface
+- assigned issue, branch, checkout or worktree, and file or behavior surface
 - goal, scope, and explicit exclusions
 - source evidence or retrieval instructions
 - canonical validation path
