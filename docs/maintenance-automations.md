@@ -253,8 +253,9 @@ each repository's own authority surfaces:
 
 - repo-local `AGENTS.md` controls repository-specific execution
 - the repository's canonical validation command controls local readiness
-- each change remains one repository, one branch, one worktree, and one pull
-  request when that workflow applies
+- each change remains one repository, one change-specific branch, and one pull
+  request with [checkout isolation](repo-readiness.md#pr-readiness) when that
+  workflow applies
 - repository owners and human reviewers decide whether a proposal is accepted
 - intentional local differences remain valid when they are explicit and do not
   violate a governing cross-repository contract

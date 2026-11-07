@@ -37,8 +37,8 @@ Keep these phases separate:
   unresolved assumptions
 - execution planning: choose a bounded lane, owner, validation path, and stop
   condition
-- implementation: make repository changes in the normal branch, worktree,
-  validation, and PR flow
+- implementation: make repository changes in the normal branch, isolated
+  checkout, validation, and PR flow
 
 Do not let an agent-generated synthesis become the execution plan until a human
 or orchestrator has verified the relevant sources and selected the next action.

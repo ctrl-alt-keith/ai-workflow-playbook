@@ -299,7 +299,8 @@ apply.
 
 ### Repository Defaults
 
-- Prefer small, scoped changes in the target repository, branch, and worktree.
+- Prefer small, scoped changes in the target repository, branch, and assigned
+  checkout.
 - Follow `docs/repo-readiness.md` for interaction mode, command form,
   implementation isolation, validation, governance, and PR readiness.
 - Treat Git, branch, worktree, validation, and PR guidance as repository

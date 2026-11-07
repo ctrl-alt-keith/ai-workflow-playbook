@@ -591,7 +591,8 @@ decide whether the work should be split at all.
 Parallel execution:
 - Separate lanes by repository, file area, behavior surface, or risk surface.
 - Define any merge-order dependencies before launch.
-- Keep one repository, one branch, one worktree, and one PR per lane.
+- Give each lane a separate change-specific branch and isolated checkout;
+  keep one repository and one PR per lane.
 - Validate each lane with the repository's canonical validation path.
 - Workers stop at PR readiness and report to the coordinating orchestrator the
   changed files, validation, overlap, blockers, residual risk, and merge-order

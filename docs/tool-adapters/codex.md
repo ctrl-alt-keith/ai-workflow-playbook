@@ -90,9 +90,9 @@ non-blocking limitation; do not ask the operator to perform it.
 
 Before repository work, apply [start here](../start-here.md), the repository
 floor, and task-activated owners. Confirm the Codex project, execution
-container, current directory, Git state, repository, and worktree match the
-task before mutation. Stop on a required source, authority, repository, or
-worktree mismatch.
+container, current directory, Git state, repository, and assigned checkout or
+worktree match the task before mutation. Stop on a required source, authority,
+repository, or checkout mismatch.
 
 Codex loads applicable global and project guidance in precedence order; use the
 guidance actually available to the run. Ambiguous repository work is review or
@@ -114,13 +114,14 @@ without treating the read profile as write readiness.
 
 ### Worktrees
 
-Use the repository's one-repository, one-branch, one-dedicated-worktree, one-PR
-rule. For same-repository parallel work, separate lanes by file, behavior, or
+Use the [implementation-isolation rule](../repo-readiness.md#pr-readiness).
+For same-repository parallel work, separate lanes by file, behavior, or
 risk surface and pause for coordination on overlap. Use the repository's
 canonical validation and PR-readiness paths; PR readiness never authorizes a
 merge, release, or other human decision.
 
-Place repo-changing worktrees under `<repo>/.worktrees/`. Before creating or
+When a worktree is required or explicitly requested, place it under
+`<repo>/.worktrees/`. Before creating or
 reusing one, inspect `git worktree list` and select a path that clearly belongs
 to the task; create it with direct `git worktree add`, not a separate `mkdir`.
 Reuse only a clean, intelligible worktree for the same active task. When cleanup
