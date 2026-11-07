@@ -306,6 +306,9 @@ Discussion is not a formal approval gate. This order does not expand review
 requirements or mandate drafts for trivial, non-PR, or otherwise inapplicable
 work.
 
+In each PR description, summarize the change and rationale and report validation
+performed or why none applies.
+
 Open a pull request as ready for review when all of the following are true:
 
 - implementation is complete

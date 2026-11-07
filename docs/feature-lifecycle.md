@@ -498,9 +498,9 @@ broad tool-name prefixes such as `codex/`, `claude/`, or `copilot/` should be
 avoided unless a repository intentionally requires them.
 
 Use the canonical [implementation-isolation rule](repo-readiness.md#pr-readiness).
-Keep shared primary checkouts clean, fetch current `origin/main` before
-branching, and do issue work only inside the assigned isolated checkout or
-worktree.
+Keep shared primary checkouts clean, fetch the intended base (normally
+`origin/main`) before branching, and do issue work only inside the assigned
+isolated checkout or worktree.
 
 For Codex-specific worktree creation, reuse, cleanup, parallel-batch handling,
 and blocked cleanup reporting when worktrees are used, follow
