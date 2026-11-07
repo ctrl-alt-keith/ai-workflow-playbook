@@ -307,7 +307,7 @@ requirements or mandate drafts for trivial, non-PR, or otherwise inapplicable
 work.
 
 In each PR description, summarize the change and rationale and report validation
-performed or why none applies.
+performed and its result, or why none applies.
 
 Open a pull request as ready for review when all of the following are true:
 
