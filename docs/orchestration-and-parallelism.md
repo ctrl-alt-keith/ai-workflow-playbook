@@ -59,11 +59,11 @@ not to fill a role taxonomy, meet a lane count, or maximize throughput. After
 bounding a lane, choose its model and reasoning configuration through
 [`model-routing.md`](model-routing.md).
 
-For same-repository Codex implementation fan-out within one workspace, keep
-each worker on its own branch and working tree; put additional worktrees under
-repo-local `.worktrees/`. Separately isolated Cloud tasks can use their own
-checkouts. One issue, one branch, one isolated checkout, and one PR per worker
-is the preferred shape when issues describe the work cleanly.
+For same-repository Codex implementation fan-out, follow
+[PR Readiness](repo-readiness.md#pr-readiness): give each worker a separate
+change-specific branch and isolated checkout or worktree. One issue, one
+branch, one isolated checkout, and one PR per worker is the preferred shape
+when issues describe the work cleanly.
 
 ## Optional Stacked Pull Requests
 

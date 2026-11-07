@@ -384,12 +384,12 @@ branches and PRs, one per repository, with the required checkout isolation.
 Each implementation change uses one repository, one change-specific branch, and
 one PR.
 In shared local checkouts, use a dedicated repo-local Git worktree under
-`.worktrees/` per change. A single worker in an isolated Cloud task may use its
-provided checkout. For concurrent mutating workers within one Cloud task, use
-that checkout for at most one worker and separate worktrees for the others, or
-use separate Cloud tasks. Repo-local policy may require a worktree even in an
-isolated task. Before publishing, verify that the remote branch is not owned by
-another change; separate local checkouts do not isolate remote refs.
+`.worktrees/` per change. A single worker in a verified isolated Cloud task may
+use its provided checkout. For concurrent mutating workers within one Cloud
+task, use that checkout for at most one worker and separate worktrees for the
+others, or use separate Cloud tasks. Repo-local policy may require a worktree
+even in an isolated task. Before publishing, verify that the remote branch is
+not owned by another change; separate local checkouts do not isolate remote refs.
 
 ## Workspace Boundary Discovery
 
