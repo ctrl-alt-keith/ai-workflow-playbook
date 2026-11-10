@@ -182,6 +182,26 @@ class GlobalBootstrapTests(unittest.TestCase):
             self.assertIn("expected exactly one", result.stdout)
             self.assertEqual(result.stderr, "")
 
+    def test_apply_rejects_inline_markers_without_replacing_unmanaged_text(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            codex_file = root / "AGENTS.md"
+            claude_file = root / "missing-CLAUDE.md"
+            router = ROUTER.read_text(encoding="utf-8")
+            codex_file.write_text(
+                f"Personal preface {START_MARKER}\n"
+                + router.replace("first project action", "every action")
+                + f"{END_MARKER}\n",
+                encoding="utf-8",
+            )
+            before = codex_file.read_bytes()
+
+            result = self.run_check(codex_file, claude_file, mode="apply")
+
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn("markers must be standalone lines", result.stdout)
+            self.assertEqual(codex_file.read_bytes(), before)
+
     def test_plan_is_read_only_and_shows_the_exact_managed_body_diff(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
