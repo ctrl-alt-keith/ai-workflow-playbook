@@ -59,9 +59,22 @@ def extract_managed_block(contents: str, path: Path) -> ManagedBlock:
     end_start = contents.index(END_MARKER)
     if end_start < start:
         raise ValueError(f"{path}: global-bootstrap markers are out of order")
+    if not (
+        _standalone_marker(contents, START_MARKER, start)
+        and _standalone_marker(contents, END_MARKER, end_start)
+    ):
+        raise ValueError(f"{path}: global-bootstrap markers must be standalone lines")
     body_start = start + len(START_MARKER)
     body = contents[body_start:end_start].strip("\n") + "\n"
     return ManagedBlock(body_start, end_start, body)
+
+
+def _standalone_marker(contents: str, marker: str, position: int) -> bool:
+    line_start = contents.rfind("\n", 0, position) + 1
+    line_end = contents.find("\n", position)
+    if line_end == -1:
+        line_end = len(contents)
+    return contents[line_start:line_end] in {marker, marker + "\r"}
 
 
 def normalize_router(contents: str) -> str:
