@@ -189,7 +189,7 @@ class GlobalBootstrapTests(unittest.TestCase):
             claude_file = root / "missing-CLAUDE.md"
             router = ROUTER.read_text(encoding="utf-8")
             codex_file.write_text(
-                f"Personal preface {START_MARKER}\n"
+                f"{START_MARKER} Personal inline note that must survive.\n"
                 + router.replace("first project action", "every action")
                 + f"{END_MARKER}\n",
                 encoding="utf-8",
