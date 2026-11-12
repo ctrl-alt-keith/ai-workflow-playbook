@@ -1,25 +1,30 @@
 # v2 Project Map
 
+> Archived planning snapshot. CAK-408 retires the experimental v2 pilot and
+> supersedes the active and future arcs below. They describe past planning,
+> not current commitments, implementation routes, or a default-v2 cutover.
+> Historical CAK-301 decisions and evidence remain separately preserved.
+
 This is the arc-level map for CAK-301. It does not define "v2 complete" or
 authorize an implementation, default, Product, release, or retirement change.
 For the accepted semantic foundation, see
 [v2-architecture-foundation.md](v2-architecture-foundation.md); for the
 opt-in slice and its qualification status, see [v2_retain/README.md](../v2_retain/README.md).
 
-## Current state
+## State at the time of this map
 
 The v2 semantic foundation is accepted, and one integrated opt-in implementation
 slice exists. CAK-361 adopts urllib3 2.8.0 for local/loopback acceptance;
 operator-live use is blocked pending applicable qualification. The September
 2.7.0 live evidence remains historical. The v1/default bootstrap remains current.
 
-## Active arc
+## Former active arc
 
 Dogfood real workflow seams. The current leading candidate is **conditional
 consequential authority / changed-head merge sequencing**. It is a candidate
 experiment, not a committed roadmap item.
 
-## Next arcs
+## Former next arcs
 
 1. Let repeated, concrete dogfood needs earn reusable mechanisms.
 2. Earn default-v2 for a defined scope through the four gates below.
