@@ -1,14 +1,7 @@
 # CAK-301 v2 Architecture Foundation Promotion Decision
 
-> Decision status: Keith explicitly accepted the exact reviewed candidate on 2026-09-12
->
-> Historical doctrine representation: [Accepted v2 Architecture Foundation](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/2ea88c3d4491956d5b4637230421aad03cb11084/docs/v2-architecture-foundation.md)
->
-> Repository integration at record creation: pending review and merge of this promotion PR
->
-> Post-integration note: PR [#455](https://github.com/ctrl-alt-keith/ai-workflow-playbook/pull/455)
-> merged as `97ff461c5f897e8ae84c8b3bc93922a7a74dc60d` on 2026-09-12; the
-> preceding integration statement remains historical.
+> PR [#455](https://github.com/ctrl-alt-keith/ai-workflow-playbook/pull/455)
+> merged as `97ff461c5f897e8ae84c8b3bc93922a7a74dc60d` on 2026-09-12.
 
 ## Human decision and effect
 

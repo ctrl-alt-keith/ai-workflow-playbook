@@ -13,8 +13,7 @@ does not own Playbook doctrine, a storage account, an image generator, or a
 production approval policy. Its boundaries derive from
 [`core-model.md`](../../docs/core-model.md): preserve exact candidate identity,
 separate evidence from approval, and keep provider and publication authority
-scoped. This human-led package is independent of the retired v2 pilot and
-does not claim that a storage connector or runtime is qualified.
+scoped. This package does not qualify a storage connector or runtime.
 
 ## Set up your own workspace
 

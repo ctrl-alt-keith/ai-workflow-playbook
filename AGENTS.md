@@ -18,9 +18,7 @@ Repo-local rules take precedence only for repo-specific behavior.
 ## Repo Scope
 
 - This repo contains reusable AI workflow and playbook guidance.
-- The experimental v2 pilot is retired under CAK-408; it is not an active
-  runtime, bootstrap, or implementation route. Preserve its historical
-  architecture decision and evidence without treating them as current defaults.
+- The experimental v2 pilot is retired under CAK-408.
 
 ## File Placement
 
