@@ -29,8 +29,7 @@ Repo-local rules take precedence only for repo-specific behavior.
 - Before editing agent-read content, apply
   [Agent-Read Documentation](docs/engineering-baseline.md#agent-read-documentation)
   to the complete affected rule across its current surfaces.
-- Keep experimental v2 code and its contract together in `v2_retain/`; otherwise
-  do not add project-specific logic or implementation examples.
+- Do not add project-specific logic or implementation examples.
 
 ## Local Execution
 
