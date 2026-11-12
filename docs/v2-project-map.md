@@ -9,7 +9,8 @@ This is the arc-level map for CAK-301. It does not define "v2 complete" or
 authorize an implementation, default, Product, release, or retirement change.
 For the accepted semantic foundation, see
 [v2-architecture-foundation.md](v2-architecture-foundation.md); for the
-opt-in slice and its qualification status, see [v2_retain/README.md](../v2_retain/README.md).
+historical opt-in slice and its qualification limits, see the [frozen
+v2_retain README](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/2ea88c3d4491956d5b4637230421aad03cb11084/v2_retain/README.md).
 
 ## State at the time of this map
 
