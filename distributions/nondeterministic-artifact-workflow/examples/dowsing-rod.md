@@ -25,4 +25,5 @@ Evidence: CAK-300's saved `dowsing-rod.md` scene contract and
 choice, finishing, and approval. They do
 not by themselves demonstrate repeated-trial consistency or document the
 physical-product comparison called for by CAK-300. That broader pilot was
-closed without those acceptance claims; any further work requires a new ticket.
+Canceled after Keith handed the workflow details to his wife, without those
+acceptance claims; any future photo work requires a new ticket.

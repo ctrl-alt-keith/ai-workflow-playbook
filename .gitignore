@@ -8,6 +8,8 @@
 __pycache__/
 *.pyc
 .venv/
+
+# Retired v2 local evidence; keep existing state out of Git.
 .v2-test-state/
 .v2-live-qualification/
 .v2-operator-retention/
