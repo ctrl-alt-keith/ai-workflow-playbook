@@ -98,11 +98,10 @@ the saved candidates and approves the exact final file.
   non-authoritative candidate under adversarial review; not current Playbook
   doctrine
 - [`docs/v2-architecture-foundation.md`](docs/v2-architecture-foundation.md):
-  accepted initial v2 semantic foundation under the CAK-301 human decision;
-  separate from the candidate foundation and current v1/default bootstrap
-- [`docs/v2-project-map.md`](docs/v2-project-map.md): lightweight current,
-  active, next, and deferred v2 arcs, including the four-gate count before a
-  defined-scope default-v2 boundary
+  historical accepted v2 semantic foundation; the experimental pilot was
+  retired under CAK-408 without changing the current default bootstrap
+- [`docs/v2-project-map.md`](docs/v2-project-map.md): archived v2 planning
+  snapshot, superseded by the CAK-408 retirement
 - [`docs/doctrine-promotion-decisions/cak-301-v2-architecture-foundation-001.md`](docs/doctrine-promotion-decisions/cak-301-v2-architecture-foundation-001.md):
   exact candidate, governed review, and human promotion provenance
 - [`docs/constitutional-vocabulary-guide.md`](docs/constitutional-vocabulary-guide.md):
