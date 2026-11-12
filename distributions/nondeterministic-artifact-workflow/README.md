@@ -11,11 +11,10 @@ editing choices are examples, not general rules.
 This distribution owns these copyable templates and its folder convention. It
 does not own Playbook doctrine, a storage account, an image generator, or a
 production approval policy. Its boundaries derive from
-[`core-model.md`](../../docs/core-model.md) and the accepted, **opt-in**
-[`v2-architecture-foundation.md`](../../docs/v2-architecture-foundation.md),
-especially exact candidate and decision applicability. The current v1/default
-bootstrap stays unchanged. Using this package does not claim that a v2 runtime
-or storage connector has been qualified.
+[`core-model.md`](../../docs/core-model.md): preserve exact candidate identity,
+separate evidence from approval, and keep provider and publication authority
+scoped. This human-led package is independent of the retired v2 pilot and
+does not claim that a storage connector or runtime is qualified.
 
 ## Set up your own workspace
 
