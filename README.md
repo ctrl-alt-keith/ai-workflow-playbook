@@ -97,11 +97,6 @@ the saved candidates and approves the exact final file.
 - [`docs/architecture-foundation-candidate.md`](docs/architecture-foundation-candidate.md):
   non-authoritative candidate under adversarial review; not current Playbook
   doctrine
-- Retired v2 pilot history: [architecture foundation](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/2ea88c3d4491956d5b4637230421aad03cb11084/docs/v2-architecture-foundation.md),
-  [project map](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/2ea88c3d4491956d5b4637230421aad03cb11084/docs/v2-project-map.md),
-  and [implementation contract](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/2ea88c3d4491956d5b4637230421aad03cb11084/v2_retain/README.md)
-- [`docs/doctrine-promotion-decisions/cak-301-v2-architecture-foundation-001.md`](docs/doctrine-promotion-decisions/cak-301-v2-architecture-foundation-001.md):
-  exact candidate, governed review, and human promotion provenance
 - [`docs/constitutional-vocabulary-guide.md`](docs/constitutional-vocabulary-guide.md):
   implementation guidance for distinguishing Product authority, human
   governance authority, repository implementation, and runtime execution
