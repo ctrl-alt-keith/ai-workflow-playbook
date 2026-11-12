@@ -22,7 +22,5 @@ finished derivative. The review note does not record a publication decision.
 
 Evidence: CAK-300's saved `dowsing-rod.md` scene contract and
 `dowsing-rod-review.md` review note. Those records support this one run's
-choice, finishing, and approval. They do
-not by themselves demonstrate repeated-trial consistency or document the
-physical-product comparison called for by CAK-300. Those remain within the
-owning pilot task, outside this package's claims.
+choice, finishing, and approval. They do not demonstrate repeated-trial
+consistency or document physical-product comparison.
