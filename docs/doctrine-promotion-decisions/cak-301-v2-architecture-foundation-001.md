@@ -2,7 +2,7 @@
 
 > Decision status: Keith explicitly accepted the exact reviewed candidate on 2026-09-12
 >
-> Current doctrine representation: [Accepted v2 Architecture Foundation](../v2-architecture-foundation.md)
+> Historical doctrine representation: [Accepted v2 Architecture Foundation](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/2ea88c3d4491956d5b4637230421aad03cb11084/docs/v2-architecture-foundation.md)
 >
 > Repository integration at record creation: pending review and merge of this promotion PR
 >
@@ -57,7 +57,7 @@ the complete review artifact.
 ## Implementation and remaining gates
 
 This repository change transcribes the accepted semantic effect into
-[`v2-architecture-foundation.md`](../v2-architecture-foundation.md); the full
+[`v2-architecture-foundation.md`](https://github.com/ctrl-alt-keith/ai-workflow-playbook/blob/2ea88c3d4491956d5b4637230421aad03cb11084/docs/v2-architecture-foundation.md); the full
 research and attempt history remain with their evidence owners. Before any
 operational claim, the selected implementation must qualify contract-bound
 decisions, actual final admission, recovery/persistence, direct-route collision
