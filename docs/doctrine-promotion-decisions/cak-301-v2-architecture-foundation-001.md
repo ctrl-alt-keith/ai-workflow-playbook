@@ -5,7 +5,7 @@
 
 ## Human decision and effect
 
-Keith's instruction in the CAK-301 v2 Planning continuation is **ACCEPT** for
+The human instruction in the CAK-301 v2 Planning continuation is **ACCEPT** for
 the exact architecture synthesis 02 identity below. That is the human doctrine
 promotion decision. It accepts the five obligations as the current bounded
 semantic partition and the first-profile/narrowed claim boundaries in that
@@ -38,7 +38,7 @@ confirmed that I4's **exclusively bound** requirement controls abbreviated
 summary rows; the frozen candidate was not rewritten.
 
 The completed reviewer was a separately invoked Claude Opus/high attempt
-under Keith's explicit revised-plan approval. Two earlier Sonnet attempts
+under explicit human approval of the revised plan. Two earlier Sonnet attempts
 returned no verdict; the frozen candidate's Sonnet selection was its prior
 plan, not the completed reviewer. The reviewer inspected supplied candidate,
 predecessor/review and three focused E3/E4 members through constrained read
