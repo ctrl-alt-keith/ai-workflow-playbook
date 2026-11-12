@@ -4,7 +4,7 @@
 > the experimental v2 implementation and active delivery path; this record
 > preserves the 2026-09-12 human decision, not a current opt-in runtime or
 > default-bootstrap route. Its original acceptance scope remains unchanged.
-
+>
 > Status: accepted initial v2 architecture under the authorized human decision recorded on 2026-09-12
 >
 > Provenance: [CAK-301 architecture promotion decision](doctrine-promotion-decisions/cak-301-v2-architecture-foundation-001.md)
