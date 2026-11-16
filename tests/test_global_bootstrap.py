@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -99,6 +100,34 @@ class GlobalBootstrapTests(unittest.TestCase):
             self.assertIn("PASS Codex", optional.stdout)
             self.assertEqual(required.returncode, 1)
             self.assertIn("FAIL Claude: missing local instruction file", required.stdout)
+
+    def test_existing_unsupported_optional_claude_path_fails_in_every_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            codex_file = root / "AGENTS.md"
+            claude_file = root / "CLAUDE.md"
+            codex_file.write_text(
+                self.marked(ROUTER.read_text(encoding="utf-8")), encoding="utf-8"
+            )
+
+            for kind in ("directory", "dangling symlink", "FIFO"):
+                with self.subTest(kind=kind):
+                    if kind == "directory":
+                        claude_file.mkdir()
+                    elif kind == "FIFO":
+                        os.mkfifo(claude_file)
+                    else:
+                        claude_file.symlink_to(root / "missing-target")
+                    for mode in ("check", "plan", "apply"):
+                        with self.subTest(mode=mode):
+                            result = self.run_check(codex_file, claude_file, mode=mode)
+                            self.assertEqual(result.returncode, 1, result.stdout)
+                            self.assertIn("unsupported local instruction file type", result.stdout)
+                            self.assertNotIn("SKIP Claude", result.stdout)
+                    if kind == "directory":
+                        claude_file.rmdir()
+                    else:
+                        claude_file.unlink()
 
     def test_validator_normalizes_outer_newlines_symmetrically(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
