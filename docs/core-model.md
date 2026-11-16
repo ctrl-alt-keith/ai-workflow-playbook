@@ -90,9 +90,9 @@ Do not expose or request private reasoning or impose a fixed phase list or
 template.
 
 For bounded bulk or connector-heavy work, report aggregate milestones and keep
-complete item evidence available when required for review or recovery under the
-owning workflow's retention rules. This does not require a separate archive for
-routine results. Report material blockers,
+complete item evidence available when needed for review or recovery. Follow
+applicable owning evidence and retention rules; this principle alone requires
+no separate archive for routine results. Report material blockers,
 authority/scope mismatch, drift, privacy/retention issues, collisions,
 overwrite risk, validation failure, and permission/approval/destructive
 boundaries promptly. Honor supported mid-run presentation preferences; report

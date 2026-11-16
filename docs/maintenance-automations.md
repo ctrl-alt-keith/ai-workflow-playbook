@@ -167,22 +167,24 @@ An automation that needs broader authority must stop and return evidence for a
 separate human-authorized action.
 
 Keep repository-change evidence in the owning pull request. For report-only and
-cross-repository runs, deliver an actionable result that identifies inspected
-scope, findings, validation, skips, blocked and unattempted scope, and unresolved
-follow-up. Include exact run and child identities when known; mark them unknown
-when they cannot be verified. Missing results are unknown, not passes. Do not
-treat scheduler history as a reliable substitute for a result unless its exact
-identity and contents are verified.
+cross-repository runs, deliver an actionable result to the operator. Identify
+inspected scope, findings, validation, skips, blocked and unattempted scope, and
+unresolved follow-up. Include exact run and child identities when known; mark
+them unknown when they cannot be verified. Missing results are unknown, not
+passes. Do not treat scheduler history as a reliable substitute for a result
+unless its exact identity and contents are verified.
 
 Routine sweep summaries need no separate permanent archive, producing receipt,
 or predeclared storage destination. Retain a separate artifact when its exact
-identity materially supports review or recovery, or an explicit owning contract
-requires it. Apply [governed-artifact capture](evidence-lifecycle.md#governed-artifact-capture)
-and the owning storage contract to that artifact. If required evidence cannot
-be retained or verified, stop the dependent action and report the blocker; do
-not invent a destination, use disposable scratch as durable evidence, or open
-an issue solely for recurring output. Keep issue-bounded evidence with its
-owning issue under that workflow's contract.
+identity materially supports review or recovery, subject to the
+[governed-artifact candidate floor](evidence-lifecycle.md#governed-artifact-capture).
+Follow an explicit owning contract that requires retention independently of
+that discretionary floor. Apply the owning storage and verification contract to
+every retained artifact. If required evidence cannot be retained or verified,
+stop the dependent action and report the blocker; do not invent a destination,
+use disposable scratch as durable evidence, or open an issue solely to store
+recurring output. Keep issue-bounded evidence with its owning issue under that
+workflow's contract.
 
 ## Execution Locality
 
