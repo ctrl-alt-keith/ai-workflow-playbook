@@ -52,7 +52,7 @@ The autonomous maintenance layer owns:
   configuration, repository-scope, and automation drift
 - bounded maintenance whose safety predicates and stop conditions are explicit
 - focused improvement proposals when a repository has a high-leverage gap
-- durable evidence for findings, actions, validation, skips, and uncertainty
+- reviewable evidence for findings, actions, validation, skips, and uncertainty
 - review-ready repository changes when correction is authorized
 - periodic review of the maintenance layer itself
 
@@ -166,26 +166,25 @@ No class silently crosses an irreversible or consequential approval boundary.
 An automation that needs broader authority must stop and return evidence for a
 separate human-authorized action.
 
-Evidence should live in the owning repository's normal review surface when a
-repository change is proposed. Report-only and cross-repository runs have no
-such surface, so they use a **durable operational-record location** declared in
-advance by the owning workspace or local operational contract. An automation
-does not select or invent that location per run.
+Keep repository-change evidence in the owning pull request. For report-only and
+cross-repository runs, deliver an actionable result to the operator. Identify
+inspected scope, findings, validation, skips, blocked and unattempted scope, and
+unresolved follow-up. Include exact run and child identities when known; mark
+them unknown when they cannot be verified. Missing results are unknown, not
+passes. Do not treat scheduler history as a reliable substitute for a result
+unless its exact identity and contents are verified.
 
-A durable operational-record location must provide immutable dated or versioned
-artifact identities, exclusive no-overwrite creation, a producing receipt, and a
-stated retention or rotation rule. It is distinct from issue-owned
-governed-artifact storage: issue-owned storage carries bounded, human-governed
-work that reaches a disposition and closes, while operational records accrue on
-a recurring cadence and are not scoped to a single issue. Do not open an issue
-solely to obtain a destination for recurring automation output, and do not route
-issue-bounded work into the operational-record location.
-
-An automation whose declared destination is unavailable fails closed and reports
-the blocker. It does not fall back to a repository, a workspace root, a retired
-storage root, or the current working directory. Concrete locators, runtime
-output paths, retention windows, and notification routing follow the
-[local or hosted operational configuration](#architecture-versus-local-configuration).
+Routine sweep summaries need no separate permanent archive, producing receipt,
+or predeclared storage destination. Retain a separate artifact when its exact
+identity materially supports review or recovery, subject to the
+[governed-artifact candidate floor](evidence-lifecycle.md#governed-artifact-capture).
+Follow an explicit owning contract that requires retention independently of
+that discretionary floor. Apply the owning storage and verification contract to
+every retained artifact. If required evidence cannot be retained or verified,
+stop the dependent action and report the blocker; do not invent a destination,
+use disposable scratch as durable evidence, or open an issue solely to store
+recurring output. Keep issue-bounded evidence with its owning issue under that
+workflow's contract.
 
 ## Execution Locality
 
@@ -235,8 +234,8 @@ Evidence must support the selected locality as well as the capability result:
   skipped or unknown state. It also records mutation and recovery evidence
   where applicable.
 - **Hosted evidence** identifies the repository and tested revision, run and
-  trigger, executing identity, permissions used, result, logs or artifacts and
-  their retention, and skipped or inaccessible hosted scope.
+  trigger, executing identity, permissions used, result, available logs or
+  artifacts and their known retention, and skipped or inaccessible hosted scope.
 - **Hybrid evidence** keeps separate local and hosted evidence packages. It may
   use a correlation identity, but it must not infer across domains and must
   reconcile disagreements or unequal freshness explicitly.
@@ -301,7 +300,7 @@ Canonical playbook doctrine owns:
 - the existence and purpose of the autonomous maintenance layer
 - its responsibility and non-responsibility boundaries
 - its authority classes, stop conditions, and evidence contract
-- the required properties of a durable operational-record location
+- the evidence and retention boundary for recurring results
 - its execution-locality classes and classification invariants
 - its relationship to doctrine, executors, repositories, contracts, and human
   approval
@@ -313,7 +312,7 @@ says otherwise:
 - exact execution times and weekdays
 - scheduler product and execution runtime
 - workstation paths and machine-specific credentials for local execution
-- the concrete durable operational-record locator and its retention window
+- any concrete locator and retention window required by an owning evidence contract
 - automation and job identifiers
 - notification routing
 - per-machine concurrency settings
@@ -350,8 +349,8 @@ normal review paths.
 
 - Retrieve authoritative repository, provider, contract, and runtime state
   before classifying drift or acting.
-- Declare scope, authority class, safety predicates, stop conditions, and
-  evidence destination before mutation.
+- Declare scope, authority class, safety predicates, stop conditions, and the
+  owner and destination of any required retained evidence before mutation.
 - Invoke an owning module, CLI, workflow, or validation entrypoint directly
   when one already defines the behavior. Orchestration may enumerate targets,
   invoke canonical commands, and collate results; it must not fork semantics.

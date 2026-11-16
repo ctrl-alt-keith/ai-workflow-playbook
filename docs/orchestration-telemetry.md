@@ -54,10 +54,11 @@ and [governed-artifact capture](evidence-lifecycle.md#governed-artifact-capture)
 - Retained, dependency-bearing telemetry follows the evidence lifecycle's
   admission, privacy, integrity, receipt, and recovery boundaries. Bounded
   issue-owned evidence uses that issue's permitted durable destination.
-  Recurring report-only or cross-repository automation output uses its
-  predeclared [operational-record location](maintenance-automations.md#authority-and-evidence-classes),
-  not an issue created merely for storage. The owning workspace/storage
-  contract supplies concrete locators and retention; this page creates none.
+  Recurring report-only or cross-repository automation follows the
+  [maintenance evidence contract](maintenance-automations.md#authority-and-evidence-classes).
+  Routine summaries need no separate telemetry archive or issue created merely
+  for storage. The owning storage contract supplies any required locator and
+  retention; this page creates none.
 - If ownership, retention, or a permitted route is unavailable, omit optional
   capture and report the gap. Required evidence fails closed under the evidence
   lifecycle; do not substitute the workspace root or current directory.

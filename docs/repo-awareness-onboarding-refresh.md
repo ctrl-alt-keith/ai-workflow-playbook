@@ -212,10 +212,11 @@ an issue merely for storage. Running the scanner from a checkout does not make
 its evidence repository-owned; disposable scratch and workspace logs cannot
 serve as durable destinations. An automation performing an issue-bounded audit
 does not change its issue ownership. Separate recurring
-report-only scans use their declared [automation-owned record location](maintenance-automations.md#authority-and-evidence-classes).
+report-only scans follow the [maintenance evidence contract](maintenance-automations.md#authority-and-evidence-classes);
+they do not require a separate archive for every scan.
 
-Create a new uniquely timestamped set with exclusive no-overwrite behavior;
-never replace or edit prior evidence. Apply the evidence lifecycle's
+For this post-change gate, create a new uniquely timestamped set with exclusive
+no-overwrite behavior; never replace or edit prior evidence. Apply the evidence lifecycle's
 [exact retention verification](evidence-lifecycle.md#direct-durable-capture)
 and [producing receipt](evidence-lifecycle.md#producing-receipt-and-compact-delivery)
 requirements, including size/SHA-256, format, durable identity, containment,
