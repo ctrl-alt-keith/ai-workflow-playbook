@@ -86,22 +86,30 @@ def inspect(check: Check) -> Inspection:
     """Read one regular local file without normalizing any unmanaged bytes."""
     try:
         descriptor = os.open(
-            check.actual, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+            check.actual,
+            os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0),
         )
     except FileNotFoundError as error:
+        if check.actual.is_symlink():
+            raise ValueError(
+                f"unsupported local instruction file type {check.actual}"
+            ) from error
         raise ValueError(f"missing local instruction file {check.actual}") from error
     except OSError as error:
         raise ValueError(
             f"unsupported local instruction file type {check.actual}"
         ) from error
     try:
-        with os.fdopen(descriptor, "rb") as source:
-            file_stat = os.fstat(source.fileno())
-            if not stat.S_ISREG(file_stat.st_mode):
-                raise ValueError(
-                    f"unsupported local instruction file type {check.actual}"
-                )
+        file_stat = os.fstat(descriptor)
+        if not stat.S_ISREG(file_stat.st_mode):
+            raise ValueError(
+                f"unsupported local instruction file type {check.actual}"
+            )
+        with os.fdopen(descriptor, "rb", closefd=False) as source:
             raw = source.read()
+    finally:
+        os.close(descriptor)
+    try:
         contents = raw.decode("utf-8")
     except UnicodeDecodeError as error:
         raise ValueError(f"{check.actual}: expected UTF-8 local instruction text") from error
@@ -261,7 +269,12 @@ def main() -> int:
     checks: list[Check] = []
     if "codex" in selected:
         checks.append(Check("Codex", args.codex_file))
-    if "claude" in selected and (args.claude_file.is_file() or args.require_claude or args.provider):
+    if "claude" in selected and (
+        args.claude_file.exists()
+        or args.claude_file.is_symlink()
+        or args.require_claude
+        or args.provider
+    ):
         checks.append(Check("Claude", args.claude_file))
     elif "claude" in selected:
         print(
