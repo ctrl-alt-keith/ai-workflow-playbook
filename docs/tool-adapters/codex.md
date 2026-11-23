@@ -155,12 +155,13 @@ require their own authorization, secret custody, and durable receipts.
 
 When the preview requires a file, use a fresh private attempt directory under
 the [scratch contract](../repo-readiness.md#repo-local-workflow-state) and apply
-the private-file controls of the tool handling the protected inputs. Use `/tmp`
-only if the Linux host checks pass in the actual invocation. On failure, report
-the failed predicate and leave ownership and permissions unchanged. Use an
-alternate directory only if the owning repository or tool explicitly qualifies
-that route in its contract and its checks pass in the invocation. Otherwise,
-stop the file-based route.
+the private-file controls of the tool handling the protected inputs. Create the
+attempt directory under `/tmp` only when that contract's Linux host checks,
+including root ownership of `/tmp`, pass in the actual invocation. If a check
+fails or cannot be verified, report it and leave ownership and permissions
+unchanged. Use an alternate directory only when the preview's owning
+repository or tool explicitly qualifies the route in its contract and the
+invocation passes those checks. Otherwise, stop the file-based route.
 
 ## Review, Evidence, And Runtime Boundaries
 
