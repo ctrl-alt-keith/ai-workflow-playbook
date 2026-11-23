@@ -145,19 +145,22 @@ matching variable makes the child safe.
 
 ### Cloud Work Read-Only Previews
 
-For a summary-only preview, prefer a repository-supported read-only entry
-point that accepts protected inputs in memory. Verify that the invoked code
-and its imports resolve to the intended checkout revision. Keep the required
-reader authority and input validation, and emit only the sanitized summary.
-Preview evidence does not qualify production secret custody or durable
-receipts.
+Before running a preview, verify that the repository supports its read-only
+entry point and that the invoked code and imports resolve to the intended
+checkout revision. If either cannot be verified, stop and report the gap.
+For a summary-only preview, prefer an entry point that accepts protected
+inputs in memory. Enforce reader authority and input validation, and emit only
+the sanitized summary. Scope evidence to the preview run. Production writes
+require their own authorization, secret custody, and durable receipts.
 
-When the preview requires a file, use an explicitly qualified private attempt
-directory under the [scratch contract](../repo-readiness.md#repo-local-workflow-state).
-Check that the Cloud runtime meets the Linux host rule before using `/tmp`.
-If the check fails, report the failed predicate, keep ownership and permissions
-unchanged, and stop the file-based route unless another directory is explicitly
-qualified. Keep the tool's private file checks in effect.
+When the preview requires a file, use a fresh private attempt directory under
+the [scratch contract](../repo-readiness.md#repo-local-workflow-state) and apply
+the private-file controls of the tool handling the protected inputs. Use `/tmp`
+only if the Linux host checks pass in the actual invocation. On failure, report
+the failed predicate and leave ownership and permissions unchanged. Use an
+alternate directory only if the owning repository or tool explicitly qualifies
+that route in its contract and its checks pass in the invocation. Otherwise,
+stop the file-based route.
 
 ## Review, Evidence, And Runtime Boundaries
 
