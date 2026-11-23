@@ -43,6 +43,7 @@ OFFICIAL_GITHUB_DOMAINS = {"api.github.com", "docs.github.com"}
 OFFICIAL_GITHUB_REPOSITORIES = {
     ("github", "docs"),
     ("github", "rest-api-description"),
+    ("linode", "linode-api-openapi"),
 }
 SAME_ORG_GITHUB_OWNERS = {"ctrl-alt-keith"}
 KNOWN_THIRD_PARTY_SUFFIXES = ("stackoverflow.com", "medium.com", "dev.to")

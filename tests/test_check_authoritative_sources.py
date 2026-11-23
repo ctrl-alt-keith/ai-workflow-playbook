@@ -65,12 +65,17 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
             "https://github.com/github/docs/blob/main/content/rest.md",
             "https://github.com/github/rest-api-description",
             "https://github.com/ctrl-alt-keith/ai-workflow-playbook",
+            "https://github.com/linode/linode-api-openapi/blob/main/openapi.json",
         )
         untrusted = (
             "https://docs.github.com.evil.example/en/rest",
             "https://github.com.evil.example/github/docs",
             "https://github.com/github/docs-fork",
             "https://github.com/another-owner/rest-api-description",
+            "https://github.com/linode/linode-api-docs/blob/main/openapi.json",
+            "https://github.com/another-owner/linode-api-openapi/blob/main/openapi.json",
+            "https://github.com/linode/linode-api-openapi-fork/blob/main/openapi.json",
+            "https://github.com/linode-lookalike/linode-api-openapi/blob/main/openapi.json",
         )
 
         for url in official:
