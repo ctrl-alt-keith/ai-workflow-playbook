@@ -39,6 +39,9 @@ DEFAULT_OFFICIAL_SUFFIXES = (
     "docs.atlassian.com",
     "support.atlassian.com",
 )
+OFFICIAL_SOURCE_URLS = {
+    "https://developer.cisco.com/meraki/api-v1/get-organization-devices-uplinks-addresses-by-device/",
+}
 OFFICIAL_GITHUB_DOMAINS = {"api.github.com", "docs.github.com"}
 OFFICIAL_GITHUB_REPOSITORIES = {
     ("github", "docs"),
@@ -112,6 +115,9 @@ def is_official(
     url: str,
     official_suffixes: tuple[str, ...] = DEFAULT_OFFICIAL_SUFFIXES,
 ) -> bool:
+    if url in OFFICIAL_SOURCE_URLS:
+        return True
+
     parsed = urlparse(url)
     domain = normalize_domain(parsed.hostname)
     path = parsed.path.lower()

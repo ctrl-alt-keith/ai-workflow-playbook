@@ -86,6 +86,36 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
                 findings = scanner.scan_text("PR body", f"REST API source: {url}")
                 self.assertEqual([finding["url"] for finding in findings], [url])
 
+    def test_cli_recognizes_only_the_exact_meraki_uplink_reference(self) -> None:
+        host = "developer.cisco.com"
+        path = "/meraki/api-v1/get-organization-devices-uplinks-addresses-by-device/"
+        official = f"https://{host}{path}"
+        untrusted = (
+            f"https://{host}/meraki/api-v1/",
+            f"{official}child/",
+            f"https://{host}.example.org{path}",
+            f"https://{host}/",
+            "https://www.cisco.com/",
+            f"http://{host}{path}",
+            f"{official}?view=other",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            body_path = Path(tmp) / "pr-body.md"
+            args = ["--pr-body-file", str(body_path)]
+
+            body_path.write_text(f"Meraki API reference: [{host}]({official})\n", encoding="utf-8")
+            result = self.run_scanner_cli(args)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("no non-authoritative source URLs found", result.stdout)
+
+            for url in untrusted:
+                with self.subTest(url=url):
+                    body_path.write_text(f"Meraki API reference: [{host}]({url})\n", encoding="utf-8")
+                    result = self.run_scanner_cli(args)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn(f"::{url} detected.", result.stdout)
+
     def test_cli_configured_domains_suppress_matching_api_warnings(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
