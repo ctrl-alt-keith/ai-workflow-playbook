@@ -143,6 +143,22 @@ separately. Normalize only the relevant identity-sensitive variables for that
 bounded invocation; do not hard-code an operator identity or infer that one
 matching variable makes the child safe.
 
+### Cloud Work Read-Only Previews
+
+For a summary-only preview, prefer a repository-supported read-only entry
+point that accepts protected inputs in memory. Verify that the invoked code
+and its imports resolve to the intended checkout revision. Keep the required
+reader authority and input validation, and emit only the sanitized summary.
+Preview evidence does not qualify production secret custody or durable
+receipts.
+
+When the preview requires a file, use an explicitly qualified private attempt
+directory under the [scratch contract](../repo-readiness.md#repo-local-workflow-state).
+Check that the Cloud runtime meets the Linux host rule before using `/tmp`.
+If the check fails, report the failed predicate, keep ownership and permissions
+unchanged, and stop the file-based route unless another directory is explicitly
+qualified. Keep the tool's private file checks in effect.
+
 ## Review, Evidence, And Runtime Boundaries
 
 For GitHub-dependent work, verify current access and inspect the owning source
