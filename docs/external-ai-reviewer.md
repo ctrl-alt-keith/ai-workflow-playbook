@@ -57,10 +57,10 @@ Codex, Gemini, ChatGPT, or another substitute may be preserved as supplemental
 evidence, but it does not complete the named review.
 
 For Claude reviews in the managed `ctrl-alt-keith` Codex Cloud environment,
-use the [Cloud Claude review entry point](https://github.com/ctrl-alt-keith/secrets-lifecycle/blob/main/docs/cloud-claude-review.md)
-for both authentication preflight and review. Use the
-[Playbook launchers](../scripts/review-launchers.md) for workstation Claude
-reviews and for Codex CLI reviews.
+use the [Cloud Claude review entry point](https://github.com/ctrl-alt-keith/secrets-lifecycle/blob/main/docs/cloud-claude-review.md).
+It runs authentication preflight and exact-commit review in one invocation.
+Use the [Playbook launchers](../scripts/review-launchers.md) for workstation
+Claude reviews and for Codex CLI reviews.
 
 If the selected reviewer cannot authenticate, retrieve required evidence, or
 complete the review, preserve that failed attempt and its capability gap in the
@@ -69,13 +69,12 @@ can complete the review or the human authority explicitly approves a revised
 review plan. Do not silently substitute another provider, relabel substitute
 output as the selected review, or omit the failure from provenance.
 
-Before an expensive Claude review, run its bounded effective-user auth
-preflight. A successful preflight only establishes authentication for that
-process context; it is not evidence about candidate quality or a guarantee for
-the later review. On a preflight or review failure, preserve candidate and
-review state unchanged, record only non-secret diagnostics, stop automated
-retries, and do not infer `REJECT`, alter auth/session files, or try another
-identity-context guess after the validated context is in effect.
+Before an expensive Claude review, require the selected entry point's bounded
+effective-user auth preflight. A successful preflight establishes authentication
+only for that process context. On a preflight or review failure, preserve
+candidate and review state unchanged, record only non-secret diagnostics, stop
+automated retries, and do not infer `REJECT`, alter auth/session files, or try
+another identity-context guess after the validated context is in effect.
 
 When provider output reliably identifies `AUTH_OAUTH_TOKEN_EXPIRED_401` or
 `AUTH_SAVED_LOGIN_REFRESH_REJECTED`, stop at `REVIEWER INFRASTRUCTURE FAILURE

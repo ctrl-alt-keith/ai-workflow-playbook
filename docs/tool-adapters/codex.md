@@ -158,9 +158,10 @@ mutations, and stop condition. A reviewer verdict is evidence, never approval;
 keep any reviewer source-access gap visible until an authorized actor verifies
 it.
 
-When launching a local `claude-review` or `codex-review`, use the Playbook's
-repository-owned launcher and select an exact repository commit or standalone
-artifact target under [launcher outcome handling](../../scripts/review-launchers.md).
+Select the [review entry point](../external-ai-reviewer.md#reviewer-selection-and-failure)
+before preflight or launch. For direct Playbook launcher use, select an exact
+repository commit or standalone artifact target under
+[launcher outcome handling](../../scripts/review-launchers.md).
 Repository review uses the active checkout and its exact candidate commit;
 artifact review binds supplied artifact and review-request files by SHA-256
 and may run outside Git. Run the required preflight.
