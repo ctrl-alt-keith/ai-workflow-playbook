@@ -1,7 +1,6 @@
 {
   "exact_hosts": [
     "api.github.com",
-    "code.claude.com",
     "developer.atlassian.com",
     "developers.dropbox.com",
     "developers.google.com",
@@ -12,21 +11,20 @@
     "docs.github.com",
     "docs.python.org",
     "dropbox-sdk-python.readthedocs.io",
-    "firebase.google.com",
     "packaging.python.org",
     "peps.python.org",
     "requests.readthedocs.io",
     "support.atlassian.com",
     "techdocs.akamai.com"
   ],
-  "exact_urls": [
-    "https://developer.hashicorp.com/terraform/language/manage-sensitive-data",
-    "https://developer.hashicorp.com/terraform/language/values/variables",
-    "https://registry.terraform.io/providers/linode/linode/latest/docs",
-    "https://registry.terraform.io/providers/linode/linode/latest/docs/resources/object_storage_bucket"
-  ],
+  "exact_urls": [],
   "https_subtrees": [
-    "https://developer.cisco.com/meraki"
+    "https://code.claude.com/docs",
+    "https://developer.cisco.com/meraki",
+    "https://developer.hashicorp.com/terraform/language",
+    "https://firebase.google.com/docs",
+    "https://firebase.google.com/support/releases",
+    "https://registry.terraform.io/providers/linode/linode/latest/docs"
   ],
   "repository_host": "github.com",
   "repositories": [
