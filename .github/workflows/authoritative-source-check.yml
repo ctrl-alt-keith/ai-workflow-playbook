@@ -13,9 +13,8 @@ on:
         description: Scan changed Markdown files or all Markdown files.
         required: false
         type: string
-        default: changed
       official_domains:
-        description: Additional narrow official documentation domain suffixes, separated by commas or spaces.
+        description: Bare documentation domains covering each host and its subdomains, separated by commas or spaces.
         required: false
         type: string
         default: ""

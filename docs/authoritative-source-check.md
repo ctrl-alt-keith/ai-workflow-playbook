@@ -38,54 +38,23 @@ retry behavior. This keeps normal repository links quiet while still surfacing
 third-party sources used to support external API behavior claims.
 
 Use `scan_mode: all` only when the caller intentionally wants to scan every
-Markdown file instead of the pull request's changed Markdown files. Use
-`official_domains` to add provider-controlled documentation domains that are
-authoritative for the caller repository but not built into the scanner. Use
-`playbook_ref` only when testing or pinning a non-`main` playbook ref.
+Markdown file. The default scans changed Markdown files and the PR body. Use
+`playbook_ref` when testing or pinning a non-`main` playbook ref.
 
 ## Official Domain Classification
 
-Keep official-source classification narrow and explainable. Add documentation
-domains that are controlled by the provider and are used for API references,
-developer docs, SDK docs, official schemas, changelogs, release notes, or
-product support docs that directly describe the behavior in question.
+Use the [canonical source policy](../scripts/authoritative_sources.json) for
+built-in classifications. Add verified provider-controlled documentation at the
+narrowest scope. An exact-host rule covers only the named host. Use exact URLs
+on mixed hosts such as corporate sites, blogs, communities, marketplaces, and
+support forums. Repository rules match the configured host, owner, and
+repository. Configured project owners identify project references. Use
+provider documentation for external API claims.
 
-Do not add broad generic domains just because a vendor owns them. Avoid
-allowlisting mixed surfaces such as blogs, communities, marketplaces, marketing
-sites, support forums, or generic corporate roots when only a documentation
-subdomain or developer portal is authoritative.
-
-The scanner includes narrow Google, OpenAI, and Atlassian documentation domains
-because they are common adoption targets:
-
-- Google: `cloud.google.com`, `developers.google.com`, and
-  `firebase.google.com`.
-- OpenAI: `developers.openai.com`, its developer and API documentation portal.
-- Dropbox: `developers.dropbox.com` and the exact
-  `dropbox-sdk-python.readthedocs.io` host for its official Python SDK API
-  reference.
-- Requests: the exact `requests.readthedocs.io` host for its official API
-  documentation.
-- Atlassian: `developer.atlassian.com`, `docs.atlassian.com`, and
-  `support.atlassian.com`.
-
-These defaults do not imply that `google.com`, `openai.com`, `atlassian.com`,
-`blog.google`, `community.atlassian.com`, or other corporate, marketing,
-mixed, or community domains are authoritative. Caller repositories can still
-add more narrow `official_domains` when their public API surface depends on
-another provider-controlled documentation domain.
-
-This classification is for public API documentation only. A Dropbox shared
-artifact can own the stored artifact or evidence it identifies, but it does not
-become authoritative for repository, provider, or other facts merely because it
-is stored on Dropbox; `www.dropbox.com` shared links remain outside the default
-allowlist.
-
-Same-organization GitHub repository links are intentionally treated as project
-references for this playbook's repositories. They are useful for local project
-history, reusable workflow behavior, and issue or PR context owned by the same
-organization. They are not a substitute for provider documentation when the
-claim is about an external public API.
+Caller `official_domains`, CLI `--official-domain`, and
+`AUTHORITATIVE_SOURCE_OFFICIAL_DOMAINS` accept bare DNS domains separated by
+commas or spaces. Each entry covers its host and its subdomains. The scanner
+rejects URLs and paths in domain overrides.
 
 ## Source Justifications
 

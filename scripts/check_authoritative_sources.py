@@ -8,7 +8,9 @@ import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
+from typing import NamedTuple
 from urllib.parse import urlparse
 
 
@@ -23,33 +25,9 @@ PUBLIC_API_CONTEXT_RE = re.compile(
     re.IGNORECASE,
 )
 
-DEFAULT_OFFICIAL_SUFFIXES = (
-    "akamai.com",
-    "linode.com",
-    "python.org",
-    "cloud.google.com",
-    "developers.google.com",
-    "firebase.google.com",
-    "developers.openai.com",
-    "claude.com",
-    "developers.dropbox.com",
-    "dropbox-sdk-python.readthedocs.io",
-    "requests.readthedocs.io",
-    "developer.atlassian.com",
-    "docs.atlassian.com",
-    "support.atlassian.com",
-)
-OFFICIAL_SOURCE_URLS = {
-    "https://developer.cisco.com/meraki/api-v1/get-organization-devices-uplinks-addresses-by-device/",
-}
-OFFICIAL_GITHUB_DOMAINS = {"api.github.com", "docs.github.com"}
-OFFICIAL_GITHUB_REPOSITORIES = {
-    ("github", "docs"),
-    ("github", "rest-api-description"),
-    ("linode", "linode-api-openapi"),
-}
-SAME_ORG_GITHUB_OWNERS = {"ctrl-alt-keith"}
-KNOWN_THIRD_PARTY_SUFFIXES = ("stackoverflow.com", "medium.com", "dev.to")
+POLICY_PATH = Path(__file__).with_name("authoritative_sources.json")
+DNS_LABEL = r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
+DOMAIN_RE = re.compile(rf"{DNS_LABEL}(?:\.{DNS_LABEL})+")
 IGNORED_MARKDOWN_PATH_PARTS = (
     ".git",
     ".mypy_cache",
@@ -70,12 +48,46 @@ JUSTIFICATION_RE = re.compile(
 )
 
 
+class SourcePolicy(NamedTuple):
+    exact_hosts: frozenset[str]
+    exact_urls: frozenset[str]
+    repository_host: str
+    repositories: frozenset[str]
+    project_owners: frozenset[str]
+    third_party_domain_suffixes: frozenset[str]
+
+
+def load_source_policy(path: Path) -> SourcePolicy:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("source policy must be a JSON object")
+
+    def entries(name: str) -> frozenset[str]:
+        values = data.get(name)
+        if not isinstance(values, list) or not all(
+            isinstance(value, str) and value for value in values
+        ):
+            raise ValueError(f"source policy {name} must be an array of non-empty strings")
+        return frozenset(values)
+
+    repository_host = data.get("repository_host")
+    if not isinstance(repository_host, str) or not DOMAIN_RE.fullmatch(repository_host):
+        raise ValueError("source policy repository_host must be a bare DNS host")
+    return SourcePolicy(
+        entries("exact_hosts"),
+        entries("exact_urls"),
+        repository_host,
+        entries("repositories"),
+        entries("project_owners"),
+        entries("third_party_domain_suffixes"),
+    )
+
+
 def normalize_domain(hostname: str | None) -> str:
-    domain = (hostname or "").lower().rstrip(".")
-    return domain[4:] if domain.startswith("www.") else domain
+    return (hostname or "").lower().removesuffix(".")
 
 
-def matches(domain: str, suffix: str) -> bool:
+def matches_domain_suffix(domain: str, suffix: str) -> bool:
     return domain == suffix or domain.endswith(f".{suffix}")
 
 
@@ -86,54 +98,46 @@ def clean_url(url: str) -> str:
     return url
 
 
-def is_same_org_github_repo(path: str) -> bool:
-    parts = [part for part in path.lower().split("/") if part]
-    return len(parts) >= 2 and parts[0] in SAME_ORG_GITHUB_OWNERS
-
-
-def github_repository(path: str) -> tuple[str, str] | None:
-    parts = [part for part in path.lower().split("/") if part]
-    if len(parts) < 2:
-        return None
-    return parts[0], parts[1]
-
-
-def configured_domains(raw_values: list[str]) -> tuple[str, ...]:
-    domains: list[str] = []
+def configured_domains(raw_values: list[str]) -> frozenset[str]:
+    domains: set[str] = set()
     for raw_value in raw_values:
         for value in re.split(r"[\s,]+", raw_value):
             if not value:
                 continue
-            parsed = urlparse(value if "://" in value else f"//{value}")
-            domain = normalize_domain(parsed.hostname or value)
-            if domain and domain not in domains:
-                domains.append(domain)
-    return tuple(domains)
+            domain = normalize_domain(value)
+            if len(domain) > 253 or not DOMAIN_RE.fullmatch(domain):
+                raise ValueError("invalid official domain override. Use only bare DNS domains")
+            domains.add(domain)
+    return frozenset(domains)
 
 
 def is_official(
     url: str,
-    official_suffixes: tuple[str, ...] = DEFAULT_OFFICIAL_SUFFIXES,
+    policy: SourcePolicy,
+    official_suffixes: frozenset[str],
 ) -> bool:
-    if url in OFFICIAL_SOURCE_URLS:
+    if url in policy.exact_urls:
         return True
 
     parsed = urlparse(url)
     domain = normalize_domain(parsed.hostname)
-    path = parsed.path.lower()
-
-    if any(matches(domain, suffix) for suffix in official_suffixes):
+    if domain in policy.exact_hosts or any(
+        matches_domain_suffix(domain, suffix) for suffix in official_suffixes
+    ):
         return True
-    if domain in OFFICIAL_GITHUB_DOMAINS:
-        return True
-    if domain == "github.com":
-        return is_same_org_github_repo(path) or github_repository(path) in OFFICIAL_GITHUB_REPOSITORIES
-    return False
+    if domain != policy.repository_host:
+        return False
+
+    parts = parsed.path.removeprefix("/").lower().split("/", 2)
+    if len(parts) < 2 or not parts[0] or not parts[1]:
+        return False
+    owner, repository = parts[:2]
+    return owner in policy.project_owners or f"{owner}/{repository}" in policy.repositories
 
 
-def reason_for(url: str) -> tuple[str, str]:
+def reason_for(url: str, policy: SourcePolicy) -> tuple[str, str]:
     domain = normalize_domain(urlparse(url).hostname)
-    if any(matches(domain, suffix) for suffix in KNOWN_THIRD_PARTY_SUFFIXES):
+    if any(matches_domain_suffix(domain, suffix) for suffix in policy.third_party_domain_suffixes):
         return domain, "known third-party discussion or publishing domain"
     return domain, "domain is not in the authoritative source allowlist"
 
@@ -161,7 +165,8 @@ def public_api_context(lines: list[str], index: int) -> str | None:
 def scan_text(
     label: str,
     text: str,
-    official_suffixes: tuple[str, ...] = DEFAULT_OFFICIAL_SUFFIXES,
+    policy: SourcePolicy,
+    official_suffixes: frozenset[str] = frozenset(),
 ) -> list[dict[str, object]]:
     findings: list[dict[str, object]] = []
     lines = text.splitlines()
@@ -179,13 +184,13 @@ def scan_text(
                 continue
             if not parsed_url.hostname:
                 continue
-            if is_official(url, official_suffixes) or justified(lines, index):
+            if is_official(url, policy, official_suffixes) or justified(lines, index):
                 continue
             context = public_api_context(lines, index)
             if context is None:
                 continue
 
-            domain, reason = reason_for(url)
+            domain, reason = reason_for(url, policy)
             findings.append(
                 {
                     "domain": domain,
@@ -338,17 +343,22 @@ def parse_args() -> argparse.Namespace:
         "--official-domain",
         action="append",
         default=[],
-        help="Additional official documentation domain suffix. May be repeated or comma-separated.",
+        help="Additional bare documentation domain covering that host and its subdomains.",
     )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    try:
+        policy = load_source_policy(POLICY_PATH)
+        official_suffixes = configured_domains(
+            args.official_domain + [os.environ.get("AUTHORITATIVE_SOURCE_OFFICIAL_DOMAINS", "")]
+        )
+    except (OSError, ValueError) as error:
+        print(f"authoritative-source-check: {error}", file=sys.stderr)
+        return 2
     payload = event_payload()
-    official_suffixes = DEFAULT_OFFICIAL_SUFFIXES + configured_domains(
-        args.official_domain + [os.environ.get("AUTHORITATIVE_SOURCE_OFFICIAL_DOMAINS", "")]
-    )
     sources: list[tuple[str, str]] = []
 
     if args.pr_body_file:
@@ -375,7 +385,7 @@ def main() -> int:
 
     findings: list[dict[str, object]] = []
     for label, text in sources + markdown_sources(markdown_files):
-        findings.extend(scan_text(label, text, official_suffixes))
+        findings.extend(scan_text(label, text, policy, official_suffixes))
 
     report(dedupe(findings))
     return 0
