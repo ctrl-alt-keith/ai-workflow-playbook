@@ -167,7 +167,13 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
         cases = [(f"[source]({url})", 0) for url in accepted]
         cases.extend((f"[source]({url})", 1) for url in rejected)
         cases.extend(
-            ((f"see {root}.", 0), (f"see {root}/.", 0), (f"see {root}/.., for details", 1))
+            (
+                (f"see {root}.", 0),
+                (f"see {root}/.", 0),
+                (f"(see {root}/.)", 0),
+                (f"see {root}/.., for details", 1),
+                (f'[source]({root}. "Link title")', 1),
+            )
         )
         with tempfile.TemporaryDirectory() as tmp:
             body = Path(tmp) / "pr-body.md"

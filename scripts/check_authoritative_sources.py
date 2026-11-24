@@ -214,9 +214,9 @@ def scan_text(
             raw_url = match.group()
             url = clean_url(raw_url)
             # Preserve explicit link targets and parent path segments when checking subtrees.
-            closing = line[match.end():match.end() + 1]
+            before_url = line[:match.start()].rstrip()
             subtree_url = raw_url.rstrip(",;:!?")
-            if closing in {")", ">", '"', "'"}:
+            if before_url.endswith(("](", "<", '"', "'")):
                 subtree_url = raw_url
             elif not subtree_url.endswith("/.."):
                 subtree_url = url
