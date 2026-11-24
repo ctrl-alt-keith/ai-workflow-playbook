@@ -56,6 +56,12 @@ For example, a task that names Claude requires a Claude review; output from
 Codex, Gemini, ChatGPT, or another substitute may be preserved as supplemental
 evidence, but it does not complete the named review.
 
+For Claude reviews in the managed `ctrl-alt-keith` Codex Cloud environment,
+use the [Cloud Claude review entry point](https://github.com/ctrl-alt-keith/secrets-lifecycle/blob/main/docs/cloud-claude-review.md)
+for both authentication preflight and review. Use the
+[Playbook launchers](../scripts/review-launchers.md) for workstation Claude
+reviews and for Codex CLI reviews.
+
 If the selected reviewer cannot authenticate, retrieve required evidence, or
 complete the review, preserve that failed attempt and its capability gap in the
 review record. Stop at the selected review boundary until the named reviewer
