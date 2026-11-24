@@ -45,11 +45,13 @@ Markdown file. The default scans changed Markdown files and the PR body. Use
 
 Use the [canonical source policy](../scripts/authoritative_sources.json) for
 built-in classifications. Add verified provider-controlled documentation at the
-narrowest scope. An exact-host rule covers only the named host. Use exact URLs
-on mixed hosts such as corporate sites, blogs, communities, marketplaces, and
-support forums. Repository rules match the configured host, owner, and
-repository. Configured project owners identify project references. Use
-provider documentation for external API claims.
+narrowest scope. An exact-host rule covers only the named host. An HTTPS
+subtree rule covers its root and descendants on that host, at path-segment
+boundaries. Use a subtree only for a verified first-party documentation area.
+Use exact URLs for individual pages on mixed hosts. Repository rules match the
+configured host, owner, and repository. Configured project owners identify
+project references. For each external API claim, verify that the cited
+provider page supports it.
 
 Caller `official_domains`, CLI `--official-domain`, and
 `AUTHORITATIVE_SOURCE_OFFICIAL_DOMAINS` accept bare DNS domains separated by

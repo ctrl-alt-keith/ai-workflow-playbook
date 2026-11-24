@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import NamedTuple
-from urllib.parse import urlparse
+from urllib.parse import SplitResult, unquote, urlparse, urlsplit
 
 
 URL_RE = re.compile(r"https?://[^\s<>)\]}\"']+")
@@ -51,10 +51,35 @@ JUSTIFICATION_RE = re.compile(
 class SourcePolicy(NamedTuple):
     exact_hosts: frozenset[str]
     exact_urls: frozenset[str]
+    https_subtrees: frozenset[tuple[str, str]]
     repository_host: str
     repositories: frozenset[str]
     project_owners: frozenset[str]
     third_party_domain_suffixes: frozenset[str]
+
+
+def unambiguous_subtree_path(path: str) -> bool:
+    decoded = unquote(path)
+    return (
+        decoded.count("/") == path.count("/")
+        and not any(delimiter in decoded for delimiter in "\\%;")
+        and all(segment not in {".", ".."} for segment in decoded.split("/"))
+    )
+
+
+def https_subtree_root(url: str) -> tuple[str, str]:
+    parsed = urlsplit(url)
+    path = parsed.path.rstrip("/")
+    if (
+        parsed.scheme != "https"
+        or not DOMAIN_RE.fullmatch(parsed.netloc)
+        or not path
+        or parsed.query
+        or parsed.fragment
+        or not unambiguous_subtree_path(path)
+    ):
+        raise ValueError("source policy https_subtrees must use HTTPS hosts and non-root paths")
+    return parsed.netloc, path
 
 
 def load_source_policy(path: Path) -> SourcePolicy:
@@ -76,6 +101,7 @@ def load_source_policy(path: Path) -> SourcePolicy:
     return SourcePolicy(
         entries("exact_hosts"),
         entries("exact_urls"),
+        frozenset(https_subtree_root(url) for url in entries("https_subtrees")),
         repository_host,
         entries("repositories"),
         entries("project_owners"),
@@ -92,6 +118,10 @@ def matches_domain_suffix(domain: str, suffix: str) -> bool:
 
 
 def clean_url(url: str) -> str:
+    # A final dot segment can change the target and is part of the citation.
+    without_punctuation = url.rstrip(",;:!?")
+    if without_punctuation.endswith(("/.", "/..")):
+        return without_punctuation
     url = url.rstrip(".,;:!?")
     while url.endswith(")") and url.count("(") < url.count(")"):
         url = url[:-1]
@@ -113,10 +143,22 @@ def configured_domains(raw_values: list[str]) -> frozenset[str]:
 
 def is_official(
     url: str,
+    original: SplitResult,
     policy: SourcePolicy,
     official_suffixes: frozenset[str],
 ) -> bool:
     if url in policy.exact_urls:
+        return True
+
+    if (
+        original.scheme == "https"
+        and any(
+            original.netloc.lower() in (host, f"{host}:443")
+            and (original.path == path or original.path.startswith(f"{path}/"))
+            for host, path in policy.https_subtrees
+        )
+        and unambiguous_subtree_path(original.path)
+    ):
         return True
 
     parsed = urlparse(url)
@@ -176,6 +218,8 @@ def scan_text(
             url = clean_url(match)
             try:
                 parsed_url = urlparse(url)
+                # Trimming prose punctuation must not turn a sibling path into the subtree root.
+                original_url = urlsplit(match)
             except ValueError:
                 # URL-like text can still contain malformed hosts (for
                 # example, an unmatched IPv6 bracket). It is not actionable
@@ -184,7 +228,7 @@ def scan_text(
                 continue
             if not parsed_url.hostname:
                 continue
-            if is_official(url, policy, official_suffixes) or justified(lines, index):
+            if is_official(url, original_url, policy, official_suffixes) or justified(lines, index):
                 continue
             context = public_api_context(lines, index)
             if context is None:

@@ -21,6 +21,7 @@ SPEC.loader.exec_module(scanner)
 
 class AuthoritativeSourceScannerTest(unittest.TestCase):
     exact_reference = "https://docs.example.test/reference/list/"
+    subtree = "https://docs.example.test/product"
 
     def setUp(self) -> None:
         root = Path(self.enterContext(tempfile.TemporaryDirectory()))
@@ -32,6 +33,7 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
                 {
                     "exact_hosts": ["api.example.test"],
                     "exact_urls": [self.exact_reference],
+                    "https_subtrees": [self.subtree],
                     "repository_host": "forge.example.test",
                     "repositories": ["provider/reference"],
                     "project_owners": ["project"],
@@ -133,6 +135,31 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
                         self.assertIn(f"::{url} detected.", result.stdout)
                     else:
                         self.assertIn("no non-authoritative source URLs found", result.stdout)
+
+    def test_cli_bounds_https_subtree_to_its_host_and_path_segment(self) -> None:
+        root = self.subtree
+        accepted = (root, f"{root}/", f"{root}/api/reference/?version=1#parameters")
+        rejected = (
+            f"{root}-preview/",
+            f"{root}.",
+            "https://docs.example.test/other/product/",
+            "https://sub.docs.example.test/product/",
+            "https://docs.example.test.invalid/product/",
+            "http://docs.example.test/product/",
+            "https://docs.example.test:8443/product/",
+            f"{root}/..",
+            f"{root}/%2e%2e/other/",
+            f"{root}/guide%2f..%2fother/",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            body = Path(tmp) / "pr-body.md"
+            cases = [(url, 0) for url in accepted] + [(url, 1) for url in rejected]
+            for url, warnings in cases:
+                with self.subTest(url=url):
+                    body.write_text(f"API reference: [source]({url})\n", encoding="utf-8")
+                    result = self.run_scanner_cli(["--pr-body-file", str(body)])
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stdout.count("::warning "), warnings, result.stdout)
 
     def test_domain_overrides_only_suppress_matching_hosts_and_subdomains(self) -> None:
         allowed = (

@@ -19,10 +19,9 @@
     "support.atlassian.com",
     "techdocs.akamai.com"
   ],
-  "exact_urls": [
-    "https://developer.cisco.com/meraki/api-v1/",
-    "https://developer.cisco.com/meraki/api-v1/get-organization-devices-uplinks-addresses-by-device/",
-    "https://developer.cisco.com/meraki/api-v1/getting-started/"
+  "exact_urls": [],
+  "https_subtrees": [
+    "https://developer.cisco.com/meraki"
   ],
   "repository_host": "github.com",
   "repositories": [
