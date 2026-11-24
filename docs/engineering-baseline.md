@@ -67,6 +67,14 @@ independently warrants permanent regression coverage. Historical regression
 tests may be removed when the failure is no longer plausible, the architecture
 removed the failure mode, or another test now protects the same invariant.
 
+Test configurable behavior with controlled inputs and expected results derived
+from the requirement, not copied from shipped values or computed with the same
+implementation. When testing shipped configuration, load the actual shipped
+file through the production entry point and assert the observable behavior
+required of that wiring. Pin an exact shipped value only when an external
+contract or a requirement independent of the current configuration makes that
+value mandatory.
+
 ## Regression Fixture Fidelity
 
 For deterministic extraction, parsing, normalization, or replay, shift to fast
