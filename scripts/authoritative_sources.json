@@ -19,7 +19,12 @@
     "support.atlassian.com",
     "techdocs.akamai.com"
   ],
-  "exact_urls": [],
+  "exact_urls": [
+    "https://developer.hashicorp.com/terraform/language/manage-sensitive-data",
+    "https://developer.hashicorp.com/terraform/language/values/variables",
+    "https://registry.terraform.io/providers/linode/linode/latest/docs",
+    "https://registry.terraform.io/providers/linode/linode/latest/docs/resources/object_storage_bucket"
+  ],
   "https_subtrees": [
     "https://developer.cisco.com/meraki"
   ],
