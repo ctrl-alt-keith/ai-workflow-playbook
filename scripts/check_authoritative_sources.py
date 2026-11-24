@@ -118,10 +118,6 @@ def matches_domain_suffix(domain: str, suffix: str) -> bool:
 
 
 def clean_url(url: str) -> str:
-    # A final dot segment can change the target and is part of the citation.
-    without_punctuation = url.rstrip(",;:!?")
-    if without_punctuation.endswith(("/.", "/..")):
-        return without_punctuation
     url = url.rstrip(".,;:!?")
     while url.endswith(")") and url.count("(") < url.count(")"):
         url = url[:-1]
@@ -143,7 +139,7 @@ def configured_domains(raw_values: list[str]) -> frozenset[str]:
 
 def is_official(
     url: str,
-    original: SplitResult,
+    citation: SplitResult,
     policy: SourcePolicy,
     official_suffixes: frozenset[str],
 ) -> bool:
@@ -151,13 +147,13 @@ def is_official(
         return True
 
     if (
-        original.scheme == "https"
+        citation.scheme == "https"
         and any(
-            original.netloc.lower() in (host, f"{host}:443")
-            and (original.path == path or original.path.startswith(f"{path}/"))
+            citation.netloc.lower() in (host, f"{host}:443")
+            and (citation.path == path or citation.path.startswith(f"{path}/"))
             for host, path in policy.https_subtrees
         )
-        and unambiguous_subtree_path(original.path)
+        and unambiguous_subtree_path(citation.path)
     ):
         return True
 
@@ -214,12 +210,19 @@ def scan_text(
     lines = text.splitlines()
 
     for index, line in enumerate(lines):
-        for match in URL_RE.findall(line):
-            url = clean_url(match)
+        for match in URL_RE.finditer(line):
+            raw_url = match.group()
+            url = clean_url(raw_url)
+            # Preserve explicit link targets and parent path segments when checking subtrees.
+            closing = line[match.end():match.end() + 1]
+            subtree_url = raw_url.rstrip(",;:!?")
+            if closing in {")", ">", '"', "'"}:
+                subtree_url = raw_url
+            elif not subtree_url.endswith("/.."):
+                subtree_url = url
             try:
                 parsed_url = urlparse(url)
-                # Trimming prose punctuation must not turn a sibling path into the subtree root.
-                original_url = urlsplit(match)
+                citation = urlsplit(subtree_url)
             except ValueError:
                 # URL-like text can still contain malformed hosts (for
                 # example, an unmatched IPv6 bracket). It is not actionable
@@ -228,7 +231,7 @@ def scan_text(
                 continue
             if not parsed_url.hostname:
                 continue
-            if is_official(url, original_url, policy, official_suffixes) or justified(lines, index):
+            if is_official(url, citation, policy, official_suffixes) or justified(lines, index):
                 continue
             context = public_api_context(lines, index)
             if context is None:

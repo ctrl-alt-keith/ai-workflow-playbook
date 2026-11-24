@@ -48,6 +48,8 @@ built-in classifications. Add verified provider-controlled documentation at the
 narrowest scope. An exact-host rule covers only the named host. An HTTPS
 subtree rule covers its root and descendants on that host, at path-segment
 boundaries. Use a subtree only for a verified first-party documentation area.
+Subtree citations use the default HTTPS port and an unambiguous path without
+embedded credentials.
 Use exact URLs for individual pages on mixed hosts. Repository rules match the
 configured host, owner, and repository. Configured project owners identify
 project references. For each external API claim, verify that the cited

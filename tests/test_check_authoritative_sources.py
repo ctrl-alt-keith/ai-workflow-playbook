@@ -136,9 +136,20 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
                     else:
                         self.assertIn("no non-authoritative source URLs found", result.stdout)
 
+            body_path.write_text(f"API reference: see {official}.\n", encoding="utf-8")
+            result = self.run_scanner_cli(["--pr-body-file", str(body_path)])
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("no non-authoritative source URLs found", result.stdout)
+
     def test_cli_bounds_https_subtree_to_its_host_and_path_segment(self) -> None:
         root = self.subtree
-        accepted = (root, f"{root}/", f"{root}/api/reference/?version=1#parameters")
+        accepted = (
+            root,
+            f"{root}/",
+            f"{root}/api/reference/?version=1#parameters",
+            f"{root}/api/setup%20guide/",
+            "https://DOCS.EXAMPLE.TEST:443/product/",
+        )
         rejected = (
             f"{root}-preview/",
             f"{root}.",
@@ -147,16 +158,22 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
             "https://docs.example.test.invalid/product/",
             "http://docs.example.test/product/",
             "https://docs.example.test:8443/product/",
+            "https://reader@docs.example.test/product/",
             f"{root}/..",
             f"{root}/%2e%2e/other/",
             f"{root}/guide%2f..%2fother/",
+            f"{root}/guide;revision=next",
+        )
+        cases = [(f"[source]({url})", 0) for url in accepted]
+        cases.extend((f"[source]({url})", 1) for url in rejected)
+        cases.extend(
+            ((f"see {root}.", 0), (f"see {root}/.", 0), (f"see {root}/.., for details", 1))
         )
         with tempfile.TemporaryDirectory() as tmp:
             body = Path(tmp) / "pr-body.md"
-            cases = [(url, 0) for url in accepted] + [(url, 1) for url in rejected]
-            for url, warnings in cases:
-                with self.subTest(url=url):
-                    body.write_text(f"API reference: [source]({url})\n", encoding="utf-8")
+            for citation, warnings in cases:
+                with self.subTest(citation=citation):
+                    body.write_text(f"API reference: {citation}\n", encoding="utf-8")
                     result = self.run_scanner_cli(["--pr-body-file", str(body)])
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertEqual(result.stdout.count("::warning "), warnings, result.stdout)
@@ -203,6 +220,9 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
 
         self.assertEqual(result.returncode, 2)
         self.assertIn(self.fixture_policy.name, result.stderr)
+
+    def test_shipped_policy_loads(self) -> None:
+        scanner.load_source_policy(scanner.POLICY_PATH)
 
     def test_changed_markdown_files_parses_nul_delimited_git_output(self) -> None:
         completed = subprocess.CompletedProcess(
