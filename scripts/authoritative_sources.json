@@ -1,0 +1,38 @@
+{
+  "exact_hosts": [
+    "api.github.com",
+    "developer.atlassian.com",
+    "developers.dropbox.com",
+    "developers.google.com",
+    "developers.openai.com",
+    "docs.atlassian.com",
+    "docs.claude.com",
+    "docs.cloud.google.com",
+    "docs.github.com",
+    "docs.python.org",
+    "dropbox-sdk-python.readthedocs.io",
+    "packaging.python.org",
+    "peps.python.org",
+    "requests.readthedocs.io",
+    "support.atlassian.com",
+    "techdocs.akamai.com"
+  ],
+  "exact_urls": [],
+  "https_subtrees": [
+    "https://code.claude.com/docs",
+    "https://developer.cisco.com/meraki",
+    "https://developer.hashicorp.com/terraform/language",
+    "https://firebase.google.com/docs",
+    "https://firebase.google.com/support/release-notes",
+    "https://firebase.google.com/support/releases",
+    "https://registry.terraform.io/providers/linode/linode/latest/docs"
+  ],
+  "repository_host": "github.com",
+  "repositories": [
+    "github/docs",
+    "github/rest-api-description",
+    "linode/linode-api-openapi"
+  ],
+  "project_owners": ["ctrl-alt-keith"],
+  "third_party_domain_suffixes": ["stackoverflow.com", "medium.com", "dev.to"]
+}
