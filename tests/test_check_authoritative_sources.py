@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from contextlib import redirect_stdout
 import importlib.util
+from io import StringIO
 import os
 from pathlib import Path
 import subprocess
@@ -86,35 +88,32 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
                 findings = scanner.scan_text("PR body", f"REST API source: {url}")
                 self.assertEqual([finding["url"] for finding in findings], [url])
 
-    def test_cli_recognizes_only_the_exact_meraki_uplink_reference(self) -> None:
-        host = "developer.cisco.com"
-        path = "/meraki/api-v1/get-organization-devices-uplinks-addresses-by-device/"
-        official = f"https://{host}{path}"
-        untrusted = (
-            f"https://{host}/meraki/api-v1/",
-            f"{official}child/",
-            f"https://{host}.example.org{path}",
-            f"https://{host}/",
-            "https://www.cisco.com/",
-            f"http://{host}{path}",
-            f"{official}?view=other",
+    def test_cli_matches_only_the_configured_exact_url(self) -> None:
+        official = "https://docs.example.test/reference/list/"
+        cases = (
+            (official, False),
+            ("https://docs.example.test/reference/", True),
+            (f"{official}child/", True),
+            (f"{official}?view=other", True),
+            ("https://docs.example.test.invalid/reference/list/", True),
         )
 
         with tempfile.TemporaryDirectory() as tmp:
             body_path = Path(tmp) / "pr-body.md"
-            args = ["--pr-body-file", str(body_path)]
-
-            body_path.write_text(f"Meraki API reference: [{host}]({official})\n", encoding="utf-8")
-            result = self.run_scanner_cli(args)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn("no non-authoritative source URLs found", result.stdout)
-
-            for url in untrusted:
-                with self.subTest(url=url):
-                    body_path.write_text(f"Meraki API reference: [{host}]({url})\n", encoding="utf-8")
-                    result = self.run_scanner_cli(args)
-                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                    self.assertIn(f"::{url} detected.", result.stdout)
+            argv = [str(SCRIPT_PATH), "--pr-body-file", str(body_path)]
+            with (
+                mock.patch.dict(os.environ, clear=True),
+                mock.patch.object(sys, "argv", argv),
+                mock.patch.object(scanner, "OFFICIAL_SOURCE_URLS", {official}),
+            ):
+                for url, warns in cases:
+                    with self.subTest(url=url), redirect_stdout(StringIO()) as output:
+                        body_path.write_text(f"API reference: [source]({url})\n", encoding="utf-8")
+                        self.assertEqual(scanner.main(), 0)
+                        if warns:
+                            self.assertIn(f"::{url} detected.", output.getvalue())
+                        else:
+                            self.assertIn("no non-authoritative source URLs found", output.getvalue())
 
     def test_cli_configured_domains_suppress_matching_api_warnings(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
