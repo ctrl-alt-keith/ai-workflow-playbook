@@ -152,10 +152,11 @@ and emit only the sanitized summary. Scope preview evidence to that run.
 Production writes require separate authorization, secret custody, and durable
 receipts.
 
-For file inputs, use one private attempt directory qualified by the preview
-owner under the [scratch contract](../repo-readiness.md#repo-local-workflow-state).
-Require the scratch and tool file checks to pass in the actual invocation.
-Stop and report any unmet or unverifiable prerequisite.
+For file inputs, use one fresh private attempt directory on a route the preview
+owner's contract explicitly qualifies. Apply the [scratch contract's platform and directory checks](../repo-readiness.md#repo-local-workflow-state)
+and the tool's private-file checks in the actual invocation. Stop and report
+if file inputs have no qualified route or any prerequisite fails or cannot be
+verified.
 
 ## Review, Evidence, And Runtime Boundaries
 
