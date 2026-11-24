@@ -145,23 +145,17 @@ matching variable makes the child safe.
 
 ### Cloud Work Read-Only Previews
 
-Before running a preview, verify that the repository supports its read-only
-entry point and that the invoked code and imports resolve to the intended
-checkout revision. If either cannot be verified, stop and report the gap.
-For a summary-only preview, prefer an entry point that accepts protected
-inputs in memory. Enforce reader authority and input validation, and emit only
-the sanitized summary. Scope evidence to the preview run. Production writes
-require their own authorization, secret custody, and durable receipts.
+Use a repository-supported read-only preview entry point and verify its code
+and imports against the intended checkout revision. For summary-only previews,
+prefer protected inputs in memory, enforce reader authority and input validation,
+and emit only the sanitized summary. Scope preview evidence to that run.
+Production writes require separate authorization, secret custody, and durable
+receipts.
 
-When the preview requires a file, use a fresh private attempt directory under
-the [scratch contract](../repo-readiness.md#repo-local-workflow-state) and apply
-the private-file controls of the tool handling the protected inputs. Create the
-attempt directory under `/tmp` only when that contract's Linux host checks,
-including root ownership of `/tmp`, pass in the actual invocation. If a check
-fails or cannot be verified, report it and leave ownership and permissions
-unchanged. Use an alternate directory only when the preview's owning
-repository or tool explicitly qualifies the route in its contract and the
-invocation passes those checks. Otherwise, stop the file-based route.
+For file inputs, use one private attempt directory qualified by the preview
+owner under the [scratch contract](../repo-readiness.md#repo-local-workflow-state).
+Require the scratch and tool file checks to pass in the actual invocation.
+Stop and report any unmet or unverifiable prerequisite.
 
 ## Review, Evidence, And Runtime Boundaries
 
