@@ -120,6 +120,7 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
             (official, False),
             ("https://docs.example.test/reference/", True),
             (f"{official}child/", True),
+            (f"{official}..", True),
             (f"{official}?view=other", True),
             ("https://docs.example.test.invalid/reference/list/", True),
         )
@@ -173,6 +174,7 @@ class AuthoritativeSourceScannerTest(unittest.TestCase):
                 (f"(see {root}/.)", 0),
                 (f"see {root}/.., for details", 1),
                 (f'[source]({root}. "Link title")', 1),
+                (f"[source]: {root}.", 1),
             )
         )
         with tempfile.TemporaryDirectory() as tmp:

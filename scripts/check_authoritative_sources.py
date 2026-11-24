@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import NamedTuple
-from urllib.parse import SplitResult, unquote, urlparse, urlsplit
+from urllib.parse import SplitResult, unquote, urlsplit
 
 
 URL_RE = re.compile(r"https?://[^\s<>)\]}\"']+")
@@ -157,8 +157,7 @@ def is_official(
     ):
         return True
 
-    parsed = urlparse(url)
-    domain = normalize_domain(parsed.hostname)
+    domain = normalize_domain(citation.hostname)
     if domain in policy.exact_hosts or any(
         matches_domain_suffix(domain, suffix) for suffix in official_suffixes
     ):
@@ -166,15 +165,15 @@ def is_official(
     if domain != policy.repository_host:
         return False
 
-    parts = parsed.path.removeprefix("/").lower().split("/", 2)
+    parts = citation.path.removeprefix("/").lower().split("/", 2)
     if len(parts) < 2 or not parts[0] or not parts[1]:
         return False
     owner, repository = parts[:2]
     return owner in policy.project_owners or f"{owner}/{repository}" in policy.repositories
 
 
-def reason_for(url: str, policy: SourcePolicy) -> tuple[str, str]:
-    domain = normalize_domain(urlparse(url).hostname)
+def reason_for(citation: SplitResult, policy: SourcePolicy) -> tuple[str, str]:
+    domain = normalize_domain(citation.hostname)
     if any(matches_domain_suffix(domain, suffix) for suffix in policy.third_party_domain_suffixes):
         return domain, "known third-party discussion or publishing domain"
     return domain, "domain is not in the authoritative source allowlist"
@@ -212,24 +211,22 @@ def scan_text(
     for index, line in enumerate(lines):
         for match in URL_RE.finditer(line):
             raw_url = match.group()
-            url = clean_url(raw_url)
-            # Preserve explicit link targets and parent path segments when checking subtrees.
+            # Keep literal link destinations and parent segments distinct from prose punctuation.
             before_url = line[:match.start()].rstrip()
-            subtree_url = raw_url.rstrip(",;:!?")
-            if before_url.endswith(("](", "<", '"', "'")):
-                subtree_url = raw_url
-            elif not subtree_url.endswith("/.."):
-                subtree_url = url
+            url = raw_url.rstrip(",;:!?")
+            if before_url.endswith(("](", "]:", "<", '"', "'")):
+                url = raw_url
+            elif not url.endswith("/.."):
+                url = clean_url(raw_url)
             try:
-                parsed_url = urlparse(url)
-                citation = urlsplit(subtree_url)
+                citation = urlsplit(url)
             except ValueError:
                 # URL-like text can still contain malformed hosts (for
                 # example, an unmatched IPv6 bracket). It is not actionable
                 # source evidence, so do not emit a warning with an empty or
                 # misleading domain.
                 continue
-            if not parsed_url.hostname:
+            if not citation.hostname:
                 continue
             if is_official(url, citation, policy, official_suffixes) or justified(lines, index):
                 continue
@@ -237,7 +234,7 @@ def scan_text(
             if context is None:
                 continue
 
-            domain, reason = reason_for(url, policy)
+            domain, reason = reason_for(citation, policy)
             findings.append(
                 {
                     "domain": domain,
