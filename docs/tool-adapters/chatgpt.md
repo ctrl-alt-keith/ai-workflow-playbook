@@ -61,6 +61,19 @@ For handoffs, apply the canonical prompt owner's
 [target-shaped projections](../prompts.md#target-shaped-projections), subject to the
 repository workflow's [merge-authorization rules](../repo-readiness.md#pr-readiness).
 
+For an eligible Chat-to-Work handoff, prefer native **Move to Work** when the
+current model, client, and execution environment expose a supported path that
+meets the task's needs. Check the actual affordance and target capabilities.
+Apply transition consent before invoking it. If the control is available only
+to the operator, the operator initiates the move.
+
+Prepare a complete handoff before the transition. Before acting, the receiving
+Work session verifies it has the full bounded task, required source access,
+and current authority. If the native route cannot be qualified, use the
+[manual two-block route](../prompts.md#prompt-delivery-decision-model) when
+permitted. Hold and reconcile an uncertain transition before starting another
+attempt.
+
 ## Connected apps and consequential actions
 
 An installed/authenticated app, available action, or approval setting is
@@ -76,27 +89,9 @@ Treat the effective permission setting and exact action contract as runtime
 evidence. A general permission does not waive a more specific action
 requirement, workspace/provider restriction, or safety protection.
 
-### Prompt transport
+### Inline prompt presentation
 
-Use the canonical prompt-delivery decision model and preserve its terminal
-failure reason. For a qualified native controller-to-worker route, use its
-supported task action and exact-identity readback. For a selected Airtable
-route, apply the canonical Airtable handoff before selecting presentation; do
-not add file-preview, download-link, or attempt-local retrieval steps. For a
-human execution recipient, use the inline two-block presentation. Inspect
-unknown required route capability before selection. Routine prompts do not
-inherit the material-prompt profile merely from transport.
-
-For Airtable production and consumption, resolve the permitted base, table, and
-field IDs through current actions and use the returned record ID with the exact
-`recordIds` constraint. Apply the canonical handoff's verification, correction,
-and transport rules; apply the issue-owned durable-capture profile only when
-its admission conditions hold. Do not add any record or transport beyond what
-those owners require.
-
-When an inline prompt is selected, emit the shared operator metadata and the
-complete executable prompt as consecutive fenced blocks with no assistant prose
-before, between, or after them. Keep the executable block independently usable;
+Apply the shared [two-block format](../prompts.md#complete-prompt-shape) and
 resolve the ChatGPT thread-name placeholder to nothing.
 
 ## Workspace Agents

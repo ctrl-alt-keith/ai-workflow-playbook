@@ -194,26 +194,6 @@ Remote services are MCP connectors: apply the
 and the GitHub route in
 [`review-packet.md`](../review-packet.md#direct-pr-inspection).
 
-### Issue-Owned Durable Prompt Retrieval
-
-When Claude receives an exact issue-owned prompt through a permitted Airtable
-route, apply the
-[Airtable canonical-text handoff](../prompts.md#airtable-canonical-text-handoff)
-and the
-[issue-owned handoff profile](../prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile):
-use the envelope's exact base, table, and record IDs; retrieve with the exact
-`recordIds` constraint and require exactly one result; no fuzzy search or key
-lookup. Fail closed on a missing, duplicated, stale, transformed, truncated,
-or mismatched record; never substitute a local file or reconstructed chat
-text. Retrieval grants no read-only mode and no authority: choose tools,
-permission mode, and persistence from the owning task or reviewer contract.
-
-When producing the handoff: create one new five-field record, capture the
-returned ID and creation time, retrieve that exact ID with `recordIds`,
-complete the shared verification, then emit the envelope from that verified
-identity. Never update a frozen record; a correction is a new record with
-external lineage.
-
 ## Model And Effort Routing
 
 Apply [model routing](../model-routing.md); do not map from OpenAI model

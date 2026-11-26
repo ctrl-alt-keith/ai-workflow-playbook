@@ -74,9 +74,6 @@ degradation, and non-weakenable guarantees when mapping a material prompt to
 Codex. In Markdown, render metadata and the prompt body in consecutive code
 blocks with no intervening prose.
 
-For qualifying Airtable canonical-text handoff, apply the shared verification
-and fail-closed contract in [prompts](../prompts.md#airtable-canonical-text-handoff).
-
 ### Visible Thread Names
 
 Apply [executor-applied visible thread names](../prompts.md#executor-applied-visible-thread-names).
