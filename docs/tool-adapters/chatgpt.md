@@ -71,8 +71,9 @@ Prepare a complete handoff before the transition. Before acting, the receiving
 Work session verifies it has the full bounded task, required source access,
 and current authority. If the native route cannot be qualified, use the
 [manual two-block route](../prompts.md#prompt-delivery-decision-model) when
-permitted. Hold and reconcile an uncertain transition before starting another
-attempt.
+permitted. If a move was attempted and its outcome is unobservable from Chat,
+keep retry and manual fallback on hold until the original attempt's state can
+be verified, including by the operator when they can observe it.
 
 ## Connected apps and consequential actions
 

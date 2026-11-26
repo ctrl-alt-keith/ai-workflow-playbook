@@ -343,22 +343,23 @@ execution and consequential actions subject to their own authority.
   the operator can copy the complete executable block to an eligible target
   when the task permits manual delivery. Confirm that the known limits of the
   sending and receiving surfaces permit the full prompt.
-- If no permitted route preserves the required handoff or the result of an
-  attempted transition or dispatch is uncertain, report the specific blocker.
-  Reconcile the original attempt before retrying or switching routes.
+- If no permitted route preserves the required handoff, report the specific
+  blocker. When a transition or dispatch was attempted and its outcome is
+  uncertain, keep retries and fallback blocked until its state is verified.
 
 For native controller-to-worker dispatch, qualify the supported send and
 read actions before dispatch. Read back the full instruction by the returned
 task identity and compare it with the executable prompt. Verify the linked
-result when produced and report the verified task identity. A successful
-readback proves only that attempt. A task history alone does not satisfy an
-independently required retention or replay guarantee.
+result when produced and report the verified task identity.
 
 Apply the
 [issue-owned durable rendered-prompt handoff profile](prompt-contracts.md#issue-owned-durable-rendered-prompt-handoff-profile)
 only when exact durable identity is a downstream dependency and the profile's
-admission conditions hold. If required preservation cannot be verified, hold
-the dependent handoff. Routine prompt delivery needs no intermediary.
+admission conditions hold. Successful direct delivery verifies only that
+attempt. Conversation carryover and task history alone do not satisfy an
+independently required retention or replay guarantee. Hold the dependent handoff
+if required preservation cannot be verified. Routine prompt delivery needs no
+intermediary.
 
 ### Current terminal presentation boundary
 
