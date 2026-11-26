@@ -166,10 +166,6 @@ class GlobalBootstrapTests(unittest.TestCase):
     def test_missing_transition_latch_is_repaired_by_projection_workflow(self) -> None:
         self.assert_latch_projection("Execution-Surface Transition Eligibility")
 
-    def test_missing_airtable_latch_is_repaired_by_projection_workflow(self) -> None:
-        # This exercises installed-router reconciliation, not hosted Chat execution.
-        self.assert_latch_projection("Airtable Envelope Eligibility")
-
     def assert_latch_projection(self, heading: str) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

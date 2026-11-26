@@ -337,31 +337,19 @@ fails closed and records diagnostic evidence when possible.
 ## Issue-Owned Durable Rendered-Prompt Handoff Profile
 
 Use this profile when exact rendered-prompt bytes become a dependency for an
-executor attempt, review, recovery, or replay. It is an operational
-profile of the prompt contract and governed-artifact lifecycle. For qualifying
-small canonical-text handoffs to an eligible machine recipient, it uses the shared
-[`Airtable canonical-text handoff`](prompts.md#airtable-canonical-text-handoff).
-It is not a general Airtable artifact store, prompt-management platform, or
-requirement to preserve routine prompts.
+executor attempt, review, recovery, or replay.
 
 The candidate and storage-admission boundaries are inherited from
 [`Governed Artifact Capture`](evidence-lifecycle.md#governed-artifact-capture).
-The conditions below project that owner onto rendered prompts and add only the
-prompt-specific identity, evidence, and recovery boundaries. For this profile,
-the shared Airtable record creation, producer readback, and consumer checks
-replace the write and verification mechanics in
-[`Direct Durable Capture`](evidence-lifecycle.md#direct-durable-capture); they do
-not weaken its candidate, privacy, visibility, retention, ownership, or
-fail-closed boundaries.
+Apply its capture rules only to admitted prompts.
 
 ### Material attempts and conversational steering
 
-The unit of durable prompt transport is one material executor attempt. Keep
-one frozen effective prompt artifact for that attempt. Ordinary in-run
-steering and follow-up remain conversational; another human message alone
-does not create another Airtable record. The executor's own run or conversation
-record is sufficient forensic evidence for that steering unless another actor
-must independently reconstruct the changed executable contract.
+Keep one frozen effective prompt artifact per admitted material executor
+attempt. Ordinary in-run steering and follow-up remain conversational. The
+executor's run or conversation record is sufficient evidence for that steering
+unless another actor must independently reconstruct the changed executable
+contract.
 
 When later direction materially changes the executable contract and the revised
 contract must cross an execution, recovery, review, replay, restart, or handoff
@@ -408,40 +396,31 @@ under an issue-like path, invent a planning issue solely to obtain storage, or
 introduce a new durable root merely for naming symmetry.
 
 When no existing owner qualifies, a routine prompt follows the ordinary
-delivery decision model and does not gain material-prompt retention merely
-because Airtable or a native task action carries it. A prompt whose exact
-durable identity is required for an authorized downstream dependency fails
-storage admission until a natural durable owner is established; importance
-does not authorize an improvised destination. Another owner may define a
-narrower profile,
-but it must preserve the semantic, identity, authority, verification, and
-fail-closed boundaries here rather than treating this issue-owned profile as a
-generic container.
-
-### Airtable projection
-
-For an admitted material prompt, apply the shared Airtable record, readback,
-consumer verification, and envelope contract in
-[`prompts.md`](prompts.md#airtable-canonical-text-handoff). Claim retention only
-after producer verification succeeds. The owning storage contract selects the
-permitted base and table; reusable doctrine and adapters do not embed
-account-specific IDs. This profile adds no second prompt object, delivery
-route, or verification procedure.
-
-Keep the semantic prompt contract, rendered prompt, Airtable record, external
-envelope, producing receipt, delivery evidence, and attempt receipt as separate
-identities when the governing workflow requires them. None supplies authority.
+delivery decision model. Hold any handoff that requires exact durable identity
+until a natural durable owner qualifies. A narrower storage profile must
+preserve the semantic, identity, authority, verification, and failure
+boundaries here.
 
 ### Delivery and evidence
 
-Record the delivery operation, executor attempt, attempt receipt, output, and
-human disposition separately when the governing workflow requires them.
+For an admitted prompt, apply
+[`Direct Durable Capture`](evidence-lifecycle.md#direct-durable-capture) and its
+[`producing receipt`](evidence-lifecycle.md#producing-receipt-and-compact-delivery)
+in the owning destination. Report retention only after exact verification.
+When delivery references the preserved prompt, give the receiver the exact
+artifact identity and the information needed to verify the rendered bytes.
+The receiving executor resolves and verifies that identity before relying on
+it. Hold execution if the required identity or bytes cannot be verified.
+
+Keep the semantic contract, rendered prompt, producing receipt, delivery
+evidence, executor attempt and receipt, output, and human disposition distinct
+where required. Each supplies evidence only.
 
 ### Recovery
 
-Recovery follows the owning planning decision to the exact record and envelope,
-delivery evidence, executor attempt receipt, and executor output, then freshly
-retrieves current repository, provider, planning, and authority state from
+Recovery follows the owning planning decision to the exact rendered artifact,
+producing receipt, delivery evidence, executor attempt receipt, and output,
+then retrieves current repository, provider, planning, and authority state from
 their owners. Historical records and receipts remain historical evidence; they
 never become current authority or current mutable state.
 
